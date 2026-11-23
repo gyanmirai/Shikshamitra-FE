@@ -4,8 +4,8 @@ import type {
   AdmissionWorkflow,
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
-  AdmissionWorkflowValidationResult,
   AdmissionWorkflowValidationIssue,
+  AdmissionWorkflowValidationResult,
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
@@ -20,6 +20,7 @@ import { type WorkflowTemplateId, getAdmissionWorkflowTemplate } from '../../wor
 import {
   insertWorkflowStage,
   removeWorkflowStage,
+  updateWorkflowStage,
   duplicateWorkflowStage,
 } from '../workflow-stage-graph';
 
@@ -143,7 +144,8 @@ export function useWorkflowBuilderDraft(
     return true;
   };
   const saveStage = (stage: AdmissionWorkflowStage, autoConnect = true, nextStepFrom?: string) => {
-    if (!stages.some((item) => item.id === stage.id)) {
+    const current = stages.find((item) => item.id === stage.id);
+    if (!current) {
       const inferredSource =
         autoConnect && workflow?.stages.length === 0 && workflow.transitions.length === 0
           ? getSequentialAppendRoute(stages, transitions, stage)?.fromStageId
@@ -152,17 +154,7 @@ export function useWorkflowBuilderDraft(
         insertWorkflowStage({ stages, transitions }, stage, nextStepFrom ?? inferredSource)
       );
     }
-    recordHistory();
-    setStages((current) => {
-      const normalized = stage.isEntryStage
-        ? current.map((item) => ({ ...item, isEntryStage: false }))
-        : current;
-      return normalized.some((item) => item.id === stage.id)
-        ? normalized.map((item) => (item.id === stage.id ? stage : item))
-        : [...normalized, stage];
-    });
-    markDirty();
-    return true;
+    return applyGraphChange(updateWorkflowStage({ stages, transitions }, current, stage));
   };
   const applyGraphChange = (change: WorkflowGraphChange) => {
     if (change.error) {

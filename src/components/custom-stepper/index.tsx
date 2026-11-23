@@ -39,9 +39,12 @@ interface CustomStepperProps {
   stepStates?: ('completed' | 'skipped' | 'error' | 'pending' | 'active')[];
   stepCaptions?: React.ReactNode[];
   onStepClick?: (index: number) => void;
+  isStepClickable?: (index: number) => boolean;
+  getStepAriaLabel?: (label: string, index: number) => string;
   disabled?: boolean;
   iconOnly?: boolean;
   density?: 'standard' | 'compact';
+  continuousVerticalTrack?: boolean;
 }
 
 const CustomStepper: React.FC<CustomStepperProps> = ({
@@ -52,13 +55,23 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
   stepStates,
   stepCaptions,
   onStepClick,
+  isStepClickable,
+  getStepAriaLabel,
   disabled = false,
   iconOnly = false,
   density = 'standard',
+  continuousVerticalTrack = false,
 }) => {
   const captionId = useId();
   const alternativeLabel = orientation === 'horizontal' && density === 'standard';
   const markerSize = density === 'compact' && !iconOnly ? 20 : 28;
+  const connectMarkers = orientation === 'vertical' && continuousVerticalTrack;
+  const connectorColor = (from: number) => {
+    const next = stepStates?.[from + 1];
+    return stepStates?.[from] === 'completed' && (next === 'completed' || next === 'active')
+      ? 'primary.main'
+      : 'divider';
+  };
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -69,6 +82,7 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
         orientation={orientation}
         alternativeLabel={alternativeLabel}
         nonLinear={Boolean(onStepClick)}
+        connector={connectMarkers ? null : undefined}
         sx={(theme) => ({
           m: 0,
           p: 0,
@@ -110,10 +124,35 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
             '& .MuiStepConnector-line': { minHeight: 20 },
             ...(iconOnly && { '& .MuiStepConnector-root': { ml: 2.75 } }),
           }),
+          ...(connectMarkers && {
+            '--step-track-gap': theme.spacing(2.5),
+            '--step-track-width': '2px',
+            '--step-track-offset': `calc((var(--step-marker-size) - var(--step-track-width)) / 2 + ${
+              onStepClick ? 'var(--step-button-padding)' : '0px'
+            } + ${density === 'compact' ? theme.spacing(0.5) : '0px'})`,
+            rowGap: 'var(--step-track-gap)',
+            '& .MuiStep-root': {
+              position: 'relative',
+              minWidth: 0,
+              ...(iconOnly && { '& > span': { display: 'block' } }),
+            },
+            '& .MuiStepButton-root': { display: 'flex' },
+            '& .MuiStepLabel-root': { minWidth: 0 },
+            '& .MuiStep-root::before, & .MuiStep-root::after': {
+              position: 'absolute',
+              insetInlineStart: 'var(--step-track-offset)',
+              width: 'var(--step-track-width)',
+              pointerEvents: 'none',
+            },
+          }),
         })}
       >
         {steps.map((label, index) => {
           const state = stepStates?.[index] ?? (index === activeStep ? 'active' : 'pending');
+          // MUI's completed circle is inset by 2 units in its 24-unit SVG viewBox.
+          const markerInset =
+            state === 'completed' && !iconOnly ? 'var(--step-marker-size) / 12' : '0px';
+          const markerEdge = `calc(50% + var(--step-marker-size) / 2 - ${markerInset})`;
           const caption = stepCaptions?.[index];
           const stepCaptionId =
             onStepClick && caption != null && !iconOnly ? `${captionId}-${index}` : undefined;
@@ -175,10 +214,10 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
           const content = onStepClick ? (
             <StepButton
               type="button"
-              aria-label={label}
+              aria-label={getStepAriaLabel?.(label, index) ?? label}
               aria-description={iconOnly ? state : undefined}
               aria-describedby={stepCaptionId}
-              disabled={disabled}
+              disabled={disabled || isStepClickable?.(index) === false}
               icon={numberIcon}
               optional={captionContent}
               aria-current={index === activeStep ? 'step' : undefined}
@@ -221,6 +260,24 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
                 },
                 ...(state === 'skipped' && { '& .MuiStepIcon-root': { color: 'warning.main' } }),
                 ...(state === 'error' && { '& .MuiStepIcon-root': { color: 'error.main' } }),
+                ...(connectMarkers &&
+                  index > 0 && {
+                    '&::before': {
+                      content: '""',
+                      insetBlockStart: 0,
+                      insetBlockEnd: markerEdge,
+                      bgcolor: connectorColor(index - 1),
+                    },
+                  }),
+                ...(connectMarkers &&
+                  index < steps.length - 1 && {
+                    '&::after': {
+                      content: '""',
+                      insetBlockStart: markerEdge,
+                      insetBlockEnd: 'calc(-1 * var(--step-track-gap))',
+                      bgcolor: connectorColor(index),
+                    },
+                  }),
               }}
             >
               {iconOnly ? (
@@ -291,6 +348,7 @@ interface CustomStepperWithFormikProps {
   saveAndNextButtonProps?: ButtonProps;
   validateFinalStep?: boolean;
   validateForwardStepClick?: boolean;
+  renderProgress?: (state: { busy: boolean; submitCurrentStep: () => void }) => React.ReactNode;
   viewMode?: 'horizontal' | 'vertical'; // Add this line
 }
 
@@ -483,6 +541,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   saveAndNextButtonProps = {},
   validateFinalStep = true,
   validateForwardStepClick = false,
+  renderProgress,
   viewMode = 'horizontal', // Default to horizontal
   footerPlacement = 'outside',
 }) => {
@@ -866,7 +925,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       }}
       aria-busy={isBusy}
     >
-      {renderStepper()}
+      {renderProgress ? renderProgress({ busy: isBusy, submitCurrentStep }) : renderStepper()}
       {renderFormContent()}
       {isBusy && (
         <Box

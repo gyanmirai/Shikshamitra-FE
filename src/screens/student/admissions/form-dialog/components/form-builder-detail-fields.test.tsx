@@ -10,6 +10,62 @@ import { FormBuilderDetailFields } from './form-builder-detail-fields';
 import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
 
 describe('FormBuilderDetailFields', () => {
+  it('confirms a multi-step inquiry switch without losing fields, groups or visibility rules', async () => {
+    const user = userEvent.setup();
+    const draft = getBlankAdmissionFormInitialValues(0);
+    draft.layoutType = 1;
+    const firstSection = draft.sections[0];
+    draft.sections = [
+      { ...firstSection, stepId: 'student-step', stepName: 'Student', stepDisplayOrder: 0 },
+      {
+        ...firstSection,
+        id: 'contact-section',
+        code: 'CONTACT',
+        name: 'Contact',
+        displayOrder: 1,
+        stepId: 'contact-step',
+        stepName: 'Contact details',
+        stepDisplayOrder: 1,
+        stepVisibilityRuleJson: '{"field":"CONTACT_REQUIRED","equals":true}',
+        fields: firstSection.fields.map((field) => ({
+          ...field,
+          id: `contact-${field.id}`,
+          code: `CONTACT_${field.code}`,
+          sectionId: 'contact-section',
+        })),
+      },
+    ];
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <Formik initialValues={draft} onSubmit={() => undefined}>
+          {(formik) => (
+            <>
+              <FormBuilderDetailFields formik={formik} />
+              <output data-testid="form-draft">{JSON.stringify(formik.values)}</output>
+            </>
+          )}
+        </Formik>
+      </ThemeProvider>
+    );
+    const chooseLayout = async (name: string) => {
+      await user.click(screen.getByRole('combobox', { name: /Form Layout/ }));
+      await user.click(screen.getByRole('option', { name }));
+    };
+    const currentDraft = () => JSON.parse(screen.getByTestId('form-draft').textContent ?? '{}');
+
+    await chooseLayout('Single Page');
+    const dialog = screen.getByRole('dialog', { name: 'Switch to Single Page?' });
+    expect(currentDraft()).toEqual(draft);
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(currentDraft()).toEqual(draft);
+
+    await chooseLayout('Single Page');
+    await user.click(screen.getByRole('button', { name: 'Switch to single page' }));
+    expect(currentDraft()).toEqual({ ...draft, layoutType: 0 });
+    await chooseLayout('Step by Step');
+    expect(currentDraft()).toEqual(draft);
+  });
+
   it('offers only English, Gujarati, and Hindi and keeps the default within selected languages', async () => {
     const user = userEvent.setup();
     render(

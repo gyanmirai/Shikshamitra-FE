@@ -1,9 +1,17 @@
-import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { alpha, keyframes } from '@mui/material/styles';
 import { Box, Stack, Alert, Button, Skeleton, IconButton, Typography } from '@mui/material';
 
 import { usePdfPage } from './use-pdf-page';
+
+import type { PdfPreviewReveal } from './find-pdf-preview-target';
+
+const revealIn = keyframes({
+  from: { opacity: 0 },
+  to: { opacity: 1 },
+});
 
 export default function PdfCanvas({
   url,
@@ -16,6 +24,8 @@ export default function PdfCanvas({
   onPageChange,
   onPageCountChange,
   preservePageOnUpdate = false,
+  reveal,
+  onReveal,
 }: {
   url: string;
   title: string;
@@ -27,17 +37,55 @@ export default function PdfCanvas({
   onPageChange?: (page: number) => void;
   onPageCountChange?: (count: number) => void;
   preservePageOnUpdate?: boolean;
+  reveal?: PdfPreviewReveal;
+  onReveal?: (id: number, page?: number, marker?: HTMLDivElement | null) => void;
 }) {
   const [page, setPage] = useState(initialPage);
+  const [dismissedReveal, setDismissedReveal] = useState<number>();
   const [retry, setRetry] = useState(0);
   const [zoom, setZoom] = useState(false);
-  const pdf = usePdfPage(url, page, retry, preservePageOnUpdate);
+  const activeReveal = reveal?.id === dismissedReveal ? undefined : reveal;
+  const target = activeReveal?.target;
+  const showMarker = Boolean(
+    target?.destination || target?.text?.length || target?.page || target?.edge
+  );
+  const pdf = usePdfPage(
+    url,
+    activeReveal ? initialPage : page,
+    retry,
+    preservePageOnUpdate,
+    activeReveal
+  );
+  const markRef = useRef<HTMLDivElement>(null);
+  const revealed = useRef<{ id: number; url: string; page?: number }>(undefined);
+  const marked =
+    !pdf.error && pdf.revealLocation?.id === activeReveal?.id && pdf.revealLocation?.url === url
+      ? pdf.revealLocation
+      : undefined;
+  const failed =
+    pdf.failedReveal?.id === activeReveal?.id && pdf.failedReveal?.url === url
+      ? pdf.failedReveal
+      : undefined;
+  useEffect(() => {
+    const result = marked ?? failed;
+    if (
+      !result ||
+      (revealed.current?.id === result.id &&
+        revealed.current.url === result.url &&
+        revealed.current.page === marked?.page)
+    )
+      return;
+    revealed.current = { id: result.id, url: result.url, page: marked?.page };
+    if (marked) setPage(marked.page);
+    onReveal?.(result.id, marked?.page, markRef.current);
+  }, [marked, failed, onReveal]);
   useEffect(() => {
     if (pdf.hasRendered) onPageCountChange?.(pdf.pageCount);
   }, [onPageCountChange, pdf.hasRendered, pdf.pageCount]);
   const showRenderedPage = pdf.hasRendered && preservePageOnUpdate;
-  const currentPage = Math.min(page, pdf.pageCount);
+  const currentPage = Math.min(marked?.page ?? page, pdf.pageCount);
   const changePage = (next: number) => {
+    setDismissedReveal(reveal?.id);
     setPage(next);
     onPageChange?.(next);
   };
@@ -132,18 +180,36 @@ export default function PdfCanvas({
           display: pdf.loading || pdf.error ? (showRenderedPage ? 'block' : 'none') : 'block',
         }}
       >
-        <Box
-          component="canvas"
-          ref={pdf.canvasRef}
-          role="img"
-          aria-label={`${title}, page ${pdf.renderedPage ?? currentPage}`}
-          sx={{
-            display: 'block',
-            width: zoom ? '150%' : '100%',
-            height: 'auto',
-            bgcolor: 'common.white',
-          }}
-        />
+        <Box sx={{ position: 'relative', width: zoom ? '150%' : '100%' }}>
+          <Box
+            component="canvas"
+            ref={pdf.canvasRef}
+            role="img"
+            aria-label={`${title}, page ${pdf.renderedPage ?? currentPage}`}
+            sx={{ display: 'block', width: 1, height: 'auto', bgcolor: 'common.white' }}
+          />
+          {marked && showMarker && (
+            <Box
+              ref={markRef}
+              aria-hidden
+              sx={{
+                position: 'absolute',
+                top: `${marked.top}%`,
+                left: `${marked.left ?? 0}%`,
+                width: `${marked.width ?? 100}%`,
+                height: `${marked.height ?? 5}%`,
+                minHeight: 14,
+                border: 1,
+                borderColor: 'info.main',
+                bgcolor: (theme) => alpha(theme.palette.info.main, 0.1),
+                borderRadius: 0.5,
+                pointerEvents: 'none',
+                animation: `${revealIn} 280ms ease-out`,
+                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+              }}
+            />
+          )}
+        </Box>
         {showPageText && pdf.text && (
           <Box component="details" sx={{ p: 1 }}>
             <Box component="summary" sx={{ typography: 'body2', cursor: 'pointer' }}>

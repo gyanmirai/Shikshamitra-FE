@@ -184,6 +184,7 @@ export function renderStudentProfile(
   );
   return {
     ...view,
+    getState: store.getState,
     invalidateProfile: () => {
       store.dispatch(
         api.util.invalidateTags([{ type: studentType.student, id: `RECORDS-PROFILE-${studentId}` }])

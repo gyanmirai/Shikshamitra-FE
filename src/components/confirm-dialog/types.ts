@@ -10,6 +10,8 @@ export type ConfirmDialogProps = Omit<DialogProps, 'title' | 'content'> & {
   icon?: React.ReactNode;
   disableBackdropClick?: boolean;
   disableCancel?: boolean;
+  /** Keep cancellation available during a read-only check shown in the action button. */
+  lockOnActionLoading?: boolean;
   cancelText?: string;
   /** Opt into the standard header close control without changing existing confirmations. */
   showCloseButton?: boolean;

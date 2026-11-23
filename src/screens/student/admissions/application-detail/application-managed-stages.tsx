@@ -26,6 +26,8 @@ export function ApplicationManagedStages({
   showCompletionAction = true,
   onReadinessChange,
   onOpenAssessments,
+  openAssessmentBooking,
+  onAssessmentBookingOpened,
   ...actions
 }: {
   application: AdmissionApplication;
@@ -40,6 +42,8 @@ export function ApplicationManagedStages({
   showCompletionAction?: boolean;
   onReadinessChange?: ApplicationStageReadinessHandler;
   onOpenAssessments?: (url: string) => void;
+  openAssessmentBooking?: boolean;
+  onAssessmentBookingOpened?: () => void;
 }) {
   const stageProps = {
     applicationId: application.id,
@@ -129,6 +133,8 @@ export function ApplicationManagedStages({
         showCompletionAction={showCompletionAction}
         onReadinessChange={onReadinessChange}
         onOpenAssessments={onOpenAssessments}
+        openAssessmentBooking={selectedIsCurrent && openAssessmentBooking}
+        onAssessmentBookingOpened={onAssessmentBookingOpened}
       />
       <ApplicationDocuments
         {...stageProps}

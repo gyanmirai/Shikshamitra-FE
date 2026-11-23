@@ -5,30 +5,44 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Stack, Switch, FormControlLabel } from '@mui/material';
+import { useId } from 'react';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { Stack, Switch, Typography, FormControlLabel } from '@mui/material';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
   metadata?: AdmissionWorkflowStageTypeMetadata;
   stages?: AdmissionWorkflowStage[];
   readOnly: boolean;
+  isLastStage?: boolean;
   children?: ReactNode;
 };
+
+const settingRowSx = {
+  m: 0,
+  width: 1,
+  justifyContent: 'space-between',
+  flexDirection: 'row-reverse',
+  gap: 1,
+} as const;
 
 export function WorkflowStageBehavior({
   formik,
   metadata,
   stages = [],
   readOnly,
+  isLastStage = false,
   children,
 }: Props) {
+  const endingHelpId = useId();
+  const isDecision = formik.values.stageType === 7;
+  const isEnding = isDecision && isLastStage;
   const managed = [1, 2, 4, 5].includes(formik.values.stageType);
   const showEntryStage =
     formik.values.isEntryStage ||
     !stages.some((stage) => stage.id !== formik.values.id && stage.isEntryStage);
   const setting = (
-    field: 'isRequired' | 'allowManualSkip' | 'isEntryStage' | 'isTerminalStage',
+    field: 'isRequired' | 'allowManualSkip' | 'isEntryStage',
     label: string,
     help: string,
     disabled = false
@@ -51,7 +65,7 @@ export function WorkflowStageBehavior({
           }}
         />
       }
-      sx={{ m: 0, width: 1, justifyContent: 'space-between', flexDirection: 'row-reverse', gap: 1 }}
+      sx={settingRowSx}
     />
   );
 
@@ -79,11 +93,25 @@ export function WorkflowStageBehavior({
             'Applicants begin at this stage. The journey must have exactly one starting stage.',
             !metadata?.canBeEntryStage
           )}
-        {setting(
-          'isTerminalStage',
-          'End Of Journey',
-          'Completing this stage ends the configured journey. Admission finalization and Student Onboarding remain separate actions.'
-        )}
+        <Stack>
+          <FormControlLabel
+            label="End Of Journey"
+            control={
+              <Switch
+                size="small"
+                checked={isEnding}
+                disabled
+                slotProps={{ input: { 'aria-describedby': endingHelpId } }}
+              />
+            }
+            sx={settingRowSx}
+          />
+          <Typography id={endingHelpId} variant="caption" color="text.secondary">
+            {isDecision
+              ? 'Only the last Admission decision ends the journey.'
+              : 'Available only for Admission decision stages.'}
+          </Typography>
+        </Stack>
         {children}
       </Stack>
     </FormSectionCard>

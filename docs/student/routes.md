@@ -100,6 +100,8 @@ Student Records links to the following workspaces. Record actions and Student Se
 | Certificates     | `/student/certificates`   | `src/screens/student/records/student-certificate-workspace.tsx`, through the document screen | `Students.Records.Certificates.View`    |
 | Reports          | `/student/reports`        | `src/screens/student/reports/index.tsx`                                                      | `Students.Records.Reports.View`         |
 
+App Access opens within Student Profile Overview. Onboarding links to `/student/profile?student={id}&view=overview#student-app-access-{relationship}` for the selected Student, Father or Mother. The profile route uses Student List View and the card uses App Access View.
+
 The former `/student/studentRecords/setting` House Settings URL redirects to House Management. House creation,
 editing and deletion use the current House Management form and its dedicated `Students.Records.HouseManagement.*`
 permissions. The Student Records **Settings** menu opens the standalone I-Card template catalogue. Authorized staff access the policy workspace from Student Setup or `/student/records/settings` and its existing task links under `Students.Records.Settings.View`.

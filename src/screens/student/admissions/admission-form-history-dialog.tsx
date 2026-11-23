@@ -1,6 +1,8 @@
-import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  AdmissionForm,
+  AdmissionFormVersionSummary,
+} from 'src/redux/student/admissions/admission-forms-api';
 
-import { LoadingButton } from '@mui/lab';
 import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -14,12 +16,15 @@ import {
   Box,
   List,
   Stack,
+  Alert,
   Button,
+  Divider,
   Skeleton,
   ListItem,
+  TextField,
   Typography,
-  ListItemText,
   DialogActions,
+  InputAdornment,
 } from '@mui/material';
 import {
   useGetAdmissionFormAuditQuery,
@@ -28,40 +33,86 @@ import {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
+import { AdmissionFormComparisonResults } from './admission-form-comparison-results';
 
 type Props = {
   form: AdmissionForm | null;
   canRestore: boolean;
   onClose: () => void;
   onRestoreVersion: (id: string) => Promise<unknown>;
+  onOpenExistingDraft: (id: string) => void;
 };
 
-export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestoreVersion }: Props) {
+const restoreErrorMessage = 'Unable to restore this version. Please try again.';
+
+const versionStatuses = [
+  { name: 'Draft', color: 'default' },
+  { name: 'Published', color: 'success' },
+  { name: 'Archived', color: 'error' },
+] as const;
+
+function VersionStatus({ status }: { status: AdmissionFormVersionSummary['status'] }) {
+  const item = versionStatuses[status];
+  return item && <Label color={item.color}>{item.name}</Label>;
+}
+
+function readExistingDraftId(error: unknown) {
+  type DraftData = { DraftId?: unknown; draftId?: unknown };
+  type ErrorBody = { data?: DraftData; error?: { data?: DraftData } };
+  const value = error as { data?: ErrorBody; response?: { data?: ErrorBody } } | null;
+  const body = value?.response?.data ?? value?.data;
+  const data = body?.error?.data ?? body?.data;
+  const id = data?.DraftId ?? data?.draftId;
+  return typeof id === 'string' && id.trim() ? id : undefined;
+}
+
+export function AdmissionFormHistoryDialog({
+  form,
+  canRestore,
+  onClose,
+  onRestoreVersion,
+  onOpenExistingDraft,
+}: Props) {
   const audit = useGetAdmissionFormAuditQuery(form?.id ?? '', { skip: !form });
-  const versions = useGetAdmissionFormVersionsQuery(form?.id ?? '', { skip: !form });
+  const versions = useGetAdmissionFormVersionsQuery(form?.id ?? '', {
+    skip: !form,
+    refetchOnMountOrArgChange: true,
+  });
   const [compare, comparison] = useLazyCompareAdmissionFormVersionsQuery();
   const [selectedVersion, setSelectedVersion] = useState('');
   const [restoring, setRestoring] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [draftConflict, setDraftConflict] = useState<{ id?: string } | null>(null);
+  const familyVersions = versions.currentData ?? [];
+  const knownDraft =
+    !versions.isFetching && !versions.isError
+      ? familyVersions.find((version) => version.status === 0)
+      : undefined;
+  const existingDraftId = draftConflict?.id ?? knownDraft?.id;
+  const existingVersion = familyVersions.find((version) => version.id === existingDraftId)?.version;
+  const hasExistingDraft = canRestore && Boolean(draftConflict || knownDraft);
 
   useEffect(() => {
     setSelectedVersion('');
     setRestoreError(null);
+    setDraftConflict(null);
   }, [form?.id]);
 
   const restoreVersion = async () => {
-    if (!canRestore || !selectedVersion || restoring) return;
+    if (!canRestore || !selectedVersion || restoring || hasExistingDraft || versions.isFetching)
+      return;
     setRestoring(true);
     setRestoreError(null);
     try {
       const restored = await onRestoreVersion(selectedVersion);
       if (restored === false) {
-        setRestoreError('Unable to restore this version. Please try again.');
+        setRestoreError(restoreErrorMessage);
       }
     } catch (error) {
-      setRestoreError(
-        parseApiProblemDetail(error).detail || 'Unable to restore this version. Please try again.'
-      );
+      const problem = parseApiProblemDetail(error);
+      if (problem.errorCode === 'Admissions.FormDraftAlreadyExists')
+        setDraftConflict({ id: readExistingDraftId(error) });
+      else setRestoreError(problem.detail || restoreErrorMessage);
     } finally {
       setRestoring(false);
     }
@@ -70,12 +121,85 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
   const versionsLoading = versions.isLoading || (versions.isFetching && !versions.currentData);
   const auditLoading = audit.isLoading || (audit.isFetching && !audit.currentData);
   const auditEntries = audit.currentData ?? [];
-  const comparableVersions = (versions.currentData ?? []).filter(
-    (version) => version.id !== form?.id
-  );
+  const comparableVersions = familyVersions.filter((version) => version.id !== form?.id);
+  const selected = comparableVersions.find((version) => version.id === selectedVersion);
+  const compareToCurrent =
+    form &&
+    (selected
+      ? selected.version < form.version
+      : comparableVersions.some((version) => version.version < form.version));
+  const comparisonArgs =
+    form && selected
+      ? {
+          id: compareToCurrent ? selected.id : form.id,
+          otherId: compareToCurrent ? form.id : selected.id,
+        }
+      : undefined;
   const comparisonMatchesSelection =
-    comparison.originalArgs?.id === form?.id &&
-    comparison.originalArgs?.otherId === selectedVersion;
+    Boolean(comparisonArgs) &&
+    comparison.originalArgs?.id === comparisonArgs?.id &&
+    comparison.originalArgs?.otherId === comparisonArgs?.otherId;
+  const isComparing = comparisonMatchesSelection && comparison.isFetching;
+  const displayComparison =
+    comparisonMatchesSelection &&
+    comparison.data?.fromId === comparisonArgs?.id &&
+    comparison.data?.toId === comparisonArgs?.otherId
+      ? comparison.data
+      : undefined;
+
+  const versionSelector = (
+    <CustomSelect
+      key="select"
+      label={compareToCurrent ? 'From' : 'To'}
+      value={selected?.id ?? ''}
+      options={comparableVersions.map((version) => ({
+        value: version.id,
+        label: `Version ${version.version}`,
+        status: versionStatuses[version.status]?.name ?? '',
+      }))}
+      optionEndLabelKey="status"
+      renderValue={() =>
+        selected && (
+          <Stack direction="row" gap={1} alignItems="center">
+            Version {selected.version}
+            <VersionStatus status={selected.status} />
+          </Stack>
+        )
+      }
+      onChange={(value) => setSelectedVersion(String(value))}
+      size="small"
+      disabled={restoring}
+    />
+  );
+  const currentVersion = form && (
+    <TextField
+      key="current"
+      size="small"
+      fullWidth
+      label={compareToCurrent ? 'To' : 'From'}
+      value={`Version ${form.version}`}
+      slotProps={{
+        input: {
+          readOnly: true,
+          endAdornment: (
+            <InputAdornment position="end">
+              <VersionStatus
+                status={
+                  familyVersions.find((version) => version.id === form.id)?.status ?? form.status
+                }
+              />
+            </InputAdornment>
+          ),
+        },
+      }}
+      sx={{ minWidth: 0, '& .MuiInputBase-root': { minHeight: 40 } }}
+    />
+  );
+  const direction = (
+    <Box key="direction" sx={{ display: { xs: 'none', sm: 'flex' }, color: 'text.secondary' }}>
+      <Iconify icon="mdi:arrow-right" width={18} aria-hidden />
+    </Box>
+  );
   return (
     <CustomDialog
       open={Boolean(form)}
@@ -91,82 +215,76 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
     >
       <DialogScrollContent scrollBarProps={{ sx: { bgcolor: 'background.neutral' } }}>
         <Stack spacing={2}>
-          <FormSectionCard icon="mdi:compare" title="Compare Versions">
-            <Typography variant="body2" color="text.secondary">
-              {canRestore
-                ? 'Review structural changes or restore an older version as a new editable draft.'
-                : 'Review structural changes between saved versions.'}
-            </Typography>
+          <FormSectionCard icon="mdi:compare" title="Compare versions">
             {versionsLoading ? (
               <Skeleton variant="rounded" height={40} aria-label="Loading Form Versions" />
             ) : versions.isError ? (
-              <StudentFeedback
-                notificationKey="STU-0062"
-                presentation="toast"
-                severity="error"
-                toastAction={
-                  <Button size="small" onClick={() => versions.refetch()}>
-                    Retry
-                  </Button>
-                }
-              >
-                Unable to load form versions. Please try again.
-              </StudentFeedback>
-            ) : comparableVersions.length ? (
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1}
-                alignItems={{ sm: 'center' }}
-              >
-                <CustomSelect
-                  label="Compare With"
-                  value={selectedVersion}
-                  options={comparableVersions.map((version) => ({
-                    value: version.id,
-                    label: `Version ${version.version}`,
-                  }))}
-                  onChange={(value) => setSelectedVersion(String(value))}
-                  size="small"
-                  disabled={restoring}
-                  sx={{ flex: 1, minWidth: 0 }}
-                />
-                <LoadingButton
+              <>
+                <StudentFeedback
+                  notificationKey="STU-0062"
+                  presentation="toast"
+                  severity="error"
+                  toastAction={
+                    <Button size="small" onClick={() => versions.refetch()}>
+                      Retry
+                    </Button>
+                  }
+                >
+                  Unable to load form versions. Please try again.
+                </StudentFeedback>
+                <Button
                   variant="outlined"
                   size="small"
-                  startIcon={<Iconify icon="mdi:compare" />}
-                  loading={comparisonMatchesSelection && comparison.isFetching}
-                  disabled={!selectedVersion || comparison.isFetching || restoring}
-                  onClick={() =>
-                    form &&
-                    compare(
-                      { id: form.id, otherId: selectedVersion },
-                      !(comparisonMatchesSelection && comparison.isError)
-                    )
-                  }
+                  startIcon={<Iconify icon="mdi:refresh" />}
+                  onClick={() => versions.refetch()}
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Retry loading versions
+                </Button>
+              </>
+            ) : comparableVersions.length ? (
+              <Stack spacing={1}>
+                <Box
                   sx={{
-                    alignSelf: { xs: 'flex-start', sm: 'auto' },
-                    flexShrink: 0,
-                    whiteSpace: 'nowrap',
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: 'minmax(0, 1fr)',
+                      sm: 'minmax(0, 1fr) auto minmax(0, 1fr) auto',
+                    },
+                    gap: 1.5,
+                    alignItems: 'center',
                   }}
                 >
-                  Compare
-                </LoadingButton>
-                {canRestore && (
-                  <LoadingButton
+                  {compareToCurrent
+                    ? [versionSelector, direction, currentVersion]
+                    : [currentVersion, direction, versionSelector]}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Iconify icon="mdi:compare" />}
+                    loading={isComparing}
+                    disabled={!comparisonArgs || comparison.isFetching || restoring}
+                    sx={{ whiteSpace: 'nowrap' }}
+                    onClick={() =>
+                      comparisonArgs &&
+                      compare(comparisonArgs, !(comparisonMatchesSelection && comparison.isError))
+                    }
+                  >
+                    Compare
+                  </Button>
+                </Box>
+                {canRestore && !hasExistingDraft && (
+                  <Button
                     variant="outlined"
                     size="small"
                     startIcon={<Iconify icon="mdi:restore" />}
-                    disabled={!selectedVersion || comparison.isFetching}
+                    disabled={!selected || comparison.isFetching || versions.isFetching}
                     loading={restoring}
                     onClick={restoreVersion}
-                    sx={{
-                      alignSelf: { xs: 'flex-start', sm: 'auto' },
-                      flexShrink: 0,
-                      whiteSpace: 'nowrap',
-                    }}
+                    sx={{ alignSelf: { xs: 'flex-start', sm: 'flex-end' } }}
                   >
                     Restore as New Draft
-                  </LoadingButton>
+                  </Button>
                 )}
               </Stack>
             ) : (
@@ -174,12 +292,57 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
                 No other versions are available yet.
               </Typography>
             )}
-            {restoreError && (
-              <StudentFeedback
-                notificationKey="STU-0063"
-                presentation="persistent"
-                severity="error"
+            {hasExistingDraft && (
+              <Alert
+                severity="info"
+                variant="outlined"
+                sx={{
+                  alignItems: 'center',
+                  bgcolor: 'background.paper',
+                  borderColor: 'divider',
+                  color: 'text.primary',
+                  '& .MuiAlert-icon': { color: 'text.secondary' },
+                  '& .MuiAlert-message': { flex: 1, minWidth: 0 },
+                }}
               >
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  gap={1}
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                  justifyContent="space-between"
+                >
+                  <Typography variant="body2">
+                    {existingVersion
+                      ? `Version ${existingVersion} is already a draft.`
+                      : existingDraftId
+                        ? 'A draft already exists for this form.'
+                        : 'A draft already exists for this form. Refresh versions to find it.'}
+                  </Typography>
+                  {existingDraftId ? (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<Iconify icon="mdi:pencil-outline" />}
+                      onClick={() => onOpenExistingDraft(existingDraftId)}
+                    >
+                      Open existing draft
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<Iconify icon="mdi:refresh" />}
+                      loading={versions.isFetching}
+                      onClick={() => versions.refetch()}
+                    >
+                      Refresh versions
+                    </Button>
+                  )}
+                </Stack>
+              </Alert>
+            )}
+            {restoreError && (
+              <StudentFeedback notificationKey="STU-0063" presentation="toast" severity="error">
                 {restoreError}
               </StudentFeedback>
             )}
@@ -188,23 +351,23 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
                 Unable to compare these versions. Select Compare to try again.
               </StudentFeedback>
             )}
-            {comparisonMatchesSelection &&
-              !comparison.isFetching &&
+            {isComparing ? (
+              <>
+                <Divider />
+                <Stack spacing={1} role="status" aria-label="Comparing form versions">
+                  <Skeleton variant="rounded" width={120} height={20} />
+                  <Skeleton variant="rounded" height={112} />
+                </Stack>
+              </>
+            ) : (
               !comparison.isError &&
-              comparison.data &&
-              (comparison.data.changes.length ? (
-                <List dense disablePadding sx={{ maxHeight: 'none' }}>
-                  {comparison.data.changes.map((change, index) => (
-                    <ListItem key={`${index}:${change}`} disableGutters>
-                      <ListItemText primary={change} />
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  No structural changes between these versions.
-                </Typography>
-              ))}
+              displayComparison && (
+                <>
+                  <Divider />
+                  <AdmissionFormComparisonResults comparison={displayComparison} />
+                </>
+              )
+            )}
           </FormSectionCard>
           <FormSectionCard icon="mdi:history" title="Activity">
             {auditLoading ? (
@@ -214,18 +377,29 @@ export function AdmissionFormHistoryDialog({ form, canRestore, onClose, onRestor
                 <Skeleton variant="rounded" height={48} />
               </Stack>
             ) : audit.isError ? (
-              <StudentFeedback
-                notificationKey="STU-0065"
-                presentation="toast"
-                severity="error"
-                toastAction={
-                  <Button size="small" onClick={() => audit.refetch()}>
-                    Retry
-                  </Button>
-                }
-              >
-                Unable to load form activity. Please try again.
-              </StudentFeedback>
+              <>
+                <StudentFeedback
+                  notificationKey="STU-0065"
+                  presentation="toast"
+                  severity="error"
+                  toastAction={
+                    <Button size="small" onClick={() => audit.refetch()}>
+                      Retry
+                    </Button>
+                  }
+                >
+                  Unable to load form activity. Please try again.
+                </StudentFeedback>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Iconify icon="mdi:refresh" />}
+                  onClick={() => audit.refetch()}
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Retry loading activity
+                </Button>
+              </>
             ) : auditEntries.length ? (
               <List
                 component="ol"

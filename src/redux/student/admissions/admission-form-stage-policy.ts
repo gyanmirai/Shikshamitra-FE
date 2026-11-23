@@ -108,7 +108,7 @@ export function getAdmissionFormStageConfigurationError(
   if (!configuration) return 'The stage settings are not valid JSON. Reopen the stage.';
   const formId =
     typeof configuration.formDefinitionId === 'string' ? configuration.formDefinitionId : '';
-  if (!formId) return 'Select a published form version.';
+  if (!formId) return 'Select a published registration form.';
   if (configuration.form === undefined) return undefined;
   const policy = readAdmissionFormStagePolicy(json);
   if (!policy)

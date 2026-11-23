@@ -43,6 +43,14 @@ function savedForm(): CreateUpdateAdmissionForm {
   return JSON.parse(screen.getByTestId('form-json').textContent ?? '{}');
 }
 
+it.each([0, 1] as const)('shows inquiry toolbar actions for layout %s', (layoutType) => {
+  renderBuilder({ ...getBlankAdmissionFormInitialValues(0), layoutType });
+  expect(screen.queryAllByRole('button', { name: 'Add Step' })).toHaveLength(layoutType);
+  expect(screen.getByRole('button', { name: 'Add Section' })).toBeVisible();
+  expect(screen.getByRole('button', { name: /Grid Layout/i })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Preview' })).toBeVisible();
+});
+
 it('shows a field drag preview while reordering and removes it when cancelled', async () => {
   const values = getBlankAdmissionFormInitialValues(0);
   const section = values.sections[0];

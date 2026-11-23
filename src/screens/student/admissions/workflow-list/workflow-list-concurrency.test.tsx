@@ -62,6 +62,34 @@ afterEach(() => {
   store.dispatch(api.util.resetApiState());
 });
 
+it('passes duplicate create and clone responses to their forms without a second error message', async () => {
+  const problem = { errorCode: 'Admissions.WorkflowNameAlreadyExists' };
+  mswServer.use(
+    http.post('*/api/student/enrollment/admissions/workflows', () =>
+      HttpResponse.json(problem, { status: 403 })
+    ),
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/clone', () =>
+      HttpResponse.json(problem, { status: 403 })
+    )
+  );
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <Provider store={store}>{children}</Provider>
+  );
+  const { result } = renderHook(() => useWorkflowListActions(), { wrapper });
+  const details = { name: 'Reserved workflow', code: '' };
+
+  act(() => result.current.openClone(staleWorkflow));
+  await act(async () => {
+    await expect(result.current.create(details)).rejects.toMatchObject({ data: problem });
+    await expect(result.current.clone(details)).rejects.toMatchObject({ data: problem });
+  });
+
+  expect(result.current.cloneDialog.value).toBe(true);
+  expect(result.current.openingCreatedWorkflow).toBe(false);
+  expect(shikshaMitraToast.error).not.toHaveBeenCalled();
+  expect(shikshaMitraToast.success).not.toHaveBeenCalled();
+});
+
 it('reloads a changed workflow and requires confirmation again before deleting', async () => {
   const deleteStamps: string[] = [];
   mswServer.use(

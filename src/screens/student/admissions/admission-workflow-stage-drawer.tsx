@@ -26,6 +26,7 @@ type Props = {
   stageTypes: AdmissionWorkflowStageTypeMetadata[];
   forms: AdmissionForm[];
   stages?: AdmissionWorkflowStage[];
+  insertionSourceId?: string | null;
   readOnly: boolean;
   onClose: () => void;
   onSave: (stage: AdmissionWorkflowStage) => void | boolean;
@@ -40,6 +41,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
     stageTypes,
     forms,
     stages: suppliedStages,
+    insertionSourceId,
     readOnly,
     onClose,
     onSave,
@@ -53,7 +55,18 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
     forms: resolvedForms,
     confirmation,
     requestClose,
-  } = useWorkflowStageEditor({ open, stage, stageTypes, stages, forms, readOnly, onClose, onSave });
+    isLastStage,
+  } = useWorkflowStageEditor({
+    open,
+    stage,
+    stageTypes,
+    stages,
+    insertionSourceId,
+    forms,
+    readOnly,
+    onClose,
+    onSave,
+  });
   const invalidDocumentSettings =
     formik.values.stageType === 5 &&
     Boolean(getDocumentConfigurationError(formik.values.configurationJson));
@@ -144,6 +157,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                   stages={stages}
                   formDefinitionId={formDefinitionId}
                   readOnly={readOnly}
+                  isLastStage={isLastStage}
                   isNewStage={
                     suppliedStages !== undefined && !stages.some((item) => item.id === stage?.id)
                   }

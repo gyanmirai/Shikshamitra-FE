@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
+import type { AdmissionFormPrintSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 
+import { DEFAULT_ADMISSION_PRINT_SETTINGS } from './form-print-model';
 import { AdmissionFormPrintWorkspace } from './admission-form-print-workspace';
 
 import type { AdmissionPrintDefinition } from './form-print-model';
@@ -16,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   retryBranding: vi.fn(),
   retryOptions: vi.fn(),
   retryPreview: vi.fn(),
+  pdf: vi.fn(),
 }));
 vi.mock('./use-admission-print-preview', () => ({
   useAdmissionPrintPreview: mocks.preview,
@@ -29,10 +32,31 @@ vi.mock('src/components/scrollbar', () => ({
   Scrollbar: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('src/components/preview-document/pdf-preview', () => ({
-  default: ({ url }: { url: string }) => <div data-testid="pdf-preview">{url}</div>,
+  default: (props: { url: string }) => {
+    mocks.pdf(props);
+    return <div data-testid="pdf-preview">{props.url}</div>;
+  },
 }));
 vi.mock('./admission-print-settings', () => ({
-  AdmissionPrintSettingsPanel: () => <div>Print settings</div>,
+  AdmissionPrintSettingsPanel: ({
+    settings,
+    onChange,
+  }: {
+    settings: AdmissionFormPrintSettings;
+    onChange: (next: AdmissionFormPrintSettings) => void;
+  }) => (
+    <button
+      type="button"
+      onClick={() =>
+        onChange({
+          ...settings,
+          advanced: { sections: { SECTION_1: { columns: 1 } } },
+        })
+      }
+    >
+      Print settings
+    </button>
+  ),
 }));
 vi.mock('./admission-print-advanced-settings', () => ({
   AdmissionPrintAdvancedSettings: () => <div>Advanced print settings</div>,
@@ -203,15 +227,58 @@ describe('Registration print workspace controls', () => {
     expect(screen.queryByText('Preparing printable form…')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Print' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Download PDF' })).toBeDisabled();
-    mocks.preview.mockReturnValue({ previewUrl: 'blob:updated', url: 'blob:updated', loading: false, error: false });
+    mocks.preview.mockReturnValue({
+      previewUrl: 'blob:updated',
+      url: 'blob:updated',
+      loading: false,
+      error: false,
+    });
     rerender(<AdmissionFormPrintWorkspace {...props} />);
     expect(screen.getByTestId('pdf-preview')).toBe(preview);
     expect(preview).toHaveTextContent('blob:updated');
     expect(screen.getByRole('button', { name: 'Print' })).toBeEnabled();
   });
 
+  it('reveals the affected section only on the updated PDF', () => {
+    const onSettingsChange = vi.fn();
+    const props = { form, onSettingsChange, settings: DEFAULT_ADMISSION_PRINT_SETTINGS };
+    const { rerender } = render(<AdmissionFormPrintWorkspace {...props} />);
+    const settingsButton = screen.getByRole('button', { name: 'Print settings' });
+    settingsButton.focus();
+    fireEvent.click(settingsButton);
+
+    mocks.preview.mockReturnValue({ previewUrl: 'blob:current', loading: true, error: false });
+    const settings = onSettingsChange.mock.lastCall![0];
+    rerender(<AdmissionFormPrintWorkspace {...props} settings={settings} />);
+    expect(mocks.pdf.mock.lastCall![0].reveal).toBeUndefined();
+    expect(screen.getByRole('status', { name: /Updating print preview/ })).toBeVisible();
+
+    mocks.preview.mockReturnValue({
+      previewUrl: 'blob:updated',
+      url: 'blob:updated',
+      loading: false,
+      error: false,
+    });
+    rerender(<AdmissionFormPrintWorkspace {...props} settings={settings} />);
+    expect(mocks.pdf.mock.lastCall![0].reveal).toMatchObject({
+      target: { destination: 'section:section-1', text: ['Family'] },
+      label: expect.stringContaining('Family'),
+    });
+    const { reveal, onReveal, onPageChange } = mocks.pdf.mock.lastCall![0];
+    expect(screen.getByRole('status', { name: /Updating print preview/ })).toBeVisible();
+    act(() => onReveal(reveal.id, 3));
+    expect(screen.getByRole('status')).toHaveTextContent(/Preview updated · Family .* Page 3/);
+    act(() => onPageChange(1));
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(settingsButton).toHaveFocus();
+  });
+
   it('keeps the branding editor usable when moving between Basic and Advanced', () => {
-    mocks.branding.mockReturnValue({ branding: { logoUrl: 'logo.png' }, loading: false, error: false });
+    mocks.branding.mockReturnValue({
+      branding: { logoUrl: 'logo.png' },
+      loading: false,
+      error: false,
+    });
     render(<AdmissionFormPrintWorkspace form={form} onSettingsChange={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit branding' }));

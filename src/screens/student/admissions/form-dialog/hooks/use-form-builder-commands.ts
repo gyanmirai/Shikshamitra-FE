@@ -39,6 +39,7 @@ export function useFormBuilderCommands(
   const systemFields = systemFieldsQuery.data ?? [];
   const addCanvasUnit = (afterStepId?: string, forceStep = false) => {
     const convertingToSteps = forceStep && !isStepper;
+    if (convertingToSteps && formik.values.purpose === 0) return undefined;
     const existingStepId = convertingToSteps ? crypto.randomUUID() : undefined;
     const currentSections = convertingToSteps
       ? formik.values.sections.map((section) => ({

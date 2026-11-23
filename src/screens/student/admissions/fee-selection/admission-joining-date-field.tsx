@@ -1,5 +1,4 @@
-import type { InputAdornmentProps } from '@mui/material/InputAdornment';
-
+import { useId } from 'react';
 import { parseDateOnly } from 'src/utils/date-only';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -7,25 +6,11 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
-import { Stack, Button, Skeleton, TextField, Typography, InputAdornment } from '@mui/material';
+import { Stack, Button, Skeleton, FormLabel, TextField, Typography } from '@mui/material';
 
 import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
 
 import type { useAdmissionJoiningDate } from './use-admission-joining-date';
-
-function JoiningDatePickerAdornment({ children, ...props }: InputAdornmentProps) {
-  return (
-    <InputAdornment {...props}>
-      {props.position === 'end' && (
-        <InfoTooltipIcon
-          label="About Actual Joining Date"
-          title="Confirm When the Student Actually Joins. Registration and Onboarding Use This Same Date. Finance Uses It to Calculate Fees. The Payment Date Is Separate."
-        />
-      )}
-      {children}
-    </InputAdornment>
-  );
-}
 
 export function AdmissionJoiningDateField({
   controller,
@@ -34,6 +19,7 @@ export function AdmissionJoiningDateField({
   controller: ReturnType<typeof useAdmissionJoiningDate>;
   disabled: boolean;
 }) {
+  const fieldId = useId();
   const { state, query, value, error, stale, previewPending, previewQuery } = controller;
   if (!state && (query.isLoading || query.isFetching))
     return (
@@ -68,28 +54,36 @@ export function AdmissionJoiningDateField({
         </Button>
       </Stack>
     );
+  const readOnly = state.isLocked || !state.canEdit;
   return (
     <Stack spacing={1} sx={skeletonReducedMotionSx}>
-      {state.isLocked || !state.canEdit ? (
+      <Stack direction="row" alignItems="center">
+        <FormLabel
+          id={`${fieldId}-label`}
+          htmlFor={fieldId}
+          required={!readOnly}
+          error={Boolean(error)}
+          sx={{ typography: 'body2' }}
+        >
+          Actual Joining Date
+        </FormLabel>
+        <InfoTooltipIcon
+          label="About Actual Joining Date"
+          title={
+            readOnly
+              ? state.lockReason ||
+                'Registration and Onboarding share this saved joining date. An authorized user can confirm it before fees are prepared.'
+              : 'Registration and Onboarding share this date. Finance uses it to calculate fees. The payment date is separate.'
+          }
+        />
+      </Stack>
+      {readOnly ? (
         <TextField
-          label="Actual Joining Date"
+          id={fieldId}
           value={value?.isValid() ? value.format(ADMISSION_DATE_FORMAT) : '—'}
           fullWidth
           size="small"
-          InputProps={{
-            readOnly: true,
-            endAdornment: (
-              <InputAdornment position="end">
-                <InfoTooltipIcon
-                  label="About Actual Joining Date"
-                  title={
-                    state.lockReason ||
-                    'The Saved Joining Date Is Shared with Registration and Onboarding. An Authorized User Can Confirm It Before Fees Are Prepared.'
-                  }
-                />
-              </InputAdornment>
-            ),
-          }}
+          slotProps={{ input: { readOnly: true } }}
         />
       ) : (
         <ShakingTextField
@@ -99,15 +93,15 @@ export function AdmissionJoiningDateField({
           }}
         >
           <DatePicker
-            label="Actual Joining Date"
             format="DD/MM/YYYY"
             value={value}
             maxDate={parseDateOnly(state.academicYearEndDate) ?? undefined}
             onChange={controller.change}
             disabled={disabled || query.isFetching || controller.saving}
-            slots={{ inputAdornment: JoiningDatePickerAdornment }}
             slotProps={{
               textField: {
+                id: fieldId,
+                InputProps: { 'aria-labelledby': `${fieldId}-label` },
                 name: 'actualJoiningDate',
                 required: true,
                 fullWidth: true,

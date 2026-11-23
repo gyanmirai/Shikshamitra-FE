@@ -7,7 +7,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, cleanup, fireEvent } from '@testing-library/react';
 
 import AdmissionFormsScreen from './admission-forms';
 
@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   criteria: '',
   query: vi.fn(),
   create: vi.fn(),
+  createVersion: vi.fn(),
   preview: vi.fn(),
   canManage: true,
   editingId: null as string | null,
@@ -60,8 +61,9 @@ vi.mock('./form-list/use-form-list-actions', () => ({
     canDelete: mocks.canManage,
     editingId: mocks.editingId,
     editing: mocks.editing,
-    creatingPurpose: 0,
+    initialPurpose: 0,
     create: mocks.create,
+    createVersion: mocks.createVersion,
     preview: mocks.preview,
     ...Object.fromEntries(
       [
@@ -70,7 +72,6 @@ vi.mock('./form-list/use-form-list-actions', () => ({
         'validate',
         'requestPublish',
         'showHistory',
-        'createVersion',
         'archive',
         'requestDelete',
         'close',
@@ -118,6 +119,7 @@ vi.mock('./form-list/use-form-lifecycle-actions', () => ({
   'solar:pen-bold',
   'solar:trash-bin-trash-bold',
   'mdi:publish',
+  'mdi:source-branch-plus',
   'eva:more-vertical-fill',
   'solar:menu-dots-bold',
   'mdi:history',
@@ -270,10 +272,44 @@ describe('Admission forms list workspace', () => {
     mocks.result.isFetching = true;
     renderScreen();
     expect(screen.getByText('Fresh inquiry')).toBeInTheDocument();
-    expect(
-      screen.getByRole('progressbar', { name: 'Refreshing Admission Forms' })
-    ).toBeInTheDocument();
-    expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Refreshing Admission Forms' })).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  });
+
+  it('places Add Form and the Form Type filter in the same region', () => {
+    renderScreen();
+    const row = within(screen.getByRole('region', { name: 'Admission Form Filters' }));
+    expect(row.getByRole('combobox', { name: 'Form Type' })).toHaveTextContent('All Types');
+    expect(row.getByRole('button', { name: 'Add Form' })).toBeEnabled();
+  });
+
+  it('opens the form from a data cell and ignores clicks in Status and Actions', () => {
+    renderScreen();
+    const row = within(screen.getByRole('row', { name: 'Preview Fresh inquiry' }));
+    fireEvent.click(row.getByRole('cell', { name: 'Draft' }));
+    fireEvent.click(row.getByRole('button', { name: 'Edit' }).closest('td')!);
+    expect(mocks.preview).not.toHaveBeenCalled();
+    fireEvent.click(row.getByRole('cell', { name: 'Inquiry' }));
+    expect(mocks.preview).toHaveBeenCalledExactlyOnceWith(
+      form.id,
+      '/student/admissions/settings/forms'
+    );
+  });
+
+  it('creates a version only after confirmation and leaves Cancel free of mutations', async () => {
+    mocks.result.currentData = { items: [{ ...form, status: 1 }], totalCount: 1 };
+    mocks.createVersion.mockResolvedValue(true);
+    renderScreen();
+    fireEvent.click(screen.getByRole('button', { name: 'New Version' }));
+    const confirmation = screen.getByRole('dialog', { name: 'Create new version?' });
+    expect(within(confirmation).getByText(form.name)).toBeInTheDocument();
+    expect(mocks.createVersion).not.toHaveBeenCalled();
+    fireEvent.click(within(confirmation).getByRole('button', { name: 'Cancel' }));
+    expect(mocks.createVersion).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole('button', { name: 'New Version' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create Version' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(mocks.createVersion).toHaveBeenCalledExactlyOnceWith(form.id);
   });
 
   it('filters form types on the server, resets paging, and clears back to all types', async () => {

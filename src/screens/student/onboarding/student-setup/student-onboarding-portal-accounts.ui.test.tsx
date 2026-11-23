@@ -8,7 +8,7 @@ import { createRef } from 'react';
 import { vi, it, expect, beforeEach } from 'vitest';
 import { shikshaMitraToast } from 'src/components/toast';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
 
@@ -549,6 +549,36 @@ it('shows Off for disabled student access instead of implying its saved email is
   expect(sendButton()).toBeDisabled();
   expect(screen.getByText('Student login is turned off.')).toBeVisible();
 });
+
+it('links an exact adult with Records App Access Off and blocks selection and resend for that recipient', () => {
+  mocks.permissions = [
+    { name: 'Students.Records.StudentList.View', isGranted: true },
+    { name: 'Students.Records.AppAccess.View', isGranted: true },
+  ];
+  const fatherWithAccessOff = {
+    ...fatherRecipient,
+    appAccessOff: true,
+    delivery: {
+      id: 'father-delivery',
+      accountType: 'guardian',
+      email: fatherRecipient.email!,
+      status: 'Sent',
+      attemptCount: 1,
+    } as const,
+  };
+  setRecipients([studentRecipient, fatherWithAccessOff, motherRecipient]);
+  panel({ compact: true });
+  const parent = within(screen.getByRole('group', { name: 'Parent / guardian login' }));
+  expect(parent.getByText('Access Off', { exact: true })).toBeVisible();
+  expect(parent.getByRole('link', { name: 'Manage in Student Records' })).toHaveAttribute(
+    'href',
+    '/student/profile?student=student-1&view=overview#student-app-access-father'
+  );
+  expect(parent.getByRole('checkbox', { name: 'Send to parent / guardian' })).toBeDisabled();
+  expect(parent.getByRole('button', { name: 'Resend login details' })).toBeDisabled();
+  expect(screen.getByRole('checkbox', { name: 'Send to student' })).toBeEnabled();
+  expect(mocks.send).not.toHaveBeenCalled();
+});
 it('keeps compact missing-email guidance, legal adult choices and permission restrictions', () => {
   setRecipients([
     { ...studentRecipient, email: null, canEditEmail: true },
@@ -559,9 +589,95 @@ it('keeps compact missing-email guidance, legal adult choices and permission res
   expect(screen.getByText('No email added')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Add Student email' })).toBeEnabled();
   expect(screen.getByRole('combobox', { name: 'Person' })).toBeVisible();
-  selectStudent();
-  expect(screen.getByText('Add an email before sending login details.')).toBeVisible();
+  expect(screen.getByRole('checkbox', { name: 'Send to student' })).toBeDisabled();
   expect(sendButton()).toBeDisabled();
+});
+it.each([false, true])(
+  'keeps a parent needing review out of the send batch (review access: %s)',
+  async (canReview) => {
+    if (canReview)
+      mocks.permissions.push({ name: 'Students.Records.GuardianAccess.View', isGranted: true });
+    const selected = vi.fn();
+    setRecipients([
+      studentRecipient,
+      {
+        ...fatherRecipient,
+        canSend: false,
+        blockedReason:
+          'The saved email belongs to a conflicting, inactive or restricted account, or has no accessible verified Parent association. Ask authorized staff to review it.',
+      },
+    ]);
+    panel({ compact: true, onSelectionStateChange: selected });
+    const parent = within(screen.getByRole('group', { name: 'Parent / guardian login' }));
+    expect(parent.getByText('Parent login needs review')).toBeVisible();
+    expect(
+      parent.getByText(
+        canReview
+          ? 'Check the existing login and its linked students.'
+          : 'Ask a school administrator to review this parent login.'
+      )
+    ).toBeVisible();
+    expect(parent.getByRole('checkbox', { name: 'Send to parent / guardian' })).toBeDisabled();
+    expect(parent.queryByRole('button', { name: 'Confirm & link parent' })).not.toBeInTheDocument();
+    expect(selected).toHaveBeenLastCalledWith({
+      selectedCount: 0,
+      canSend: false,
+      parentSelected: false,
+    });
+
+    selectStudent();
+    expect(sendButton()).toBeEnabled();
+    fireEvent.click(sendButton());
+    await waitFor(() => expect(mocks.send).toHaveBeenCalledOnce());
+    expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({ accountType: 'student' }));
+  }
+);
+it('links a verified parent after consent without submitting a credentials request', async () => {
+  const current: StudentCredentialsWorkspace = {
+    ...mocks.query.currentData!,
+    recipients: [studentRecipient, { ...fatherRecipient, canSend: false }],
+    parentSibling: {
+      enabled: true,
+      familyConfirmed: false,
+      requiresOnboardingConfirmation: true,
+      isLinked: false,
+      requiresSelection: false,
+      canLink: true,
+      canRetrySetup: false,
+      status: 'Available',
+      candidates: [
+        {
+          relationship: 'father',
+          email: fatherRecipient.email!,
+          userId: 'existing-parent',
+          setupStatus: 'Ready',
+        },
+      ],
+    },
+  };
+  mocks.query.currentData = current;
+  mocks.link.mockReturnValue({
+    unwrap: async () => ({
+      ...current,
+      parentSibling: {
+        ...current.parentSibling,
+        isLinked: true,
+        linkedRelationship: 'father',
+        status: 'Linked',
+      },
+    }),
+  });
+  panel({ compact: true });
+  expect(screen.getByText('Existing parent login found')).toBeVisible();
+  expect(screen.getByRole('checkbox', { name: 'Send to parent / guardian' })).toBeDisabled();
+  const link = screen.getByRole('button', { name: 'Confirm & link parent' });
+  expect(link).toBeDisabled();
+  confirm();
+  fireEvent.click(link);
+  expect(await screen.findByText('Existing parent login linked')).toBeVisible();
+  expect(screen.getByText('The parent can sign in with their current password.')).toBeVisible();
+  expect(mocks.link).toHaveBeenCalledOnce();
+  expect(mocks.send).not.toHaveBeenCalled();
 });
 it('retains both saved parent emails in Person choices with readiness blockers', () => {
   setRecipients([

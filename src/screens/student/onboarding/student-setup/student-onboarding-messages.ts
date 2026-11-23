@@ -1,7 +1,18 @@
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
+const parentLoginReviewReasons = {
+  'The saved email belongs to a conflicting, inactive or restricted account, or has no accessible verified Parent association. Ask authorized staff to review it.':
+    'This email cannot be used for parent access. Ask your administrator to review the existing login and linked children.',
+  'The saved email is conflicting, inactive, restricted or has no accessible verified Parent association. Refresh App Login or ask authorized staff to review it.':
+    'This email cannot be used for parent access. Refresh App Login, or ask your administrator to review the existing login and linked children.',
+};
+
+export const requiresParentLoginReview = (reason?: string | null) =>
+  Boolean(reason && Object.hasOwn(parentLoginReviewReasons, reason.trim()));
+
 // Keep staff wording local to Onboarding. The shared parser serves other modules too.
 const messages: Record<string, string> = {
+  ...parentLoginReviewReasons,
   'Invalid maximumNumber in onboarding settings.':
     'Enter a whole maximum number, or leave it blank for no limit.',
   'Maximum number must not be below the starting number.':
@@ -12,10 +23,6 @@ const messages: Record<string, string> = {
     'This email already has another login or restricted access. Use a different email, or ask your administrator to review it.',
   'This Student email is already used by another account. Correct the saved email or ask authorized staff to review it.':
     'This student email already has another login. Update the saved email, or ask your administrator to review it.',
-  'The saved email belongs to a conflicting, inactive or restricted account, or has no accessible verified Parent association. Ask authorized staff to review it.':
-    'This email cannot be used for parent access. Ask your administrator to review the existing login and linked children.',
-  'The saved email is conflicting, inactive, restricted or has no accessible verified Parent association. Refresh App Login or ask authorized staff to review it.':
-    'This email cannot be used for parent access. Refresh App Login, or ask your administrator to review the existing login and linked children.',
   'Explicitly confirm the saved adult and existing Parent account in App Login before linking.':
     'Confirm this person may access the student, then choose Confirm & link parent.',
   'Confirm the current saved adult and existing Parent account before linking.':

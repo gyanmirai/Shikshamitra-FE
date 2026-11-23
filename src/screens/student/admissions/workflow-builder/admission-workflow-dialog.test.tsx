@@ -18,6 +18,7 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 const registrationForm = { id: 'registration-form', name: 'Student registration', version: 3 };
 const fetchRegistrationForms = vi.fn(async () => ({ data: [registrationForm], hasMore: false }));
+const duplicateNameMessage = 'A workflow with this name already exists. Enter a different name.';
 
 function renderCreate({
   onSave = vi.fn().mockResolvedValue(undefined),
@@ -72,18 +73,29 @@ describe('workflow creation first step', () => {
     renderCreate({ onSave });
     await user.click(screen.getByRole('radio', { name: /Blank workflow/ }));
     const name = screen.getByRole('textbox', { name: 'Workflow name *' });
+    const description = screen.getByRole('textbox', { name: 'Description' });
     fireEvent.change(name, { target: { value: 'Main Workflow' } });
+    fireEvent.change(description, { target: { value: 'Original description' } });
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(
-      await screen.findByText(
-        'A workflow with this name already exists. Please enter a different name.'
-      )
-    ).toBeVisible();
+    expect(await screen.findByText(duplicateNameMessage)).toBeVisible();
     expect(name).toHaveValue('Main Workflow');
     expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(name).toHaveAccessibleDescription(duplicateNameMessage);
+    expect(description).toHaveValue('Original description');
+    await act(async () => {
+      fireEvent.change(description, { target: { value: 'Preserve these workflow details' } });
+    });
+    expect(screen.getByText(duplicateNameMessage)).toBeVisible();
     fireEvent.change(name, { target: { value: 'Main Workflow New' } });
+    await waitFor(() => expect(screen.queryByText(duplicateNameMessage)).not.toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
+    expect(onSave).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        name: 'Main Workflow New',
+        description: 'Preserve these workflow details',
+      })
+    );
   });
 
   it('offers only Standard and Blank and saves Standard with the selected registration form', async () => {
@@ -217,12 +229,15 @@ describe('workflow creation first step', () => {
   it('allows a blank workflow without a registration form', async () => {
     const user = userEvent.setup();
     const onSave = renderCreate();
+    const blankGuidance = /In Step 2: Build Journey, add a stage with Stage Type set to Form/;
+    expect(screen.queryByText(blankGuidance)).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
       target: { value: 'Custom Admission' },
     });
     await user.click(screen.getByRole('radio', { name: /Blank workflow/ }));
     expect(screen.queryByRole('combobox', { name: 'Registration form *' })).toBeNull();
+    expect(screen.getByText(blankGuidance)).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
@@ -289,9 +304,10 @@ describe('workflow clone name validation', () => {
     const user = userEvent.setup();
     const store = configureStore({ reducer: { confirmPopup } });
     const onClose = vi.fn();
-    const onSave = vi.fn().mockRejectedValue({
-      data: { errorCode: 'Admissions.WorkflowNameAlreadyExists' },
-    });
+    const onSave = vi
+      .fn()
+      .mockRejectedValueOnce({ data: { errorCode: 'Admissions.WorkflowNameAlreadyExists' } })
+      .mockResolvedValue(undefined);
     render(
       <Provider store={store}>
         <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -309,13 +325,23 @@ describe('workflow clone name validation', () => {
     );
     expect(screen.getByRole('button', { name: 'Workflow Details information' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Clone' }));
-    expect(
-      await screen.findByText(
-        'A workflow with this name already exists. Please enter a different name.'
-      )
-    ).toBeVisible();
-    expect(screen.getByRole('textbox', { name: 'Workflow name *' })).toHaveValue('Existing copy');
+    expect(await screen.findByText(duplicateNameMessage)).toBeVisible();
+    const name = screen.getByRole('textbox', { name: 'Workflow name *' });
+    expect(name).toHaveValue('Existing copy');
     expect(onClose).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.change(screen.getByRole('textbox', { name: 'Description' }), {
+        target: { value: 'Keep this description' },
+      });
+    });
+    expect(screen.getByText(duplicateNameMessage)).toBeVisible();
+    fireEvent.change(name, { target: { value: 'New copy' } });
+    await waitFor(() => expect(screen.queryByText(duplicateNameMessage)).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Clone' }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(onSave).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: 'New copy', description: 'Keep this description' })
+    );
   });
 });
 
@@ -358,6 +384,30 @@ describe('inline workflow details editing', () => {
     return { onSave, onClose, closeRequestRef };
   }
 
+  it('keeps the edited draft open on a duplicate rename and clears the field error on correction', async () => {
+    const user = userEvent.setup();
+    const onSave = vi
+      .fn()
+      .mockRejectedValueOnce({ data: { error: { code: 'Admissions.WorkflowNameAlreadyExists' } } })
+      .mockResolvedValue(undefined);
+    const { onClose } = renderEdit(onSave);
+    const name = screen.getByRole('textbox', { name: 'Workflow name *' });
+    const description = screen.getByRole('textbox', { name: 'Description' });
+    fireEvent.change(name, { target: { value: 'Existing copy' } });
+    await user.click(screen.getByRole('button', { name: /Save & continue/i }));
+    expect(await screen.findByText(duplicateNameMessage)).toBeVisible();
+    expect(name).toHaveValue('Existing copy');
+    expect(description).toHaveValue('Saved description');
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.change(name, { target: { value: 'Corrected workflow' } });
+    await waitFor(() => expect(screen.queryByText(duplicateNameMessage)).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: /Save & continue/i }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(onSave).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: 'Corrected workflow', description: 'Saved description' })
+    );
+  });
+
   it('reuses create layout with templates, form and the actual current journey', async () => {
     const user = userEvent.setup();
     const { onSave, onClose } = renderEdit();
@@ -370,7 +420,7 @@ describe('inline workflow details editing', () => {
     ).toBeNull();
     expect(screen.queryByRole('button', { name: 'Workflow Information' })).toBeNull();
     expect(screen.queryByText('Step 1 of 2')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Close Workflow Editor' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Close Workflow Editor' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Step 1: Workflow details' })).toHaveAttribute(
       'aria-current',
       'step'
@@ -409,7 +459,7 @@ describe('inline workflow details editing', () => {
     await user.hover(info);
     expect(await screen.findByRole('tooltip')).toHaveTextContent(guidance);
     await user.unhover(info);
-    await user.click(screen.getByRole('button', { name: 'Close Workflow Editor' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(onClose).toHaveBeenCalledOnce();
     expect(onSave).not.toHaveBeenCalled();
@@ -471,7 +521,7 @@ describe('inline workflow details editing', () => {
     );
   });
 
-  it('routes breadcrumb Back through the same dirty-close guard', async () => {
+  it('guards returning to Build journey with Cancel when details are dirty', async () => {
     const user = userEvent.setup();
     const { onClose, closeRequestRef } = renderEdit();
     fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
@@ -483,10 +533,10 @@ describe('inline workflow details editing', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it('locks edit Back, Close and Save while saving', () => {
+  it('locks edit Cancel and Save while saving', () => {
     const { onClose, closeRequestRef } = renderEdit(undefined, undefined, 'Saved', true);
     expect(screen.getByRole('button', { name: 'Save & Continue' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Close Workflow Editor' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancel', hidden: true })).toBeDisabled();
     act(() => closeRequestRef.current?.());
     expect(onClose).not.toHaveBeenCalled();
     const changeYear = vi.fn();

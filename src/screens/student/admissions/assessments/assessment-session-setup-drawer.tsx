@@ -287,12 +287,10 @@ function SessionSetupContent({
                     safely before you change the session.
                   </StudentFeedback>
                 )}
-                {session && (
+                {session && session.bookedCount > 0 && (
                   <StudentFeedback notificationKey="STU-0282" presentation="inline" severity="info">
-                    Assessment type, classes and assessment choices stay unchanged for an existing
-                    session.
-                    {session.bookedCount > 0 &&
-                      ` ${session.bookedCount} applicants are booked. Booked individual-interview timing is preserved.`}
+                    {session.bookedCount} applicants are booked. Booked individual-interview timing
+                    is preserved.
                   </StudentFeedback>
                 )}
                 <AssessmentSessionSetupFields

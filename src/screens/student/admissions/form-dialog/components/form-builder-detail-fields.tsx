@@ -1,9 +1,14 @@
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
+import { useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Grid, MenuItem, TextField, Autocomplete } from '@mui/material';
+import { Grid, Button, MenuItem, TextField, Autocomplete } from '@mui/material';
 
+import { getAdmissionFormStepGroups } from '../form-step-groups';
 import { ADMISSION_FORM_LANGUAGES, AVAILABLE_ADMISSION_FORM_LANGUAGES } from '../form-languages';
 
 export function FormBuilderDetailFields({
@@ -15,6 +20,8 @@ export function FormBuilderDetailFields({
   nameConflictMessage?: string | null;
   checkingName?: boolean;
 }) {
+  const [confirmSinglePage, setConfirmSinglePage] = useState(false);
+
   return (
     <Grid container spacing={1.5}>
       <Grid size={{ xs: 12, sm: 6 }}>
@@ -42,7 +49,20 @@ export function FormBuilderDetailFields({
           size="small"
           label="Form Layout *"
           value={formik.values.layoutType}
-          onChange={(event) => formik.setFieldValue('layoutType', Number(event.target.value))}
+          onChange={(event) => {
+            const layoutType = Number(event.target.value);
+            const { purpose, layoutType: currentLayout, sections } = formik.values;
+            if (
+              purpose === 0 &&
+              currentLayout === 1 &&
+              layoutType === 0 &&
+              getAdmissionFormStepGroups(sections).length > 1
+            ) {
+              setConfirmSinglePage(true);
+              return;
+            }
+            formik.setFieldValue('layoutType', layoutType);
+          }}
         >
           <MenuItem value={0}>Single Page</MenuItem>
           <MenuItem value={1}>Step by Step</MenuItem>
@@ -116,6 +136,28 @@ export function FormBuilderDetailFields({
           ))}
         </TextField>
       </Grid>
+      <ConfirmDialog
+        open={confirmSinglePage}
+        icon="info"
+        title="Switch to Single Page?"
+        content="Sections will appear on one page. Your fields and visibility rules will be kept, and the original step groups will be available if you switch back."
+        onClose={() => setConfirmSinglePage(false)}
+        action={
+          <Button
+            type="button"
+            size="small"
+            color="inherit"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.transfer} />}
+            onClick={() => {
+              formik.setFieldValue('layoutType', 0);
+              setConfirmSinglePage(false);
+            }}
+          >
+            Switch to single page
+          </Button>
+        }
+      />
     </Grid>
   );
 }

@@ -12,12 +12,13 @@ import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import calculateAge from 'src/utils/calculate-age';
 import { fDate, formatStr } from 'src/utils/format-time';
-import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { Box, Alert, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
 
+import { StudentProfileAppAccess } from './student-profile-app-access';
 import { profileOverviewContacts } from './student-profile-overview-model';
 import { StudentParentsContactDialog } from './student-parents-contact-dialog';
 
@@ -362,6 +363,19 @@ export function StudentProfileOverview({
           )}
         </FormSectionCard>
       </Box>
+      {student.recordsAccess === 'Full' &&
+        student.status === 6 &&
+        !student.maskedFields?.includes('Identity') &&
+        hasGrantedPermission(permissions, studentPermissions.records.appAccess) && (
+          <StudentProfileAppAccess
+            key={student.studentId}
+            studentId={student.studentId}
+            canManage={hasGrantedPermission(
+              permissions,
+              studentPermissions.records.manageAppAccess
+            )}
+          />
+        )}
       <EnrollmentMilestones student={student} />
       <FormSectionCard
         aria-label="Recent Changes"

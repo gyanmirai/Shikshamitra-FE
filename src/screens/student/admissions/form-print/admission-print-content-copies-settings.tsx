@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { FormSectionCard } from 'src/components/form-section-card';
 import { BannerUpload } from 'src/components/custom-upload/banner-upload';
 import { Stack, Button, Tooltip, IconButton, Typography } from '@mui/material';
 
@@ -10,6 +9,7 @@ import { PrintInstructionsListEditor } from './print-instructions-list-editor';
 import {
   PrintSettingText,
   PrintSettingsGrid,
+  PrintSettingsCard,
   PrintSettingsCards,
   PrintSettingSelect,
   PrintSettingToggle,
@@ -59,9 +59,9 @@ export function AdmissionPrintContentCopiesSettings({
     });
   return (
     <PrintSettingsCards>
-      <FormSectionCard
+      <PrintSettingsCard
+        defaultExpanded
         title="Print Content Language"
-        sx={{ gridColumn: '1 / -1' }}
         icon={GlobalIcons.academicTextCase}
         action={
           <PrintSettingsResetButton
@@ -84,8 +84,8 @@ export function AdmissionPrintContentCopiesSettings({
             Enable English, Gujarati or Hindi in Form details to edit translated print content.
           </Typography>
         )}
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Instructions"
         icon={GlobalIcons.info}
         action={
@@ -140,8 +140,8 @@ export function AdmissionPrintContentCopiesSettings({
           disabled={!content.showInstructions || !language}
           onChange={(instructions) => updateTranslation({ instructions })}
         />
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Document Checklist"
         icon={GlobalIcons.prerequisites}
         action={
@@ -219,8 +219,8 @@ export function AdmissionPrintContentCopiesSettings({
         >
           Add document
         </Button>
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Declaration & Signatures"
         icon={GlobalIcons.edit}
         action={
@@ -329,8 +329,8 @@ export function AdmissionPrintContentCopiesSettings({
           disabled={!settings.showSignature}
           onChange={(signatureDate) => update('content', { signatureDate })}
         />
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Office Use"
         icon={GlobalIcons.building}
         action={
@@ -381,10 +381,9 @@ export function AdmissionPrintContentCopiesSettings({
             onChange={(checked) => update('content', { [key]: checked })}
           />
         ))}
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Filled Copies"
-        sx={{ gridColumn: '1 / -1' }}
         icon={GlobalIcons.copy}
         action={
           <PrintSettingsResetButton
@@ -415,7 +414,7 @@ export function AdmissionPrintContentCopiesSettings({
             onChange={(selectedChoices) => update('copies', { selectedChoices })}
           />
         </PrintSettingsGrid>
-      </FormSectionCard>
+      </PrintSettingsCard>
     </PrintSettingsCards>
   );
 }

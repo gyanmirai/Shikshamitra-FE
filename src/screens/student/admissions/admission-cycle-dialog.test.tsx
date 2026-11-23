@@ -7,8 +7,8 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { render, screen, within, waitFor } from '@testing-library/react';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
@@ -76,6 +76,37 @@ describe('admission cycle dialog', () => {
     expect(await screen.findByText('Cycle name is required')).toBeVisible();
     await waitFor(() => expect(name).toHaveFocus());
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('shows a duplicate name on the edit field and keeps the draft available for correction', async () => {
+    const user = userEvent.setup();
+    const onSave = vi
+      .fn()
+      .mockRejectedValueOnce({ data: { error: { code: 'Admissions.CycleNameAlreadyExists' } } })
+      .mockResolvedValueOnce(undefined);
+    const onClose = vi.fn();
+    renderDateDialog({ editingCycle, onSave, onClose });
+
+    const name = screen.getByRole('textbox', { name: 'Cycle name' });
+    await user.clear(name);
+    await user.type(name, 'TEST ONE');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    const message = 'An admission cycle with this name already exists. Enter a different name.';
+    expect(await screen.findByText(message)).toBeVisible();
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(name).toHaveAccessibleDescription(message);
+    expect(name).toHaveValue('TEST ONE');
+    expect(screen.getByRole('textbox', { name: 'Description' })).toHaveValue(
+      editingCycle.description
+    );
+    expect(onClose).not.toHaveBeenCalled();
+
+    await user.clear(name);
+    await user.type(name, 'New intake period');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'New intake period' }));
   });
 
   it.each(['Applications open', 'Applications close'])(

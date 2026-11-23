@@ -36,7 +36,7 @@ const mocks = vi.hoisted(() => ({
   clear: vi.fn(),
   query: vi.fn(),
   result: {
-    data: { items: [] as AdmissionCycle[], totalCount: 0 } as
+    currentData: { items: [] as AdmissionCycle[], totalCount: 0 } as
       { items: AdmissionCycle[]; totalCount: number } | undefined,
     isLoading: false,
     isFetching: false,
@@ -46,7 +46,13 @@ const mocks = vi.hoisted(() => ({
   errorToast: vi.fn(),
   dismissToast: vi.fn(),
   validate: vi.fn(),
-  guardedProps: null as null | { action: string | null; validation: unknown; onClose: () => void },
+  guardedProps: null as null | {
+    action: string | null;
+    validation: unknown;
+    validationError?: string | null;
+    onRetryValidation?: () => void;
+    onClose: () => void;
+  },
 }));
 
 vi.mock('./use-admission-cycle-filters', () => ({
@@ -171,7 +177,8 @@ describe('Admission periods table states', () => {
       rowsPerPage: 10,
     };
     Object.assign(mocks.result, {
-      data: { items: [], totalCount: 0 },
+      currentData: { items: [], totalCount: 0 },
+      data: undefined,
       isLoading: false,
       isFetching: false,
       isError: false,
@@ -191,20 +198,20 @@ describe('Admission periods table states', () => {
       mocks.validate
         .mockReturnValueOnce({ unwrap: () => stale })
         .mockReturnValueOnce({ unwrap: async () => fresh });
-      mocks.result.data = { items: [cycle], totalCount: 1 };
+      mocks.result.currentData = { items: [cycle], totalCount: 1 };
       const view = renderScreen();
       const openPublish = async () => {
-        const direct = screen.queryByRole('button', { name: 'Validate & Publish' });
+        const direct = screen.queryByRole('button', { name: 'Publish' });
         if (direct) fireEvent.click(direct);
         else {
           fireEvent.click(screen.getByRole('button', { name: /More actions/i }));
-          fireEvent.click(await screen.findByRole('menuitem', { name: 'Validate & Publish' }));
+          fireEvent.click(await screen.findByRole('menuitem', { name: 'Publish' }));
         }
       };
       await openPublish();
       expect(mocks.guardedProps?.validation).toBeNull();
       act(() => mocks.guardedProps?.onClose());
-      mocks.result.data = { items: [{ ...cycle, id: 'cycle-2' }], totalCount: 1 };
+      mocks.result.currentData = { items: [{ ...cycle, id: 'cycle-2' }], totalCount: 1 };
       // A table-state update refreshes rows without replacing the owning screen state.
       view.rerender(
         <Provider
@@ -230,14 +237,43 @@ describe('Admission periods table states', () => {
       });
       expect(mocks.guardedProps?.action).toBe('publish');
       expect(mocks.guardedProps?.validation).toEqual(fresh);
+      expect(mocks.guardedProps?.validationError).toBeNull();
       expect(mocks.errorToast).not.toHaveBeenCalled();
     }
   );
 
+  it('keeps Publish open and rechecks readiness after a failed request', async () => {
+    const valid = { isValid: true, errors: [], warnings: [] };
+    const failure = Object.assign(new Error('Readiness request failed'), {
+      data: { detail: 'Unable to check readiness.' },
+    });
+    mocks.validate
+      .mockReturnValueOnce({ unwrap: () => Promise.reject(failure) })
+      .mockReturnValueOnce({ unwrap: () => Promise.resolve(valid) });
+    mocks.result.currentData = { items: [cycle], totalCount: 1 };
+    renderScreen();
+
+    fireEvent.click(screen.getByRole('button', { name: 'More actions for Fresh Admission' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Publish' }));
+    await waitFor(() =>
+      expect(mocks.guardedProps?.validationError).toBe('Unable to check readiness.')
+    );
+    expect(mocks.guardedProps?.action).toBe('publish');
+    expect(mocks.guardedProps?.validation).toBeNull();
+
+    await act(async () => mocks.guardedProps?.onRetryValidation?.());
+    expect(mocks.validate).toHaveBeenNthCalledWith(2, cycle.id);
+    expect(mocks.guardedProps?.validation).toEqual(valid);
+    expect(mocks.guardedProps?.validationError).toBeNull();
+  });
+
   it.each(['isLoading', 'isFetching'] as const)(
     'keeps the known header, filters, table columns and pagination during %s without claiming empty',
     (loadingFlag) => {
-      mocks.result.data = undefined;
+      mocks.result.currentData = undefined;
+      if (loadingFlag === 'isFetching') {
+        Object.assign(mocks.result, { data: { items: [cycle], totalCount: 1 } });
+      }
       mocks.result[loadingFlag] = true;
       renderScreen();
 
@@ -252,13 +288,14 @@ describe('Admission periods table states', () => {
       expect(rows).toHaveLength(10);
       rows.forEach((row) => expect(row.querySelectorAll('td')).toHaveLength(8));
       expect(table.querySelector('.MuiSkeleton-root')).toBeInTheDocument();
+      expect(within(table).queryByText('Fresh Admission')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Go to next page' })).toBeInTheDocument();
       expect(screen.queryByText(/No Admission Periods/)).not.toBeInTheDocument();
     }
   );
 
   it('renders supplied records, server totals and the standard table utilities', () => {
-    mocks.result.data = { items: [cycle], totalCount: 36 };
+    mocks.result.currentData = { items: [cycle], totalCount: 36 };
     renderScreen();
 
     const table = screen.getByRole('table');
@@ -277,12 +314,16 @@ describe('Admission periods table states', () => {
     expect(screen.getByRole('button', { name: /full.?screen/i })).toBeInTheDocument();
   });
 
-  it('retains records and avoids first-load skeletons during refresh', () => {
-    mocks.result.data = { items: [cycle], totalCount: 1 };
+  it('shows the shared refresh skeleton while retaining records and headings', () => {
+    mocks.result.currentData = { items: [cycle], totalCount: 1 };
     mocks.result.isFetching = true;
     renderScreen();
     expect(screen.getByText('Fresh Admission')).toBeInTheDocument();
-    expect(screen.getByRole('table').querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
+    const status = screen.getByRole('status', { name: 'Refreshing Admission Periods' });
+    expect(status).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('table')).not.toContainElement(status);
+    expect(screen.queryByRole('progressbar', { name: 'Refreshing Admission Periods' })).toBeNull();
   });
 
   it('shows the successful first-use empty state only after loading completes', () => {
@@ -318,7 +359,7 @@ describe('Admission periods table states', () => {
   });
 
   it('announces API failure through the Student toast without a successful-empty result', async () => {
-    mocks.result.data = undefined;
+    mocks.result.currentData = undefined;
     mocks.result.isError = true;
     renderScreen();
 
@@ -346,7 +387,7 @@ describe('Admission periods table states', () => {
   });
 
   it('preserves exact Add/Delete permission gating on page and row actions', () => {
-    mocks.result.data = { items: [cycle], totalCount: 1 };
+    mocks.result.currentData = { items: [cycle], totalCount: 1 };
     renderScreen(['Students.Admissions.View']);
 
     expect(screen.getByRole('button', { name: 'Add Cycle' })).toBeDisabled();
@@ -358,7 +399,7 @@ describe('Admission periods table states', () => {
   });
 
   it('connects the rendered pagination and search to server query state', async () => {
-    mocks.result.data = { items: [cycle], totalCount: 36 };
+    mocks.result.currentData = { items: [cycle], totalCount: 36 };
     renderScreen();
 
     fireEvent.click(screen.getByRole('button', { name: 'Go to next page' }));
@@ -373,7 +414,7 @@ describe('Admission periods table states', () => {
     { heading: 'Status', option: 'Draft', changes: { status: 0, windowStatus: '' } },
     { heading: 'Window', option: 'Archived', changes: { status: '', windowStatus: 4 } },
   ])('applies the $heading header filter to server state', async ({ heading, option, changes }) => {
-    mocks.result.data = { items: [cycle], totalCount: 36 };
+    mocks.result.currentData = { items: [cycle], totalCount: 36 };
     renderScreen();
 
     fireEvent.click(screen.getByRole('button', { name: `Filter ${heading}`, hidden: true }));
@@ -409,7 +450,7 @@ describe('Admission periods table states', () => {
     mocks.filters.columnFilters =
       '[{"column":"name","type":"contains","value":"Fresh","valueType":"string"},{"column":"endDate","type":"before","value":"01-04-2027","valueType":"date"}]';
     mocks.filters.page = 2;
-    mocks.result.data = { items: [cycle], totalCount: 36 };
+    mocks.result.currentData = { items: [cycle], totalCount: 36 };
     renderScreen();
 
     expect(mocks.query).toHaveBeenLastCalledWith(

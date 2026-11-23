@@ -15,6 +15,7 @@ const row = {
   stageType: 1,
 };
 const theme = createTheme(defaultSettings);
+const applicationUrl = (id: string) => `/app/${id}`;
 
 describe('Pipeline Registration printing', () => {
   it('offers filled and blank copies without navigating to another case', () => {
@@ -23,7 +24,7 @@ describe('Pipeline Registration printing', () => {
     render(
       <AdmissionPipelineRowActions
         row={row as never}
-        href="/app/app-1"
+        applicationUrl={applicationUrl}
         onOpen={open}
         onPrint={print}
       />,
@@ -39,7 +40,7 @@ describe('Pipeline Registration printing', () => {
   });
 
   it('does not expose print actions when the owning screen has not granted access', () => {
-    render(<AdmissionPipelineRowActions row={row as never} href="/app/app-1" />);
+    render(<AdmissionPipelineRowActions row={row as never} applicationUrl={applicationUrl} />);
     expect(screen.queryByRole('button', { name: /print options/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /complete form/i })).toHaveAttribute(
       'href',

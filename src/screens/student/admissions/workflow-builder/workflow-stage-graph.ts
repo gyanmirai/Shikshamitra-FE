@@ -6,6 +6,11 @@ import type {
 
 import { duplicateStage } from '../workflow-builder-utils';
 import { isApplicationStageType } from './workflow-stage-configuration';
+import {
+  isLastWorkflowStage,
+  FINAL_DECISION_HAS_ROUTES,
+  FINAL_DECISION_REPLACEMENT,
+} from './workflow-final-stage';
 
 export type WorkflowGraph = {
   stages: AdmissionWorkflowStage[];
@@ -130,8 +135,13 @@ export function insertWorkflowStage(
     return reject(graph, 'This stage already belongs to the journey.');
   if (!isApplicationStageType(stage.stageType))
     return reject(graph, 'Choose a supported admission stage type.');
+  const isTerminalStage =
+    stage.stageType === 7 && isLastWorkflowStage(stages, stage.id, afterStageId);
   if (!stages.length)
-    return { stages: [{ ...stage, displayOrder: 0, isEntryStage: true }], transitions };
+    return {
+      stages: [{ ...stage, displayOrder: 0, isEntryStage: true, isTerminalStage }],
+      transitions,
+    };
   const ordered = orderedStages(stages);
   const source = ordered.find((item) => item.id === afterStageId);
   if (!source) return reject(graph, 'Choose where to insert this stage.');
@@ -175,12 +185,12 @@ export function insertWorkflowStage(
     !canReach(transitions, destination.id, source.id)
       ? destination
       : undefined;
-  if (stage.isTerminalStage && nextDestination)
+  if (isTerminalStage && nextDestination)
     return reject(
       graph,
-      'An ending stage cannot be inserted before another stage. Clear End of journey first.'
+      'Choose an insertion position with no following path for the final stage.'
     );
-  const newStage = { ...stage, isEntryStage: false };
+  const newStage = { ...stage, isEntryStage: false, isTerminalStage };
   const result = [...ordered];
   result.splice(ordered.findIndex((item) => item.id === source.id) + 1, 0, newStage);
   const first = existing
@@ -206,6 +216,28 @@ export function insertWorkflowStage(
   };
 }
 
+export function updateWorkflowStage(
+  graph: WorkflowGraph,
+  current: AdmissionWorkflowStage,
+  stage: AdmissionWorkflowStage
+): WorkflowGraphChange {
+  const isLastStage = isLastWorkflowStage(graph.stages, current.id);
+  if (isLastStage && current.stageType === 7 && current.isTerminalStage && stage.stageType !== 7)
+    return reject(graph, FINAL_DECISION_REPLACEMENT);
+  const isTerminalStage = isLastStage && stage.stageType === 7;
+  if (isTerminalStage && graph.transitions.some((route) => route.fromStageId === current.id))
+    return reject(graph, FINAL_DECISION_HAS_ROUTES);
+
+  return {
+    stages: graph.stages.map((item) => {
+      if (item.id === current.id)
+        return { ...stage, displayOrder: current.displayOrder, isTerminalStage };
+      return stage.isEntryStage && item.isEntryStage ? { ...item, isEntryStage: false } : item;
+    }),
+    transitions: graph.transitions,
+  };
+}
+
 function insertBeforeTerminal(
   graph: WorkflowGraph,
   stage: AdmissionWorkflowStage,
@@ -214,7 +246,6 @@ function insertBeforeTerminal(
 ): WorkflowGraphChange {
   const incoming = graph.transitions.filter((route) => route.toStageId === terminal.id);
   if (
-    stage.isTerminalStage ||
     graph.transitions.some((route) => route.fromStageId === terminal.id) ||
     incoming.length > 1 ||
     incoming.some((route) => !isPlainDefault(route))
@@ -287,6 +318,18 @@ export function removeWorkflowStage(graph: WorkflowGraph, stageId: string): Work
     );
   }
   const remaining = orderedStages(stages).filter((item) => item.id !== stageId);
+  const lastRemaining = remaining.at(-1);
+  const replacement =
+    lastRemaining?.stageType === 7 && lastRemaining.id === incoming[0]?.fromStageId
+      ? lastRemaining
+      : undefined;
+  if (
+    stage.isTerminalStage &&
+    stage.stageType === 7 &&
+    isLastWorkflowStage(stages, stage.id) &&
+    !replacement
+  )
+    return reject(graph, FINAL_DECISION_REPLACEMENT);
   if (!remaining.length)
     return {
       stages: [],
@@ -340,14 +383,12 @@ export function removeWorkflowStage(graph: WorkflowGraph, stageId: string): Work
       'Removing this stage would create a duplicate or circular path. Review its connected paths first.'
     );
   }
-  if (previous && !next && !stage.isTerminalStage)
-    return reject(graph, 'Choose the next step or mark this stage as ending before removing it.');
   return {
     stages: normalizeOrder(
       remaining.map((item) => ({
         ...item,
         ...(stage.isEntryStage && item.id === next?.id ? { isEntryStage: true } : {}),
-        ...(stage.isTerminalStage && item.id === previous?.id ? { isTerminalStage: true } : {}),
+        ...(stage.isTerminalStage && item.id === replacement?.id ? { isTerminalStage: true } : {}),
       }))
     ),
     transitions: previous && next ? [...kept, { ...incoming[0], toStageId: next.id }] : kept,

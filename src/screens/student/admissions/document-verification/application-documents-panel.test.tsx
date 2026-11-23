@@ -17,6 +17,139 @@ vi.hoisted(() => {
 });
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 describe('applicant document checklist interactions', { timeout: 15000 }, () => {
+  it('shows skeletons inside the checklist columns on the first request', async () => {
+    let finish!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    mswServer.use(
+      http.get(documentStagePath, async () => {
+        await pending;
+        return HttpResponse.json(documentSummary);
+      })
+    );
+    renderDocumentUi(
+      <ApplicationDocumentsPanel applicationId="application-1" stage={documentStage} layout="table" />
+    );
+
+    try {
+      expect(screen.getByRole('status', { name: 'Loading Document Checklist' })).toBeInTheDocument();
+      const table = within(screen.getByRole('table', { name: 'Document Requirements table' }));
+      expect(table.getAllByRole('columnheader').map((header) => header.textContent?.trim())).toEqual([
+        'Document Name',
+        'Format',
+        'Status',
+        'Actions',
+      ]);
+      const [, firstBodyRow] = table.getAllByRole('row');
+      expect(within(firstBodyRow).getAllByRole('cell')).toHaveLength(4);
+      expect(firstBodyRow.querySelectorAll('.MuiSkeleton-root')).toHaveLength(4);
+      expect(table.queryByText('No Applicable Document Requirements.')).not.toBeInTheDocument();
+    } finally {
+      finish();
+    }
+    expect(await screen.findByRole('row', { name: /Birth certificate/ })).toBeVisible();
+    expect(screen.queryByRole('status', { name: 'Loading Document Checklist' })).not.toBeInTheDocument();
+  });
+
+  it.each([false, true])('scopes manual refresh feedback to its button (request failed: %s)', async (fails) => {
+    let finish!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    let reads = 0;
+    mswServer.use(
+      http.get(documentStagePath, async () => {
+        reads += 1;
+        if (reads > 1) {
+          await pending;
+          if (fails) return HttpResponse.json({ detail: 'Checklist temporarily unavailable' }, { status: 503 });
+        }
+        return HttpResponse.json(documentSummary);
+      })
+    );
+    renderDocumentUi(
+      <ApplicationDocumentsPanel applicationId="application-1" stage={documentStage} layout="table" />
+    );
+
+    const row = await screen.findByRole('row', { name: /Birth certificate/ });
+    const refresh = screen.getByRole('button', { name: 'Refresh' });
+    try {
+      await userEvent.dblClick(refresh);
+      await waitFor(() => expect(reads).toBe(2));
+      expect(refresh).toBeDisabled();
+      expect(within(refresh).getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByRole('row', { name: /Birth certificate/ })).toBe(row);
+      expect(screen.queryByRole('status', { name: 'Refreshing Document Checklist' })).not.toBeInTheDocument();
+    } finally {
+      finish();
+    }
+    await waitFor(() => expect(refresh).toBeEnabled());
+    expect(within(refresh).queryByRole('progressbar')).not.toBeInTheDocument();
+    if (fails) expect(row).not.toBeInTheDocument();
+    else expect(screen.getByRole('row', { name: /Birth certificate/ })).toBe(row);
+  });
+
+  it.each(['Upload Document', 'Upload Replacement'])(
+    'keeps loading on the %s submit and retains the row on the resulting checklist refresh',
+    async (label) => {
+      let finishUpload!: () => void;
+      let finishRefresh!: () => void;
+      const pendingUpload = new Promise<void>((resolve) => {
+        finishUpload = resolve;
+      });
+      const pendingRefresh = new Promise<void>((resolve) => {
+        finishRefresh = resolve;
+      });
+      const summary = label === 'Upload Replacement'
+        ? { ...documentSummary, requirements: [{ ...documentSummary.requirements[0], evidence: [documentEvidence] }] }
+        : documentSummary;
+      let reads = 0;
+      let uploads = 0;
+      mswServer.use(
+        http.get(documentStagePath, async () => {
+          reads += 1;
+          if (reads > 1) await pendingRefresh;
+          return HttpResponse.json(summary);
+        }),
+        http.post(`${documentStagePath}/requirements/BIRTH_CERTIFICATE/upload`, async () => {
+          uploads += 1;
+          await pendingUpload;
+          return HttpResponse.json(summary);
+        })
+      );
+      renderDocumentUi(
+        <ApplicationDocumentsPanel applicationId="application-1" stage={documentStage} layout="table" />
+      );
+      const row = await screen.findByRole('row', { name: /Birth certificate/ });
+      await userEvent.click(within(row).getByRole('button', { name: `${label} for Birth certificate` }));
+      const dialog = within(screen.getByRole('dialog'));
+      fireEvent.change(dialog.getByRole('group', { name: 'Document' }).querySelector('input')!, {
+        target: { files: [new File(['%PDF-1.7'], 'birth.pdf', { type: 'application/pdf' })] },
+      });
+      const submit = dialog.getByRole('button', { name: 'Upload Document' });
+
+      try {
+        await userEvent.dblClick(submit);
+        await waitFor(() => expect(uploads).toBe(1));
+        expect(submit).toBeDisabled();
+        expect(within(submit).getByRole('progressbar')).toBeInTheDocument();
+
+        finishUpload();
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+        await waitFor(() => expect(reads).toBe(2));
+        expect(screen.getByRole('row', { name: /Birth certificate/ })).toBe(row);
+        expect(within(row).getByRole('button', { name: `${label} for Birth certificate` })).toBeDisabled();
+        expect(within(screen.getByRole('button', { name: 'Refresh' })).queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.queryByRole('status', { name: 'Refreshing Document Checklist' })).not.toBeInTheDocument();
+      } finally {
+        finishUpload();
+        finishRefresh();
+      }
+      await waitFor(() => expect(within(row).getByRole('button', { name: `${label} for Birth certificate` })).toBeEnabled());
+    }
+  );
+
   it.each([false, true])(
     'uses server readiness and exposes blockers in table layout (ready: %s)',
     async (ready) => {

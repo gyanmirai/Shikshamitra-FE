@@ -32,6 +32,7 @@ import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { Box, Paper, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import { StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
@@ -51,11 +52,10 @@ import {
 } from 'src/redux/student/admissions/admission-cycles-api';
 
 import { AdmissionTableText } from './admission-table-text';
-import { getCycleNameError } from './cycle-dialog/cycle-name-error';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
+import { getCycleNameError } from './cycle-dialog/cycle-name-error';
 import { AdmissionNumberingDialog } from './admission-numbering-dialog';
 import { useAdmissionCycleFilters } from './use-admission-cycle-filters';
 import { AdmissionCycleActionDialog } from './admission-cycle-action-dialog';
@@ -101,6 +101,7 @@ export default function AdmissionCyclesScreen() {
   const [guardedAction, setGuardedAction] = useState<CycleGuardedAction | null>(null);
   const [configurationMode, setConfigurationMode] = useState<CycleConfigurationMode | null>(null);
   const [publishValidation, setPublishValidation] = useState<AdmissionCycleValidation | null>(null);
+  const [publishValidationError, setPublishValidationError] = useState<string | null>(null);
   const validationRequest = useRef(0);
   const { filters, update: updateFilters, clear: clearFilters } = useAdmissionCycleFilters();
 
@@ -122,7 +123,13 @@ export default function AdmissionCyclesScreen() {
     [academicYearsData?.items]
   );
 
-  const { data, isLoading, isFetching, isError, refetch } = useGetAdmissionCyclesQuery({
+  const {
+    currentData: data,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useGetAdmissionCyclesQuery({
     search: filters.search || undefined,
     academicYearId: filters.academicYearId || undefined,
     status: filters.status === '' ? undefined : filters.status,
@@ -202,6 +209,7 @@ export default function AdmissionCyclesScreen() {
     setGuardedAction(null);
     setActionCycle(null);
     setPublishValidation(null);
+    setPublishValidationError(null);
   };
 
   const openGuardedAction = async (action: CycleGuardedAction, cycle: AdmissionCycle) => {
@@ -210,6 +218,7 @@ export default function AdmissionCyclesScreen() {
     setActionCycle(cycle);
     setGuardedAction(action);
     setPublishValidation(null);
+    setPublishValidationError(null);
     if (action === 'publish') {
       try {
         const validation = await validateCycle(cycle.id).unwrap();
@@ -217,8 +226,7 @@ export default function AdmissionCyclesScreen() {
         setPublishValidation(validation);
       } catch (error) {
         if (request !== validationRequest.current) return;
-        closeGuardedDialog();
-        shikshaMitraToast.error({ message: getErrorMessage(error) });
+        setPublishValidationError(getErrorMessage(error));
       }
     }
   };
@@ -486,7 +494,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'publish',
-                  label: `Validate & Publish`,
+                  label: 'Publish',
                   icon: GlobalIcons.publish,
                   onClick: () => openGuardedAction('publish', cycle),
                 },
@@ -549,7 +557,7 @@ export default function AdmissionCyclesScreen() {
             moreLabel={`More actions for ${cycle.name}`}
             directActionLimit={2}
             collapseOnOverflow={false}
-            sx={{ justifyContent: 'flex-end' }}
+            sx={{ justifyContent: 'flex-start' }}
             actions={actions}
           />
         );
@@ -729,17 +737,13 @@ export default function AdmissionCyclesScreen() {
               height: 1,
               minHeight: 0,
               minWidth: 0,
-              '& .MuiLinearProgress-root': {
-                height: 2,
-                bgcolor: 'transparent',
-                '& .MuiLinearProgress-bar': { bgcolor: 'text.disabled' },
-              },
             },
           }}
           tableContainerProps={{ sx: { height: 1 } }}
           errorContent={isError ? <AdmissionQueryError onRetry={() => refetch()} /> : undefined}
           isLoading={isLoading || (isFetching && !data)}
           isRefreshing={isFetching && !isLoading && Boolean(data)}
+          refreshIndicator="skeleton"
           isPagination
           isSearch
           isFilter={false}
@@ -810,6 +814,12 @@ export default function AdmissionCyclesScreen() {
         action={guardedAction}
         cycle={actionCycle}
         validation={publishValidation}
+        validationError={publishValidationError}
+        onRetryValidation={
+          guardedAction === 'publish' && actionCycle
+            ? () => openGuardedAction('publish', actionCycle)
+            : undefined
+        }
         busy={actionBusy}
         onClose={closeGuardedDialog}
         onConfirm={confirmGuardedAction}

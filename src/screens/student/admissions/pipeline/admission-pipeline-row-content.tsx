@@ -16,7 +16,7 @@ export function renderPipelineStep(row: AdmissionPipelineItem) {
         <TableOverflowText variant="body2">{name}</TableOverflowText>
         {current >= 0 && (
           <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-            {formatNumber(current + 1)} Of {formatNumber(stages.length)}
+            {formatNumber(current + 1)} of {formatNumber(stages.length)}
           </Typography>
         )}
       </Stack>
@@ -124,7 +124,9 @@ export function pipelineActionLabel(row: AdmissionPipelineItem) {
     case 1:
       return 'Complete form';
     case 2:
-      return 'Book assessment';
+      if (row.assessmentAction === 'book') return 'Book Assessment';
+      if (row.assessmentAction === 'view') return 'View Assessment';
+      return 'Continue';
     case 4:
       return 'Collect fees';
     case 5:

@@ -12,7 +12,7 @@ export interface FormSectionHeaderProps {
   title: ReactNode;
   titleTypographyProps?: Partial<TypographyProps>;
   description?: string;
-  descriptionTooltip?: string;
+  descriptionTooltip?: ReactNode;
   descriptionTooltipLabel?: string;
   action?: ReactNode;
   actionFullWidthOnMobile?: boolean;

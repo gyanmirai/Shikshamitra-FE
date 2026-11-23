@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
+import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
@@ -78,7 +79,15 @@ export default function AdmissionApplicationDetailScreen({
   applicationId,
   onClose,
   presentation = 'page',
-}: { applicationId?: string; onClose?: () => void; presentation?: 'page' | 'drawer' } = {}) {
+  openAssessmentBooking,
+  onAssessmentBookingOpened,
+}: {
+  applicationId?: string;
+  onClose?: () => void;
+  presentation?: 'page' | 'drawer';
+  openAssessmentBooking?: boolean;
+  onAssessmentBookingOpened?: () => void;
+} = {}) {
   const isDrawer = presentation === 'drawer';
   const titleId = useId();
   const focusMode = useBoolean();
@@ -89,6 +98,14 @@ export default function AdmissionApplicationDetailScreen({
   const requestedReturnUrl =
     searchParams.get('returnTo') ?? (isDrawer ? studentPaths.enrollment.pipeline : null);
   const [workspace, setWorkspace] = useState<WorkspaceView>({ view: 'journey' });
+  const [assessmentBookingOpened, setAssessmentBookingOpened] = useState(false);
+  useEffect(() => {
+    if (!openAssessmentBooking) setAssessmentBookingOpened(false);
+  }, [openAssessmentBooking]);
+  const handleAssessmentBookingOpened = () => {
+    setAssessmentBookingOpened(true);
+    onAssessmentBookingOpened?.();
+  };
   const detail = useApplicationDetail(
     applicationId ?? params.id,
     workspace.view === 'journey' ? workspace.stageId : undefined,
@@ -102,6 +119,8 @@ export default function AdmissionApplicationDetailScreen({
   const correctionDrawer = useBoolean();
   const [finalizationOpen, setFinalizationOpen] = useState(false);
   const [decisionFooter, setDecisionFooter] = useState<HTMLElement | null>(null);
+  const [registrationToolbar, setRegistrationToolbar] = useState<HTMLDivElement | null>(null);
+  const [registrationStatus, setRegistrationStatus] = useState<HTMLDivElement | null>(null);
   const [decisionDraftDirty, setDecisionDraftDirty] = useState(false);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canViewApplicantNotes = hasGrantedPermission(
@@ -370,6 +389,30 @@ export default function AdmissionApplicationDetailScreen({
             workflowQuery.refetch();
             if (!formQuery.isUninitialized) formQuery.refetch();
           }}
+          renderToolbarActions={
+            registrationToolbar && !historicalReview
+              ? (formActions) =>
+                  createPortal(
+                    <ParentRegistrationPanel
+                      placement="header"
+                      statusElement={registrationStatus}
+                      applicationId={application.id}
+                      canView={hasGrantedPermission(
+                        permissions,
+                        'Students.Admissions.Applications.View'
+                      )}
+                      canManage={detail.canEdit}
+                      disabled={navigationLocked}
+                      dirty={detail.hasUnsavedAnswers}
+                      currentValues={detail.currentValues}
+                      onBusyChange={onParentRegistrationBusyChange}
+                      onProgressChange={onParentRegistrationProgressChange}
+                      formActions={formActions}
+                    />,
+                    registrationToolbar
+                  )
+              : undefined
+          }
           onSubmit={detail.submitApplication}
           showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
           canSubmitForm={
@@ -443,6 +486,8 @@ export default function AdmissionApplicationDetailScreen({
         showCompletionAction={false}
         onReadinessChange={onStageReadinessChange}
         onOpenAssessments={(url) => leaveGuard.requestNavigation(() => router.push(url))}
+        openAssessmentBooking={openAssessmentBooking && !assessmentBookingOpened}
+        onAssessmentBookingOpened={handleAssessmentBookingOpened}
         onFeeSelectionStateChange={setFeeEditorState}
         onDeferFeeCollection={async (reason) => {
           if (!canLeaveFeeEditor || historical || !selectedCurrentStage || !detail.canAdvance)
@@ -524,6 +569,7 @@ export default function AdmissionApplicationDetailScreen({
         aria-label={selectedStage?.name ?? 'Admission Stage'}
         spacing={1.5}
         sx={
+          showDecisionReview ||
           selectedStage?.stageType === 4 ||
           isFormStage(selectedStage) ||
           selectedStage?.documentVerificationEnabled
@@ -685,7 +731,7 @@ export default function AdmissionApplicationDetailScreen({
               xs: 'minmax(0, 1fr)',
               md: 'minmax(0, 1fr) minmax(0, auto)',
             },
-            alignItems: 'center',
+            alignItems: isDrawer ? 'start' : 'center',
             gap: 1,
             p: { xs: 1.5, sm: 2 },
             borderBottom: 1,
@@ -694,21 +740,23 @@ export default function AdmissionApplicationDetailScreen({
             bgcolor: 'background.paper',
           }}
         >
-          <Box
+          <Stack
+            spacing={0.5}
             sx={{
               minWidth: 0,
-              ...(application && {
-                borderInlineStart: '3px solid',
-                borderColor: 'primary.main',
-                paddingInlineStart: (theme) => theme.spacing(1.25),
-              }),
+              ...(!isDrawer &&
+                application && {
+                  borderInlineStart: '3px solid',
+                  borderColor: 'primary.main',
+                  paddingInlineStart: (theme) => theme.spacing(1.25),
+                }),
             }}
           >
             <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
               <Typography
                 id={titleId}
                 component="h2"
-                variant="h4"
+                variant={isDrawer ? 'h6' : 'h4'}
                 sx={{ lineHeight: 1.2, overflowWrap: 'anywhere' }}
               >
                 {application?.applicantName ?? 'Application Details'}
@@ -721,43 +769,75 @@ export default function AdmissionApplicationDetailScreen({
                     height={24}
                     role="status"
                     aria-label="Refreshing Application Status"
+                    sx={{ flexShrink: 0 }}
                   />
                 ) : (
-                  <Label color={getAdmissionApplicationStatusColor(application.status)}>
+                  <Label
+                    color={getAdmissionApplicationStatusColor(application.status)}
+                    sx={{ flexShrink: 0 }}
+                  >
                     {getAdmissionApplicationStatusLabel(application.status)}
                   </Label>
                 ))}
             </Stack>
             {application && (
               <Stack
-                direction="row"
-                spacing={1}
+                direction={{ xs: 'column', sm: 'row' }}
                 useFlexGap
                 flexWrap="wrap"
-                alignItems="center"
-                aria-label="Application Academic Context"
-                sx={{ color: 'text.secondary', mt: 0.25 }}
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
+                sx={{ minWidth: 0, columnGap: 2, rowGap: 0.25 }}
               >
-                {[formatAdmissionReference(application.applicationNumber), ...academicContext].map(
-                  (value, index) => (
-                    <Typography
-                      key={`${index}-${value}`}
-                      variant="body2"
-                      component="span"
-                      sx={{
-                        overflowWrap: 'anywhere',
-                        ...(index === 0
-                          ? { fontWeight: 'fontWeightSemiBold' }
-                          : { borderLeft: 1, borderColor: 'divider', pl: 1 }),
-                      }}
-                    >
-                      {value}
-                    </Typography>
-                  )
+                <Stack
+                  role="group"
+                  aria-label="Application Reference"
+                  direction="row"
+                  spacing={0.5}
+                  alignItems="baseline"
+                  sx={{ minWidth: 0, maxWidth: 1 }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    Application
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 'fontWeightSemiBold', overflowWrap: 'anywhere' }}
+                  >
+                    {formatAdmissionReference(application.applicationNumber)}
+                  </Typography>
+                </Stack>
+                {academicContext.length > 0 && (
+                  <Stack
+                    role="group"
+                    aria-label="Application Academic Context"
+                    direction="row"
+                    spacing={0.75}
+                    useFlexGap
+                    flexWrap="wrap"
+                    sx={(theme) => ({
+                      minWidth: 0,
+                      color: 'text.secondary',
+                      '& > span + span::before': {
+                        content: '"·"',
+                        marginInlineEnd: theme.spacing(0.75),
+                      },
+                    })}
+                  >
+                    {academicContext.map((value, index) => (
+                      <Typography
+                        key={`${index}-${value}`}
+                        variant="body2"
+                        component="span"
+                        sx={{ overflowWrap: 'anywhere' }}
+                      >
+                        {value}
+                      </Typography>
+                    ))}
+                  </Stack>
                 )}
               </Stack>
             )}
-          </Box>
+          </Stack>
           <Stack
             direction="row"
             spacing={1}
@@ -767,29 +847,7 @@ export default function AdmissionApplicationDetailScreen({
             flexWrap="wrap"
             sx={{ minWidth: 0, maxWidth: 1, justifySelf: { xs: 'stretch', md: 'end' } }}
           >
-            {!isLoading &&
-              !isError &&
-              application &&
-              form &&
-              !formQuery.isError &&
-              workspace.view === 'journey' &&
-              isFormStage(selectedStage) &&
-              !historical && (
-                <ParentRegistrationPanel
-                  placement="header"
-                  applicationId={application.id}
-                  canView={hasGrantedPermission(
-                    permissions,
-                    'Students.Admissions.Applications.View'
-                  )}
-                  canManage={detail.canEdit}
-                  disabled={navigationLocked}
-                  dirty={detail.hasUnsavedAnswers}
-                  currentValues={detail.currentValues}
-                  onBusyChange={onParentRegistrationBusyChange}
-                  onProgressChange={onParentRegistrationProgressChange}
-                />
-              )}
+            <Box ref={setRegistrationStatus} sx={{ '&:empty': { display: 'none' } }} />
             <ApplicationWorkspaceActions
               disabled={navigationLocked || isError || !application}
               closeDisabled={navigationLocked}
@@ -808,6 +866,18 @@ export default function AdmissionApplicationDetailScreen({
               onClose={closeDetail}
             />
           </Stack>
+          <Box
+            ref={setRegistrationToolbar}
+            inert={workspaceBusy || undefined}
+            sx={{
+              gridColumn: '1 / -1',
+              minWidth: 0,
+              borderTop: 1,
+              borderColor: 'divider',
+              pt: 1,
+              '&:empty': { display: 'none' },
+            }}
+          />
         </Box>
         <Box sx={{ display: 'flex', flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
           <ApplicationJourneySidebar
@@ -870,6 +940,7 @@ export default function AdmissionApplicationDetailScreen({
                 >
                   <FormBusyRegion
                     fillContent
+                    flattenFieldset={showDecisionReview}
                     busy={workspaceBusy}
                     showOverlay={panelBusy.validation}
                     label={

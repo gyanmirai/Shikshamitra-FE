@@ -327,6 +327,7 @@ export type StudentCredentialsRecipient = {
   name?: string | null;
   email?: string | null;
   canSend: boolean;
+  appAccessOff?: boolean;
   canSendExistingParentHelp?: boolean;
   isMainContact?: boolean;
   blockedReason?: string | null;

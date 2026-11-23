@@ -6,10 +6,10 @@ import type {
 import { useState } from 'react';
 import { Typography } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
-import { FormSectionCard } from 'src/components/form-section-card';
 
 import {
   PrintSettingsGrid,
+  PrintSettingsCard,
   PrintSettingsCards,
   PrintSettingSelect,
   PrintSettingNumber,
@@ -61,9 +61,9 @@ export function AdmissionPrintSectionsFieldsSettings({
   };
   return (
     <PrintSettingsCards>
-      <FormSectionCard
+      <PrintSettingsCard
+        defaultExpanded
         title="Form Flow"
-        sx={{ gridColumn: '1 / -1' }}
         icon={GlobalIcons.floors}
         action={
           <PrintSettingsResetButton
@@ -88,8 +88,8 @@ export function AdmissionPrintSectionsFieldsSettings({
           checked={advanced.flow.sectionNumbers}
           onChange={(sectionNumbers) => update('flow', { sectionNumbers })}
         />
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Section Layout"
         icon={GlobalIcons.admissionDetails}
         action={
@@ -174,8 +174,8 @@ export function AdmissionPrintSectionsFieldsSettings({
             Add sections in Build form to configure their printed layout.
           </Typography>
         )}
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Field Appearance"
         icon={GlobalIcons.academicFieldSettings}
         action={
@@ -262,7 +262,7 @@ export function AdmissionPrintSectionsFieldsSettings({
             Add fields to this section to configure their printed appearance.
           </Typography>
         )}
-      </FormSectionCard>
+      </PrintSettingsCard>
     </PrintSettingsCards>
   );
 }

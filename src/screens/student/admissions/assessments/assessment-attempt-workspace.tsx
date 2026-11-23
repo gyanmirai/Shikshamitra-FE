@@ -7,7 +7,6 @@ import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 
 import { AssessmentAttemptCard } from './assessment-attempt-card';
-import { useAssessmentPermissions } from './use-assessment-permissions';
 import { useAssessmentQuickActions } from './use-assessment-quick-actions';
 
 import type { AssessmentAction } from './assessment-action-model';
@@ -25,7 +24,6 @@ export function AssessmentAttemptWorkspace({
   onAction: (action: AssessmentAction) => void;
   onStateChange: (state: { dirty: boolean; busy: boolean }) => void;
 }) {
-  const permissions = useAssessmentPermissions();
   const quick = useAssessmentQuickActions(assessment, disabled || readOnly);
   const { dirty } = quick.formik;
   const { busy } = quick;
@@ -41,17 +39,6 @@ export function AssessmentAttemptWorkspace({
   return (
     <FormBusyRegion busy={busy} label="Updating Assessment…">
       <Stack spacing={1.5} sx={{ minWidth: 0 }}>
-        {!readOnly && assessment.canBook && permissions.book && (
-          <Button
-            size="small"
-            variant="contained"
-            disabled={disabled || busy || dirty}
-            sx={{ alignSelf: 'flex-end' }}
-            onClick={() => onAction('book')}
-          >
-            {assessment.policy.schedulingEnabled ? 'Book Assessment Slot' : 'Start Assessment'}
-          </Button>
-        )}
         {quick.error && (
           <StudentFeedback notificationKey="STU-0244" presentation="persistent" severity="error">
             {quick.error}
@@ -87,17 +74,6 @@ export function AssessmentAttemptWorkspace({
             onClick={quick.discardResult}
           >
             Discard Result
-          </Button>
-        )}
-        {!assessment.attempts.length && !readOnly && assessment.canWaive && permissions.waive && (
-          <Button
-            size="small"
-            variant="outlined"
-            sx={{ alignSelf: 'flex-start' }}
-            disabled={disabled || busy || dirty}
-            onClick={() => onAction('waive')}
-          >
-            Waive Assessment
           </Button>
         )}
       </Stack>

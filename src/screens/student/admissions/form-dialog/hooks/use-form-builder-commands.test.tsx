@@ -314,6 +314,18 @@ describe('useFormBuilderCommands', () => {
     expect(fields.some((item) => item.bindingKey === 'Applicant.DateOfBirth')).toBe(false);
   });
 
+  it('does not add a step or change the layout of a single-page inquiry', async () => {
+    const initialValues = getBlankAdmissionFormInitialValues(0);
+    const user = userEvent.setup();
+    render(
+      <Formik initialValues={initialValues} onSubmit={() => undefined}>
+        {(formik) => <Commands formik={formik} selectedSectionId={initialValues.sections[0].id} />}
+      </Formik>
+    );
+    await user.click(screen.getByRole('button', { name: 'Add next step' }));
+    expect(JSON.parse(screen.getByTestId('draft').textContent!)).toEqual(initialValues);
+  });
+
   it('converts a single-page Registration to steps without losing its existing sections or fields', async () => {
     const initialValues = getBlankAdmissionFormInitialValues(1);
     initialValues.layoutType = 0;

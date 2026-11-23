@@ -13,30 +13,33 @@ import { pipelineActionLabel } from './admission-pipeline-row-content';
 
 type Props = {
   row: AdmissionPipelineItem;
-  href: string;
-  onOpen?: (id: string) => void;
+  applicationUrl: (id: string, assessmentAction?: 'book') => string;
+  onOpen?: (id: string, assessmentAction?: 'book') => void;
   onPrint?: (id: string, mode: 'blank' | 'filled') => void;
 };
 
-export function AdmissionPipelineRowActions({ row, href, onOpen, onPrint }: Props) {
+export function AdmissionPipelineRowActions({ row, applicationUrl, onOpen, onPrint }: Props) {
   const label = pipelineActionLabel(row);
+  const bookAssessment = row.stageType === 2 && row.assessmentAction === 'book';
   const reference = formatAdmissionReference(row.applicationNumber);
   const icon =
     row.stageType === 0
       ? 'mdi:account-search-outline'
       : row.stageType === 1
         ? 'mdi:clipboard-check-outline'
-        : row.stageType === 2
+        : bookAssessment
           ? 'mdi:calendar-plus-outline'
-          : row.stageType === 4
-            ? 'mdi:wallet-outline'
-            : row.stageType === 5
-              ? 'mdi:file-document-check-outline'
-              : row.stageType === 12
-                ? 'mdi:calendar-clock-outline'
-                : row.stageType === 7
-                  ? 'mdi:school-outline'
-                  : 'mdi:arrow-right-circle-outline';
+          : row.stageType === 2 && row.assessmentAction === 'view'
+            ? 'mdi:calendar-check-outline'
+            : row.stageType === 4
+              ? 'mdi:wallet-outline'
+              : row.stageType === 5
+                ? 'mdi:file-document-check-outline'
+                : row.stageType === 12
+                  ? 'mdi:calendar-clock-outline'
+                  : row.stageType === 7
+                    ? 'mdi:school-outline'
+                    : 'mdi:arrow-right-circle-outline';
   const open = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     if (
@@ -48,18 +51,28 @@ export function AdmissionPipelineRowActions({ row, href, onOpen, onPrint }: Prop
       event.button === 0
     ) {
       event.preventDefault();
-      onOpen(row.id);
+      if (bookAssessment) onOpen(row.id, 'book');
+      else onOpen(row.id);
     }
   };
   return (
     <Box
-      sx={{ display: 'inline-flex', alignItems: 'center' }}
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: { xs: 0, sm: 0.5 },
+        '& .MuiIconButton-root': {
+          width: { xs: 44, sm: 30 },
+          height: { xs: 44, sm: 30 },
+        },
+      }}
       onClick={(event) => event.stopPropagation()}
     >
       <CustomTooltip title={label} arrow>
         <IconButton
+          size="small"
           component={Link}
-          href={href}
+          href={applicationUrl(row.id, bookAssessment ? 'book' : undefined)}
           aria-label={`${label} ${reference}`}
           onClick={open}
           sx={{ color: 'text.secondary' }}

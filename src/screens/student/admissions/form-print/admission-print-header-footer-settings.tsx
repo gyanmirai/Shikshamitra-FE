@@ -1,11 +1,12 @@
 import { useId } from 'react';
 import { Typography } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
-import { FormSectionCard } from 'src/components/form-section-card';
 
+import { hasAdmissionPrintPhotoField } from './form-print-model';
 import {
   PrintSettingText,
   PrintSettingsGrid,
+  PrintSettingsCard,
   PrintSettingsCards,
   PrintSettingSelect,
   PrintSettingNumber,
@@ -30,6 +31,7 @@ export function AdmissionPrintHeaderFooterSettings({
   update,
 }: AdmissionPrintAdvancedTabProps) {
   const { header, photo, footer } = advanced;
+  const hasPhotoField = hasAdmissionPrintPhotoField(form.sections);
   const contactHelpId = useId();
   const contacts = [
     ['phone', 'School phone', branding.schoolPhone],
@@ -38,7 +40,8 @@ export function AdmissionPrintHeaderFooterSettings({
   ] as const;
   return (
     <PrintSettingsCards>
-      <FormSectionCard
+      <PrintSettingsCard
+        defaultExpanded
         title="School Details"
         icon={GlobalIcons.building}
         action={
@@ -96,8 +99,8 @@ export function AdmissionPrintHeaderFooterSettings({
           ]}
           onChange={(continuation) => update('header', { continuation })}
         />
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Title & Admission Details"
         icon={GlobalIcons.admissionDetails}
         action={
@@ -154,73 +157,102 @@ export function AdmissionPrintHeaderFooterSettings({
             onChange={(checked) => update('header', { [key]: checked })}
           />
         ))}
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Photo Space"
         icon={GlobalIcons.image}
         action={
-          <PrintSettingsResetButton
-            title="Photo Space"
-            onReset={() =>
-              onChange({
-                ...settings,
-                showPhoto: true,
-                advanced: {
-                  ...settings.advanced,
-                  photo: {
-                    placement: 'first',
-                    alignment: 'right',
-                    width: 35,
-                    height: 45,
-                    caption: '',
-                    useSaved: true,
+          hasPhotoField && (
+            <PrintSettingsResetButton
+              title="Photo Space"
+              onReset={() =>
+                onChange({
+                  ...settings,
+                  showPhoto: true,
+                  advanced: {
+                    ...settings.advanced,
+                    photo: {
+                      placement: 'first',
+                      alignment: 'right',
+                      width: 35,
+                      height: 45,
+                      caption: '',
+                      useSaved: true,
+                    },
                   },
-                },
-              })
-            }
-          />
+                })
+              }
+            />
+          )
         }
-        descriptionTooltip="Set the printed photo space. The saved student photo is used only in filled copies when enabled."
+        descriptionTooltip="Set the printed photo size and position for photo questions added in Build form. Blank copies show the photo dimensions."
       >
-        <PrintSettingToggle
-          label="Show photo space"
-          checked={settings.showPhoto}
-          onChange={(showPhoto) => onChange({ ...settings, showPhoto })}
-        />
-        <PrintSettingsGrid>
-          <PrintSettingText
-            label="Photo caption"
-            value={photo.caption}
-            disabled={!settings.showPhoto}
-            onChange={(caption) => update('photo', { caption })}
-          />
-          <PrintSettingNumber
-            label="Photo width"
-            value={photo.width}
-            min={20}
-            max={55}
-            unit="mm"
-            disabled={!settings.showPhoto}
-            onChange={(width) => update('photo', { width })}
-          />
-          <PrintSettingNumber
-            label="Photo height"
-            value={photo.height}
-            min={25}
-            max={70}
-            unit="mm"
-            disabled={!settings.showPhoto}
-            onChange={(height) => update('photo', { height })}
-          />
-        </PrintSettingsGrid>
-        <PrintSettingToggle
-          label="Use saved student photo in filled copies"
-          checked={photo.useSaved}
-          disabled={!settings.showPhoto}
-          onChange={(useSaved) => update('photo', { useSaved })}
-        />
-      </FormSectionCard>
-      <FormSectionCard
+        {hasPhotoField ? (
+          <>
+            <PrintSettingToggle
+              label="Show photo space"
+              checked={settings.showPhoto}
+              onChange={(showPhoto) => onChange({ ...settings, showPhoto })}
+            />
+            <PrintSettingSelect
+              label="Photo placement"
+              value={photo.placement}
+              disabled={!settings.showPhoto}
+              options={[
+                ['field', 'At the photo question'],
+                ['first', 'Before questions'],
+                ['last', 'After questions'],
+                ['header-top-right', 'Top right of first-page header'],
+              ]}
+              onChange={(placement) => update('photo', { placement })}
+            />
+            <PrintSettingsGrid>
+              <PrintSettingNumber
+                label="Photo width"
+                value={photo.width}
+                min={20}
+                max={55}
+                unit="mm"
+                disabled={!settings.showPhoto}
+                onChange={(width) => update('photo', { width })}
+              />
+              <PrintSettingNumber
+                label="Photo height"
+                value={photo.height}
+                min={25}
+                max={70}
+                unit="mm"
+                disabled={!settings.showPhoto}
+                onChange={(height) => update('photo', { height })}
+              />
+              <PrintSettingSelect
+                label="Photo alignment"
+                value={photo.placement === 'header-top-right' ? 'right' : photo.alignment}
+                disabled={!settings.showPhoto || photo.placement === 'header-top-right'}
+                options={ALIGNMENTS}
+                onChange={(alignment) => update('photo', { alignment })}
+              />
+              <PrintSettingText
+                label="Photo caption"
+                value={photo.caption}
+                disabled={!settings.showPhoto}
+                onChange={(caption) => update('photo', { caption })}
+              />
+            </PrintSettingsGrid>
+            <PrintSettingToggle
+              label="Use saved student photo in filled copies"
+              checked={photo.useSaved}
+              disabled={!settings.showPhoto}
+              onChange={(useSaved) => update('photo', { useSaved })}
+            />
+          </>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            Add a photo question in Build form to include a photo on the printed form.
+          </Typography>
+        )}
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="Footer"
         icon={GlobalIcons.documentIcon}
         action={
@@ -276,7 +308,7 @@ export function AdmissionPrintHeaderFooterSettings({
             onChange={(checked) => update('footer', { [key]: checked })}
           />
         ))}
-      </FormSectionCard>
+      </PrintSettingsCard>
     </PrintSettingsCards>
   );
 }

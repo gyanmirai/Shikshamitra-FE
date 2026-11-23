@@ -5,10 +5,11 @@ import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { parseDateOnly } from 'src/utils/date-only';
+import { Stack, TextField, Typography } from '@mui/material';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Stack, TextField, Typography, CircularProgress } from '@mui/material';
 import {
   type AdmissionCycle,
   type AdmissionCycleAction,
@@ -25,6 +26,8 @@ type Props = {
   action: CycleGuardedAction | null;
   cycle: AdmissionCycle | null;
   validation?: AdmissionCycleValidation | null;
+  validationError?: string | null;
+  onRetryValidation?: () => void;
   busy: boolean;
   onClose: () => void;
   onConfirm: (payload: AdmissionCycleAction | ReopenAdmissionCycle) => Promise<void>;
@@ -50,6 +53,8 @@ export function AdmissionCycleActionDialog({
   action,
   cycle,
   validation,
+  validationError,
+  onRetryValidation,
   busy,
   onClose,
   onConfirm,
@@ -86,16 +91,20 @@ export function AdmissionCycleActionDialog({
   const impact = impactReady ? impactQuery.data : null;
   const needsReason = action === 'reopen';
   const hasBlockingValidation = action === 'publish' && Boolean(validation?.errors.length);
-  const publishPending = action === 'publish' && !validation;
+  const publishPending = action === 'publish' && !validation && !validationError;
+  const retryPublish = action === 'publish' && validationError ? onRetryValidation : undefined;
+  const checking = publishPending || impactPending;
+  const startDate = parseDateOnly(cycle.startDate);
+  const endDate = parseDateOnly(cycle.endDate);
+  const windowDays = startDate && endDate ? endDate.diff(startDate, 'day') + 1 : 0;
   const cannotArchive = action === 'archive' && Boolean(impact?.activeOfferingCount);
   const cannotDelete =
     action === 'delete' &&
     Boolean((impact?.linkedOfferingCount ?? 0) > 0 || (impact?.applicationCount ?? 0) > 0);
   const disabled =
     busy ||
-    publishPending ||
-    (action === 'publish' && !validation?.isValid) ||
-    impactPending ||
+    checking ||
+    (action === 'publish' && (!validation?.isValid || Boolean(validationError))) ||
     impactError ||
     hasBlockingValidation ||
     cannotArchive ||
@@ -126,24 +135,21 @@ export function AdmissionCycleActionDialog({
       disableBackdropClick
       disableEscapeKeyDown={busy}
       disableCancel={busy}
+      lockOnActionLoading={!checking}
       icon={
-        action === 'delete'
-          ? 'error'
-          : action === 'publish' || action === 'reopen'
-            ? 'info'
-            : 'warning'
+        action === 'publish' ? (
+          <Iconify icon={GlobalIcons.info} width={24} sx={{ color: 'info.main' }} aria-hidden />
+        ) : action === 'delete' ? (
+          'error'
+        ) : action === 'reopen' ? (
+          'info'
+        ) : (
+          'warning'
+        )
       }
       title={titles[action]}
       content={
         <Stack spacing={1.5}>
-          {publishPending && (
-            <Stack direction="row" spacing={1} alignItems="center" role="status" aria-live="polite">
-              <CircularProgress size={18} aria-label="Checking Admission Cycle Readiness" />
-              <Typography variant="body2" color="text.secondary">
-                Checking Admission Cycle Readiness…
-              </Typography>
-            </Stack>
-          )}
           {action === 'delete' ? (
             <Typography variant="body2">
               The Draft Admission Cycle <strong>&ldquo;{cycle.name}&rdquo;</strong> will be
@@ -164,14 +170,6 @@ export function AdmissionCycleActionDialog({
             </Typography>
           ) : null}
 
-          {impactPending && (
-            <Stack direction="row" spacing={1} alignItems="center" role="status" aria-live="polite">
-              <CircularProgress size={18} aria-label="Checking Admission Cycle" />
-              <Typography variant="body2" color="text.secondary">
-                Checking Linked Offerings and Applications…
-              </Typography>
-            </Stack>
-          )}
           {impactError && (
             <StudentFeedback
               notificationKey="STU-0028"
@@ -187,9 +185,19 @@ export function AdmissionCycleActionDialog({
             <>
               <Typography variant="body2">
                 Publishing makes this cycle available to linked admission offerings. Applications
-                are accepted only during {dayjs(cycle.startDate).format(ADMISSION_DATE_FORMAT)}–
-                {dayjs(cycle.endDate).format(ADMISSION_DATE_FORMAT)}.
+                are accepted from {startDate?.format(ADMISSION_DATE_FORMAT) ?? '—'} to{' '}
+                {endDate?.format(ADMISSION_DATE_FORMAT) ?? '—'}
+                {windowDays > 0 && ` (${windowDays} ${windowDays === 1 ? 'day' : 'days'})`}.
               </Typography>
+              {validationError && (
+                <StudentFeedback
+                  notificationKey="admission-cycle:publish:check-failed"
+                  scopeKey={cycle.id}
+                  severity="error"
+                >
+                  {validationError}
+                </StudentFeedback>
+              )}
               {validation?.errors.map((issue) => (
                 <StudentFeedback
                   key={issue.code}
@@ -260,20 +268,30 @@ export function AdmissionCycleActionDialog({
           variant="contained"
           size="small"
           color={
-            action === 'publish'
+            action === 'publish' || action === 'close'
               ? 'inherit'
-              : action === 'delete' || action === 'archive' || action === 'close'
+              : action === 'delete' || action === 'archive'
                 ? 'error'
                 : 'primary'
           }
-          loading={busy}
-          disabled={disabled}
+          loading={busy || checking}
+          loadingPosition="start"
+          disabled={retryPublish ? busy : disabled}
           startIcon={
-            <Iconify icon={action === 'delete' ? GlobalIcons.delete : GlobalIcons.submit} />
+            <Iconify
+              icon={
+                retryPublish
+                  ? GlobalIcons.refresh
+                  : action === 'delete'
+                    ? GlobalIcons.delete
+                    : GlobalIcons.submit
+              }
+              width={18}
+            />
           }
-          onClick={confirm}
+          onClick={retryPublish ?? confirm}
         >
-          {actionLabels[action]}
+          {retryPublish ? 'Retry check' : actionLabels[action]}
         </LoadingButton>
       }
     />

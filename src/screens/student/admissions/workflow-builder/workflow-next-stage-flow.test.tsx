@@ -12,13 +12,13 @@ import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { vi, it, expect, describe, afterEach } from 'vitest';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
+import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { act, render, screen, within, waitFor, cleanup, fireEvent } from '@testing-library/react';
 
-import AdmissionWorkflowBuilder from '../admission-workflow-builder';
 import { getAdmissionWorkflowTemplate } from '../workflow-template';
+import AdmissionWorkflowBuilder from '../admission-workflow-builder';
 
 import type { WorkflowBuilderHeaderProps } from './components/workflow-builder-header';
 
@@ -26,6 +26,13 @@ vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
 const navigationPush = vi.hoisted(() => vi.fn());
+beforeEach(() => {
+  mswServer.use(
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-next/validate-preview', () =>
+      HttpResponse.json({ data: { isValid: true, issues: [] } })
+    )
+  );
+});
 vi.mock('next-auth/react', () => ({ getSession: vi.fn().mockResolvedValue(null) }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: navigationPush }),
@@ -33,7 +40,14 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('../use-admission-unsaved-changes', () => ({ useAdmissionUnsavedChanges: vi.fn() }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-vi.mock('../admission-workflow-dialog', () => ({ AdmissionWorkflowDialog: () => null }));
+vi.mock('../admission-workflow-dialog', () => ({
+  AdmissionWorkflowDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+    open ? (
+      <button type="button" onClick={onClose}>
+        Return to Build Journey
+      </button>
+    ) : null,
+}));
 vi.mock('./components/workflow-standard-template-dialog', () => ({
   WorkflowStandardTemplateDialog: () => null,
 }));
@@ -517,12 +531,29 @@ it('guards leaving the main workflow draft after a staged edit is applied', asyn
     expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
   );
   fireEvent.click(screen.getByRole('button', { name: 'Back to workflows' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Back to workflows' }));
   expect(await screen.findByText('Discard Unsaved Changes?')).toBeVisible();
   expect(navigationPush).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Return to Build Journey' }));
   expect(screen.getByText('Unsaved graph stage')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Back to workflows' }));
   fireEvent.click(screen.getByRole('button', { name: 'Back to workflows' }));
   fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(navigationPush).toHaveBeenCalledTimes(1);
   expect(screen.queryByText('Unsaved graph stage')).not.toBeInTheDocument();
+});
+
+it('blocks saving and publishing a single non-decision stage even with an old Final flag', async () => {
+  const { saves } = await setup(false, {
+    ...workflow,
+    stages: [{ ...workflow.stages[0], isTerminalStage: true }],
+    transitions: [],
+  });
+  expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Publish' })).toHaveAccessibleDescription(
+    'End of Journey must be on for the last Admission decision stage only.'
+  );
+  expect(saves).toHaveLength(0);
 });

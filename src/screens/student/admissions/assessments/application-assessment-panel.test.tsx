@@ -74,11 +74,11 @@ const query = (data = base, extra = {}) => ({
   refetch: mocks.refetch,
   ...extra,
 });
-const panel = (onComplete = vi.fn()) =>
+const panel = (onComplete = vi.fn(), compact = true) =>
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <ApplicationAssessmentPanel
-        compact
+        compact={compact}
         applicationId="application-1"
         admissionOfferingId="offering-1"
         stage={stage}
@@ -105,6 +105,7 @@ it('keeps empty requirements and start/waive actions visible in compact mode', (
   expect(screen.getByText('Attempts')).toBeVisible();
   expect(screen.getByText(`0 of ${DEFAULT_ASSESSMENT_POLICY.maxAttempts}`)).toBeVisible();
   expect(screen.getByRole('button', { name: 'Waive Assessment' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Discard Result' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Start Assessment' }));
   expect(screen.getByRole('dialog')).toHaveTextContent('Action book');
 });
@@ -221,7 +222,7 @@ it.each([false, true])(
     const { rerender } = panel();
     const attempt = screen.getByRole('article', { name: 'Assessment Attempt 1' });
     expect(attempt).toBeVisible();
-    expect(screen.getByRole('status', { name: 'Refreshing Assessment' })).toBeVisible();
+    expect(screen.getByRole('progressbar', { name: 'Refreshing Assessment' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled();
     mocks.query.mockReturnValue(query(assessment, { isError }));
     rerender(
@@ -237,7 +238,9 @@ it.each([false, true])(
         />
       </ThemeProvider>
     );
-    expect(screen.queryByRole('status', { name: 'Refreshing Assessment' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('progressbar', { name: 'Refreshing Assessment' })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('article', { name: 'Assessment Attempt 1' })).toBe(attempt);
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled();
   }
@@ -365,6 +368,29 @@ const editable = (extra: Partial<ApplicationAssessment> = {}) => ({
   canCancel: true,
   attempts: [pendingAttempt],
   ...extra,
+});
+
+it.each([true, false])('hides the waiver for a passed assessment (compact: %s)', (compact) => {
+  mocks.query.mockReturnValue(
+    query(
+      editable({
+        attempts: [
+          { ...pendingAttempt, status: 'completed', outcome: 'passed', marks: 80 },
+        ],
+        canRecordAttendance: false,
+        canCancel: false,
+        canComplete: true,
+        canWaive: true,
+      })
+    )
+  );
+  panel(vi.fn(), compact);
+  expect(screen.getByText('Passed')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Waive Assessment' })).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('button', { name: 'More Actions for Attempt 1' })
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Discard Result' })).not.toBeInTheDocument();
 });
 
 it('shows the booked session, school-local date/time and room in the attempt card', () => {
@@ -744,6 +770,39 @@ it('reports unsaved results to the page and blocks continuation until discard', 
   );
 });
 
+it('hides discard after clearing the only entered subject mark', async () => {
+  const profile = {
+    id: 'profile',
+    name: 'Class 1 entrance',
+    boardId: 'board',
+    mediumId: 'medium',
+    standardIds: ['class-1'],
+    passRule: 'overall' as const,
+    passingMarks: 20,
+    subjects: [{ code: 'english', name: 'English', totalMarks: 50, passingMarks: 20 }],
+  };
+  mocks.query.mockReturnValue(
+    query(
+      editable({
+        policy: { ...DEFAULT_ASSESSMENT_POLICY, version: 2, scoringMode: 'subjects' },
+        effectiveProfile: profile,
+        attempts: [{ ...pendingAttempt, effectiveProfile: profile }],
+        canRecordResult: true,
+      })
+    )
+  );
+  panel();
+  const field = screen.getByRole('textbox', { name: /English \/ 50/ });
+  expect(screen.queryByRole('button', { name: 'Discard Result' })).not.toBeInTheDocument();
+  fireEvent.change(field, { target: { value: '0' } });
+  expect(screen.getByRole('button', { name: 'Discard Result' })).toBeEnabled();
+  fireEvent.change(field, { target: { value: '' } });
+  await waitFor(() =>
+    expect(screen.queryByRole('button', { name: 'Discard Result' })).not.toBeInTheDocument()
+  );
+  expect(mocks.run).not.toHaveBeenCalled();
+});
+
 it('restores subject draft marks, requires every mark for submit, and saves partial drafts without continuing', async () => {
   const profile = {
     id: 'profile',
@@ -800,6 +859,13 @@ it('restores subject draft marks, requires every mark for submit, and saves part
   panel(complete);
   expect(screen.getByRole('textbox', { name: /English \/ 50/ })).toHaveValue('0');
   expect(screen.getByRole('textbox', { name: /Maths \/ 50/ })).toHaveValue('');
+  expect(screen.queryByRole('button', { name: 'Discard Result' })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole('textbox', { name: /English \/ 50/ }), {
+    target: { value: '' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Discard Result' }));
+  expect(screen.getByRole('textbox', { name: /English \/ 50/ })).toHaveValue('0');
+  expect(screen.queryByRole('button', { name: 'Discard Result' })).not.toBeInTheDocument();
   fireEvent.change(screen.getByRole('textbox', { name: /English \/ 50/ }), {
     target: { value: '15.25' },
   });

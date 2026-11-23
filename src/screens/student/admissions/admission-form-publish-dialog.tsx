@@ -1,12 +1,12 @@
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionFormUsageQuery } from 'src/redux/student/admissions/admission-forms-api';
 import {
-  Box,
   List,
   Stack,
   Button,
@@ -14,7 +14,6 @@ import {
   Typography,
   ListItemIcon,
   ListItemText,
-  CircularProgress,
 } from '@mui/material';
 
 type Props = {
@@ -37,57 +36,30 @@ export function AdmissionFormPublishDialog({
   onPublish,
 }: Props) {
   const usage = useGetAdmissionFormUsageQuery(form?.id ?? '', { skip: !form });
-  const hasIssues = Boolean(issues?.length);
-  const busy = validating || publishing;
+  const checking = validating || issues === null;
+  const validationIssues = checking ? [] : issues;
+  const hasIssues = validationIssues.length > 0;
+  const busy = checking || publishing;
 
   return (
     <ConfirmDialog
       open={Boolean(form)}
-      onClose={busy ? () => undefined : onClose}
+      onClose={onClose}
       disableBackdropClick
       disableEscapeKeyDown={busy}
       disableCancel={busy}
-      aria-labelledby="admission-form-publish-title"
-      icon={
-        hasIssues ? (
-          'error'
-        ) : (
-          <Box
-            sx={{
-              width: 36,
-              height: 36,
-              flexShrink: 0,
-              borderRadius: '50%',
-              display: 'grid',
-              placeItems: 'center',
-              bgcolor: 'info.lighter',
-              color: 'info.main',
-            }}
-          >
-            <Iconify icon="mdi:publish" width={20} />
-          </Box>
-        )
-      }
-      title={
-        <Box component="span" id="admission-form-publish-title">
-          {hasIssues ? 'Form Needs Changes' : `Publish ${form?.name ?? 'form'}?`}
-        </Box>
-      }
+      icon={hasIssues ? 'error' : 'info'}
+      title={hasIssues ? 'Form Needs Changes' : `Publish ${form?.name ?? 'form'}?`}
       sx={{ '& .MuiDialogActions-root': { p: 2, borderTop: 1, borderColor: 'divider' } }}
       content={
-        validating || issues === null ? (
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ py: 1 }}>
-            <CircularProgress size={22} />
-            <Typography variant="body2">Checking every field and rule...</Typography>
-          </Stack>
-        ) : hasIssues ? (
+        hasIssues ? (
           <Stack spacing={1}>
             <StudentFeedback notificationKey="STU-0068" presentation="persistent" severity="error">
-              Resolve all {issues.length} {issues.length === 1 ? 'Issue' : 'Issues'} before
-              publishing.
+              Resolve all {validationIssues.length}{' '}
+              {validationIssues.length === 1 ? 'Issue' : 'Issues'} before publishing.
             </StudentFeedback>
             <List dense disablePadding sx={{ maxHeight: 240, overflowY: 'auto' }}>
-              {issues.map((issue, index) => (
+              {validationIssues.map((issue, index) => (
                 <ListItem key={`${issue}-${index}`} disableGutters alignItems="flex-start">
                   <ListItemIcon sx={{ minWidth: 28, mt: 0.25 }}>
                     <Iconify icon="mdi:alert-circle-outline" color="error.main" width={18} />
@@ -126,9 +98,10 @@ export function AdmissionFormPublishDialog({
           <LoadingButton
             size="small"
             variant="contained"
-            loading={publishing || validating}
-            disabled={issues === null}
-            startIcon={<Iconify icon="mdi:publish" />}
+            color="inherit"
+            loading={busy}
+            loadingPosition="start"
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={onPublish}
           >
             Publish Form

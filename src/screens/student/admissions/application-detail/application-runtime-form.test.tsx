@@ -761,8 +761,8 @@ describe('application form step navigation', () => {
       'Student answer'
     );
     await user.click(screen.getByRole('button', { name: 'Save & Next' }));
+    expect(await screen.findByText('Health details')).toBeVisible();
     expect(onValidateStep.mock.calls).toEqual([['basic'], ['contact']]);
-    expect(screen.getByText('Health details')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Previous' }));
     expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toHaveValue(
       'Student answer'

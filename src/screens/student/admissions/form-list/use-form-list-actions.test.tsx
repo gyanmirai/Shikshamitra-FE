@@ -70,10 +70,10 @@ describe('useFormListActions editor mode', () => {
     vi.clearAllMocks();
     query.data = null;
     query.isError = false;
-    freshForm.load.mockReturnValue({
-      unwrap: () => Promise.resolve({ id: 'draft', status: 0, concurrencyStamp: 'latest' }),
+    freshForm.load.mockImplementation((id: string) => ({
+      unwrap: () => Promise.resolve(query.data ?? { id, status: 0, concurrencyStamp: 'latest' }),
       unsubscribe: vi.fn(),
-    });
+    }));
   });
 
   it('runs table validation, opens Edit for invalid choices, then publishes a corrected row with its saved stamp', async () => {
@@ -162,14 +162,105 @@ describe('useFormListActions editor mode', () => {
 
   it('retains the opened revision when a newer same-ID background snapshot arrives', async () => {
     const { result, rerender } = renderHook(() => useFormListActions());
-    act(() => result.current.edit('draft'));
     query.data = { id: 'draft', name: 'Opened form', concurrencyStamp: 'opened' } as AdmissionForm;
-    rerender();
+    await act(async () => {
+      await result.current.edit('draft');
+    });
     await waitFor(() => expect(result.current.editing?.concurrencyStamp).toBe('opened'));
     query.data = { ...query.data, name: 'Changed by another user', concurrencyStamp: 'external' };
     rerender();
     expect(result.current.editing?.concurrencyStamp).toBe('opened');
     expect(result.current.editing?.name).toBe('Opened form');
+  });
+
+  it('waits for a fresh draft revision before loading it and saves with that revision', async () => {
+    const cached = {
+      id: 'draft',
+      name: 'Cached version',
+      concurrencyStamp: 'cached',
+    } as AdmissionForm;
+    const latest = { ...cached, name: 'Fresh version', concurrencyStamp: 'fresh' };
+    query.data = cached;
+    let finish!: (value: AdmissionForm) => void;
+    const read = new Promise<AdmissionForm>((resolve) => {
+      finish = resolve;
+    });
+    freshForm.load.mockReturnValue({ unwrap: () => read, unsubscribe: vi.fn() });
+    saving.update.mockReturnValue({ unwrap: async () => latest });
+    const { result } = renderHook(() => useFormListActions());
+
+    act(() => {
+      result.current.edit('draft');
+    });
+    expect(freshForm.load).toHaveBeenCalledExactlyOnceWith('draft', false);
+    expect(result.current.editing).toBeNull();
+    await act(async () => {
+      finish(latest);
+    });
+    expect(result.current.editing).toBe(latest);
+
+    const body = { ...result.current.editing, name: 'My draft edit' } as CreateUpdateAdmissionForm;
+    await act(async () => {
+      await result.current.save(body);
+    });
+    expect(saving.update).toHaveBeenCalledExactlyOnceWith({
+      id: 'draft',
+      body: expect.objectContaining({ concurrencyStamp: 'fresh', name: 'My draft edit' }),
+    });
+    expect(result.current.editingId).toBeNull();
+  });
+
+  it('keeps the editor closed to cached data after an error and retries the fresh read', async () => {
+    const latest = { id: 'draft', status: 0, concurrencyStamp: 'fresh' } as AdmissionForm;
+    freshForm.load.mockReturnValueOnce({
+      unwrap: async () => {
+        throw new Error('Network unavailable');
+      },
+      unsubscribe: vi.fn(),
+    });
+    freshForm.load.mockReturnValueOnce({ unwrap: async () => latest, unsubscribe: vi.fn() });
+    const { result } = renderHook(() => useFormListActions());
+
+    await act(async () => {
+      await result.current.edit(latest.id);
+    });
+    expect(result.current.editing).toBeNull();
+    expect(result.current.editingError).toBe(true);
+    await act(async () => {
+      await result.current.retryEditing();
+    });
+    expect(freshForm.load.mock.calls).toEqual([
+      [latest.id, false],
+      [latest.id, false],
+    ]);
+    expect(result.current.editing).toBe(latest);
+    expect(result.current.editingError).toBe(false);
+  });
+
+  it('hands the backend draft conflict to History without showing a second toast', async () => {
+    const conflict = Object.assign(new Error('A draft already exists'), {
+      status: 400,
+      data: { errorCode: 'Admissions.FormDraftAlreadyExists', data: { DraftId: 'draft' } },
+    });
+    saving.version.mockReturnValueOnce({
+      unwrap: async () => {
+        throw conflict;
+      },
+    });
+    const { result } = renderHook(() => useFormListActions());
+
+    await act(async () => {
+      await expect(result.current.restoreVersion('published-v1')).rejects.toEqual(conflict);
+    });
+    expect(saving.version).toHaveBeenCalledExactlyOnceWith('published-v1');
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(result.current.creatingVersionId).toBeNull();
+
+    saving.version.mockReturnValueOnce({ unwrap: async () => ({ id: 'new-draft' }) });
+    await act(async () => {
+      expect(await result.current.restoreVersion('published-v1')).toBe(true);
+    });
+    expect(toast.success).toHaveBeenCalledExactlyOnceWith({ message: 'New form version created' });
   });
 
   it('does not silently refresh or retry a genuine conflict during table publication', async () => {
@@ -382,9 +473,14 @@ describe('useFormListActions editor mode', () => {
   it('opens Create with a fresh form after Edit, even if the old query data remains', async () => {
     const { result, rerender } = renderHook(() => useFormListActions());
 
-    act(() => result.current.edit('saved-form'));
-    query.data = { id: 'saved-form', name: 'Existing form' } as AdmissionForm;
-    rerender();
+    query.data = {
+      id: 'saved-form',
+      name: 'Existing form',
+      concurrencyStamp: 'opened',
+    } as AdmissionForm;
+    await act(async () => {
+      await result.current.edit('saved-form');
+    });
     await waitFor(() => expect(result.current.editing?.id).toBe('saved-form'));
 
     act(() => result.current.close());
@@ -394,15 +490,20 @@ describe('useFormListActions editor mode', () => {
     expect(result.current.dialog.value).toBe(true);
     expect(result.current.editingId).toBeNull();
     expect(result.current.editing).toBeNull();
-    expect(result.current.creatingPurpose).toBe(0);
+    expect(result.current.initialPurpose).toBe(0);
   });
 
   it('keeps the loaded Edit form stable if its query temporarily has no data', async () => {
     const { result, rerender } = renderHook(() => useFormListActions());
 
-    act(() => result.current.edit('saved-form'));
-    query.data = { id: 'saved-form', name: 'Existing form' } as AdmissionForm;
-    rerender();
+    query.data = {
+      id: 'saved-form',
+      name: 'Existing form',
+      concurrencyStamp: 'opened',
+    } as AdmissionForm;
+    await act(async () => {
+      await result.current.edit('saved-form');
+    });
     await waitFor(() => expect(result.current.editing?.id).toBe('saved-form'));
 
     query.data = null;
@@ -412,14 +513,17 @@ describe('useFormListActions editor mode', () => {
     expect(result.current.dialog.value).toBe(true);
   });
 
-  it('does not display a different form while the selected Edit form loads', () => {
+  it('does not display a different form if the fresh response has the wrong ID', async () => {
     query.data = { id: 'previous-form', name: 'Previous form' } as AdmissionForm;
     const { result } = renderHook(() => useFormListActions());
 
-    act(() => result.current.edit('next-form'));
+    await act(async () => {
+      await result.current.edit('next-form');
+    });
 
     expect(result.current.editing).toBeNull();
     expect(result.current.editingId).toBe('next-form');
+    expect(result.current.editingError).toBe(true);
   });
 
   it('keeps the delete confirmation open and explains a rejected dependency', async () => {

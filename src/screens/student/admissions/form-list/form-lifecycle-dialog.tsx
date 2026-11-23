@@ -1,8 +1,8 @@
 import type { AdmissionFormArchiveImpact } from 'src/redux/student/admissions/admission-forms-api';
 
 import { Iconify } from 'src/components/iconify';
+import { Stack, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Stack, Button, Typography, CircularProgress } from '@mui/material';
 
 import type { PendingFormLifecycle } from './use-form-lifecycle-actions';
 
@@ -51,6 +51,7 @@ export function FormLifecycleDialog({
       disableBackdropClick
       disableCancel={busy}
       disableEscapeKeyDown={busy}
+      lockOnActionLoading={!loading}
       content={
         <Stack spacing={1.5}>
           {restoring ? (
@@ -75,12 +76,6 @@ export function FormLifecycleDialog({
                 </>
               )}
             </Typography>
-          )}
-          {loading && (
-            <Stack direction="row" spacing={1} role="status" alignItems="center">
-              <CircularProgress size={16} />
-              <Typography variant="body2">Checking Form Usage…</Typography>
-            </Stack>
           )}
           {restoring && (
             <Typography variant="body2">
@@ -114,8 +109,9 @@ export function FormLifecycleDialog({
           variant="contained"
           color={restoring ? 'primary' : 'inherit'}
           size="small"
-          disabled={!canConfirm || busy}
-          loading={busy}
+          disabled={!canConfirm || busy || loading}
+          loading={loading || busy}
+          loadingPosition="start"
           startIcon={<Iconify icon={restoring ? 'mdi:restore' : 'mdi:archive-outline'} />}
           onClick={onConfirm}
         >

@@ -43,6 +43,7 @@ export function getRouteSaveError(
     !isApplicationStageType(destinationStage.stageType)
   )
     return 'Replace retired stage types before configuring their next steps.';
+  if (sourceStage.isTerminalStage) return 'The final Admission decision cannot have a next step.';
   const key = simpleRouteKey(route.conditionRuleJson);
   if (
     !route.isDefault &&

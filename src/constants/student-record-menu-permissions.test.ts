@@ -17,13 +17,14 @@ const features = [
   'Records.Transitions',
   'Records.Overrides',
   'Records.GuardianAccess',
+  'Records.AppAccess',
   'IdentityCompliance',
 ];
+const viewAddFeatures = ['Records.Overrides', 'Records.GuardianAccess', 'Records.AppAccess'];
 const names = features.flatMap((feature) =>
-  (['Records.Overrides', 'Records.GuardianAccess'].includes(feature)
-    ? ['View', 'Add']
-    : ['View', 'Add', 'Delete']
-  ).map((action) => `Students.${feature}.${action}`)
+  (viewAddFeatures.includes(feature) ? ['View', 'Add'] : ['View', 'Add', 'Delete']).map(
+    (action) => `Students.${feature}.${action}`
+  )
 );
 const studentListFeatures = [
   'Records.StudentList',
@@ -31,6 +32,7 @@ const studentListFeatures = [
   'Records.Transitions',
   'Records.Overrides',
   'Records.GuardianAccess',
+  'Records.AppAccess',
   'IdentityCompliance',
 ];
 const provider = { providerName: 'U', providerKey: 'profile-user' };
@@ -84,10 +86,7 @@ describe('Student Records menu-aligned permission matrix', () => {
       ).toEqual(
         studentListFeatures
           .flatMap((feature) =>
-            (['Records.Overrides', 'Records.GuardianAccess'].includes(feature)
-              ? ['View', 'Add']
-              : [action]
-            )
+            (viewAddFeatures.includes(feature) ? ['View', 'Add'] : [action])
               .filter((permissionAction) => permissionAction === action)
               .map((permissionAction) => `Students.${feature}.${permissionAction}`)
           )

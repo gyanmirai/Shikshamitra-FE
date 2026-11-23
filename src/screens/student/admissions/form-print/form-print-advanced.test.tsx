@@ -1,4 +1,5 @@
 // @vitest-environment node
+import type { PdfPreviewTarget } from 'src/components/preview-document/pdf-preview/find-pdf-preview-target';
 import type { AdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { act } from 'react';
@@ -8,6 +9,7 @@ import { createRequire } from 'node:module';
 import { mswServer } from 'src/test/mswServer';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { it, expect, describe, beforeAll } from 'vitest';
+import { findPdfPreviewTarget } from 'src/components/preview-document/pdf-preview/find-pdf-preview-target';
 
 import { createAdmissionFormPdfBlob } from './form-print-pdf';
 import { buildAdmissionPrintDocument } from './form-print-model';
@@ -47,7 +49,8 @@ const branding = {
 async function artifact(
   name: string,
   model: ReturnType<typeof buildAdmissionPrintDocument>,
-  paperBranding: AdmissionPrintBranding = branding
+  paperBranding: AdmissionPrintBranding = branding,
+  targets: PdfPreviewTarget[] = []
 ) {
   let blob!: Blob;
   await act(async () => {
@@ -78,69 +81,164 @@ async function artifact(
   const texts = pages.map((page) =>
     page.items.map((item) => ('str' in item ? item.str : '')).join(' ')
   );
+  const locations = await Promise.all(
+    targets.map((target) => findPdfPreviewTarget(doc, target, 1, () => true))
+  );
   await loading.destroy();
-  return { pages, texts, text: texts.join(' ') };
+  return { pages, texts, text: texts.join(' '), locations };
 }
 
 describe('Advanced Registration paper settings', () => {
-  it.each(['A4', 'A5'] as const)('fits a top-right photo beside the first-page title on %s', async (paperSize) => {
+  it('reveals the changed section and field on page 3 in the generated PDF', async () => {
     const model = buildAdmissionPrintDocument({
       definition: {
-        name: 'Registration header test',
+        name: 'Registration',
         sections: [
-          section('Student', [
-            question('STUDENT_PHOTO', {
-              label: 'Student header photo',
-              bindingType: 0,
-              bindingKey: 'Applicant.ProfilePhoto',
-              validationJson: '{"format":"photo"}',
-            }),
-            question('STUDENT_NAME', { label: 'Student name' }),
-          ]),
-          section('Family', [
-            question('OTHER_PHOTO', { label: 'Parent photo', validationJson: '{"format":"photo"}' }),
-          ], { displayOrder: 1 }),
+          section('FIRST', [question('FIRST_NAME', { label: 'Student name' })], {
+            name: 'Student details',
+          }),
+          section('SECOND', [question('FAMILY')], { displayOrder: 1 }),
+          section('THIRD', [question('THIRD_NAME', { label: 'Student name' })], {
+            name: 'Student details',
+            displayOrder: 2,
+          }),
         ],
       },
-      mode: 'blank',
       values: {},
+      mode: 'blank',
       settings: {
-        paperSize,
-        showPhoto: true,
-        showSignature: false,
-        advanced: {
-          photo: { placement: 'header-top-right', alignment: 'left', width: 35, height: 45 },
-          header: { continuation: 'full' },
-          sections: { FAMILY: { startNewPage: true } },
-        },
+        advanced: { sections: { SECOND: { startNewPage: true }, THIRD: { startNewPage: true } } },
       },
     });
-    const result = await artifact(`header-photo-${paperSize}`, model, {
-      ...branding,
-      bannerUrl:
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAGklEQVR4AWO8I6LxnwEJMDGgASYGNMDEgAYAifgCH8XBj9IAAAAASUVORK5CYII=',
-    });
-    const firstPage = result.pages[0];
-    const textAt = (label: string) => {
-      const item = firstPage.items.find((text) => 'str' in text && text.str.includes(label));
-      if (!item || !('transform' in item)) throw new Error(`Missing "${label}" on page 1.`);
-      return item;
-    };
-    const title = textAt('Registration header test');
-    const photo = textAt('Student header photo');
-    const registration = textAt('Registration No.');
-    const name = textAt('Student name');
-    const photoLeft = firstPage.viewport.width - ((12 + 35) * 72) / 25.4;
-    expect(title.transform[4] + title.width).toBeLessThan(photoLeft);
-    expect(photo.transform[4]).toBeGreaterThan(photoLeft);
-    expect(photo.transform[5]).toBeGreaterThan(registration.transform[5]);
-    expect(registration.transform[5]).toBeGreaterThan(name.transform[5]);
-    expect(result.texts.slice(1).join(' ')).not.toContain('Student header photo');
-    expect(result.texts.slice(1).join(' ')).toContain('Parent photo');
+    const { locations } = await artifact('reveal-page-three', model, {}, [
+      { destination: 'section:THIRD', text: ['Student details'] },
+      {
+        destination: 'field:THIRD:THIRD_NAME',
+        text: ['Student name'],
+        afterText: 'Student details',
+      },
+    ]);
+    expect(locations).toMatchObject([{ page: 3 }, { page: 3 }]);
+  });
+
+  it.each(['A4', 'A5'] as const)(
+    'fits a top-right photo beside the first-page title on %s',
+    async (paperSize) => {
+      const model = buildAdmissionPrintDocument({
+        definition: {
+          name: 'Registration header test',
+          sections: [
+            section('Student', [
+              question('STUDENT_PHOTO', {
+                label: 'Student header photo',
+                bindingType: 0,
+                bindingKey: 'Applicant.ProfilePhoto',
+                validationJson: '{"format":"photo"}',
+              }),
+              question('STUDENT_NAME', { label: 'Student name' }),
+            ]),
+            section(
+              'Family',
+              [
+                question('OTHER_PHOTO', {
+                  label: 'Parent photo',
+                  validationJson: '{"format":"photo"}',
+                }),
+              ],
+              { displayOrder: 1 }
+            ),
+          ],
+        },
+        mode: 'blank',
+        values: {},
+        settings: {
+          paperSize,
+          showPhoto: true,
+          showSignature: false,
+          advanced: {
+            photo: { placement: 'header-top-right', alignment: 'left', width: 35, height: 45 },
+            header: { continuation: 'full' },
+            sections: { FAMILY: { startNewPage: true } },
+          },
+        },
+      });
+      const result = await artifact(`header-photo-${paperSize}`, model, {
+        ...branding,
+        bannerUrl:
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAGklEQVR4AWO8I6LxnwEJMDGgASYGNMDEgAYAifgCH8XBj9IAAAAASUVORK5CYII=',
+      });
+      const firstPage = result.pages[0];
+      const textAt = (label: string) => {
+        const item = firstPage.items.find((text) => 'str' in text && text.str.includes(label));
+        if (!item || !('transform' in item)) throw new Error(`Missing "${label}" on page 1.`);
+        return item;
+      };
+      const title = textAt('Registration header test');
+      const photo = textAt('Student header photo');
+      const registration = textAt('Registration No.');
+      const name = textAt('Student name');
+      const photoLeft = firstPage.viewport.width - ((12 + 35) * 72) / 25.4;
+      expect(title.transform[4] + title.width).toBeLessThan(photoLeft);
+      expect(photo.transform[4]).toBeGreaterThan(photoLeft);
+      expect(photo.transform[5]).toBeGreaterThan(registration.transform[5]);
+      expect(registration.transform[5]).toBeGreaterThan(name.transform[5]);
+      expect(result.texts.slice(1).join(' ')).not.toContain('Student header photo');
+      expect(result.texts.slice(1).join(' ')).toContain('Parent photo');
+      expect(result.texts[0]).toContain('35 × 45 mm');
+    }
+  );
+
+  it.each(['first', 'last', 'field', 'header-top-right'] as const)(
+    'omits the %s photo space when no photo question is printable',
+    async (placement) => {
+      const result = await artifact(
+        `no-configured-photo-${placement}`,
+        buildAdmissionPrintDocument({
+          definition: { name: 'Registration', sections: [section('Student')] },
+          values: {},
+          mode: 'blank',
+          settings: {
+            showPhoto: true,
+            advanced: { photo: { placement, caption: 'Photo space sample' } },
+          },
+        })
+      );
+      expect(result.text).toContain('NAME');
+      expect(result.text).not.toMatch(/Photograph|Photo space sample/);
+    }
+  );
+
+  it('keeps photos from other steps out of a single-step PDF', async () => {
+    const output = await artifact(
+      'scoped-without-photo',
+      buildAdmissionPrintDocument({
+        definition: {
+          name: 'Registration',
+          sections: [
+            section('Student'),
+            section('Photo', [question('PHOTO', { validationJson: '{"format":"photo"}' })]),
+          ],
+        },
+        values: {},
+        mode: 'blank',
+        stepKey: 'Student',
+        settings: { advanced: { photo: { placement: 'header-top-right' } } },
+      })
+    );
+    expect(output.text).toContain('NAME');
+    expect(output.text).not.toContain('Photograph');
   });
 
   it('aligns or hides a printed photo space while keeping other questions', async () => {
-    const definition = { name: 'Photo alignment', sections: [section('Student')] };
+    const definition = {
+      name: 'Photo alignment',
+      sections: [
+        section('Student', [
+          question('NAME'),
+          question('PHOTO', { validationJson: '{"format":"photo"}' }),
+        ]),
+      ],
+    };
     const render = (showPhoto: boolean, alignment: 'left' | 'center' | 'right') =>
       artifact(
         `photo-${alignment}-${showPhoto}`,
@@ -148,13 +246,19 @@ describe('Advanced Registration paper settings', () => {
           definition,
           values: {},
           mode: 'blank',
-          settings: { showPhoto, advanced: { photo: { alignment, caption: 'Photo space sample' } } },
+          settings: {
+            showPhoto,
+            advanced: { photo: { alignment, caption: 'Photo space sample' } },
+          },
         })
       );
     const captionPosition = async (alignment: 'left' | 'center' | 'right') => {
       const result = await render(true, alignment);
-      const caption = result.pages[0].items.find((item) => 'str' in item && item.str === 'Photo space sample');
-      if (!caption || !('transform' in caption)) throw new Error('Photo caption was missing from the PDF.');
+      const caption = result.pages[0].items.find(
+        (item) => 'str' in item && item.str === 'Photo space sample'
+      );
+      if (!caption || !('transform' in caption))
+        throw new Error('Photo caption was missing from the PDF.');
       return caption.transform[4];
     };
     const left = await captionPosition('left');
@@ -172,39 +276,54 @@ describe('Advanced Registration paper settings', () => {
     ['selected', 'none', [2, 4]],
     ['selected', 'full', [1, 3]],
     ['every', 'compact', [1, 2, 3, 4]],
-  ] as const)('prints %s banner pages with a %s header', async (placement, continuation, expected) => {
-    const pages = [1, 2, 3, 4];
-    const model = buildAdmissionPrintDocument({
-      definition: {
-        name: 'Banner pages',
-        sections: pages.map((page) => section(`PAGE_${page}`, [question(`FIELD_${page}`)], { displayOrder: page })),
-      },
-      values: {},
-      mode: 'blank',
-      settings: {
-        showPhoto: false,
-        showSignature: false,
-        advanced: {
-          branding: { bannerPlacement: placement, bannerPages: [...expected] },
-          header: { continuation },
-          sections: Object.fromEntries(pages.slice(1).map((page) => [`PAGE_${page}`, { startNewPage: true }])),
+  ] as const)(
+    'prints %s banner pages with a %s header',
+    async (placement, continuation, expected) => {
+      const pages = [1, 2, 3, 4];
+      const model = buildAdmissionPrintDocument({
+        definition: {
+          name: 'Banner pages',
+          sections: pages.map((page) =>
+            section(`PAGE_${page}`, [question(`FIELD_${page}`)], { displayOrder: page })
+          ),
         },
-      },
-    });
-    const bannerUrl =
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAGklEQVR4AWO8I6LxnwEJMDGgASYGNMDEgAYAifgCH8XBj9IAAAAASUVORK5CYII=';
-    const output = await artifact(`banner-${placement}-${continuation}`, model, { bannerUrl });
-    const { OPS } = await pdfjs();
-    expect(output.pages).toHaveLength(4);
-    expect(pages.filter((page) => output.pages[page - 1].operators.fnArray.includes(OPS.paintImageXObject)))
-      .toEqual(expected);
-  });
+        values: {},
+        mode: 'blank',
+        settings: {
+          showPhoto: false,
+          showSignature: false,
+          advanced: {
+            branding: { bannerPlacement: placement, bannerPages: [...expected] },
+            header: { continuation },
+            sections: Object.fromEntries(
+              pages.slice(1).map((page) => [`PAGE_${page}`, { startNewPage: true }])
+            ),
+          },
+        },
+      });
+      const bannerUrl =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAGklEQVR4AWO8I6LxnwEJMDGgASYGNMDEgAYAifgCH8XBj9IAAAAASUVORK5CYII=';
+      const output = await artifact(`banner-${placement}-${continuation}`, model, { bannerUrl });
+      const { OPS } = await pdfjs();
+      expect(output.pages).toHaveLength(4);
+      expect(
+        pages.filter((page) =>
+          output.pages[page - 1].operators.fnArray.includes(OPS.paintImageXObject)
+        )
+      ).toEqual(expected);
+    }
+  );
 
   it('keeps a section heading with its first field when the photo and header consume space', async () => {
     const model = buildAdmissionPrintDocument({
       definition: {
         name: 'QA Printed Registration',
-        sections: [section('Student Details', [question('FIRST_NAME', { label: 'First name' })])],
+        sections: [
+          section('Student Details', [
+            question('FIRST_NAME', { label: 'First name' }),
+            question('PHOTO', { displayOrder: 1, validationJson: '{"format":"photo"}' }),
+          ]),
+        ],
       },
       values: {},
       mode: 'blank',
@@ -291,7 +410,10 @@ describe('Advanced Registration paper settings', () => {
         advanced: {
           header: { board: true, medium: true, class: true, academicYear: true },
           fields: { FIELD_0: { width: 'full' } },
-          content: { showInstructions: true, translations: { en: { instructions: 'Write clearly.' } } },
+          content: {
+            showInstructions: true,
+            translations: { en: { instructions: 'Write clearly.' } },
+          },
         },
       },
     });
@@ -436,6 +558,7 @@ describe('Advanced Registration paper settings', () => {
           )
         ).length;
         expect(imageCount).toBe(useSaved ? 2 : 0);
+        expect(result.text.includes('30 × 35 mm')).toBe(!useSaved);
         expect(
           result.text
             .replace(/-\s/g, '')
@@ -512,7 +635,10 @@ describe('Advanced Registration paper settings', () => {
         template: 'boxed-grid',
         showPhoto: false,
         advanced: {
-          paper: { orientation: 'landscape', margins: { top: 18, left: 12, bottom: 12, right: 12 } },
+          paper: {
+            orientation: 'landscape',
+            margins: { top: 18, left: 12, bottom: 12, right: 12 },
+          },
           border: {
             enabled: true,
             style: 'double',

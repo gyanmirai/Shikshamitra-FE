@@ -4,6 +4,7 @@ import type {
   ManagedApplicationAssessment,
 } from 'src/redux/student/admissions/admission-assessment-types';
 
+import { useRef, useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
@@ -12,10 +13,10 @@ import { Box, Stack, Button, Divider, MenuItem, Typography } from '@mui/material
 
 import { AssessmentResultEntry } from './assessment-result-entry';
 import { formatAssessmentSchedule } from './assessment-date-time';
-import { assessmentActionLabels } from './assessment-action-model';
 import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { AssessmentSubjectScoreHistory } from './assessment-subject-score-history';
+import { canWaiveAssessment, assessmentActionLabels } from './assessment-action-model';
 
 import type { AssessmentAction } from './assessment-action-model';
 import type { useAssessmentQuickActions } from './use-assessment-quick-actions';
@@ -56,6 +57,8 @@ export function AssessmentAttemptCard({
   onAction,
 }: Props) {
   const permissions = useAssessmentPermissions();
+  const menuAnchor = useRef<HTMLButtonElement>(null);
+  const [opensAbove, setOpensAbove] = useState(false);
   const latest = attempt.id === quick?.attempt?.id;
   const editable = !readOnly && latest && Boolean(quick);
   const canAttend = editable && quick?.canRecordAttendance;
@@ -68,7 +71,7 @@ export function AssessmentAttemptCard({
     if (assessment.canRetake && permissions.book) actions.push('retake');
     if (assessment.canCancel && permissions.book) actions.push('cancel');
   }
-  if (!readOnly && attempt.attemptNumber === lastNumber && assessment.canWaive && permissions.waive)
+  if (!readOnly && attempt.attemptNumber === lastNumber && permissions.waive && canWaiveAssessment(assessment))
     actions.push('waive');
   const status =
     attempt.status === 'cancelled'
@@ -118,7 +121,27 @@ export function AssessmentAttemptCard({
           {actions.length > 0 && (
             <ThreeDotsActions
               moreLabel={`More Actions for Attempt ${attempt.attemptNumber}`}
-              placement="bottom-right"
+              placement={opensAbove ? 'bottom-right' : 'top-right'}
+              onClickThreeDots={(event) => {
+                menuAnchor.current = event.currentTarget;
+                setOpensAbove(false);
+              }}
+              popoverSlotProps={{
+                paper: { sx: { mt: opensAbove ? -1 : 1 } },
+                transition: {
+                  onEntering: (paper: HTMLElement) => {
+                    const trigger = menuAnchor.current;
+                    const viewport = trigger?.ownerDocument.defaultView;
+                    if (!trigger || !viewport) return;
+                    const anchor = trigger.getBoundingClientRect();
+                    const drawer = trigger.closest('[role="dialog"]')?.getBoundingClientRect();
+                    const below = Math.min(viewport.innerHeight, drawer?.bottom ?? Infinity) - anchor.bottom;
+                    const above = anchor.top - Math.max(0, drawer?.top ?? 0);
+                    const gap = Math.abs(Number.parseFloat(viewport.getComputedStyle(paper).marginTop)) || 0;
+                    setOpensAbove(below < paper.offsetHeight + gap + 16 && above > below);
+                  },
+                },
+              }}
               actions={({ popover }) =>
                 actions.map((action) => (
                   <MenuItem
@@ -140,8 +163,15 @@ export function AssessmentAttemptCard({
             />
           )}
         </Stack>
-        <Divider />
-        <Stack spacing={1}>
+        <Stack
+          direction="row"
+          spacing={2}
+          flexWrap="wrap"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          useFlexGap
+        >
+        <Stack spacing={1} sx={{ flex: '1 1 220px', minWidth: 0 }}>
           <Typography variant="subtitle1">
             {attempt.sessionName ||
               (attempt.sessionId ? 'Scheduled Session' : 'No Session Required')}
@@ -167,20 +197,11 @@ export function AssessmentAttemptCard({
             )}
           </Stack>
         </Stack>
-        <Divider />
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) minmax(0, 1.3fr)' },
-            gap: 2,
-          }}
-        >
-          <Stack spacing={1}>
+          <Stack spacing={1} sx={{ minWidth: 0, maxWidth: '100%' }}>
             <Typography variant="subtitle2">Attendance</Typography>
             <Stack
               direction="row"
               spacing={1}
-              justifyContent="space-between"
               alignItems="center"
               flexWrap="wrap"
               useFlexGap
@@ -230,19 +251,9 @@ export function AssessmentAttemptCard({
               )}
             </Stack>
           </Stack>
-          <Stack
-            spacing={1}
-            sx={{
-              borderStyle: 'solid',
-              borderWidth: 0,
-              borderLeftWidth: { xs: 0, md: 1 },
-              borderTopWidth: { xs: 1, md: 0 },
-              borderColor: 'divider',
-              pl: { md: 2 },
-              pt: { xs: 2, md: 0 },
-              minWidth: 0,
-            }}
-          >
+        </Stack>
+        <Divider />
+          <Stack spacing={1} sx={{ minWidth: 0 }}>
             <Typography variant="subtitle2">Result</Typography>
             {pendingResult && quick && assessment.policy ? (
               <AssessmentResultEntry
@@ -270,7 +281,6 @@ export function AssessmentAttemptCard({
               </Typography>
             )}
           </Stack>
-        </Box>
         {(attempt.notes || attempt.reviewNotes || attempt.reviewedAt) && (
           <Stack spacing={0.5}>
             {attempt.notes && (

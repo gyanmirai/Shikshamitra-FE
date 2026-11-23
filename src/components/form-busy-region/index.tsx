@@ -14,6 +14,8 @@ type Props = {
   fillContent?: boolean;
   /** Allow a full-height flex layout to pass through the fieldset's anonymous content box. */
   flattenFieldset?: boolean;
+  /** Keep controls usable during a background refresh. */
+  blockInteraction?: boolean;
 };
 
 /** Keeps a blocking form visible while disabling native and custom controls. */
@@ -24,7 +26,10 @@ export function FormBusyRegion({
   showOverlay = true,
   fillContent = false,
   flattenFieldset = false,
+  blockInteraction = true,
 }: Props) {
+  const blocked = busy && blockInteraction;
+  const opacity = blockInteraction ? 0.8 : 0.55;
   const contentLayout = fillContent
     ? ({
         display: 'flex',
@@ -38,7 +43,7 @@ export function FormBusyRegion({
     <Box aria-busy={busy} sx={{ position: 'relative', minWidth: 0, ...contentLayout }}>
       <Box
         component="fieldset"
-        disabled={busy}
+        disabled={blocked}
         sx={{
           border: 0,
           p: 0,
@@ -48,7 +53,7 @@ export function FormBusyRegion({
           ...(flattenFieldset && { display: 'contents' }),
         }}
       >
-        <Box inert={busy || undefined} sx={contentLayout}>
+        <Box inert={blocked || undefined} sx={contentLayout}>
           {children}
         </Box>
       </Box>
@@ -83,11 +88,12 @@ export function FormBusyRegion({
             position: 'absolute',
             inset: 0,
             zIndex: 2,
+            pointerEvents: blockInteraction ? undefined : 'none',
             minHeight: 64,
             bgcolor: (theme) =>
               theme.vars
-                ? varAlpha(theme.vars.palette.background.paperChannel, 0.8)
-                : alpha(theme.palette.background.paper, 0.8),
+                ? varAlpha(theme.vars.palette.background.paperChannel, opacity)
+                : alpha(theme.palette.background.paper, opacity),
           }}
         >
           <CircularProgress size={24} aria-hidden="true" />

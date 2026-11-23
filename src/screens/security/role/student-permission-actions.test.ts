@@ -55,7 +55,7 @@ const names = [
   ...features.flatMap((feature) =>
     ['View', 'Add', 'Delete'].map((action) => `Students.${feature}.${action}`)
   ),
-  ...['Records.Overrides', 'Records.GuardianAccess'].flatMap((feature) =>
+  ...['Records.Overrides', 'Records.GuardianAccess', 'Records.AppAccess'].flatMap((feature) =>
     ['View', 'Add'].map((action) => `Students.${feature}.${action}`)
   ),
 ];
@@ -112,7 +112,7 @@ describe('complete Student permission editor contract', () => {
     expect(new Set(targets).size).toBe(targets.length);
   });
 
-  it.each(['Records.Overrides', 'Records.GuardianAccess'])(
+  it.each(['Records.Overrides', 'Records.GuardianAccess', 'Records.AppAccess'])(
     'leaves unsupported %s Delete unavailable',
     (feature) => {
       const node = { title: feature, permissionName: `Students.${feature}.View` };

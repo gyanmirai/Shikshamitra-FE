@@ -3,12 +3,14 @@ import type { ReactNode } from 'react';
 import COLORS from 'src/theme/core/colors.json';
 import { Page, Text, View, Image, Document } from '@react-pdf/renderer';
 
+import { estimatePrintTextLines } from './form-print-text-layout';
+import { formatAdmissionPrintPhotoSize } from './form-print-advanced-layout';
+
 import type {
   AdmissionPrintField,
   AdmissionPrintBranding,
   AdmissionPrintDocument,
 } from './form-print-model';
-import { estimatePrintTextLines } from './form-print-text-layout';
 
 type PaperTemplateProps = {
   model: AdmissionPrintDocument;
@@ -37,23 +39,15 @@ export function AdmissionPaperTemplate({
   const fontSize = spacious ? 10 : 9;
   const border = COLORS.grey[500];
   const schoolHeader = model.settings.showSchoolHeader;
-  const hasPhotos = model.steps.some((step) =>
-    step.sections.some((section) =>
-      section.entries.some((entry) => entry.fields.some((field) => field.kind === 'photo'))
-    )
-  );
-  const headerPhoto = model.settings.showPhoto && !hasPhotos;
   const addressLines = schoolHeader
     ? (branding.addressLines ?? []).filter((line) => line.trim())
     : [];
-  const brandingWidth =
-    595.28 - margin * 2 - (schoolHeader && branding.logoUrl ? 57 : 0) - (headerPhoto ? 83 : 0);
+  const brandingWidth = 595.28 - margin * 2 - (schoolHeader && branding.logoUrl ? 57 : 0);
   // Reserve wrapped content before placing the fixed header so long Institute Setup addresses
   // remain complete and can never overlap the first question or registration-number line.
   const estimatedLines = (value: string, characterWidth: number) =>
     estimatePrintTextLines(value, brandingWidth, characterWidth);
   const mastheadHeight = Math.max(
-    headerPhoto ? 84 : 0,
     schoolHeader && branding.logoUrl ? 47 : 0,
     (schoolHeader && branding.schoolName ? estimatedLines(branding.schoolName, 10) * 24 : 0) +
       addressLines.reduce((height, line) => height + estimatedLines(line, 4.5) * 12, 0) +
@@ -75,12 +69,14 @@ export function AdmissionPaperTemplate({
         : [row]
     );
 
-  const renderPhoto = (field?: AdmissionPrintField) => (
+  const photoWidth = 68;
+  const photoHeight = 82;
+  const renderPhoto = (field: AdmissionPrintField) => (
     <View
       wrap={false}
       style={{
-        width: 68,
-        height: 82,
+        width: photoWidth,
+        height: photoHeight,
         borderWidth: 0.7,
         borderColor: border,
         padding: 4,
@@ -88,10 +84,18 @@ export function AdmissionPaperTemplate({
         alignItems: 'center',
       }}
     >
-      {model.mode === 'filled' && field?.imageUrl ? (
-        <Image src={field.imageUrl} style={{ width: 58, height: 72, objectFit: 'contain' }} />
+      {model.mode === 'filled' && field.imageUrl ? (
+        <Image
+          src={field.imageUrl}
+          style={{ width: photoWidth - 10, height: photoHeight - 10, objectFit: 'contain' }}
+        />
       ) : (
-        <Text style={{ fontSize: 8, textAlign: 'center' }}>{textRuns(model.labels.photo)}</Text>
+        <>
+          <Text style={{ fontSize: 8, textAlign: 'center' }}>{textRuns(model.labels.photo)}</Text>
+          <Text style={{ fontSize: 7, textAlign: 'center', marginTop: 2 }}>
+            {textRuns(formatAdmissionPrintPhotoSize(photoWidth, photoHeight))}
+          </Text>
+        </>
       )}
     </View>
   );
@@ -257,7 +261,7 @@ export function AdmissionPaperTemplate({
                 style={{ width: 47, height: 47, objectFit: 'contain', marginRight: 10 }}
               />
             ) : null}
-            <View style={{ flex: 1, paddingRight: headerPhoto ? 15 : 0 }}>
+            <View style={{ flex: 1 }}>
               {schoolHeader && branding.schoolName ? (
                 <Text style={{ fontSize: 17, fontWeight: 700, marginBottom: 3 }}>
                   {textRuns(branding.schoolName)}
@@ -274,7 +278,6 @@ export function AdmissionPaperTemplate({
                 {textRuns(model.title)}
               </Text>
             </View>
-            {headerPhoto ? renderPhoto() : null}
           </View>
           {/* Registration identifiers remain a normal writing line, independent of the grid template. */}
           <View

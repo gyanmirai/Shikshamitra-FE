@@ -1,7 +1,7 @@
 import type { AdmissionApplication } from 'src/redux/student/admissions/admission-applications-api';
 
 import { vi, it, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 
 import { ApplicationAdmissionReview } from './application-admission-review';
 
@@ -54,10 +54,16 @@ it('shows direct small decisions and pending setup without a manual verification
   expect(screen.getByRole('button', { name: 'Waitlist' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Reject' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Approve & Finalize' })).toBeEnabled();
+  expect(screen.getByText('Status: Ready for Review')).toHaveAttribute('role', 'status');
   expect(
     screen.getByText('Division, GR number and roll number are completed in Student Setup.')
   ).toBeVisible();
-  expect(screen.getByText('qa@example.test')).toBeVisible();
+  const student = screen.getByLabelText('Student and class');
+  expect(within(student).getByText('QA Admission')).toBeVisible();
+  expect(within(student).getByText('Class 2')).toBeVisible();
+  const contact = screen.getByLabelText('Primary contact details');
+  expect(within(contact).getByText('QA Parent')).toBeVisible();
+  expect(within(contact).getByText('qa@example.test')).toBeVisible();
   expect(screen.queryByText('Profile Review Rules')).not.toBeInTheDocument();
   expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
 });
@@ -75,6 +81,14 @@ it('holds the opening state across committed cache updates and never mounts the 
     <ApplicationAdmissionReview application={application} onFinalized={onFinalized} />
   );
   fireEvent.click(screen.getByRole('button', { name: 'Approve & Finalize' }));
+  const pendingApproval = screen.getByRole('button', { name: 'Approve & Finalize' });
+  expect(pendingApproval).toBeDisabled();
+  fireEvent.click(pendingApproval);
+  expect(mocks.run).toHaveBeenCalledOnce();
+  const progress = screen.getByText('Finalizing admission…').closest('[role="status"]');
+  expect(progress).not.toBeNull();
+  expect(progress).toHaveStyle({ alignItems: 'center', justifyContent: 'center' });
+  expect(screen.getAllByRole('progressbar')).toHaveLength(1);
   view.rerender(
     <ApplicationAdmissionReview
       application={{ ...application, status: 11 }}
@@ -97,6 +111,7 @@ it('blocks incomplete checks and keeps duplicate identity resolution explicit', 
   ];
   render(<ApplicationAdmissionReview application={application} />);
   expect(screen.getByRole('button', { name: 'Approve & Finalize' })).toBeDisabled();
+  expect(screen.queryByText('Status: Ready for Review')).not.toBeInTheDocument();
   expect(screen.getByText('Date of birth missing')).toBeVisible();
   expect(screen.getByRole('radiogroup', { name: 'Student Identity' })).toBeVisible();
 });

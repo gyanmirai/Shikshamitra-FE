@@ -51,6 +51,7 @@ type Props = {
   onOpenChange?: (open: boolean) => void;
   stretch?: boolean;
   defaultJoiningDateToToday?: boolean;
+  showJoiningDateSave?: boolean;
   footerAction?: ReactNode;
 };
 
@@ -103,6 +104,7 @@ export default function AdmissionFeeCollectionPanel({
   onOpenChange,
   stretch = false,
   defaultJoiningDateToToday = false,
+  showJoiningDateSave = false,
   footerAction,
 }: Props) {
   const router = useRouter();
@@ -159,6 +161,27 @@ export default function AdmissionFeeCollectionPanel({
     requiresVariableAmounts: Boolean(state?.variableFeeHeads?.length),
     defaultToToday: defaultJoiningDateToToday,
   });
+  const [savingJoiningDate, setSavingJoiningDate] = useState(false);
+  const [joiningDateSaveError, setJoiningDateSaveError] = useState<string>();
+  const saveJoiningDate = async () => {
+    if (opening.current || !access.canCollect || !joiningDate.canSaveDate) return;
+    opening.current = true;
+    setSavingJoiningDate(true);
+    setJoiningDateSaveError(undefined);
+    onOpenChange?.(true);
+    try {
+      await joiningDate.saveDate();
+      shikshaMitraToast.success({ message: 'Actual joining date saved.' });
+    } catch (error) {
+      setJoiningDateSaveError(
+        parseApiProblemDetail(error).detail || 'Could not save the actual joining date. Try again.'
+      );
+    } finally {
+      opening.current = false;
+      setSavingJoiningDate(false);
+      onOpenChange?.(false);
+    }
+  };
   const canPrepare = Boolean(state?.canCollect || joiningDate.state?.canPreview);
   const showingDatePreview = Boolean(joiningDate.state?.canPreview);
   const activePreview = showingDatePreview ? joiningDate.preview : undefined;
@@ -203,6 +226,7 @@ export default function AdmissionFeeCollectionPanel({
       return;
     opening.current = true;
     setOpeningError(undefined);
+    setJoiningDateSaveError(undefined);
     onOpenChange?.(true);
     try {
       if (state.variableFeeHeads?.length) {
@@ -291,18 +315,19 @@ export default function AdmissionFeeCollectionPanel({
     minWidth: 0,
     ...(stretch && { flex: 1, minHeight: 0 }),
   };
-  const header = stretch ? (
+  const header = (
     <FormSectionHeader
-      icon="mdi:receipt-text-outline"
+      icon={stretch ? 'mdi:receipt-text-outline' : undefined}
       title="Fee Collection"
-      titleTypographyProps={{ component: 'h3' }}
-      descriptionTooltip="Partial collection is allowed. Charges and late fees appear separately in the collection form. Collect later requires a reason."
+      titleTypographyProps={{ component: 'h3', variant: stretch ? 'subtitle1' : 'subtitle2' }}
+      descriptionTooltip={
+        <Box sx={{ maxWidth: '11rem' }}>
+          Partial payments are allowed. The collection form lists charges and late fees separately.
+          Collecting later requires a reason.
+        </Box>
+      }
       descriptionTooltipLabel="Fee Collection Information"
     />
-  ) : (
-    <Typography variant="subtitle2" component="h3">
-      Fee Collection
-    </Typography>
   );
   if (summary.isLoading || (!state && summary.isFetching))
     return (
@@ -340,10 +365,11 @@ export default function AdmissionFeeCollectionPanel({
       size="small"
       variant="contained"
       startIcon={<Iconify icon="mdi:cash-plus" width={16} />}
-      loading={preparing.isLoading || joiningDate.saving}
+      loading={preparing.isLoading || (joiningDate.saving && !savingJoiningDate)}
       disabled={
         disabled ||
         refreshingCollection ||
+        savingJoiningDate ||
         !access.canCollect ||
         !canPrepare ||
         joiningDate.blocked ||
@@ -397,22 +423,25 @@ export default function AdmissionFeeCollectionPanel({
             </Button>
           </Stack>
         )}
-        <AdmissionJoiningDateField
-          controller={joiningDate}
-          disabled={
-            disabled ||
-            refreshingCollection ||
-            dialog.value ||
-            variableAmounts.value ||
-            preparing.isLoading
-          }
-        />
-        {joiningDate.prorationPolicyEligible &&
-          joiningDate.state?.canSelectProrationPolicy &&
-          access.canOverridePolicies && (
-            <Stack spacing={1} sx={{ maxWidth: { xs: '100%', sm: 520 } }}>
+        <Stack spacing={1.5} useFlexGap sx={{ width: 1, maxWidth: '15rem' }}>
+          <AdmissionJoiningDateField
+            controller={joiningDate}
+            disabled={
+              disabled ||
+              refreshingCollection ||
+              dialog.value ||
+              variableAmounts.value ||
+              preparing.isLoading ||
+              savingJoiningDate
+            }
+          />
+          {joiningDate.prorationPolicyEligible &&
+            joiningDate.state?.canSelectProrationPolicy &&
+            access.canOverridePolicies && (
               <CustomSelect<'value' | 'label', false>
                 label="Proration policy"
+                fullWidth
+                size="small"
                 value={joiningDate.selectedPolicyVersionId ?? NO_PRORATION_POLICY_OPTION}
                 options={[
                   ...(!joiningDate.state.defaultProrationPolicyVersionId
@@ -440,8 +469,40 @@ export default function AdmissionFeeCollectionPanel({
                 }}
                 helperText="Used to calculate fees from the actual joining date."
               />
-            </Stack>
+            )}
+        </Stack>
+        {showJoiningDateSave &&
+          access.canCollect &&
+          joiningDate.state?.canEdit &&
+          !joiningDate.state.isLocked && (
+            <Button
+              type="button"
+              size="small"
+              variant="outlined"
+              sx={{ alignSelf: 'flex-end' }}
+              loading={savingJoiningDate}
+              disabled={
+                disabled ||
+                refreshingCollection ||
+                dialog.value ||
+                variableAmounts.value ||
+                preparing.isLoading ||
+                !joiningDate.canSaveDate
+              }
+              onClick={saveJoiningDate}
+            >
+              Save Joining Date
+            </Button>
           )}
+        {joiningDateSaveError && (
+          <StudentFeedback
+            notificationKey="admission-joining-date-save"
+            presentation="persistent"
+            severity="error"
+          >
+            {joiningDateSaveError}
+          </StudentFeedback>
+        )}
         {joiningDate.preview &&
           (joiningDate.preview.proration || joiningDate.preview.prorationPolicy) && (
             <Label sx={{ alignSelf: 'flex-end' }}>Preview</Label>
@@ -564,7 +625,9 @@ export default function AdmissionFeeCollectionPanel({
           </StudentFeedback>
         )}
         {state.blocker &&
-          !(stretch && state.blocker === 'Confirm a published fee structure before collecting fees.') &&
+          !(
+            stretch && state.blocker === 'Confirm a published fee structure before collecting fees.'
+          ) &&
           !joiningDate.state?.canPreview &&
           (stretch ? (
             <Stack direction="row" spacing={1} alignItems="flex-start" role="status">

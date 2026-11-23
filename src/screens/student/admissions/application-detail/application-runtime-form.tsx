@@ -93,6 +93,7 @@ type Props = {
   publicMode?: boolean;
   allowPrint?: boolean;
   onRefresh?: () => void;
+  renderToolbarActions?: (actions: { print: ReactNode; refresh: ReactNode }) => ReactNode;
   editableFieldCodes?: string[];
   canEditOverride?: boolean;
   submitLabel?: string;
@@ -149,6 +150,7 @@ export function ApplicationRuntimeFormCore({
   publicMode = false,
   allowPrint = false,
   onRefresh,
+  renderToolbarActions,
   editableFieldCodes,
   canEditOverride,
   submitLabel,
@@ -793,6 +795,31 @@ export function ApplicationRuntimeFormCore({
     );
   };
 
+  const printAction = (
+    <AdmissionRuntimePrintActions
+      applicationId={application.id}
+      form={form}
+      values={values}
+      busy={interactionLocked}
+      currentStepId={visibleSteps[safeActiveStep]?.id}
+      onSave={onSave}
+      canSave={showSaveDraft && !readOnly && !correctionMode}
+    />
+  );
+  const refreshAction = onRefresh && (
+    <Button
+      type="button"
+      size="small"
+      variant="outlined"
+      color="inherit"
+      disabled={interactionLocked || hasUnsavedAdmissionPrintValues(form, values)}
+      startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
+      onClick={onRefresh}
+    >
+      Refresh
+    </Button>
+  );
+
   return (
     <FormBusyRegion
       busy={validatingStep}
@@ -822,30 +849,23 @@ export function ApplicationRuntimeFormCore({
               : { maxWidth: 1280, mx: 'auto' }
           }
         >
-          {allowPrint && !publicMode && (
-            <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mb: 1 }}>
-              {onRefresh && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  disabled={interactionLocked || hasUnsavedAdmissionPrintValues(form, values)}
-                  startIcon={<Iconify icon={GlobalIcons.refresh} />}
-                  onClick={onRefresh}
-                >
-                  Refresh
-                </Button>
-              )}
-              <AdmissionRuntimePrintActions
-                applicationId={application.id}
-                form={form}
-                values={values}
-                busy={interactionLocked}
-                currentStepId={visibleSteps[safeActiveStep]?.id}
-                onSave={onSave}
-                canSave={showSaveDraft && !readOnly && !correctionMode}
-              />
-            </Stack>
-          )}
+          {allowPrint &&
+            !publicMode &&
+            (renderToolbarActions ? (
+              renderToolbarActions({ print: printAction, refresh: refreshAction })
+            ) : (
+              <Stack
+                direction="row"
+                justifyContent="flex-end"
+                spacing={1}
+                useFlexGap
+                flexWrap="wrap"
+                sx={{ mb: 1 }}
+              >
+                {refreshAction}
+                {printAction}
+              </Stack>
+            ))}
           {!compact && (
             <Typography variant="h6" sx={{ mb: 0.5 }}>
               {form.definition.name} · v{form.formVersion}

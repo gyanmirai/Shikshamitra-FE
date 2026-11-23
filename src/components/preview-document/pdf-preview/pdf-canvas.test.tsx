@@ -15,6 +15,8 @@ describe('PDF page controls', () => {
       error: false,
       pageCount: 3,
       renderedPage: 2,
+      revealLocation: undefined,
+      failedReveal: undefined,
       hasRendered: true,
       text: '',
     });

@@ -95,7 +95,7 @@ function AdmissionFormCloneEditor({
         }}
       >
         <DialogScrollContent>
-          <FormBusyRegion busy={busy} label="Cloning form…">
+          <FormBusyRegion busy={busy} label="Cloning form…" showOverlay={false}>
             <FormSectionCard
               title="Draft Details"
               icon={GlobalIcons.copy}

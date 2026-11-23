@@ -35,6 +35,7 @@ export function ConfirmDialog({
   icon = 'error',
   disableBackdropClick = true,
   disableCancel = false,
+  lockOnActionLoading = true,
   cancelText = 'Cancel',
   showCloseButton = false,
   bodyBusy,
@@ -47,7 +48,9 @@ export function ConfirmDialog({
   const isBusy =
     bodyBusy ||
     disableCancel ||
-    (isValidElement(action) && Boolean((action.props as { loading?: boolean }).loading));
+    (lockOnActionLoading &&
+      isValidElement(action) &&
+      Boolean((action.props as { loading?: boolean }).loading));
 
   return (
     <Dialog

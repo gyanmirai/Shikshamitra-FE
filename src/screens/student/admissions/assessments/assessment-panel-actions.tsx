@@ -3,8 +3,8 @@ import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/
 
 import { Stack, Button } from '@mui/material';
 
-import { assessmentActionLabels } from './assessment-action-model';
 import { useAssessmentPermissions } from './use-assessment-permissions';
+import { canWaiveAssessment, assessmentActionLabels } from './assessment-action-model';
 
 import type { AssessmentAction } from './assessment-action-model';
 
@@ -34,7 +34,7 @@ export function AssessmentPanelActions({
     { action: 'result', allowed: assessment.canRecordResult && permissions.results },
     { action: 'retake', allowed: assessment.canRetake && permissions.book },
     { action: 'cancel', allowed: assessment.canCancel && permissions.book },
-    { action: 'waive', allowed: assessment.canWaive && permissions.waive },
+    { action: 'waive', allowed: permissions.waive && canWaiveAssessment(assessment) },
   ];
   const availableActions = actions.filter((item) => item.allowed);
   return (

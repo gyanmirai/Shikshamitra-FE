@@ -195,10 +195,21 @@ it('promotes the supported successor after deleting the entry stage', () => {
   ]);
   expect(paths(result.current.transitions)).toEqual(['b->c']);
 });
-it('retains an ending stage after deleting the final step of a simple route', () => {
+it('keeps the final decision when its predecessor is not an Admission decision', () => {
   const { result } = renderHook(() => useWorkflowBuilderDraft(workflow, null));
   act(() => result.current.deleteStage('c'));
-  expect(result.current.stages[1]).toMatchObject({ id: 'b', isTerminalStage: true });
+  expect(result.current.stages).toEqual(stages);
+  expect(result.current.transitions).toEqual(transitions);
+  expect(result.current.dirty).toBe(false);
+});
+
+it('promotes the directly preceding Admission decision after removing the final decision', () => {
+  const replacement = { ...stages[1], stageType: 7 as const };
+  const { result } = renderHook(() =>
+    useWorkflowBuilderDraft({ ...workflow, stages: [stages[0], replacement, stages[2]] }, null)
+  );
+  act(() => result.current.deleteStage('c'));
+  expect(result.current.stages.at(-1)).toMatchObject({ id: 'b', isTerminalStage: true });
   expect(paths(result.current.transitions)).toEqual(['a->b']);
 });
 it('inserts a terminal-stage copy before the original ending stage', () => {
@@ -240,10 +251,24 @@ it('does not remove an ending stage whose predecessor still has a conditional br
   expect(result.current.transitions).toEqual(old.transitions);
   expect(result.current.canUndo).toBe(false);
 });
-it('rejects insertion that would create outgoing routes from the inserted ending stage', () => {
+it('keeps an inserted non-decision stage non-final even when its input carries the old flag', () => {
   const { result } = renderHook(() => useWorkflowBuilderDraft(workflow, null));
   act(() => result.current.saveStage({ ...added, isTerminalStage: true }, false, 'b'));
-  expect(result.current.stages).toEqual(stages);
+  expect(result.current.stages[2]).toMatchObject({ id: added.id, isTerminalStage: false });
+  expect(result.current.stages.at(-1)).toMatchObject({ id: 'c', isTerminalStage: true });
+  expect(paths(result.current.transitions)).toEqual(['a->b', 'b->new', 'new->c']);
+});
+
+it('cannot demote or remove the sole final decision', () => {
+  const only = { ...stages[2], displayOrder: 0, isEntryStage: true };
+  const { result } = renderHook(() =>
+    useWorkflowBuilderDraft({ ...workflow, stages: [only], transitions: [] }, null)
+  );
+  act(() => {
+    expect(result.current.saveStage({ ...only, stageType: 2, isTerminalStage: false })).toBe(false);
+    expect(result.current.deleteStage(only.id)).toBe(false);
+  });
+  expect(result.current.stages).toEqual([only]);
   expect(result.current.canUndo).toBe(false);
 });
 it('rejects a missing insertion source on a populated saved journey', () => {
@@ -258,4 +283,7 @@ it('retains sequential auto-connection while building an initially blank draft',
   act(() => result.current.saveStage(stages[0]));
   act(() => result.current.saveStage(stages[1]));
   expect(paths(result.current.transitions)).toEqual(['a->b']);
+  act(() => result.current.saveStage({ ...stages[2], isTerminalStage: false }));
+  expect(result.current.stages.at(-1)).toMatchObject({ id: 'c', isTerminalStage: true });
+  expect(paths(result.current.transitions)).toEqual(['a->b', 'b->c']);
 });

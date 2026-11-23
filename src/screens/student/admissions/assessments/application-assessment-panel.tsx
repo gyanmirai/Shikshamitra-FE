@@ -1,15 +1,16 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
-import { useState, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
-import { Box, Card, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
+import { Box, Card, Stack, Button, Typography, CircularProgress } from '@mui/material';
 import { useGetApplicationAssessmentQuery } from 'src/redux/student/admissions/admission-assessments-api';
 
 import { AdmissionQueryError } from '../admission-query-error';
+import { canWaiveAssessment } from './assessment-action-model';
 import { AssessmentActionDialog } from './assessment-action-dialog';
 import { AssessmentPanelActions } from './assessment-panel-actions';
 import { AssessmentAttemptHistory } from './assessment-attempt-history';
@@ -18,6 +19,7 @@ import { assessmentPassRuleLabels } from './assessment-subject-results';
 import { AssessmentAttemptWorkspace } from './assessment-attempt-workspace';
 import { AssessmentPipelineBookingDrawer } from './assessment-pipeline-booking-drawer';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
+import { ApplicationAssessmentSkeleton } from '../application-detail/application-workspace-skeleton';
 
 import type { AssessmentAction } from './assessment-action-model';
 import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
@@ -32,6 +34,8 @@ type Props = {
   compact?: boolean;
   showCompletionAction?: boolean;
   onReadinessChange?: ApplicationStageReadinessHandler;
+  openAssessmentBooking?: boolean;
+  onAssessmentBookingOpened?: () => void;
 };
 
 export function ApplicationAssessmentPanel({
@@ -44,6 +48,8 @@ export function ApplicationAssessmentPanel({
   compact = false,
   showCompletionAction = true,
   onReadinessChange,
+  openAssessmentBooking,
+  onAssessmentBookingOpened,
 }: Props) {
   const permissions = useAssessmentPermissions();
   const query = useGetApplicationAssessmentQuery(
@@ -51,6 +57,8 @@ export function ApplicationAssessmentPanel({
     { skip: !permissions.view }
   );
   const [action, setAction] = useState<AssessmentAction | null>(null);
+  const bookingOpened = useRef(false);
+  const refreshPending = useRef(false);
   const [quickState, setQuickState] = useState({ dirty: false, busy: false });
   const onQuickStateChange = useCallback((next: typeof quickState) => {
     setQuickState((previous) =>
@@ -58,6 +66,40 @@ export function ApplicationAssessmentPanel({
     );
   }, []);
   const assessment = query.currentData;
+  const initialLoading = !assessment && (query.isLoading || query.isFetching);
+  const controlsBusy = query.isFetching || advancing || Boolean(action) || quickState.busy;
+  const assessmentActionsDisabled = controlsBusy || query.isError || quickState.dirty;
+  const canWaive = Boolean(assessment && permissions.waive && canWaiveAssessment(assessment));
+  const showCompactActions =
+    compact && assessment?.assessmentEnabled && assessment.policy && stage.status === 1;
+  const canOpenBooking = Boolean(
+    permissions.view &&
+    permissions.book &&
+    stage.status === 1 &&
+    assessment?.assessmentEnabled &&
+    assessment.policy?.schedulingEnabled &&
+    assessment.canBook &&
+    !assessmentActionsDisabled
+  );
+  useEffect(() => {
+    if (!openAssessmentBooking) {
+      bookingOpened.current = false;
+      return;
+    }
+    if (!canOpenBooking || bookingOpened.current) return;
+    bookingOpened.current = true;
+    setAction('book');
+    onAssessmentBookingOpened?.();
+  }, [canOpenBooking, openAssessmentBooking, onAssessmentBookingOpened]);
+  const refresh = async () => {
+    if (controlsBusy || refreshPending.current) return;
+    refreshPending.current = true;
+    try {
+      await query.refetch();
+    } finally {
+      refreshPending.current = false;
+    }
+  };
   // The summary and controls provide routine guidance; retain actionable blockers.
   const blockers =
     assessment?.blockers.filter(
@@ -86,25 +128,63 @@ export function ApplicationAssessmentPanel({
       }}
     >
       <Stack spacing={1.5}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" spacing={0.5} alignItems="center">
-            <Typography variant={compact ? 'subtitle1' : 'h6'}>{stage.name}</Typography>
-            <CustomTooltip title="Record the Entrance Assessment or an Authorized Waiver. The Configured Assessment Rules Decide When This Stage Is Ready to Continue.">
-              <IconButton size="small" color="info" aria-label="Assessment Information">
-                <Iconify icon="mdi:information-outline" width={16} />
-              </IconButton>
-            </CustomTooltip>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1} flexWrap="wrap">
+          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+            <Typography variant={compact ? 'subtitle1' : 'h6'} sx={{ overflowWrap: 'anywhere' }}>
+              {stage.name}
+            </Typography>
+            <InfoTooltipIcon
+              label="Assessment Information"
+              title="Record the assessment or an authorized waiver. The assessment rules determine when this stage can continue."
+            />
           </Stack>
           {permissions.view && (
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:refresh" width={16} />}
-              disabled={query.isFetching || advancing || Boolean(action) || quickState.busy}
-              onClick={query.refetch}
+            <Stack
+              role="group"
+              aria-label="Assessment Actions"
+              direction="row"
+              spacing={1}
+              useFlexGap
+              flexWrap="wrap"
+              alignItems="center"
+              justifyContent="flex-end"
+              sx={{ ml: 'auto', minWidth: 0 }}
             >
-              Refresh
-            </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon="mdi:refresh" width={16} />}
+                loading={Boolean(assessment) && query.isFetching}
+                loadingPosition="start"
+                loadingIndicator={
+                  <CircularProgress size={14} color="inherit" aria-label="Refreshing Assessment" />
+                }
+                disabled={controlsBusy}
+                onClick={refresh}
+              >
+                Refresh
+              </Button>
+              {showCompactActions && !assessment.attempts.length && canWaive && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={assessmentActionsDisabled}
+                    onClick={() => setAction('waive')}
+                  >
+                    Waive Assessment
+                  </Button>
+                )}
+              {showCompactActions && assessment.canBook && permissions.book && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={assessmentActionsDisabled}
+                  onClick={() => setAction('book')}
+                >
+                  {assessment.policy?.schedulingEnabled ? 'Book Assessment Slot' : 'Start Assessment'}
+                </Button>
+              )}
+            </Stack>
           )}
         </Stack>
         {!permissions.view ? (
@@ -112,13 +192,10 @@ export function ApplicationAssessmentPanel({
             Assessment access is required to view bookings and results. Contact an admissions
             administrator.
           </StudentFeedback>
-        ) : query.isLoading ? (
-          <Stack role="status" aria-label="Loading Assessment" spacing={1}>
-            <Skeleton variant="text" width="40%" />
-            <Skeleton variant="rounded" height={100} />
-          </Stack>
+        ) : initialLoading ? (
+          <ApplicationAssessmentSkeleton showHeading={false} />
         ) : !assessment ? (
-          <AdmissionQueryError onRetry={query.refetch} />
+          <AdmissionQueryError onRetry={refresh} />
         ) : !assessment.assessmentEnabled || !assessment.policy ? (
           <StudentFeedback notificationKey="STU-0232" presentation="inline" severity="info">
             Assessment management is not enabled for this stage. Refresh the application to load its
@@ -126,14 +203,7 @@ export function ApplicationAssessmentPanel({
           </StudentFeedback>
         ) : (
           <>
-            {query.isFetching && (
-              <Stack direction="row" spacing={1} role="status" aria-label="Refreshing Assessment">
-                <Skeleton variant="text" width="32%" />
-                <Skeleton variant="text" width="24%" />
-                <Skeleton variant="text" width="20%" />
-              </Stack>
-            )}
-            {query.isError && <AdmissionQueryError onRetry={query.refetch} />}
+            {query.isError && <AdmissionQueryError onRetry={refresh} />}
             <Box
               component="dl"
               sx={
@@ -292,7 +362,7 @@ export function ApplicationAssessmentPanel({
                     onComplete={onComplete}
                     compact={compact}
                   />
-                  {assessment.canWaive && permissions.waive && (
+                  {canWaive && (
                     <Typography
                       variant="caption"
                       color="text.secondary"

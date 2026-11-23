@@ -9,6 +9,7 @@ export function ReviewDialog({
   open = true,
   title,
   titleInfo,
+  titleInfoPlacement,
   maxWidth = 'sm',
   dirty,
   busy,
@@ -20,6 +21,7 @@ export function ReviewDialog({
   open?: boolean;
   title: string;
   titleInfo?: string;
+  titleInfoPlacement?: ComponentProps<typeof CustomDialog>['titleInfoPlacement'];
   maxWidth?: DialogProps['maxWidth'];
   dirty: boolean;
   busy: boolean;
@@ -41,6 +43,7 @@ export function ReviewDialog({
         open={open}
         title={title}
         titleInfo={titleInfo}
+        titleInfoPlacement={titleInfoPlacement}
         maxWidth={maxWidth}
         handleClose={requestClose}
         guardUnsavedChanges={false}

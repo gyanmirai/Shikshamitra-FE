@@ -4,10 +4,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useId, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import CustomAccordion from 'src/components/custom-accordian';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
   Box,
+  Paper,
   Stack,
   Switch,
   Tooltip,
@@ -28,35 +31,92 @@ export function PrintSettingsResetButton({
 }) {
   return (
     <Tooltip title={`Reset ${title} to defaults`}>
-      <IconButton
-        size="small"
-        aria-label={`Reset ${title} to defaults`}
-        onClick={onReset}
-        disabled={disabled}
-        sx={{ minWidth: 44, minHeight: 44 }}
-      >
-        <Iconify icon={GlobalIcons.resetIcon} />
-      </IconButton>
+      <Box component="span" sx={{ display: 'inline-flex' }}>
+        <IconButton
+          size="small"
+          aria-label={`Reset ${title} to defaults`}
+          onClick={onReset}
+          disabled={disabled}
+          sx={{ minWidth: 44, minHeight: 44 }}
+        >
+          <Iconify icon={GlobalIcons.resetIcon} />
+        </IconButton>
+      </Box>
     </Tooltip>
   );
 }
 
 export function PrintSettingsCards({ children }: { children: ReactNode }) {
+  return <Stack spacing={1.5}>{children}</Stack>;
+}
+
+export function PrintSettingsCard({
+  children,
+  title,
+  icon,
+  action,
+  descriptionTooltip,
+  defaultExpanded = false,
+}: {
+  children: ReactNode;
+  title: string;
+  icon?: string;
+  action?: ReactNode;
+  descriptionTooltip?: string;
+  defaultExpanded?: boolean;
+}) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const id = useId();
+  const toggleLabel = `${expanded ? 'Collapse' : 'Expand'} ${title}`;
   return (
-    <Box sx={{ minWidth: 0, containerType: 'inline-size' }}>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr)',
-          gap: 2,
-          alignItems: 'stretch',
-          '@container (min-width: 620px)': { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
-          '& > section': { minWidth: 0, containerType: 'inline-size' },
-        }}
-      >
-        {children}
-      </Box>
-    </Box>
+    <Paper
+      component="section"
+      variant="outlined"
+      sx={{
+        minWidth: 0,
+        borderRadius: 2,
+        containerType: 'inline-size',
+        '& > .MuiAccordion-root, & > .MuiAccordion-root.Mui-expanded': {
+          m: 0,
+          color: 'text.primary',
+          borderRadius: 'inherit',
+          bgcolor: 'transparent',
+        },
+        '& .MuiAccordionDetails-root': { px: { xs: 1.5, sm: 2 }, pb: { xs: 1.5, sm: 2 }, pt: 0 },
+      }}
+    >
+      <CustomAccordion
+        title={title}
+        expanded={expanded}
+        summary={
+          <Box id={`${id}-header`} aria-controls={`${id}-content`} sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <FormSectionHeader
+              title={title}
+              icon={icon}
+              descriptionTooltip={descriptionTooltip}
+              action={
+                <Stack direction="row" alignItems="center">
+                  {action}
+                  <Tooltip title={toggleLabel}>
+                    <IconButton
+                      type="button"
+                      size="small"
+                      aria-label={toggleLabel}
+                      aria-expanded={expanded}
+                      aria-controls={`${id}-content`}
+                      onClick={() => setExpanded(!expanded)}
+                    >
+                      <Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+              }
+            />
+          </Box>
+        }
+        content={<Stack spacing={2}>{children}</Stack>}
+      />
+    </Paper>
   );
 }
 

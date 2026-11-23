@@ -12,7 +12,11 @@ import { renderDocumentUi } from '../document-verification/document-ui-test-fixt
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
-function setup(type: 4 | 7, readOnly = false) {
+function setup(
+  type: 4 | 7,
+  readOnly = false,
+  position: 'existing' | 'earlier' | 'before-final' | 'after-last' | 'first' = 'existing'
+) {
   const onSave = vi.fn();
   const onClose = vi.fn();
   const name = type === 4 ? 'Payment' : 'Admission Decision';
@@ -40,7 +44,7 @@ function setup(type: 4 | 7, readOnly = false) {
     isRequired: true,
     allowManualSkip: false,
     isEntryStage: false,
-    isTerminalStage: type === 7,
+    isTerminalStage: type === 7 && position !== 'after-last' && position !== 'first',
     configurationJson:
       type === 4
         ? JSON.stringify({
@@ -50,13 +54,31 @@ function setup(type: 4 | 7, readOnly = false) {
           })
         : undefined,
   };
+  const other: AdmissionWorkflowStage = {
+    ...stage,
+    id: 'other-stage',
+    code: 'OTHER_STAGE',
+    name: 'Other stage',
+    displayOrder: 1,
+    stageType: position === 'after-last' ? 4 : 7,
+    isTerminalStage: position !== 'after-last',
+  };
+  const stages =
+    position === 'first'
+      ? []
+      : position === 'existing'
+        ? [stage]
+        : position === 'earlier'
+          ? [stage, other]
+          : [other];
   renderDocumentUi(
     <AdmissionWorkflowStageDrawer
       open
       stage={stage}
       stageTypes={[metadata]}
       forms={[]}
-      stages={[stage]}
+      stages={stages}
+      insertionSourceId={position === 'before-final' || position === 'after-last' ? other.id : null}
       readOnly={readOnly}
       onClose={onClose}
       onSave={onSave}
@@ -89,17 +111,36 @@ describe('Finance fee confirmation and admission decision setup', () => {
       extension: 'preserve',
     });
   });
-  it('keeps Admission Decision terminal behavior on the same page', async () => {
+  it('keeps the last Admission decision checked and locked', async () => {
     const { user, onSave } = setup(7);
     expect(screen.getByRole('heading', { name: 'Stage Details' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Stage Behavior' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Advanced Settings' })).not.toBeInTheDocument();
-    expect(screen.getByRole('switch', { name: 'End Of Journey' })).toBeChecked();
+    const ending = screen.getByRole('switch', { name: 'End Of Journey' });
+    expect(ending).toBeChecked();
+    expect(ending).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({ stageType: 7, isTerminalStage: true });
   });
+  it.each([
+    ['earlier', false],
+    ['before-final', false],
+    ['after-last', true],
+    ['first', true],
+  ] as const)(
+    'derives End of Journey for an Admission decision at %s',
+    async (position, terminal) => {
+      const { user, onSave } = setup(7, false, position);
+      const ending = screen.getByRole('switch', { name: 'End Of Journey' });
+      expect(ending).toBeDisabled();
+      expect((ending as HTMLInputElement).checked).toBe(terminal);
+      await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+      await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+      expect(onSave.mock.calls[0][0]).toMatchObject({ stageType: 7, isTerminalStage: terminal });
+    }
+  );
   it('shows Payment read-only and closes without saving', async () => {
     const { user, onSave, onClose } = setup(4, true);
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();

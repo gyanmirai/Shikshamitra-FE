@@ -98,14 +98,31 @@ describe('form lifecycle decision', () => {
     );
     cleanup();
   });
-  it('does not offer archive before dependency verification finishes', () => {
-    render(<FormLifecycleDialog {...props} impact={undefined} loading canConfirm={false} />);
-    expect(screen.getByRole('status')).toHaveTextContent('Checking Form Usage');
-    expect(screen.getByText(form.name).closest('p')).not.toHaveTextContent('linked to');
-    expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
-    cleanup();
-  });
+  it.each(['archive', 'restore'] as const)(
+    'shows one compact progress indicator on %s while checking dependencies',
+    (action) => {
+      const pending = { action, form: { ...form, status: action === 'archive' ? 1 : 2 } } as const;
+      render(
+        <FormLifecycleDialog
+          {...props}
+          pending={pending}
+          impact={undefined}
+          loading
+          canConfirm={false}
+        />
+      );
+      const outcome = screen.getByRole('button', {
+        name: action === 'archive' ? 'Archive' : 'Restore',
+      });
+      expect(screen.getAllByRole('progressbar')).toHaveLength(1);
+      expect(outcome).toContainElement(screen.getByRole('progressbar'));
+      expect(screen.queryByText(/Checking Form Usage/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/This form is linked to/)).not.toBeInTheDocument();
+      expect(outcome).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+      cleanup();
+    }
+  );
   it('locks both actions during a write and explains restoration without deleting links', () => {
     render(
       <FormLifecycleDialog

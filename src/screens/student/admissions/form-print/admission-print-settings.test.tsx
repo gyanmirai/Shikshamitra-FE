@@ -20,14 +20,18 @@ describe('print template choices', () => {
     expect(onChange).toHaveBeenLastCalledWith({ ...settings, layout: 'compact' });
   });
 
-  it('keeps the saved legacy layout selected until explicitly changed', () => {
+  it('presents Boxed Grid for a legacy layout without changing settings on mount', () => {
+    const onChange = vi.fn();
     render(
       <AdmissionPrintSettingsPanel
         settings={DEFAULT_ADMISSION_PRINT_SETTINGS}
-        onChange={vi.fn()}
+        onChange={onChange}
         branding={{}}
       />
     );
-    expect(screen.getByRole('radio', { name: /Simple/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Boxed Grid' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Structured Classic' })).not.toBeChecked();
+    expect(screen.queryByRole('radio', { name: /Simple/ })).not.toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
   });
 });
