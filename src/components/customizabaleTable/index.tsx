@@ -117,6 +117,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   searchFieldProps = {},
   searchableFields,
   noDataText = <>No data available</>,
+  externalFiltersActive = false,
   errorContent: customErrorContent,
   error: queryError,
   onRetry,
@@ -678,6 +679,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               <Table
                 stickyHeader
                 aria-label={`${tableTitle} table`}
+                aria-busy={(isLoading || isRefreshing) && !errorContent ? true : undefined}
                 size={dense ? 'small' : 'medium'}
                 sx={{
                   height:
@@ -726,7 +728,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   tableRef={tableRef}
                   rowsPerPage={rowsPerPage}
                   searchTerm={searchTerm}
-                  hasActiveFilters={filters.length > 0}
+                  hasActiveFilters={externalFiltersActive || filters.length > 0}
                   onClearCriteria={() => {
                     if (onClearCriteria) {
                       handleChangeParams({ searchTerm: '', filters: [], page: 0 });
@@ -838,7 +840,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                           : filteredData.length
                     }
                     labelDisplayedRows={
-                      paginationMode === 'unknown' ? () => `Page ${page + 1}` : undefined
+                      isLoading
+                        ? () => 'Loading…'
+                        : paginationMode === 'unknown' ? () => `Page ${page + 1}` : undefined
                     }
                     slotProps={
                       paginationMode === 'unknown'
@@ -953,6 +957,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       preparingExport,
       incompleteExport,
       exportError,
+      externalFiltersActive,
       showColumns,
       showExport,
       showFullScreen,

@@ -4,33 +4,32 @@ import { login, prepare, snapshot, fixtureApi, expectHealthy } from './academic-
 
 const tag = ['@module-academic', '@submodule-notifications', '@regression', '@responsive', '@accessibility'];
 
-test('shows paused queue processing across the notification workspace', { tag }, async ({ page, request }) => {
+test('keeps the notification workspace usable without a passive queue warning', { tag }, async ({ page, request }) => {
   await request.post(`${fixtureApi}/fixture/reset`, { data: { visited: true, notificationRules: true } });
   await prepare(page, request);
   await login(page);
   await page.setViewportSize({ width: 390, height: 844 });
-  let isQueueWorkerEnabled = false;
   await page.route('**/api/academic/notifications/catalogue', async (route) => {
     if (route.request().method() !== 'GET') {
       await route.continue();
       return;
     }
     const response = await route.fetch();
-    await route.fulfill({ response, json: { ...(await response.json()), isQueueWorkerEnabled } });
+    await route.fulfill({ response, json: { ...(await response.json()), isQueueWorkerEnabled: false } });
   });
   await page.goto('/academic/notification?category=learning');
-  const notice = page.getByRole('status').filter({ hasText: 'Notification processing is paused on this server.' });
-  await expect(notice).toBeVisible();
+  const notice = page.getByText(/Notification processing is paused/);
   await expect(page.getByRole('button', { name: 'Configure Homework published' })).toBeEnabled();
-  await page.getByRole('tab', { name: 'Templates' }).click();
-  await expect(notice).toBeVisible();
-  await page.getByRole('tab', { name: 'Delivery History' }).click();
-  await expect(notice).toBeVisible();
+  await expect(notice).toHaveCount(0);
+  await expectHealthy(page);
 
-  isQueueWorkerEnabled = true;
-  const refreshed = page.waitForResponse((response) => response.url().endsWith('/notifications/catalogue'));
-  await page.reload();
-  await (await refreshed).finished();
+  await page.getByRole('tab', { name: 'Templates' }).click();
+  await expect(page.getByRole('table', { name: 'Academic notification templates table' })).toBeVisible();
+  await expect(notice).toHaveCount(0);
+  await expectHealthy(page);
+
+  await page.getByRole('tab', { name: 'Delivery History' }).click();
+  await expect(page.getByRole('table', { name: 'Recent Academic notifications table' })).toBeVisible();
   await expect(notice).toHaveCount(0);
   await expectHealthy(page);
   expect((await snapshot(request)).notificationRuleWrites).toEqual([]);
@@ -411,7 +410,7 @@ test('confirms a retry for the exact rejected email attempt and refreshes queued
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/academic/notification?view=history&operation=5d643be1-59a9-4d91-a7b1-7dbd9b673011');
   const table = page.getByRole('table', { name: 'Academic notification delivery history table' });
-  const retry = table.getByRole('button', { name: 'Retry Email' });
+  const retry = table.getByRole('button', { name: 'Retry Email delivery for Guardian', exact: true });
   await expect(retry).toHaveCount(1);
   await expect(retry).toBeInViewport({ ratio: 1 });
   await expect(table.getByText('Failed', { exact: true })).toBeInViewport({ ratio: 1 });
@@ -438,10 +437,11 @@ test('refreshes history and explains when a retry needs review', { tag }, async 
   await login(page);
   await page.goto('/academic/notification?view=history&operation=5d643be1-59a9-4d91-a7b1-7dbd9b673011');
   const table = page.getByRole('table', { name: 'Academic notification delivery history table' });
-  await table.getByRole('button', { name: 'Retry Email' }).click();
+  const retry = table.getByRole('button', { name: 'Retry Email delivery for Guardian', exact: true });
+  await retry.click();
   await page.getByRole('dialog', { name: 'Retry Delivery' }).getByRole('button', { name: 'Queue retry' }).click();
   await expect(page.getByText('This attempt now needs review.', { exact: false })).toBeVisible();
-  await expect(table.getByRole('button', { name: 'Retry Email' })).toHaveCount(0);
+  await expect(retry).toHaveCount(0);
   await expect(table.getByText('Queued', { exact: true })).toHaveCount(0);
 });
 

@@ -1,4 +1,4 @@
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { AcademicNotificationRecentDelivery } from 'src/redux/academic-notifications/delivery-types';
 import type { AcademicNotificationEvent, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
 
@@ -12,10 +12,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { notificationEventKeyLabel } from 'src/redux/academic-notifications/response-adapters';
 import { useAcademicNotificationRecentDeliveriesQuery } from 'src/redux/academic-notifications/delivery-api';
 
-const columns: IColumn[] = [
-  { id: 'notification', label: 'Notification', rowHeader: true, minWidth: 160, isSort: false, render: (value) => value },
-  { id: 'createdAt', label: 'Created', minWidth: 160, isSort: false },
-];
 
 function deliveryPath(item: AcademicNotificationRecentDelivery) {
   const query = new URLSearchParams({ view: 'history' });
@@ -55,6 +51,21 @@ export function NotificationRecentDeliveries({ identity, events, eventKey, curso
   });
   const current = query.isError ? undefined : query.currentData;
   const next = current?.nextCursor;
+  const selectedOption = eventOptions.find(({ value }) => value === selectedEvent);
+  const filters: IParams['filters'] = selectedOption ? [{
+    column: 'notification', type: 'equals', value: selectedOption.value, valueType: 'enum',
+    label: 'Notification', displayValue: selectedOption.label,
+  }] : [];
+  const columns: IColumn[] = [
+    { id: 'notification', label: 'Notification', rowHeader: true, minWidth: 160, isSort: false,
+      isFilter: eventOptions.length > 0, filterType: 'enum', enumOptions: eventOptions, render: (value) => value,
+    },
+    { id: 'createdAt', label: 'Created', minWidth: 160, isSort: false, isFilter: false },
+  ];
+
+  function setEvent(event?: string) {
+    router.push(recentPath(event));
+  }
 
   return (
     <Stack gap={1} sx={{ p: 1, flex: 1, minHeight: 0 }}>
@@ -62,7 +73,7 @@ export function NotificationRecentDeliveries({ identity, events, eventKey, curso
       {eventOptions.length > 0 && (
         <CustomSelect label="Notification event" size="small" isSearch value={selectedEvent ?? 'all'}
           options={[{ value: 'all', label: 'All events' }, ...eventOptions]}
-          onChange={(value) => router.push(recentPath(value === 'all' ? undefined : String(value)))}
+          onChange={(value) => setEvent(value === 'all' ? undefined : String(value))}
           sx={{ width: { xs: 1, sm: 320 } }} />
       )}
       <CustomizableTable tableId="academic-notification-recent-deliveries" tableTitle="Recent Academic notifications"
@@ -75,17 +86,18 @@ export function NotificationRecentDeliveries({ identity, events, eventKey, curso
           ),
           createdAt: fDateTime(item.createdAt, 'DD MMM YYYY h:mm:ss a') ?? '—',
         }))}
-        isPagination={false} isFilter={false} isSearch={false} showToolbar={false} showExport={false}
+        isPagination={false} isSearch={false} showColumns showFullScreen showExport={false}
+        filters={filters} onServerFilter={(criteria) => setEvent(criteria.at(-1)?.value)}
         isLoading={!current && query.isFetching} isRefreshing={Boolean(current) && query.isFetching}
         error={query.error} onRetry={query.refetch}
-        noDataText={next ? 'No deliveries found on this page.' : 'No deliveries to show.'}
+        noDataText={cursor ? 'No deliveries found on this page.' : 'No deliveries to show.'}
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }} tableContainerProps={{ sx: { height: 1, minHeight: 0 } }} />
       {(cursor || next) && (
         <Stack direction="row" gap={1} justifyContent="flex-end">
           {cursor && <Button size="small" component={RouterLink} href={recentPath(selectedEvent)}>Newest</Button>}
           {next && (
             <Button size="small" component={RouterLink}
-              href={recentPath(selectedEvent, next)}>Older Deliveries</Button>
+              href={recentPath(selectedEvent, next)}>Older deliveries</Button>
           )}
         </Stack>
       )}

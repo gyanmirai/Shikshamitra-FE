@@ -123,13 +123,13 @@ Run `npm test -- src/screens/academic/AcademicNotification src/components/notifi
 The same Playwright config checks school-wide starter draft creation for the selected event, retry after a failed request, repeat setup, and preservation of saved template wording at phone and desktop widths.
 The rule-to-template scenario also verifies coverage for the current recipients, channels and fallback language. It checks both choices in the unsaved-changes confirmation and verifies that the Templates workspace opens for the same event and scope.
 The channel setup scenario distinguishes configured, pending and unavailable setup status before saving, and verifies that staff can save a disabled rule while setup is pending.
-The queue processing scenario checks the pause notice at phone width across all three tabs and verifies that it clears when the reloaded catalogue reports processing enabled.
+The workspace scenario checks that Rules, Templates, and Delivery History remain usable at phone width without a passive warning when the catalogue reports paused processing.
 
 The unavailable-event case checks the source explanation in the Rules table and configuration drawer. It verifies the disabled Enabled switch and readable drawer content at phone, tablet and desktop widths.
 
 The WhatsApp approval case publishes a revision, links it to a synthetic provider, submits for approval and refreshes its status. It checks phone, tablet and desktop layouts and queues a sample test after approval. The approval panel unit cases cover a view-only staff account and a changed provider binding.
 
-Run `npm test -- src/components/academic-notification-action` for reviewed sends, repeated confirmation clicks, changed reviews, and interrupted confirmation retries. The focused Playwright config also verifies that a reminder from the Homework evaluation table supplies exactly the selected student and opens the queued operation. This scenario uses a synthetic source and sends only to the fixture API.
+Run `npm test -- src/components/academic-notification-action` for reviewed sends, repeated confirmation clicks, changed reviews, and interrupted confirmation retries. The focused Playwright config also verifies that a reminder from the Homework evaluation table supplies exactly the selected student, shows a pause notice when confirmation reports paused processing, and opens the queued operation. This scenario uses a synthetic source and sends only to the fixture API.
 
 The reviewed-send checks exercise a queue pause that starts or ends between preview and confirmation. The dialog shows the latest pause status and retains the queued operation link.
 

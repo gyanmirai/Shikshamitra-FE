@@ -2,18 +2,17 @@ import type { FormikProps } from 'formik';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import type { AcademicNotificationEvent, AcademicNotificationChannel } from 'src/redux/academic-notifications/types';
 
-import { useId, useRef } from 'react';
-import { Editor } from 'src/components/editor';
+import { useRef } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { Stack, TextField, Typography } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
 import { notificationLabel, notificationChannelLabels } from 'src/redux/academic-notifications/response-adapters';
 
-import { NotificationVariablePicker } from './notification-variable-picker';
-import { templateVariableToken, insertTemplateVariable, templateRecipientKinds } from '../notification-template-model';
+import { templateRecipientKinds } from '../notification-template-model';
+import { NotificationTemplateTextField } from './notification-template-text-field';
+import { NotificationTemplateEmailField } from './notification-template-email-field';
 
-import type { TemplateTextField } from '../notification-template-model';
 import type { TemplateFormValues } from '../use-notification-template-form';
 
 export function NotificationTemplateFields({ event, form, locked, disabled, readOnly, scopeLabel }: {
@@ -24,30 +23,12 @@ export function NotificationTemplateFields({ event, form, locked, disabled, read
   readOnly: boolean;
   scopeLabel: string;
 }) {
-  const messageId = useId();
-  const subjectRef = useRef<HTMLInputElement>(null);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
   const editorRef = useRef<TiptapEditor | null>(null);
   const { values, errors, touched } = form;
+  const { variables } = event.definition;
   const email = values.channel === CommunicationChannelType.Email;
-  const contentDisabled = disabled || readOnly;
   const subjectError = touched.subject ? errors.subject : undefined;
   const bodyError = touched.body ? errors.body : undefined;
-
-  function insert(field: TemplateTextField, key: string) {
-    if (field === 'body' && email) {
-      editorRef.current?.chain().focus().insertContent(templateVariableToken(key)).run();
-      return;
-    }
-    const input = field === 'body' ? bodyRef.current : subjectRef.current;
-    const position = values[field].length;
-    const next = insertTemplateVariable(values[field], input?.selectionStart ?? position, input?.selectionEnd ?? position, key);
-    form.setFieldValue(field, next.value);
-    requestAnimationFrame(() => {
-      input?.focus();
-      input?.setSelectionRange(next.caret, next.caret);
-    });
-  }
 
   return (
     <Stack gap={2}>
@@ -95,35 +76,19 @@ export function NotificationTemplateFields({ event, form, locked, disabled, read
           Browser push shows a generic school alert on the device. Use the in-app template for the message recipients read in the website inbox.
         </Typography>
       )}
-      <ShakingTextField error={Boolean(subjectError)}>
-        <TextField label="Subject" size="small" fullWidth inputRef={subjectRef}
-          {...form.getFieldProps('subject')} disabled={contentDisabled} error={Boolean(subjectError)} helperText={subjectError} />
-      </ShakingTextField>
-      {!readOnly && <NotificationVariablePicker variables={event.definition.variables}
-        field="subject" disabled={disabled} onInsert={(key) => insert('subject', key)} />}
+      <NotificationTemplateTextField input={form.getFieldProps('subject')} error={subjectError}
+        readOnly={readOnly} disabled={disabled} variables={variables}
+        onValue={(value) => { form.setFieldValue('subject', value); }} />
       {email ? (
-        <Stack gap={0.5}>
-          <Typography component="label" id={messageId} variant="subtitle2">Message</Typography>
-          <Editor value={values.body} editable={!contentDisabled} isToolbarShow={!readOnly}
-            sx={disabled ? { pointerEvents: 'none' } : undefined}
-            onCreate={({ editor }) => { editorRef.current = editor; }}
-            onChange={(value) => { form.setFieldValue('body', value); }}
-            onBlur={() => { form.setFieldTouched('body'); }}
-            placeholder="Write the email message"
-            editorProps={{ attributes: {
-              role: 'textbox', name: 'body', 'aria-multiline': 'true', 'aria-labelledby': messageId,
-              'aria-invalid': String(Boolean(bodyError)),
-            } }}
-            error={Boolean(bodyError)} helperText={bodyError} />
-        </Stack>
+        <NotificationTemplateEmailField editorRef={editorRef} value={values.body} error={bodyError}
+          disabled={disabled} readOnly={readOnly} variables={variables}
+          onValue={(value) => { form.setFieldValue('body', value); }}
+          onBlur={() => { form.setFieldTouched('body'); }} />
       ) : (
-        <ShakingTextField error={Boolean(bodyError)}>
-          <TextField label="Message" size="small" required fullWidth multiline minRows={4} inputRef={bodyRef}
-            {...form.getFieldProps('body')} disabled={contentDisabled} error={Boolean(bodyError)} helperText={bodyError} />
-        </ShakingTextField>
+        <NotificationTemplateTextField input={form.getFieldProps('body')} error={bodyError}
+          readOnly={readOnly} disabled={disabled} variables={variables}
+          onValue={(value) => { form.setFieldValue('body', value); }} />
       )}
-      {!readOnly && <NotificationVariablePicker variables={event.definition.variables}
-        field="message" disabled={disabled} onInsert={(key) => insert('body', key)} />}
     </Stack>
   );
 }

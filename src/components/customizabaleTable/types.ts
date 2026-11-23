@@ -158,6 +158,8 @@ export interface ICustomizableTableProps {
   searchFieldProps?: TextFieldProps;
   searchableFields?: string[];
   noDataText?: React.ReactNode;
+  /** Criteria owned by the screen, such as a category or event selector. */
+  externalFiltersActive?: boolean;
   errorContent?: ReactNode;
   error?: unknown;
   onRetry?: () => void;

@@ -20,7 +20,7 @@ Use the [backend API reference](../../../Shikshamitra-BE/docs/modules/academic/a
 Weekly summary rules pass a weekday as `timing.weeklySummaryDay` alongside the school-local `timing.reminderLocalTime`.
 The catalogue cache is keyed by tenant and user. The task reminder reads `manualAvailability` when present. The Rules workspace uses `availability` to show which events can run automatically. The rule cache also includes the requested academic hierarchy, event filter and page. Each request verifies the identity of the session that supplies the token. The request sends the hierarchy and paging fields, and the save sends the current rule concurrency stamp. Successful saves refresh rule queries for the same user and tenant. Rejected saves retain the existing results.
 
-Rules, Templates, and Delivery History share the workspace catalogue request. An explicit false `isQueueWorkerEnabled` shows a pause notice for the current server. [Catalogue contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#catalogue-availability)
+Rules, Templates, and Delivery History share the workspace catalogue request. [Catalogue contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#catalogue-availability)
 
 ## Notification template client
 
@@ -39,6 +39,8 @@ Test send submits just the saved revision ID and stamp. Its queued response prov
 `src/redux/academic-notifications/delivery-api.ts` reads the operation status and paged delivery attempts for an authorized source. A link with an operation ID reads its authorized source before requesting its attempt rows. Staff cancellation refreshes both reads for the same school and user.
 
 `src/redux/academic-notifications/manual-api.ts` submits the source, selected recipient references and channel choices for review. Confirmation submits only the review token and its stable idempotency key. A successful confirmation returns the operation for Delivery History. The same session guard applies to both requests.
+
+The send dialog uses queue status from the review and confirmation responses to show pauses that affect the selected channels.
 
 `src/redux/academic-notifications/template-api.ts` submits current draft fields to the sample preview endpoint after typing pauses. The editor cancels replaced requests and displays only the result for the current fields, school and account. The saved-revision route supplies preview in version history.
 
