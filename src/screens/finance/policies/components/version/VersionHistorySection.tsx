@@ -14,7 +14,6 @@ interface Props {
   title: string;
   helpText: string;
   helpLabel?: string;
-  badge?: ReactNode;
   children: ReactNode;
   expanded?: boolean;
   onChange?: () => void;
@@ -25,7 +24,6 @@ export default function VersionHistorySection({
   title,
   helpText,
   helpLabel = `${title} information`,
-  badge,
   children,
   expanded,
   onChange,
@@ -72,7 +70,6 @@ export default function VersionHistorySection({
               <Typography variant="subtitle1" component="h3" color="text.primary">
                 {title}
               </Typography>
-              {badge}
             </AccordionSummary>
             <CustomTooltip placement="right" arrow title={helpText}>
               <IconButton size="small" aria-label={helpLabel}>

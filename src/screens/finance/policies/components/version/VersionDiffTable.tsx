@@ -75,11 +75,9 @@ const SNAPSHOT_METADATA_FIELDS = new Set([
 
 function ChangesSection({
   collapsible,
-  fieldCount,
   children,
 }: {
   collapsible: boolean;
-  fieldCount: number;
   children: React.ReactNode;
 }) {
   if (!collapsible) return <Box>{children}</Box>;
@@ -90,11 +88,6 @@ function ChangesSection({
       helpText="Before shows the previous version's recorded value. After shows the selected version's value. The first version has no previous snapshot; a dash (—) means no value was recorded."
       helpLabel="Version changes information"
       defaultExpanded
-      badge={
-        <Label sx={{ ml: 'auto', mr: 1 }}>
-          {fieldCount} {fieldCount === 1 ? 'field' : 'fields'}
-        </Label>
-      }
     >
       {children}
     </VersionHistorySection>
@@ -187,7 +180,6 @@ function VersionDiffTable({
       <ChangesSection
         key={selectedVersion.eventId}
         collapsible={collapsibleChanges}
-        fieldCount={selectedVersion.changedFields.length}
       >
         {!collapsibleChanges && (
           <Stack
@@ -211,10 +203,6 @@ function VersionDiffTable({
                 </IconButton>
               </CustomTooltip>
             </Stack>
-            <Label color="default">
-              {selectedVersion.changedFields.length}{' '}
-              {selectedVersion.changedFields.length === 1 ? 'field' : 'fields'}
-            </Label>
           </Stack>
         )}
         {selectedVersion.changedFields.length === 0 ? (

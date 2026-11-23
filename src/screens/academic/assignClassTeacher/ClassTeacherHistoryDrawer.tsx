@@ -1,9 +1,8 @@
 import dayjs from 'dayjs';
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Stack, Button, Typography, LinearProgress } from '@mui/material';
+import { Box, Stack, Typography, LinearProgress } from '@mui/material';
 import { useGetClassTeacherAssignmentHistoryQuery } from 'src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssignmentApi';
 
 import { AssignmentDrawerShell } from './AssignmentDrawerShell';
@@ -29,17 +28,6 @@ export function ClassTeacherHistoryDrawer({ open, organization, canView, onClose
       title="Assignment History"
       onClose={onClose}
       help="Review saved teacher changes, reasons, and audit dates for the selected organization."
-      actions={
-        <Button
-          size="small"
-          variant="outlined"
-          color="inherit"
-          onClick={onClose}
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-        >
-          Close
-        </Button>
-      }
     >
       <Stack spacing={2} aria-busy={isLoading || isFetching}>
         {isError && (

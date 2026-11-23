@@ -6,29 +6,30 @@ import type {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import dayjs from 'dayjs';
-import { fDate } from 'src/utils/format-time';
 import { Label } from 'src/components/label';
+import { fDate } from 'src/utils/format-time';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Alert,
-  Stack,
-  Button,
-  Checkbox,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Alert, Stack, Button, Divider, TextField, Typography, DialogActions } from '@mui/material';
 import {
   assignmentError,
   useAssignmentOptionalServiceStopMutation,
   useAssignmentOptionalServiceStopPreviewMutation,
 } from 'src/redux/finance/studentFeeAssignment';
+
+import { optionalServiceStatus } from './optionalServiceStatus';
+import AssignmentFeeHeadSummary from './AssignmentFeeHeadSummary';
+import OptionalFeeServiceRestart from './OptionalFeeServiceRestart';
+
+import type { FeeHeadProration } from './assignmentReviewPresentation';
 
 export default function OptionalFeeServiceStops({
   assignment,
@@ -36,15 +37,19 @@ export default function OptionalFeeServiceStops({
   onSaved,
   onBusyChange,
   disabledReason,
+  feeHeadProration,
+  canRestart,
 }: {
   assignment: AssignmentPreview;
   disabled?: boolean;
   onSaved?: () => void;
   onBusyChange?: (busy: boolean) => void;
   disabledReason?: string;
+  feeHeadProration?: Map<string, FeeHeadProration>;
+  canRestart?: boolean;
 }) {
   const [head, setHead] = useState<AssignmentHead>();
-  const [lastServiceDate, setLastServiceDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const [reason, setReason] = useState('');
   const [requestId, setRequestId] = useState('');
   const [quote, setQuote] = useState<OptionalServiceStopResult>();
@@ -58,31 +63,36 @@ export default function OptionalFeeServiceStops({
     return () => onBusyChange?.(false);
   }, [busy, onBusyChange]);
   const heads = assignment.heads.filter((item) => item.isOptional);
-  const hasUnselected = heads.some((item) => !item.included);
+  const hasUnavailableOptions = heads.some(
+    (item) => !item.included && (!canRestart || item.isOneTime)
+  );
+  const blocker = disabled
+    ? disabledReason || 'This action is unavailable while another change is pending.'
+    : undefined;
   const minDate = head?.servicePeriod?.startDate
     ? dayjs(head.servicePeriod.startDate.slice(0, 10))
     : undefined;
   const maxDate = head?.servicePeriod?.endDate
-    ? dayjs(head.servicePeriod.endDate.slice(0, 10)).subtract(1, 'day')
+    ? dayjs(head.servicePeriod.endDate.slice(0, 10))
     : undefined;
   const validDate =
-    lastServiceDate?.isValid() &&
+    endDate?.isValid() &&
     minDate &&
     maxDate &&
-    !lastServiceDate.isBefore(minDate, 'day') &&
-    !lastServiceDate.isAfter(maxDate, 'day');
+    !endDate.isBefore(minDate, 'day') &&
+    !endDate.isAfter(maxDate, 'day');
 
   if (!heads.length) return null;
 
   const submit = async () => {
-    if (pending.current || !head || !lastServiceDate || !validDate || !reason.trim()) return;
+    if (pending.current || !head || !endDate || !validDate || !reason.trim()) return;
     pending.current = true;
     setError('');
     const body = {
       studentId: assignment.studentId,
       academicYearId: assignment.academicYearId,
       feeHeadId: head.feeHeadId,
-      lastServiceDate: lastServiceDate.format('YYYY-MM-DD'),
+      lastServiceDate: endDate.subtract(1, 'day').format('YYYY-MM-DD'),
       reason: reason.trim(),
       requestId,
     };
@@ -92,7 +102,7 @@ export default function OptionalFeeServiceStops({
       } else {
         await stop({ ...body, previewToken: quote.previewToken }).unwrap();
         setHead(undefined);
-        shikshaMitraToast.success({ message: 'Future unpaid installments cancelled.' });
+        shikshaMitraToast.success({ message: 'Service cancellation saved.' });
         onSaved?.();
       }
     } catch (issue) {
@@ -106,10 +116,10 @@ export default function OptionalFeeServiceStops({
     <FormSectionCard
       title="Optional Fee Heads"
       icon="mdi:format-list-checks"
-      descriptionTooltip="Review every optional fee from the assigned structure. Stop an active recurring service to cancel eligible future installments."
+      descriptionTooltip="Manage recurring optional services and review their saved fee amounts and service dates."
     >
-      <Stack spacing={1}>
-        {hasUnselected && (
+      <Stack spacing={1.5} divider={<Divider flexItem />}>
+        {hasUnavailableOptions && (
           <Typography variant="body2" color="text.secondary">
             Adding optional fees through this assignment requires an editable fee structure.
           </Typography>
@@ -120,100 +130,187 @@ export default function OptionalFeeServiceStops({
             (sum, line) => sum + (line.optionalServiceCancellationAmount ?? 0),
             0
           );
-          const stopped = cancelledAmount > 0;
-          const blocker = disabled
-            ? disabledReason || 'This action is unavailable while another change is pending.'
-            : !item.servicePeriod?.startDate || !item.servicePeriod?.endDate
-              ? 'Saved service dates are unavailable for this fee.'
-              : !lines.some((line) => line.outstandingAmount > 0 && !line.paidAmount)
-                ? 'There are no unpaid installments available to cancel for this service.'
-                : undefined;
+          const { stopped, label, latestPeriod } = optionalServiceStatus(item, cancelledAmount > 0);
+          const servicePeriod = latestPeriod ?? item.servicePeriod;
+          const supportsStop = item.included && !item.isOneTime && label !== 'Ended';
+          const stopBlocker = stopped ? 'This service has already been cancelled.' : blocker;
+          const stopLabel = `Cancel service for ${item.feeHeadName}`;
+          const unavailableReason =
+            !servicePeriod?.startDate || !servicePeriod?.endDate
+              ? 'Service dates are unavailable for this fee.'
+              : undefined;
+          const showCancel = supportsStop && !unavailableReason;
+          const showEnable = canRestart && !item.isOneTime && (stopped || !item.included);
+          const dates =
+            item.included && !stopped && servicePeriod?.startDate && servicePeriod.endDate
+              ? `${fDate(servicePeriod.startDate)} – ${fDate(servicePeriod.endDate)}`
+              : undefined;
           return (
-            <Stack
+            <AssignmentFeeHeadSummary
               key={item.feeHeadId}
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              spacing={1}
-            >
-              <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0 }}>
-                <Checkbox
-                  checked={item.included && !stopped}
-                  disabled
-                  inputProps={{ 'aria-label': item.feeHeadName }}
-                />
-                <div>
-                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                    {item.feeHeadName}
-                  </Typography>
-                  {stopped && (
-                    <Typography variant="body2" color="text.secondary">
-                      {formatNumber(cancelledAmount, assignment.currency)} cancelled
-                    </Typography>
-                  )}
-                </div>
-              </Stack>
-              {stopped && <Label sx={{ flexShrink: 0 }}>Service stopped</Label>}
-              {!item.included && <Label sx={{ flexShrink: 0 }}>Not selected</Label>}
-              {item.included && !stopped && !item.isOneTime && (
-                <CustomTooltip
-                  title={blocker || `Stop service for ${item.feeHeadName}`}
-                  describeChild
-                >
-                  {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Keep the disabled action's explanation reachable by keyboard. */}
-                  <span tabIndex={blocker ? 0 : undefined} style={{ display: 'inline-flex' }}>
-                    <Button
-                      variant="outlined"
-                      color="inherit"
-                      size="small"
-                      aria-label={`Stop service for ${item.feeHeadName}`}
-                      disabled={Boolean(blocker)}
-                      onClick={() => {
-                        setHead(item);
-                        setLastServiceDate(null);
-                        setReason('');
-                        setQuote(undefined);
-                        setError('');
-                        setRequestId(globalThis.crypto.randomUUID());
-                      }}
-                    >
-                      Stop service
-                    </Button>
-                  </span>
-                </CustomTooltip>
-              )}
-            </Stack>
+              head={item}
+              currency={assignment.currency}
+              calculation={feeHeadProration?.get(item.feeHeadId)}
+              status={
+                label ? (
+                  <Label color={stopped || label === 'Ended' ? 'default' : 'success'}>
+                    {label}
+                  </Label>
+                ) : !item.included ? (
+                  <Label>Not selected</Label>
+                ) : undefined
+              }
+              serviceDetails={
+                item.included && (
+                  <>
+                    {dates && (
+                      <DetailField
+                        label={
+                          latestPeriod &&
+                          (item.originalOptionalServiceEndDate ||
+                            (item.optionalServicePeriods?.length ?? 0) > 1)
+                            ? 'Restarted service dates'
+                            : 'Service dates'
+                        }
+                        value={dates}
+                      />
+                    )}
+                    {stopped && item.optionalServiceEndDate && (
+                      <DetailField
+                        label="Cancellation effective date"
+                        value={fDate(item.optionalServiceEndDate)}
+                      />
+                    )}
+                    {item.originalOptionalServiceEndDate && latestPeriod && (
+                      <DetailField
+                        label="Original cancellation date"
+                        value={fDate(item.originalOptionalServiceEndDate)}
+                      />
+                    )}
+                    {cancelledAmount > 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        {formatNumber(cancelledAmount, assignment.currency)} cancelled
+                      </Typography>
+                    )}
+                    {supportsStop && unavailableReason && (
+                      <Typography variant="caption" color="text.secondary">
+                        {unavailableReason}
+                      </Typography>
+                    )}
+                  </>
+                )
+              }
+              actions={
+                (showEnable || showCancel) && (
+                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                    {showEnable && (
+                      <OptionalFeeServiceRestart
+                        assignment={assignment}
+                        head={item}
+                        disabledReason={blocker}
+                        onSaved={onSaved}
+                        onBusyChange={onBusyChange}
+                      />
+                    )}
+                    {showCancel && (
+                      <CustomTooltip title={stopBlocker || stopLabel} describeChild>
+                        <span
+                          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Keep the disabled action's explanation reachable by keyboard.
+                          tabIndex={stopBlocker ? 0 : undefined}
+                          style={{ display: 'inline-flex' }}
+                        >
+                          <Button
+                            variant="outlined"
+                            color="inherit"
+                            size="small"
+                            aria-label={stopLabel}
+                            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                            disabled={Boolean(stopBlocker)}
+                            onClick={() => {
+                              setHead({
+                                ...item,
+                                servicePeriod: servicePeriod
+                                  ? {
+                                      ...item.servicePeriod,
+                                      feeHeadId: item.feeHeadId,
+                                      source: item.servicePeriod?.source ?? 'ManualOverride',
+                                      startDate: servicePeriod.startDate,
+                                      endDate: servicePeriod.endDate,
+                                    }
+                                  : undefined,
+                              });
+                              setEndDate(null);
+                              setReason('');
+                              setQuote(undefined);
+                              setError('');
+                              setRequestId(globalThis.crypto.randomUUID());
+                            }}
+                          >
+                            Cancel service
+                          </Button>
+                        </span>
+                      </CustomTooltip>
+                    )}
+                  </Stack>
+                )
+              }
+            />
           );
         })}
       </Stack>
       <CustomDialog
         open={Boolean(head)}
-        title={`Stop ${head?.feeHeadName ?? 'Optional Fee'} Service`}
+        title={`Cancel ${head?.feeHeadName ?? 'Optional Fee'} Service`}
         handleClose={() => setHead(undefined)}
         disableClose={busy}
-        hasUnsavedChanges={Boolean(lastServiceDate || reason)}
+        hasUnsavedChanges={Boolean(endDate || reason)}
         hasForm={false}
       >
         <DialogScrollContent>
           <Stack spacing={2}>
             {quote ? (
               <Alert severity="warning">
-                Cancel {quote.installmentCount} future unpaid{' '}
-                {quote.installmentCount === 1 ? 'installment' : 'installments'} totaling{' '}
-                {formatNumber(quote.cancelledAmount, assignment.currency)} after{' '}
-                {fDate(lastServiceDate)}. Past charges and receipts will be kept.
+                Service ends on {fDate(endDate)}.{' '}
+                {quote.installmentCount
+                  ? `${quote.installmentCount} ${quote.installmentCount === 1 ? 'installment' : 'installments'} totaling ${formatNumber(quote.cancelledAmount, assignment.currency)} will be deducted.`
+                  : 'There are no installments eligible for cancellation.'}
+                {quote.installmentCount > 0 && (
+                  <>
+                    {' '}
+                    Outstanding fees decrease by{' '}
+                    {formatNumber(
+                      quote.outstandingReduction ?? quote.cancelledAmount,
+                      assignment.currency
+                    )}
+                    .
+                    {!!quote.prepaidCredit && (
+                      <>
+                        {' '}
+                        Prepaid service credit is{' '}
+                        {formatNumber(quote.prepaidCredit, assignment.currency)}.
+                      </>
+                    )}
+                  </>
+                )}
               </Alert>
             ) : (
               <>
                 <DatePicker
-                  label="Last service date"
+                  label="Cancellation effective date"
                   format="DD/MM/YYYY"
                   minDate={minDate}
                   maxDate={maxDate}
-                  value={lastServiceDate}
-                  onChange={setLastServiceDate}
+                  value={endDate}
+                  onChange={setEndDate}
                   disabled={busy}
-                  slotProps={{ textField: { fullWidth: true, required: true, size: 'small' } }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                      size: 'small',
+                      helperText: 'Choose the first day the service is no longer provided.',
+                    },
+                  }}
                 />
                 <TextField
                   label="Reason for stopping service"
@@ -238,6 +335,7 @@ export default function OptionalFeeServiceStops({
             color="inherit"
             size="small"
             disabled={busy}
+            startIcon={<Iconify icon={quote ? GlobalIcons.back : GlobalIcons.cancel} />}
             onClick={() => {
               if (quote) {
                 setQuote(undefined);
@@ -254,10 +352,11 @@ export default function OptionalFeeServiceStops({
             color="inherit"
             size="small"
             loading={busy}
+            startIcon={<Iconify icon={quote ? GlobalIcons.submit : GlobalIcons.eye} />}
             disabled={!validDate || !reason.trim() || busy}
             onClick={submit}
           >
-            {quote ? 'Cancel future installments' : 'Preview cancellation'}
+            {quote ? 'Confirm cancellation' : 'Preview cancellation'}
           </Button>
         </DialogActions>
       </CustomDialog>

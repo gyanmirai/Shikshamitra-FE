@@ -134,6 +134,12 @@ describe('Fee Structure workspace API', () => {
       body: { concurrencyStamp: 'stamp' },
     });
     expect(endpoints.reviseStructure.query(args).url).toBe('/fee-structures/structure/revisions');
+    expect(
+      endpoints.reviseStructure.query({ ...args, requestId: 'revision-request' }).body
+    ).toEqual({
+      concurrencyStamp: 'stamp',
+      requestId: 'revision-request',
+    });
     expect(endpoints.publishStructure.invalidatesTags(null, null, args)).toContainEqual(
       expect.objectContaining({ id: 'class' })
     );

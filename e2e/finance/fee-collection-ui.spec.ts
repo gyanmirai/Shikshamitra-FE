@@ -44,7 +44,9 @@ async function expandGroups(page: Page) {
 async function expectTotal(page: Page, expected: number) {
   await expect(amount(page)).toHaveValue(expected ? `₹ ${expected.toLocaleString('en-IN')}` : '');
   await expect(
-    summary(page).getByText(`₹ ${expected.toLocaleString('en-IN')}`, { exact: true }).last()
+    page.getByLabel('Collection actions').getByText(`₹ ${expected.toLocaleString('en-IN')}`, {
+      exact: true,
+    })
   ).toBeVisible();
 }
 
@@ -120,6 +122,11 @@ test('shows billing dates and one-time heads, and reviews only funded fee heads 
   await expect(schoolFees.getByText('10 Jun 2026')).toBeVisible();
 
   await amount(page).fill('2500');
+  const tuitionGroup = feeLedger.getByRole('button', { name: /^Class 3 Tuition Fee/ });
+  await expect(tuitionGroup).toHaveAttribute('aria-expanded', 'false');
+  const paymentsGroup = summary(page).getByRole('button', { name: /^Payments \(/ });
+  await expect(paymentsGroup).toHaveAttribute('aria-expanded', 'false');
+  await tuitionGroup.click();
   await expect(
     feeLedger.getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, June 2026' })
   ).toBeChecked();
@@ -134,7 +141,29 @@ test('shows billing dates and one-time heads, and reviews only funded fee heads 
   const review = page.getByRole('dialog', { name: 'Review Payment' });
   await expect(review.getByText('Class 3 Tuition Fee', { exact: true })).toHaveCount(1);
   await expect(review.getByText('School Fees', { exact: true })).toHaveCount(0);
-  await expect(review.getByText('Jun 2026 · Jul 2026', { exact: true })).toBeVisible();
+  await expect(review.getByRole('rowheader', { name: /Jun 2026 to Jul 2026/ })).toBeVisible();
+});
+
+test('shows applied waiver rows for late and ordinary charges without a charge explanation', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Mixed waived charges', exact: true }).click();
+  await page.getByRole('button', { name: 'Collect fee for Diya Sweta Badgujar (10092)' }).click();
+  const fees = ledger(page);
+  await fees.getByRole('button', { name: /^Additional Charges/ }).click();
+
+  for (const [name, reasons] of [
+    [/Partially Waived Late Fee/, ['First partial waiver', 'Second partial waiver']],
+    [/Fully Waived Manual Charge/, ['Approved charge waiver']],
+  ] as const) {
+    await fees.getByRole('row', { name }).click();
+    const details = page.getByRole('dialog', { name });
+    const history = details.getByRole('table', { name: 'Waiver history table' });
+    for (const reason of reasons) await expect(history.getByText(reason)).toBeVisible();
+    await expect(details.getByText('Charge explanation', { exact: true })).toHaveCount(0);
+    await details.getByRole('button', { name: 'Close', exact: true }).click();
+  }
 });
 
 test('all six status filters use real fee and charge statuses', async ({ page }) => {
@@ -170,9 +199,10 @@ test('grouping and hidden display filters retain selection and an edited partial
   await choose(page, 'Month', 'June-2026');
   await expect(page.getByText('1 selected item is outside the current filters.')).toBeVisible();
   await expect(amount(page)).toHaveValue('₹ 500');
+  await summary(page).getByRole('button', { name: /^Payments \(/ }).click();
   await expect(
     summary(page).getByRole('table', { name: 'Selected collection items' }).getByRole('cell', {
-      name: '₹ 2,400',
+      name: '₹ 500',
       exact: true,
     })
   ).toBeVisible();
@@ -280,15 +310,10 @@ async function moveDownWithKeyboard(handle: Locator) {
 
 async function confirmCash(page: Page) {
   await collectAction(page).click();
-  await page
-    .getByRole('dialog', { name: 'Payment Details', exact: true })
-    .getByRole('button', { name: 'Confirm & Collect Fee', exact: true })
-    .click();
-  await page
-    .getByRole('dialog', { name: 'Confirm Cash Payment', exact: true })
-    .getByRole('button', { name: 'Final Submit & Generate Receipt', exact: true })
-    .click();
-  await expect(page.getByRole('dialog', { name: 'Payment Receipts', exact: true })).toBeVisible();
+  const review = page.getByRole('dialog', { name: 'Review Payment', exact: true });
+  await review.getByRole('button', { name: /^Collect / }).click();
+  await expect(page.getByText('Receipt generated.', { exact: true })).toBeVisible();
+  await expect(review).toHaveCount(0);
 }
 
 test('selected fees are visible, pointer and keyboard dragging change the partial-payment allocation order', async ({
@@ -303,6 +328,7 @@ test('selected fees are visible, pointer and keyboard dragging change the partia
     })
     .check();
   const selected = page.getByRole('table', { name: 'Selected collection items', exact: true });
+  await selected.getByRole('button', { name: /^Payments \(/ }).click();
   const rows = selected
     .getByRole('rowgroup', { name: 'Selected fees', exact: true })
     .getByRole('row');
@@ -350,6 +376,7 @@ test('charge ordering and the trailing remove icon update the ledger and outgoin
   await filters(page);
   await page.getByRole('checkbox', { name: 'All Charges', exact: true }).check();
   const selected = page.getByRole('table', { name: 'Selected collection items', exact: true });
+  await selected.getByRole('button', { name: /^Charges \(/ }).click();
   const rows = selected
     .getByRole('rowgroup', { name: 'Selected charges', exact: true })
     .getByRole('row');
@@ -462,7 +489,7 @@ for (const [method, methodId] of [
   ['Debit Card', 5],
   ['UPI', 6],
 ] as const) {
-  test(`${method}: one review, receipt download, and canonical payment request`, async ({
+  test(`${method}: one review, receipt toast, and canonical payment request`, async ({
     page,
   }) => {
     await openCollection(page);
@@ -484,19 +511,16 @@ for (const [method, methodId] of [
         name: method === 'Cash' ? /^Collect\s*₹\s*500$/ : 'Record & issue provisional receipt',
       })
       .click();
-    const receipts = page.getByRole('dialog', { name: 'Payment Receipts', exact: true });
-    await expect(receipts).toBeVisible();
-    await expect(receipts).toContainText(methodId === 0 ? 'REC-2026-' : 'KFE-2026-');
+    await expect(page.getByText(
+      methodId === 0 ? 'Receipt generated.' : 'Provisional receipt generated.',
+      { exact: true }
+    )).toBeVisible();
+    await expect(preview).toHaveCount(0);
     await expect(page.getByRole('dialog', { name: 'Payment Verification' })).toHaveCount(0);
-    await expect(receipts.locator('iframe, embed, object')).toHaveCount(0);
-    const [download] = await Promise.all([
-      page.waitForEvent('download'),
-      receipts.getByRole('button', { name: 'Download', exact: true }).click(),
-    ]);
-    expect(download.suggestedFilename()).toMatch(/\.pdf$/);
-    await receipts.getByRole('button', { name: 'Done', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Payment summary', exact: true })).toHaveCount(0);
-    const sent = (await requests(page)).filter(
+    const entries = await requests(page);
+    expect(entries.filter((item) => item.url.endsWith('/pdf'))).toHaveLength(0);
+    const sent = entries.filter(
       (item) => item.url === '/fee-collections' && item.method === 'POST'
     );
     expect(sent).toHaveLength(1);
@@ -539,6 +563,7 @@ for (const size of [
       }
       await filters(page);
       await page.getByRole('checkbox', { name: 'All Pending', exact: true }).check();
+      await summary(page).getByRole('button', { name: /^Payments \(/ }).click();
       await page.getByRole('button', { name: /^Filters/ }).click();
       await summary(page).scrollIntoViewIfNeeded();
       const body = page.getByRole('region', { name: 'Payment details' });

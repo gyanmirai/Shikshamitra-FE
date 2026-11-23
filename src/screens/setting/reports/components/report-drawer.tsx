@@ -92,18 +92,22 @@ export function ReportDrawer({
       >
         {children}
       </Box>
-      <Divider />
-      <Stack
-        direction="row"
-        justifyContent="flex-end"
-        alignItems="center"
-        useFlexGap
-        flexWrap="wrap"
-        spacing={1}
-        sx={{ px: { xs: 2, sm: 3 }, py: 1.75, flexShrink: 0 }}
-      >
-        {footer}
-      </Stack>
+      {footer && (
+        <>
+          <Divider />
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            alignItems="center"
+            useFlexGap
+            flexWrap="wrap"
+            spacing={1}
+            sx={{ px: { xs: 2, sm: 3 }, py: 1.75, flexShrink: 0 }}
+          >
+            {footer}
+          </Stack>
+        </>
+      )}
     </Drawer>
   );
 }

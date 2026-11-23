@@ -3,7 +3,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import SubmitButton from 'src/components/submit-button';
-import { Box, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Skeleton, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { reportError } from '../types';
@@ -43,31 +43,18 @@ export function ReportPreviewDrawer({
       onClose={onClose}
       info="Preview current data using the saved report filters. Previously generated downloads retain their original contents."
       footer={
-        <>
-          <Button
+        canAdd && (
+          <SubmitButton
             type="button"
-            size="small"
-            color="inherit"
-            variant="outlined"
-            disabled={busy}
-            onClick={onClose}
-            startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
-          >
-            Close
-          </Button>
-          {canAdd && (
-            <SubmitButton
-              type="button"
-              loading={busy}
-              disabled={busy || loading || Boolean(error) || !preview}
-              startIcon={<Iconify icon={GlobalIcons.generateReport} width={18} />}
-              buttonText={`Generate ${request.format === 'excel' ? 'Excel' : request.format.toUpperCase()} report`}
-              onClick={() => {
-                if (!busy && !loading && !error && preview) onGenerate(request);
-              }}
-            />
-          )}
-        </>
+            loading={busy}
+            disabled={busy || loading || Boolean(error) || !preview}
+            startIcon={<Iconify icon={GlobalIcons.generateReport} width={18} />}
+            buttonText={`Generate ${request.format === 'excel' ? 'Excel' : request.format.toUpperCase()} report`}
+            onClick={() => {
+              if (!busy && !loading && !error && preview) onGenerate(request);
+            }}
+          />
+        )
       }
     >
       <Typography variant="body2" role="status" sx={{ flexShrink: 0, overflowWrap: 'anywhere' }}>

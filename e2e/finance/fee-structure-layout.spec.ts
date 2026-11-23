@@ -1,6 +1,43 @@
 /* eslint-disable import/no-extraneous-dependencies -- Playwright is a test dependency. */
 import { test, expect } from '@playwright/test';
 
+test('centers the empty fee heads and stretches the workspace divider', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await page.getByText('Fixture controls', { exact: true }).click();
+  await page.getByRole('button', { name: 'Light theme', exact: true }).click();
+  await page.getByRole('button', { name: 'Open full-screen workspace', exact: true }).click();
+  const workspace = page.getByRole('dialog').filter({ hasText: 'Manage Fee Structure' });
+  await expect(workspace.getByRole('tab', { selected: true })).toHaveCSS(
+    'border-top-color',
+    'rgb(0, 0, 0)'
+  );
+  await workspace.getByRole('button', { name: 'Add Structure', exact: true }).click();
+
+  const stepper = workspace.locator('.MuiStepper-vertical:visible');
+  const divider = await stepper.evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
+    workspaceHeight: element.parentElement!.getBoundingClientRect().height,
+    borderWidth: getComputedStyle(element).borderRightWidth,
+  }));
+  expect(divider.borderWidth).toBe('1px');
+  expect(divider.height).toBeCloseTo(divider.workspaceHeight, 0);
+
+  const empty = workspace.getByText('No fee heads added.', { exact: true });
+  await expect(empty).toBeVisible();
+  const center = await empty.evaluate((element) => {
+    const illustration = element.previousElementSibling!.getBoundingClientRect();
+    const label = element.getBoundingClientRect();
+    const tableHeader = element.closest('table')!.tHead!.getBoundingClientRect();
+    const viewport = element.closest('.simplebar-content-wrapper')!.getBoundingClientRect();
+    return {
+      content: (illustration.top + label.bottom) / 2,
+      tableBody: (tableHeader.bottom + viewport.bottom) / 2,
+    };
+  });
+  expect(Math.abs(center.content - center.tableBody)).toBeLessThan(4);
+});
+
 [
   { width: 1440, height: 900 },
   { width: 768, height: 1024 },

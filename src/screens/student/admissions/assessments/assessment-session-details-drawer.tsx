@@ -173,11 +173,6 @@ export function AssessmentSessionDetailsDrawer({ session, onClose }: Props) {
         </Stack>
       </Scrollbar>
       <Divider />
-      <Stack direction="row" justifyContent="flex-end" sx={{ p: 2 }}>
-        <Button variant="outlined" onClick={onClose}>
-          Close
-        </Button>
-      </Stack>
     </Drawer>
   );
 }

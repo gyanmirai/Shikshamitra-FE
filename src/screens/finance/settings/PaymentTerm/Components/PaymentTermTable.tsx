@@ -9,7 +9,8 @@ import React, { useMemo, useState } from 'react';
 import { Label } from 'src/components/label';
 
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Chip, Stack, Typography, Button, Drawer, Box } from '@mui/material';
+import { Stack, Typography, Button, Drawer, Box } from '@mui/material';
+import { DefaultIndicator } from 'src/screens/finance/components/DefaultIndicator';
 import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 import { PaymentTermUsageBreakdown } from './PaymentTermUsage';
 
@@ -130,9 +131,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
           return (
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               <Label color={statusColor(displayStatus)}>{displayStatus}</Label>
-              {term.isDefault ? (
-                <Chip size="small" label="Default" color="primary" variant="outlined" />
-              ) : null}
+              {term.isDefault && <DefaultIndicator label="Default payment term" />}
             </Stack>
           );
         },
@@ -246,7 +245,6 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
       onPublish,
       onRestore,
       onVersionHistory,
-      onView,
     ]
   );
 

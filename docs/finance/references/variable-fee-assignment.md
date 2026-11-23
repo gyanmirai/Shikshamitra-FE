@@ -24,7 +24,7 @@ The [backend contract](../../../../Shikshamitra-BE/docs/modules/finance/referenc
 6. Assign the published structure to students.
 7. Required variable heads always show a student amount input.
 8. Optional variable heads show the input only after selection; deselection clears its entered amount and service-period draft.
-9. Enter the total for Payment Term coverage before Finance proration; enter a reason for an intentional zero amount.
+9. For a monthly schedule, use **Charge per month** to enter a rate. Clear it to enter the total for the Payment Term. Other schedules accept a term total. Enter a reason for an intentional zero amount and check the generated installments in **Review & save**.
 10. Review the authoritative student preview, then confirm the assignment.
 
 Switching Variable off requires a new fixed amount.

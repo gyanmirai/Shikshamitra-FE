@@ -4,6 +4,8 @@ import type {
   AssignmentCandidate,
 } from 'src/redux/finance/studentFeeAssignment';
 
+import { admissionServicePeriods } from './assignmentAdmissionContext';
+
 export function assignmentEditRequest(
   context: AssignmentContext,
   candidate: AssignmentCandidate,
@@ -15,11 +17,12 @@ export function assignmentEditRequest(
     studentId: context.studentId,
     academicYearId,
     standardFeeStructureId: candidate.id,
-    ...(candidate.boardStartDate && candidate.boardEndDate && {
-      chargePeriodSource: 'BoardAcademicYear',
-      chargeStartDate: candidate.boardStartDate,
-      chargeEndDate: candidate.boardEndDate,
-    }),
+    ...(candidate.boardStartDate &&
+      candidate.boardEndDate && {
+        chargePeriodSource: 'BoardAcademicYear',
+        chargeStartDate: candidate.boardStartDate,
+        chargeEndDate: candidate.boardEndDate,
+      }),
     editAssignmentId: context.assignmentId ?? undefined,
     assignmentConcurrencyStamp: context.assignmentConcurrencyStamp,
     editReason: '',
@@ -32,16 +35,23 @@ export function assignmentEditRequest(
           .map((h) => ({
             feeHeadId: h.feeHeadId,
             amount: h.effectiveAmount,
+            ...(h.amountBasis === 'MonthlyRate' && { isMonthlyRate: true }),
             zeroAmountReason: h.zeroAmountReason,
           }))
       : [],
     servicePeriods: sameStructure
       ? saved.heads.filter((h) => h.included && h.servicePeriod).map((h) => h.servicePeriod!)
-      : [],
+      : admissionServicePeriods(candidate, context, []),
     feeHeadDetails: sameStructure
       ? saved.heads
-          .filter((head) => head.isOptional && !head.isVariable && head.included &&
-            head.effectiveAmount != null && head.effectiveAmount !== head.configuredAmount)
+          .filter(
+            (head) =>
+              head.isOptional &&
+              !head.isVariable &&
+              head.included &&
+              head.effectiveAmount != null &&
+              head.effectiveAmount !== head.configuredAmount
+          )
           .map((head) => ({ feeHeadId: head.feeHeadId, amount: head.effectiveAmount }))
       : [],
     ...(saved && {

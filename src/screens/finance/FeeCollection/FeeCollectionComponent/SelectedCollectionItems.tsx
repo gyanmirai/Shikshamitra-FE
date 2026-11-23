@@ -1,6 +1,5 @@
 import type { DragEndEvent } from '@dnd-kit/core';
 
-import { useState } from 'react';
 import { CSS } from '@dnd-kit/utilities';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -40,6 +39,8 @@ interface Props {
   onMoveCharge: (from: number, to: number) => void;
   fixedFeeOrder?: boolean;
   emptyText?: string;
+  expandedGroups: Record<'fees' | 'charges', boolean>;
+  onToggleGroup: (group: 'fees' | 'charges') => void;
 }
 
 const rowLayout = {
@@ -159,9 +160,9 @@ export default function SelectedCollectionItems({
   onMoveCharge,
   fixedFeeOrder = false,
   emptyText = 'Select fees or charges from the ledger to start collecting.',
+  expandedGroups,
+  onToggleGroup,
 }: Props) {
-  const [feesExpanded, setFeesExpanded] = useState(true);
-  const [chargesExpanded, setChargesExpanded] = useState(true);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -236,8 +237,8 @@ export default function SelectedCollectionItems({
               fees.reduce((total, fee) => total + fee.amount, 0),
               'INR'
             )}`}
-            expanded={feesExpanded}
-            onChange={() => setFeesExpanded((current) => !current)}
+            expanded={expandedGroups.fees}
+            onChange={() => onToggleGroup('fees')}
             content={
               <Box sx={{ overflowX: 'auto' }}>
                 {tableHeader}
@@ -264,8 +265,8 @@ export default function SelectedCollectionItems({
               charges.reduce((total, charge) => total + charge.amount, 0),
               'INR'
             )}`}
-            expanded={chargesExpanded}
-            onChange={() => setChargesExpanded((current) => !current)}
+            expanded={expandedGroups.charges}
+            onChange={() => onToggleGroup('charges')}
             content={
               <Box sx={{ overflowX: 'auto' }}>
                 {fees.length > 0 && (

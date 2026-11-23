@@ -428,29 +428,6 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
           </Box>
         )}
       </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          px: { xs: 2, sm: 3 },
-          py: 1.75,
-          borderTop: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          flexShrink: 0,
-        }}
-      >
-        <Button
-          type="button"
-          size="small"
-          variant="outlined"
-          color="inherit"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
-        >
-          Close
-        </Button>
-      </Box>
     </Drawer>
   );
 };

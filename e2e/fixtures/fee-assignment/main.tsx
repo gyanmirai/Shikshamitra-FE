@@ -14,6 +14,7 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { Box, Alert, Stack, Button, Typography, CssBaseline } from '@mui/material';
 import AssignmentDrawer from 'src/screens/finance/FeeStructureAssign/Components/AssignmentDrawer';
+import AssignmentHistoryDrawer from 'src/screens/finance/FeeStructureAssign/Components/AssignmentHistoryDrawer';
 import FeeStructureAssignTable from 'src/screens/finance/FeeStructureAssign/Components/FeeStructureAssignTable';
 
 import { api } from './mock-service';
@@ -90,6 +91,7 @@ async function renderFixture() {
       bulkSidebar ? bulkStudents : []
     );
     const [editAssignedPolicies, setEditAssignedPolicies] = React.useState(false);
+    const [historyStudent, setHistoryStudent] = React.useState<IFeeStructureData>();
     const openAssignment = (selected: IFeeStructureData[], edit = false) => {
       setEditAssignedPolicies(edit);
       setStudents(selected);
@@ -117,6 +119,7 @@ async function renderFixture() {
           <FeeStructureAssignTable
             onAssignStructure={(student) => openAssignment([student])}
             onEdit={(student) => openAssignment([student], true)}
+            onHistory={setHistoryStudent}
             onBulkAssign={(selected) =>
               openAssignment(
                 selected,
@@ -131,6 +134,14 @@ async function renderFixture() {
             editAssignedPolicies={editAssignedPolicies}
             onClose={() => openAssignment([])}
           />
+          {historyStudent && (
+            <AssignmentHistoryDrawer
+              student={historyStudent}
+              academicYearId={academicYear.id}
+              academicYearName={academicYear.name}
+              onClose={() => setHistoryStudent(undefined)}
+            />
+          )}
         </Box>
       </Stack>
     );

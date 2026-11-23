@@ -16,13 +16,19 @@ export interface AssignmentHead {
   feeHeadName: string;
   isOptional: boolean;
   isOneTime: boolean;
+  usesSingleServiceMonth?: boolean;
   included: boolean;
   configuredAmount: number | null;
   isVariable?: boolean;
   zeroAmountReason?: string;
   effectiveAmount: number | null;
   amountBasis: string;
+  supportsMonthlyRate?: boolean;
   obligation: number;
+  optionalServiceEndDate?: string;
+  originalOptionalServiceEndDate?: string | null;
+  canReviewOptionalServiceCancellation?: boolean;
+  optionalServicePeriods?: OptionalServicePeriod[];
   paymentTermName?: string;
   paymentTermVersionNumber?: number;
   supportsTransportSource?: boolean;
@@ -38,11 +44,21 @@ export interface AssignmentLine {
   feeHeadName: string;
   installmentLabel: string;
   sequence: number;
+  coverageStartDate?: string | null;
+  coverageEndDate?: string | null;
+  coverageDays?: number | null;
+  eligibleDays?: number | null;
+  chargedDays?: number | null;
+  optionalServicePeriodId?: string | null;
   dueDate: string;
   demandDate?: string;
   allocationPercentage: number;
   scheduledAmount: number;
   proratedAmount: number;
+  reductionAmount?: number;
+  ruleType?: string;
+  factor?: number | null;
+  roundingMode?: string | null;
   paidAmount: number;
   outstandingAmount: number;
   optionalServiceCancellationAmount?: number;
@@ -112,6 +128,71 @@ export interface OptionalServiceStopRequest {
 export interface OptionalServiceStopResult {
   installmentCount: number;
   cancelledAmount: number;
+  outstandingReduction?: number;
+  prepaidCredit?: number;
+  previewToken?: string;
+}
+
+export interface OptionalServicePeriod {
+  id: string;
+  startDate: string;
+  endDate: string;
+  cancellationEffectiveDate?: string | null;
+  monthlyRate: number;
+  prorationPolicyName: string;
+  prorationPolicyVersion: number;
+  assignedAmount: number;
+}
+
+interface OptionalServiceRestartScope {
+  studentId: string;
+  academicYearId: string;
+  feeHeadId: string;
+}
+
+export interface OptionalServiceRestartOption {
+  versionId: string;
+  name: string;
+  version: number;
+}
+
+export interface OptionalServiceRestartContext {
+  earliestStartDate: string;
+  latestEndDate: string;
+  monthlyRate?: number | null;
+  defaultProrationPolicyVersionId?: string | null;
+  defaultPaymentTermVersionId?: string | null;
+  prorationPolicies: OptionalServiceRestartOption[];
+  paymentTerms: OptionalServiceRestartOption[];
+  prepaidCredit: number;
+}
+
+export interface OptionalServiceRestartRequest extends OptionalServiceRestartScope {
+  startDate: string;
+  endDate: string;
+  monthlyRate: number;
+  prorationPolicyVersionId: string;
+  paymentTermVersionId: string;
+  requestId: string;
+}
+
+export interface OptionalServiceRestartResult {
+  startDate: string;
+  endDate: string;
+  monthlyRate: number;
+  scheduledTotal: number;
+  prorationReduction: number;
+  assignedTotal: number;
+  prepaidCredit: number;
+  lines: AssignmentLine[];
+  existingInstallments?: {
+    dueFeeId: string;
+    installmentLabel: string;
+    coverageStartDate: string;
+    coverageEndDate: string;
+    billedAmount: number;
+    outstandingAmount: number;
+  }[];
   previewToken?: string;
 }
 
@@ -122,6 +203,30 @@ export interface AssignmentDetails {
   assignment: AssignmentPreview;
   warnings: string[];
   concurrencyStamp: string;
+}
+
+export interface AssignmentHistoryChange {
+  field: string;
+  before: string | number | null;
+  after: string | number | null;
+  format?: 'date' | 'money' | null;
+  feeHead?: string | null;
+  detail?: string | null;
+  installment?: string | null;
+}
+
+export interface AssignmentHistoryPage {
+  totalCount: number;
+  currency: string;
+  hasIncompleteEvidence: boolean;
+  items: {
+    id: string;
+    action: string;
+    occurredAt: string;
+    actor?: string | null;
+    reason?: string | null;
+    changes: AssignmentHistoryChange[];
+  }[];
 }
 
 export interface AssignmentRequest {
@@ -139,7 +244,12 @@ export interface AssignmentRequest {
   chargeStartDate?: string;
   chargeEndDate?: string;
   feeHeadDetails: { feeHeadId: string; amount: number | null }[];
-  variableFeeHeads?: { feeHeadId: string; amount: number | null; zeroAmountReason?: string }[];
+  variableFeeHeads?: {
+    feeHeadId: string;
+    amount: number | null;
+    zeroAmountReason?: string;
+    isMonthlyRate?: boolean;
+  }[];
   overrideReason?: string;
   previewToken?: string;
 }
@@ -269,6 +379,8 @@ export function assignmentError(error: unknown): string {
     return "Select a published fee structure matching this student's class and academic year.";
   if (code.endsWith('InvalidInput'))
     return 'Review fee-head selections, amounts, service dates and required override reasons.';
+  if (code.endsWith('OneTimeServiceMonth'))
+    return 'Select a single calendar month for a one-time fee.';
   if (code.endsWith('SourceUnavailable'))
     return 'The admission or service facts could not be verified. Review the saved preparation and dates.';
   if (code.endsWith('JoiningDateRequired'))
@@ -371,6 +483,46 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
       }),
       invalidatesTags: (result, _error, arg) => (result ? assignmentChangedTags([arg]) : []),
     }),
+    assignmentOptionalServiceRestartContext: builder.query<
+      OptionalServiceRestartContext,
+      OptionalServiceRestartScope
+    >({
+      query: ({ studentId, ...params }) => ({
+        url: `/student-fee-structure/student/${studentId}/optional-service-restart/context`,
+        params,
+      }),
+      providesTags: (_result, _error, arg) => [assignmentStudentTag(arg)],
+      keepUnusedDataFor: 0,
+    }),
+    assignmentOptionalServiceRestartPreview: builder.mutation<
+      OptionalServiceRestartResult,
+      OptionalServiceRestartRequest
+    >({
+      query: ({ studentId, ...body }) => ({
+        url: `/student-fee-structure/student/${studentId}/optional-service-restart/preview`,
+        method: 'POST',
+        body,
+      }),
+    }),
+    assignmentOptionalServiceRestart: builder.mutation<
+      OptionalServiceRestartResult,
+      OptionalServiceRestartRequest & { previewToken: string }
+    >({
+      query: ({ studentId, ...body }) => ({
+        url: `/student-fee-structure/student/${studentId}/optional-service-restart`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (result, _error, arg) =>
+        result
+          ? [
+              assignmentStudentTag(arg),
+              assignmentYearTag(arg.academicYearId),
+              financeModuleType.feeCollection,
+              financeModuleType.feeDetails,
+            ]
+          : [],
+    }),
     assignmentStudents: builder.query<
       { items: AssignmentStudent[]; totalCount: number },
       {
@@ -414,6 +566,16 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
       }),
       providesTags: (_r, _e, arg) => [assignmentStudentTag(arg)],
     }),
+    assignmentHistory: builder.query<
+      AssignmentHistoryPage,
+      { studentId: string; academicYearId: string; skipCount: number; maxResultCount: number }
+    >({
+      query: ({ studentId, ...params }) => ({
+        url: `/student-fee-structure/student/${studentId}/history`,
+        params,
+      }),
+      providesTags: (_r, _e, arg) => [assignmentStudentTag(arg)],
+    }),
     assignmentPreview: builder.mutation<AssignmentPreview, AssignmentRequest>({
       query: (body) => ({ url: '/student-fee-structure/preview', method: 'POST', body }),
     }),
@@ -445,6 +607,7 @@ export const {
   useAssignmentStudentsQuery,
   useAssignmentCandidatesQuery,
   useAssignmentDetailsQuery,
+  useAssignmentHistoryQuery,
   useAssignmentPreviewMutation,
   useAssignmentBulkPreviewMutation,
   useAssignmentCommitMutation,
@@ -452,4 +615,7 @@ export const {
   useAssignmentTransportSourcesQuery,
   useAssignmentOptionalServiceStopPreviewMutation,
   useAssignmentOptionalServiceStopMutation,
+  useAssignmentOptionalServiceRestartContextQuery,
+  useAssignmentOptionalServiceRestartPreviewMutation,
+  useAssignmentOptionalServiceRestartMutation,
 } = studentFeeAssignmentApi;

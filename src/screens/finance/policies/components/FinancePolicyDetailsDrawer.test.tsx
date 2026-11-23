@@ -14,6 +14,26 @@ vi.mock('./FinancePolicySkeleton', () => ({
   default: ({ label }: any) => <div role="status">{label}</div>,
 }));
 
+const { simulate } = vi.hoisted(() => ({ simulate: vi.fn() }));
+vi.mock('src/redux/finance/prorationPolicy', () => ({
+  useSimulateProrationPolicyMutation: () => [
+    simulate,
+    {
+      isLoading: false,
+      data: {
+        scheduledAmount: 6000,
+        proratedAmount: 2000,
+        reductionAmount: 4000,
+        factor: 1 / 3,
+        ruleType: 'FullCharge',
+        chargedDays: 10,
+        coverageDays: 30,
+        explanation: 'September 1 through 10 is billable.',
+        policyVersion: 2,
+      },
+    },
+  ],
+}));
 const policy = {
   id: 'refund-1',
   policyType: 'refund',
@@ -142,4 +162,58 @@ it('shows an unset student-year cap clearly when only the request limit is confi
     .closest('section')!;
   expect(within(settlement).getByText(formatNumber(5000, 'INR'))).toBeInTheDocument();
   expect(within(settlement).getByText('No cumulative student cap')).toBeInTheDocument();
+});
+
+it('simulates a saved withdrawal-only rule and clears the preview when dates change', () => {
+  simulate.mockClear();
+  render(
+    <FinancePolicyDetailsDrawer
+      open
+      onClose={vi.fn()}
+      policy={{
+        ...policy,
+        id: 'proration-1',
+        policyType: 'proration',
+        policyName: 'September proration',
+      }}
+      policyDetails={{
+        version: 2,
+        feeHeadRules: [
+          {
+            feeHeadId: 'tuition',
+            feeHeadName: 'Tuition',
+            ruleType: 'FullCharge',
+            applyOnAdmission: false,
+            applyOnEarlyWithdrawal: true,
+            earlyWithdrawalRuleType: 'Daily',
+            roundingMode: 'Currency',
+          },
+        ],
+      }}
+    />
+  );
+
+  expect(screen.getByRole('combobox', { name: 'Target Fee Head' })).toHaveTextContent('Tuition');
+  fireEvent.change(screen.getByLabelText('Billing Period Start'), { target: { value: '2026-09-01' } });
+  fireEvent.change(screen.getByLabelText('Billing Period End'), { target: { value: '2026-09-30' } });
+  fireEvent.change(screen.getByLabelText('Student Active From'), { target: { value: '2026-09-01' } });
+  const lastDay = screen.getByLabelText('Student Active Until');
+  fireEvent.change(lastDay, { target: { value: '2026-09-10' } });
+  expect(screen.queryByText('September 1 through 10 is billable.')).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Calculate proration preview' }));
+  expect(simulate).toHaveBeenCalledWith({
+    id: 'proration-1',
+    body: expect.objectContaining({
+      feeHeadId: 'tuition',
+      coverageStartDate: '2026-09-01',
+      coverageEndDate: '2026-09-30',
+      chargeStartDate: '2026-09-01',
+      chargeEndDate: '2026-09-10',
+    }),
+  });
+  expect(screen.getByText('September 1 through 10 is billable.')).toBeVisible();
+
+  fireEvent.change(lastDay, { target: { value: '2026-09-11' } });
+  expect(screen.queryByText('September 1 through 10 is billable.')).not.toBeInTheDocument();
 });

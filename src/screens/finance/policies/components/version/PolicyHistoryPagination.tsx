@@ -1,17 +1,25 @@
 import { TablePagination } from '@mui/material';
 
-export default function PolicyHistoryPagination({ page, pageSize, totalCount, isLoading, onPageChange }: {
+export default function PolicyHistoryPagination({
+  page,
+  pageSize,
+  totalCount,
+  isLoading,
+  onPageChange,
+  ariaLabel = 'Policy history pages',
+}: {
   page: number;
   pageSize: number;
   totalCount: number;
-  isLoading: boolean;
+  isLoading?: boolean;
   onPageChange: (page: number) => void;
+  ariaLabel?: string;
 }) {
   return (
     <TablePagination
       component="div"
       role="navigation"
-      aria-label="Policy history pages"
+      aria-label={ariaLabel}
       count={totalCount}
       page={totalCount ? Math.min(page, Math.ceil(totalCount / pageSize) - 1) : 0}
       rowsPerPage={pageSize}

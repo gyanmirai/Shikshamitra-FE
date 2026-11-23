@@ -32,7 +32,7 @@ were supplied, and only the visible portion of the body is shown.
 | Reference | Asset | Preserve |
 | --- | --- | --- |
 | Create Concession Policy | [Form drawer](../assets/drawer.png) | Title, Draft badge, info, top-right close; sectioned fields; required markers; fixed Cancel/Submit footer |
-| Saved policy details | [View drawer](../assets/drawer-view.png) | Record title, status/version, info, close; corresponding sections with real saved details; fixed Close footer |
+| Saved policy details | [View drawer](../assets/drawer-view.png) | Record title, status/version, info, header close, and sections with real saved details. The captured bottom Close footer has been superseded. |
 
 ![Form drawer with title, status, help, close icon, sections, and Cancel/Submit footer](../assets/drawer.png)
 
@@ -56,7 +56,7 @@ Scrollable body:
   [Leading icon] Application Scope [Info]
 Fixed footer:
   Form:                                                  [X Cancel] [Save Submit]
-  View:                                                             [X Close]
+  View:                                             [Record action if needed]
 ```
 
 Every information/field group belongs in a meaningful section. Use the same names and order in
@@ -144,9 +144,9 @@ controls without document overflow. Do not shrink text or controls to make a des
   permitted details even if not editable. Do not change stored names or amounts to match a screenshot.
 - Use the same sentence-case field labels; remove view-only all-caps/extra-bold styling. Do not
   make body values bold because the section title is semibold. See [section parity](sections.md#form-to-view-parity).
-- The footer uses one outlined `Close` button with `GlobalIcons.cancel`. No Submit, required
-  markers, or unsaved-change confirmation is needed for a purely read-only panel. Separate
-  consequential operations still follow their own confirmation rules.
+- Dismiss a read-only drawer through the accessible header close button or Escape. Omit the footer
+  when it would only repeat Close. Keep footers for meaningful workflow actions, and follow their
+  own confirmation rules for consequential operations.
 - Fetching details shows content-shaped loading; an error shows accurate retry content. Do not
   present partial/previous-record data as a completed view. Close remains usable during a normal
   read-only fetch unless a blocking mutation makes dismissal unsafe.

@@ -100,26 +100,6 @@ function WorkbenchDrawer({
       <Scrollbar sx={{ minHeight: 0, ...(detailView && { flex: 1 }) }}>
         <Box sx={{ p: detailView ? { xs: 2, sm: 3 } : 2 }}>{children}</Box>
       </Scrollbar>
-      {detailView && (
-        <>
-          <Divider />
-          <Stack
-            direction="row"
-            justifyContent="flex-end"
-            spacing={1}
-            sx={{ px: { xs: 2, sm: 3 }, py: 1.5, flexShrink: 0 }}
-          >
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              onClick={onClose}
-            >
-              Close
-            </Button>
-          </Stack>
-        </>
-      )}
     </Drawer>
   );
 }

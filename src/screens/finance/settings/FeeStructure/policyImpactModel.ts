@@ -21,7 +21,7 @@ export type ImpactPolicyData = Partial<
     | 'lateFeeApplyOnFeeHeads'
   > &
     Pick<IRefundPolicy, 'feeHeadScope' | 'applicableFeeHeadIds'>
->;
+> & { prorationFeeHeadIds?: string[] };
 
 export interface PolicyImpactRow {
   id: string;
@@ -60,7 +60,7 @@ export function policyImpactRows(
     return review.coverage.map((row) => ({
       id: row.feeHeadId,
       name: row.name,
-      treatment: row[family],
+      treatment: row[family] ?? 'Full charge',
     }));
   }
   if (
@@ -111,6 +111,11 @@ export function policyImpactRows(
             candidate.concessionApplicableFeeHeadIds.includes(line.feeHeadId))
             ? 'Eligible on approval'
             : 'Not eligible';
+        break;
+      case 'proration':
+        treatment = !line.isOneTime && policy.prorationFeeHeadIds?.includes(line.feeHeadId)
+          ? 'Proration rule configured'
+          : 'Full charge';
         break;
       default:
         treatment =

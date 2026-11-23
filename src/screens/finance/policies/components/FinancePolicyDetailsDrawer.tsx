@@ -30,6 +30,7 @@ import {
 
 import FinancePolicySkeleton from './FinancePolicySkeleton';
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
+import ProrationSimulationSection from './proration/ProrationSimulationSection';
 import { hasActiveProration, ProrationEventDetail } from './proration/ProrationEventDetail';
 import {
   CONCESSION_SCOPES,
@@ -53,6 +54,7 @@ type FinancePolicyDetailsDrawerProps = {
   aboveDialog?: boolean;
   errorMessage?: string;
   savedVersionDetails?: ReactNode;
+  showProrationSimulation?: boolean;
 };
 
 const BooleanChip = ({ label, value }: { label: string; value?: boolean }) => (
@@ -82,6 +84,7 @@ export default function FinancePolicyDetailsDrawer({
   aboveDialog = false,
   errorMessage = 'Unable to load this policy. Retry to view its saved configuration.',
   savedVersionDetails,
+  showProrationSimulation = true,
 }: FinancePolicyDetailsDrawerProps) {
   if (!policy) return null;
 
@@ -1192,6 +1195,14 @@ export default function FinancePolicyDetailsDrawer({
                           )}
                         </DetailSection>
 
+                        {showProrationSimulation && policyDetails.feeHeadRules?.length > 0 && (
+                          <ProrationSimulationSection
+                            key={JSON.stringify([policy.id, policyDetails.version])}
+                            policyId={policy.id}
+                            rules={policyDetails.feeHeadRules}
+                          />
+                        )}
+
                         {/* Audit Metadata */}
                         <DetailSection
                           helpText="The current policy version and recorded creation or modification details."
@@ -1252,30 +1263,6 @@ export default function FinancePolicyDetailsDrawer({
             )}
           </Box>
         </Scrollbar>
-
-        {/* Footer */}
-        <Box
-          sx={{
-            px: 2,
-            py: 1.5,
-            bgcolor: 'background.paper',
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            flexShrink: 0,
-          }}
-        >
-          <Button
-            variant="outlined"
-            size="small"
-            color="inherit"
-            onClick={onClose}
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          >
-            Close
-          </Button>
-        </Box>
       </Box>
     </Drawer>
   );

@@ -30,6 +30,7 @@ export function ConfirmDialog({
   title,
   content,
   action,
+  secondaryAction,
   open,
   onClose,
   icon = 'error',
@@ -117,18 +118,20 @@ export function ConfirmDialog({
       {/* <Divider /> */}
 
       <DialogActions>
-        <Button
-          type="button"
-          autoFocus
-          variant="outlined"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          color="inherit"
-          onClick={onClose}
-          disabled={isBusy}
-          size="small"
-        >
-          {cancelText}
-        </Button>
+        {secondaryAction ?? (
+          <Button
+            type="button"
+            autoFocus
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            color="inherit"
+            onClick={onClose}
+            disabled={isBusy}
+            size="small"
+          >
+            {cancelText}
+          </Button>
+        )}
         {isValidElement(action)
           ? cloneElement(action as React.ReactElement<any>, {
               size: 'small',

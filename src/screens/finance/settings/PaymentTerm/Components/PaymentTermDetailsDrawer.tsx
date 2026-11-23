@@ -12,7 +12,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { fPercent } from 'src/utils/format-number';
-import { useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { fDate, fDateTime } from 'src/utils/format-time';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -286,6 +286,7 @@ export default function PaymentTermDetailsDrawer({
   initialTab,
   onClose,
 }: PaymentTermDetailsDrawerProps) {
+  const drawerPaperRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<PaymentTermDetailsTab>(initialTab);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const { data, isFetching, isError, refetch } = useGetPaymentTermByIdQuery(paymentTermId ?? '', {
@@ -323,11 +324,14 @@ export default function PaymentTermDetailsDrawer({
     () => versions.find((version) => version.id === selectedVersionId) ?? versions[0],
     [selectedVersionId, versions]
   );
-  const headerVersion = view === 'versions' ? selectedVersion : displayedVersion;
   const selectedVersionAudit = versionHistory?.items.find(
     (item) =>
       item.id === selectedVersion?.id || item.versionNumber === selectedVersion?.versionNumber
   );
+  const openHistory = () => {
+    drawerPaperRef.current?.focus();
+    setView('versions');
+  };
 
   return (
     <Drawer
@@ -338,7 +342,9 @@ export default function PaymentTermDetailsDrawer({
         backdrop: { sx: { bgcolor: (theme) => alpha(theme.palette.common.black, 0.32) } },
       }}
       PaperProps={{
+        ref: drawerPaperRef,
         role: 'dialog',
+        tabIndex: -1,
         'aria-modal': true,
         'aria-labelledby': 'payment-term-detail-title',
         sx: {
@@ -367,25 +373,21 @@ export default function PaymentTermDetailsDrawer({
               : 'Review this payment term’s saved settings, status, and schedule. This view is read-only.'
           }
           badges={
-            view === 'versions' ? (
-              <Label>Read Only</Label>
-            ) : (
-              data && (
-                <>
-                  <Label
-                    color={
-                      data.status === 'Active'
-                        ? 'success'
-                        : data.status === 'Draft'
-                          ? 'warning'
-                          : 'default'
-                    }
-                  >
-                    {data.status}
-                  </Label>
-                  {headerVersion && <Label>v{headerVersion.versionNumber}</Label>}
-                </>
-              )
+            view === 'details' && data && (
+              <>
+                <Label
+                  color={
+                    data.status === 'Active'
+                      ? 'success'
+                      : data.status === 'Draft'
+                        ? 'warning'
+                        : 'default'
+                  }
+                >
+                  {data.status}
+                </Label>
+                {displayedVersion && <Label>v{displayedVersion.versionNumber}</Label>}
+              </>
             )
           }
           onClose={onClose}
@@ -467,7 +469,7 @@ export default function PaymentTermDetailsDrawer({
                   {displayedVersion ? (
                     <InstallmentSchedule
                       version={displayedVersion}
-                      onHistory={() => setView('versions')}
+                      onHistory={openHistory}
                     />
                   ) : (
                     <FormSectionCard
@@ -481,7 +483,7 @@ export default function PaymentTermDetailsDrawer({
                           size="small"
                           variant="outlined"
                           startIcon={<Iconify icon={GlobalIcons.history} />}
-                          onClick={() => setView('versions')}
+                          onClick={openHistory}
                         >
                           Version history
                         </Button>
@@ -503,37 +505,6 @@ export default function PaymentTermDetailsDrawer({
             </Stack>
           </Scrollbar>
         )}
-        <Box
-          sx={{
-            px: 2,
-            py: 1.5,
-            bgcolor: 'background.paper',
-            borderTop: 1,
-            borderColor: 'divider',
-            display: 'flex',
-            justifyContent: view === 'versions' ? 'space-between' : 'flex-end',
-            flexShrink: 0,
-          }}
-        >
-          {view === 'versions' && (
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.retrunIcon} />}
-              onClick={() => setView('details')}
-            >
-              Back to details
-            </Button>
-          )}
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={onClose}
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          >
-            Close
-          </Button>
-        </Box>
       </Box>
     </Drawer>
   );

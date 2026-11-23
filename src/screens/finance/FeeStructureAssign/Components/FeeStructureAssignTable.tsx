@@ -47,6 +47,7 @@ function SelectionCheckbox({ reason, ...props }: CheckboxProps & { reason?: stri
 export default function FeeStructureAssignTable({
   onAssignStructure,
   onEdit,
+  onHistory,
   onBulkAssign,
   feeHeadId,
 }: IFeeStructureTableProps & { feeHeadId?: string }) {
@@ -532,15 +533,21 @@ export default function FeeStructureAssignTable({
                     {row.assignmentState === 'Prepared' ? 'Review prepared fees' : 'Review issue'}
                   </Button>
                 );
-              if (!row.isFeeStructureAssigned && canAssign)
+              if (!row.isFeeStructureAssigned && canAssign) {
+                const hasAdmissionSelection = row.assignmentState === 'Selected';
                 return (
                   <AdaptiveThreeDotsActions
                     directActionLimit={2}
                     actions={[
                       {
-                        id: 'assign',
-                        icon: GlobalIcons.addIcon,
-                        label: `Assign fee structure to ${row.studentName}`,
+                        id: hasAdmissionSelection ? 'edit-admission-selection' : 'assign',
+                        icon: hasAdmissionSelection ? GlobalIcons.edit : GlobalIcons.addIcon,
+                        label: hasAdmissionSelection
+                          ? 'Edit admission fee selection'
+                          : 'Assign fee structure',
+                        ariaLabel: hasAdmissionSelection
+                          ? `Edit admission fee selection for ${row.studentName}`
+                          : `Assign fee structure to ${row.studentName}`,
                         disabled: query.isFetching || !row.isActive,
                         onClick: () => onAssignStructure(row),
                       },
@@ -548,9 +555,11 @@ export default function FeeStructureAssignTable({
                     sx={{ justifyContent: 'flex-start' }}
                   />
                 );
+              }
               return row.isFeeStructureAssigned && canView ? (
                 <AdaptiveThreeDotsActions
-                  directActionLimit={2}
+                  directActionLimit={3}
+                  mobileDirectActionLimit={2}
                   collapseOnOverflow={false}
                   actions={[
                     {
@@ -568,9 +577,21 @@ export default function FeeStructureAssignTable({
                           {
                             id: 'edit',
                             icon: GlobalIcons.edit,
-                            label: `Edit fee structure assignment for ${row.studentName || 'student'}`,
+                            label: 'Edit fee structure assignment',
+                            ariaLabel: `Edit fee structure assignment for ${row.studentName || 'student'}`,
                             disabled: query.isFetching,
                             onClick: () => onEdit(row),
+                          },
+                        ]
+                      : []),
+                    ...(onHistory
+                      ? [
+                          {
+                            id: 'history',
+                            icon: GlobalIcons.history,
+                            label: `View assignment history for ${row.studentName || 'student'}`,
+                            disabled: query.isFetching,
+                            onClick: () => onHistory(row),
                           },
                         ]
                       : []),

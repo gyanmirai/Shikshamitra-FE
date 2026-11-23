@@ -5,12 +5,10 @@ import { useMemo, useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
-import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Stack,
   Paper,
-  Avatar,
   Button,
   Collapse,
   Accordion,
@@ -57,32 +55,26 @@ const ACTION_ICONS: Record<string, string> = {
   activate: 'mdi:check-circle-outline',
 };
 
-const getInitials = (actor: string) =>
-  actor
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0].toUpperCase())
-    .join('') || 'S';
-
 export default function PolicyAuditTimeline({
   versions,
   valueContext,
-  policyName,
 }: {
   versions: PolicyVersion[];
   valueContext: VersionValueContext;
-  policyName: string;
 }) {
   const theme = useTheme();
   const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
-  const grouped = useMemo(() => versions.reduce<Record<string, PolicyVersion[]>>((groups, version) => {
-    const date = dayjs(version.createdAt);
-    const key = date.isValid() ? date.format('YYYY-MM-DD') : 'unknown';
-    (groups[key] ||= []).push(version);
-    return groups;
-  }, {}), [versions]);
+  const grouped = useMemo(
+    () =>
+      versions.reduce<Record<string, PolicyVersion[]>>((groups, version) => {
+        const date = dayjs(version.createdAt);
+        const key = date.isValid() ? date.format('YYYY-MM-DD') : 'unknown';
+        (groups[key] ||= []).push(version);
+        return groups;
+      }, {}),
+    [versions]
+  );
 
   const toggleDate = (date: string) => {
     setCollapsedDates((previous) => {
@@ -157,189 +149,112 @@ export default function PolicyAuditTimeline({
                 id={contentId}
                 role="region"
                 aria-labelledby={headingId}
-                sx={{ p: { xs: 1.5, sm: 2 } }}
+                sx={{ borderTop: 1, borderColor: 'divider' }}
               >
-                <Stack spacing={1}>
-                  {entries.map((version, index) => {
-                    const timestamp = dayjs(version.createdAt);
-                    const actor = version.actor || 'System';
-                    const action = version.action.toLowerCase();
-                    const eventExpanded = expandedEvents.has(version.eventId);
-                    const inspected = eventExpanded ? materializePolicyVersion(version) : version;
-                    const hasChanges = version.snapshotJson !== undefined || inspected.changedFields.length > 0;
-                    return (
-                      <Stack key={version.eventId} direction="row" spacing={1} alignItems="stretch">
-                        <Stack alignItems="center" sx={{ width: 58, flexShrink: 0 }}>
-                          <Typography
-                            variant="caption"
-                            fontWeight={700}
-                            color="text.secondary"
-                            sx={{ whiteSpace: 'nowrap' }}
-                          >
-                            {timestamp.isValid() ? timestamp.format('hh:mm A') : '—'}
-                          </Typography>
-                          <Box
-                            sx={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: '50%',
-                              mt: 0.5,
-                              bgcolor: 'primary.main',
-                              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                            }}
-                          />
-                          {index < entries.length - 1 && (
-                            <Box
-                              sx={{
-                                width: 2,
-                                flex: 1,
-                                minHeight: 24,
-                                mt: 0.5,
-                                bgcolor: alpha(theme.palette.primary.main, 0.15),
-                              }}
-                            />
-                          )}
-                        </Stack>
-                        <Accordion
-                          disableGutters
-                          expanded={eventExpanded}
-                          onChange={(_event, isExpanded) => setExpandedEvents((previous) => {
-                            const next = new Set(previous);
-                            if (isExpanded) next.add(version.eventId);
-                            else next.delete(version.eventId);
-                            return next;
-                          })}
-                          sx={{
-                            flex: 1,
+                {entries.map((version, index) => {
+                  const timestamp = dayjs(version.createdAt);
+                  const actor = version.actor || 'System';
+                  const action = version.action.toLowerCase();
+                  const eventExpanded = expandedEvents.has(version.eventId);
+                  const inspected = eventExpanded ? materializePolicyVersion(version) : version;
+                  const hasChanges =
+                    version.snapshotJson !== undefined || version.changedFields.length > 0;
+                  const detailLabel = hasChanges ? 'recorded changes' : 'event details';
+
+                  return (
+                    <Accordion
+                      key={version.eventId}
+                      disableGutters
+                      expanded={eventExpanded}
+                      onChange={(_event, isExpanded) =>
+                        setExpandedEvents((previous) => {
+                          const next = new Set(previous);
+                          if (isExpanded) next.add(version.eventId);
+                          else next.delete(version.eventId);
+                          return next;
+                        })
+                      }
+                      sx={{
+                        boxShadow: 'none',
+                        bgcolor: 'transparent',
+                        borderTop: index === 0 ? 0 : 1,
+                        borderColor: 'divider',
+                        '&::before': { display: 'none' },
+                      }}
+                    >
+                      <AccordionSummary
+                        id={`audit-${version.eventId}`}
+                        aria-controls={`audit-changes-${version.eventId}`}
+                        expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" width={18} />}
+                        sx={{
+                          px: { xs: 1.5, sm: 2 },
+                          gap: 1,
+                          '& .MuiAccordionSummary-content': {
+                            my: 1.25,
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 1,
                             minWidth: 0,
-                            border: 1,
-                            borderColor: 'divider',
-                            borderRadius: '12px !important',
-                            boxShadow: 'none',
-                            overflow: 'hidden',
-                            '&.Mui-expanded': { m: 0 },
-                            '&::before': { display: 'none' },
-                          }}
+                          },
+                        }}
+                      >
+                        <Label
+                          color="primary"
+                          startIcon={
+                            <Iconify icon={ACTION_ICONS[action] || 'mdi:history'} width={14} />
+                          }
                         >
-                          <AccordionSummary
-                            id={`audit-${version.eventId}`}
-                            aria-controls={`audit-changes-${version.eventId}`}
-                            expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" width={18} />}
-                            sx={{
-                              px: 1.75,
-                              minHeight: 72,
-                              '& .MuiAccordionSummary-content': { my: 1.5, minWidth: 0 },
-                              '& .MuiAccordionSummary-content.Mui-expanded': { my: 1.5 },
-                            }}
-                          >
-                            <Stack
-                              direction="row"
-                              alignItems="center"
-                              spacing={1}
-                              sx={{ minWidth: 0, width: 1 }}
-                            >
-                              <Avatar
-                                sx={{
-                                  width: 28,
-                                  height: 28,
-                                  fontSize: 11,
-                                  fontWeight: 700,
-                                  bgcolor: alpha(theme.palette.primary.main, 0.12),
-                                  color: 'primary.main',
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {getInitials(actor)}
-                              </Avatar>
-                              <Box sx={{ minWidth: 0, flex: 1 }}>
-                                <Stack
-                                  direction="row"
-                                  alignItems="center"
-                                  spacing={0.75}
-                                  useFlexGap
-                                  flexWrap="wrap"
-                                >
-                                  <Box
-                                    sx={{
-                                      px: 1,
-                                      py: 0.45,
-                                      borderRadius: 1.5,
-                                      bgcolor: alpha(theme.palette.primary.main, 0.08),
-                                      border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
-                                      color: 'primary.main',
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: 0.5,
-                                    }}
-                                  >
-                                    <Iconify
-                                      icon={ACTION_ICONS[action] || 'mdi:history'}
-                                      width={14}
-                                    />
-                                    <Typography variant="caption" fontWeight={700}>
-                                      {ACTION_LABELS[action] || 'Policy changed'}
-                                    </Typography>
-                                  </Box>
-                                  <Label color="default">v{version.versionNumber}</Label>
-                                </Stack>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  display="block"
-                                  sx={{ mt: 0.5 }}
-                                >
-                                  by {actor}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  color={hasChanges ? 'primary.main' : 'text.secondary'}
-                                  display="block"
-                                  sx={{ mt: 0.5 }}
-                                >
-                                  {hasChanges
-                                    ? version.snapshotJson !== undefined && !eventExpanded
-                                      ? 'View recorded changes'
-                                      : `${inspected.changedFields.length} ${inspected.changedFields.length === 1 ? 'field changed' : 'fields changed'} · View changes`
-                                    : 'No changes recorded'}
-                                </Typography>
-                              </Box>
-                              <CustomTooltip title={policyName} placement="left" arrow>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  noWrap
-                                  tabIndex={0}
-                                  sx={{ maxWidth: 120, display: { xs: 'none', sm: 'block' } }}
-                                >
-                                  {policyName}
-                                </Typography>
-                              </CustomTooltip>
-                            </Stack>
-                          </AccordionSummary>
-                          <AccordionDetails
-                            id={`audit-changes-${version.eventId}`}
-                            sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}
-                          >
-                            <Typography variant="caption" color="text.secondary" display="block">
-                              Change reason
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              sx={{ mt: 0.5, mb: 2, overflowWrap: 'anywhere' }}
-                            >
-                              {version.changeReason || 'No reason recorded'}
-                            </Typography>
-                            {eventExpanded && <VersionDiffTable
+                          {ACTION_LABELS[action] || 'Policy changed'}
+                        </Label>
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
+                        >
+                          by {actor}
+                          {timestamp.isValid() && (
+                            <>
+                              {' '}
+                              • <Box component="span">{timestamp.format('hh:mm A')}</Box>
+                            </>
+                          )}
+                        </Typography>
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          color="primary.main"
+                          sx={{ ml: 'auto', whiteSpace: 'nowrap' }}
+                        >
+                          {eventExpanded ? `Hide ${detailLabel}` : `View ${detailLabel}`}
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Change reason
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ mt: 0.5, mb: 2, overflowWrap: 'anywhere' }}
+                        >
+                          {version.changeReason || 'No reason recorded'}
+                        </Typography>
+                        {eventExpanded &&
+                          (hasChanges ? (
+                            <VersionDiffTable
                               selectedVersion={inspected}
                               valueContext={valueContext}
                               showSummary={false}
-                            />}
-                          </AccordionDetails>
-                        </Accordion>
-                      </Stack>
-                    );
-                  })}
-                </Stack>
+                            />
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No changes recorded
+                            </Typography>
+                          ))}
+                      </AccordionDetails>
+                    </Accordion>
+                  );
+                })}
               </Box>
             </Collapse>
           </Paper>

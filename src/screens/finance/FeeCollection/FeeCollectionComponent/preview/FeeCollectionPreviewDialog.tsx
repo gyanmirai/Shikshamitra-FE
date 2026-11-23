@@ -1,6 +1,7 @@
 'use client';
 
 import type { IData, IColumn } from 'src/components/customizabaleTable/types';
+import type { ReactNode } from 'react';
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
@@ -40,6 +41,7 @@ export interface FeeCollectionPreviewDialogProps {
   academicYear?: string;
   feeStructureName?: string;
   bankAccounts?: { id: string; name: string }[];
+  completion?: { content: ReactNode; onDone: () => void };
 }
 
 const FeeCollectionPreviewDialog = ({
@@ -55,6 +57,7 @@ const FeeCollectionPreviewDialog = ({
   academicYear,
   feeStructureName,
   bankAccounts,
+  completion,
 }: FeeCollectionPreviewDialogProps) => {
   const paidAmount = useMemo(() => {
     const amount = Number(String(formValues.payment.amount || 0).replace(/[₹,\s]/g, ''));
@@ -72,6 +75,22 @@ const FeeCollectionPreviewDialog = ({
     [formValues.selectedItems, formValues.charges, chargesData, feeHeadMap, paidAmount]
   );
   const rows = summarizeFundedAllocations(allocatedRows, oneTimeFeeHeadIds);
+  const periodOrder = new Map(
+    formValues.selectedItems.map(({ period }) => [dayjs(`${period}-01`).format('MMM YYYY'), period])
+  );
+  const formatPeriodRange = (periods: string[]) => {
+    const sorted = [...new Set(periods)].sort((first, second) =>
+      (periodOrder.get(first) ?? first).localeCompare(periodOrder.get(second) ?? second)
+    );
+    const start = sorted[0];
+    const end = sorted[sorted.length - 1];
+    if (sorted.length < 2) return start;
+    const span = dayjs(`${periodOrder.get(end)}-01`).diff(
+      dayjs(`${periodOrder.get(start)}-01`), 'month'
+    ) + 1;
+    const range = `${start} to ${end}`;
+    return span > sorted.length ? `${range} (${sorted.length} months selected)` : range;
+  };
   const columns: IColumn[] = [
     {
       id: 'name',
@@ -84,8 +103,8 @@ const FeeCollectionPreviewDialog = ({
             <Typography variant="body2">{value}</Typography>
             {row.oneTime && <Label>One time</Label>}
           </Stack>
-          <Typography variant="caption" color="text.secondary">
-            {row.context ?? row.periods.join(' · ')}
+          <Typography variant="caption" color="text.secondary" component="span">
+            {row.context ?? formatPeriodRange(row.periods)}
           </Typography>
         </Box>
       ),
@@ -99,13 +118,7 @@ const FeeCollectionPreviewDialog = ({
       cellSx: { fontVariantNumeric: 'tabular-nums' },
     })),
   ].map((column) => ({ ...column, isSort: false, isFilter: false }));
-  const periods = [...new Set(rows.flatMap((row) => row.periods))];
-  const periodLabel =
-    periods.length === 1
-      ? periods[0]
-      : periods.length > 1
-        ? `${periods.length} months`
-        : 'Selected Charges';
+  const periodLabel = formatPeriodRange(rows.flatMap((row) => row.periods)) ?? 'Selected Charges';
   const { paymentMethod, details: paymentDetails } = formValues.payment;
   const isCash = paymentMethod === 'Cash';
   const details = Object.entries(
@@ -124,6 +137,26 @@ const FeeCollectionPreviewDialog = ({
     }
     return String(value);
   };
+
+  if (completion) {
+    return (
+      <CustomDialog
+        open={open}
+        handleClose={completion.onDone}
+        guardUnsavedChanges={false}
+        maxWidth="md"
+        hasForm={false}
+        title="Review Payment"
+      >
+        <DialogScrollContent>{completion.content}</DialogScrollContent>
+        <DialogActions>
+          <Button variant="contained" size="small" onClick={completion.onDone}>
+            Done
+          </Button>
+        </DialogActions>
+      </CustomDialog>
+    );
+  }
 
   return (
     <CustomDialog

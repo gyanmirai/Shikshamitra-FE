@@ -9,13 +9,15 @@
  */
 
 import dayjs from 'dayjs';
+import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { useMemo, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { DetailSection } from 'src/screens/finance/components/detail-view';
 import { useSimulateProrationPolicyMutation } from 'src/redux/finance/prorationPolicy';
 import {
   Box,
@@ -27,47 +29,33 @@ import {
   MenuItem,
   TextField,
   Typography,
-  InputAdornment,
 } from '@mui/material';
 
-import { ConcessionSectionCard as SectionCard } from '../concession/ConcessionCommon';
-
-import type { IProrationFeeHeadRule } from '../../types/finance-policy.types';
+import type { IProrationPolicyRule } from '../../types/finance-policy.types';
 
 interface Props {
   policyId: string;
-  rules: IProrationFeeHeadRule[];
+  rules: IProrationPolicyRule[];
 }
 
 export default function ProrationSimulationSection({ policyId, rules }: Props) {
-  const enabledRules = useMemo(
-    () => rules.filter((rule) => rule.ruleType !== 'NoProration'),
-    [rules]
-  );
-
   const [input, setInput] = useState({
-    feeHeadId: '',
-    scheduledAmount: 10000,
+    feeHeadId: rules[0]?.feeHeadId ?? '',
+    scheduledAmount: '10000',
     coverageStartDate: dayjs().startOf('month').format('YYYY-MM-DD'),
     coverageEndDate: dayjs().endOf('month').format('YYYY-MM-DD'),
     chargeStartDate: dayjs().startOf('month').add(14, 'day').format('YYYY-MM-DD'),
     chargeEndDate: dayjs().endOf('month').format('YYYY-MM-DD'),
   });
 
-  const [simulate, { data: result, isLoading, error }] = useSimulateProrationPolicyMutation();
-
-  useEffect(() => {
-    if (!enabledRules.some((rule) => rule.feeHeadId === input.feeHeadId)) {
-      setInput((previous) => ({
-        ...previous,
-        feeHeadId: enabledRules[0]?.feeHeadId ?? '',
-      }));
-    }
-  }, [enabledRules, input.feeHeadId]);
+  const [simulate, { data, isLoading, error }] = useSimulateProrationPolicyMutation();
+  const [submittedInput, setSubmittedInput] = useState<typeof input | null>(null);
+  const result = submittedInput === input ? data : undefined;
+  const currentError = submittedInput === input ? error : undefined;
 
   const canSimulate =
     Boolean(input.feeHeadId) &&
-    input.scheduledAmount >= 0 &&
+    input.scheduledAmount !== '' &&
     Boolean(input.coverageStartDate) &&
     Boolean(input.coverageEndDate) &&
     Boolean(input.chargeStartDate) &&
@@ -75,41 +63,25 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
     input.coverageStartDate <= input.coverageEndDate &&
     input.chargeStartDate <= input.chargeEndDate;
 
-  // Preset Date Range Helper
-  const applyPreset = (type: 'midMonth' | 'fullMonth') => {
-    const startOfCurrentMonth = dayjs().startOf('month');
-    const endOfCurrentMonth = dayjs().endOf('month');
+  const applyPreset = (type: 'admission' | 'withdrawal' | 'fullMonth') => {
+    const month = dayjs().startOf('month');
+    const startDate = month.format('YYYY-MM-DD');
+    const endDate = month.endOf('month').format('YYYY-MM-DD');
 
-    if (type === 'midMonth') {
-      setInput((prev) => ({
-        ...prev,
-        coverageStartDate: startOfCurrentMonth.format('YYYY-MM-DD'),
-        coverageEndDate: endOfCurrentMonth.format('YYYY-MM-DD'),
-        chargeStartDate: startOfCurrentMonth.date(16).format('YYYY-MM-DD'),
-        chargeEndDate: endOfCurrentMonth.format('YYYY-MM-DD'),
-      }));
-    } else if (type === 'fullMonth') {
-      setInput((prev) => ({
-        ...prev,
-        coverageStartDate: startOfCurrentMonth.format('YYYY-MM-DD'),
-        coverageEndDate: endOfCurrentMonth.format('YYYY-MM-DD'),
-        chargeStartDate: startOfCurrentMonth.format('YYYY-MM-DD'),
-        chargeEndDate: endOfCurrentMonth.format('YYYY-MM-DD'),
-      }));
-    }
+    setInput((previous) => ({
+      ...previous,
+      coverageStartDate: startDate,
+      coverageEndDate: endDate,
+      chargeStartDate: type === 'admission' ? month.date(16).format('YYYY-MM-DD') : startDate,
+      chargeEndDate: type === 'withdrawal' ? month.date(15).format('YYYY-MM-DD') : endDate,
+    }));
   };
 
   return (
-    <SectionCard
-      subtitle="Preview the calculation using the last saved policy version. Unsaved changes are not included."
-      title="Calculation Simulator"
-
+    <DetailSection
+      title="Proration Preview"
       icon="solar:calculator-bold-duotone"
-      action={
-        <Label color="info" sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}>
-          Interactive Preview
-        </Label>
-      }
+      helpText="Calculate sample fees using the current saved policy. The preview does not create student charges."
     >
       <Grid container spacing={2}>
         {/* Quick Date Presets */}
@@ -121,18 +93,25 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
               fontWeight={600}
               sx={{ fontSize: '0.72rem' }}
             >
-              Quick Presets:
+              Date presets
             </Typography>
             <Chip
               size="small"
-              label="Mid-Month Joiner (16th to EOM)"
-              onClick={() => applyPreset('midMonth')}
+              label="Mid-month joining"
+              onClick={() => applyPreset('admission')}
               variant="outlined"
               sx={{ height: 24, fontSize: '0.7rem' }}
             />
             <Chip
               size="small"
-              label="Full Month (1st to EOM)"
+              label="Mid-month withdrawal"
+              onClick={() => applyPreset('withdrawal')}
+              variant="outlined"
+              sx={{ height: 24, fontSize: '0.7rem' }}
+            />
+            <Chip
+              size="small"
+              label="Full month"
               onClick={() => applyPreset('fullMonth')}
               variant="outlined"
               sx={{ height: 24, fontSize: '0.7rem' }}
@@ -150,9 +129,9 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
             value={input.feeHeadId}
             onChange={(event) => setInput((value) => ({ ...value, feeHeadId: event.target.value }))}
           >
-            {enabledRules.map((rule) => (
+            {rules.map((rule) => (
               <MenuItem key={rule.feeHeadId} value={rule.feeHeadId} sx={{ fontSize: '0.8rem' }}>
-                {rule.feeHeadName || rule.feeHeadId} ({rule.ruleType.replace('Proration', '')})
+                {rule.feeHeadName || rule.feeHeadId}
               </MenuItem>
             ))}
           </TextField>
@@ -160,19 +139,20 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
 
         {/* Scheduled Amount */}
         <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField
+          <NumericFormatCustom
+            name="scheduledAmount"
             fullWidth
             size="small"
-            type="number"
-            label="Scheduled Base Amount"
+            label="Scheduled amount"
             value={input.scheduledAmount}
-            onChange={(event) =>
-              setInput((value) => ({ ...value, scheduledAmount: Number(event.target.value) }))
-            }
-            InputProps={{
-              startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+            valueIsNumericString
+            decimalScale={2}
+            roundToWholeRupees={false}
+            onValueChange={({ value }, source) => {
+              if (source.source === 'event') {
+                setInput((previous) => ({ ...previous, scheduledAmount: value }));
+              }
             }}
-            inputProps={{ min: 0, step: 100 }}
           />
         </Grid>
 
@@ -242,19 +222,25 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
             size="small"
             loading={isLoading}
             disabled={!canSimulate}
-            onClick={() => simulate({ id: policyId, body: input })}
+            onClick={() => {
+              setSubmittedInput(input);
+              return simulate({
+                id: policyId,
+                body: { ...input, scheduledAmount: Number(input.scheduledAmount) },
+              });
+            }}
             startIcon={<Iconify icon="solar:play-circle-bold" width={18} />}
             sx={{ px: 2.5 }}
           >
-            Calculate Proration Preview
+            Calculate proration preview
           </LoadingButton>
         </Grid>
 
         {/* Error Callout */}
-        {error && (
+        {currentError && (
           <Grid size={{ xs: 12 }}>
             <Alert severity="error" sx={{ borderRadius: 1.25 }}>
-              {parseApiProblemDetail(error).detail}
+              {parseApiProblemDetail(currentError).detail}
             </Alert>
           </Grid>
         )}
@@ -285,7 +271,7 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
                   Factor: {result.factor.toFixed(4)}
                 </Label>
                 <Label color="info" sx={{ height: 20, fontSize: '0.68rem' }}>
-                  {result.ruleType}
+                  Policy v{result.policyVersion}
                 </Label>
               </Stack>
 
@@ -302,7 +288,7 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
                     }}
                   >
                     <Typography variant="caption" color="text.secondary" display="block">
-                      Original Scheduled Amount
+                      Scheduled amount
                     </Typography>
                     <Typography variant="h6" fontWeight={700} color="text.primary">
                       {formatNumber(result.scheduledAmount, 'INR')}
@@ -327,7 +313,7 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
                       fontWeight={600}
                       display="block"
                     >
-                      Calculated Prorated Demand
+                      Prorated amount
                     </Typography>
                     <Typography variant="h6" fontWeight={800} color="primary.main">
                       {formatNumber(result.proratedAmount, 'INR')}
@@ -384,7 +370,7 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
                       color="text.secondary"
                       sx={{ fontSize: '0.74rem', lineHeight: 1.5 }}
                     >
-                      <strong>Formula Breakdown:</strong> {result.explanation}
+                      <strong>Calculation</strong> {result.explanation}
                     </Typography>
                   </Stack>
                 </Box>
@@ -393,6 +379,6 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
           </Grid>
         )}
       </Grid>
-    </SectionCard>
+    </DetailSection>
   );
 }

@@ -408,10 +408,9 @@ const buildSelectionForm = () => {
 };
 
 const selectedAllocationCount = () =>
-  screen
-    .getByRole('heading', { name: 'Payment summary' })
-    .closest('section')!
-    .querySelectorAll('button[aria-label^="Remove "][aria-label$=" from collection"]').length;
+  within(screen.getByRole('table', { name: 'Selected collection items' }))
+    .queryAllByRole('button', { name: /^(Payments|Charges) \(/ })
+    .reduce((total, group) => total + Number(group.textContent?.match(/\((\d+)\)/)?.[1] ?? 0), 0);
 
 const expectSelection = async (count: number, amount: number) => {
   expect(selectedAllocationCount()).toBe(count);
@@ -570,11 +569,19 @@ describe('Collect Fees presentation and shared ledger', () => {
     expect(screen.getByRole('region', { name: 'Charges' })).toBeVisible();
     const paymentsAccordion = screen.getByRole('button', { name: /^Payments \(/ });
     const chargesAccordion = screen.getByRole('button', { name: /^Charges \(/ });
+    expect(paymentsAccordion).toHaveAttribute('aria-expanded', 'false');
+    expect(chargesAccordion).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(paymentsAccordion);
+    fireEvent.click(chargesAccordion);
     expect(paymentsAccordion).toHaveAttribute('aria-expanded', 'true');
     expect(chargesAccordion).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(chargesAccordion);
     expect(chargesAccordion).toHaveAttribute('aria-expanded', 'false');
     expect(paymentsAccordion).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(chargesAccordion);
+    fireEvent.change(screen.getByLabelText(/Amount to collect/), { target: { value: '2350' } });
+    expect(chargesAccordion).toHaveAttribute('aria-expanded', 'false');
+    expect(paymentsAccordion).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(screen.getByRole('button', { name: 'Clear All' }));
     expect(screen.getByLabelText(/Amount to collect/)).toHaveValue('');
     expect(screen.getByRole('button', { name: 'Clear All' })).toBeDisabled();
@@ -748,12 +755,17 @@ describe('Fee Collection automatic ledger selection', () => {
       const secondBox = () => checkbox(`Select ${second}, June 2026`);
       const lastBox = () => checkbox('Select Class 3 Tuition Fee, July 2026');
       const amount = screen.getByLabelText(/Amount to collect/);
+      const transport = ledger().getByRole('button', { name: /^Transport/ });
+      if (transport.getAttribute('aria-expanded') !== 'true') fireEvent.click(transport);
+      const tuition = ledger().getByRole('button', { name: /^Class 3 Tuition Fee/ });
+      if (tuition.getAttribute('aria-expanded') !== 'true') fireEvent.click(tuition);
 
       fireEvent.change(amount, { target: { value: '500' } });
       await waitFor(() => expect(firstBox()).toBeChecked());
       expect(secondBox()).not.toBeChecked();
       expect(lastBox()).not.toBeChecked();
       expect(amount).toHaveValue('₹ 500');
+      fireEvent.click(screen.getByRole('button', { name: /^Payments \(/ }));
       expect(
         within(screen.getByRole('table', { name: 'Selected collection items' })).getAllByRole('row')
       ).toHaveLength(2);

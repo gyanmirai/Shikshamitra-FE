@@ -773,12 +773,12 @@ summary-refresh failure without reclassifying a successful payment.
 Build the collection fixture as described in
 [`e2e/fixtures/fee-collection-late-fees/README.md`](../../e2e/fixtures/fee-collection-late-fees/README.md),
 then run `node node_modules/@playwright/test/cli.js test --config e2e/finance/charge-receipt-preview.config.ts`.
-Finish in the in-app browser with **Charge receipt regression** and **Charge receipt retry regression**:
-collect ₹1,000, verify PDF preview/download, refresh to paid/zero pending, and retry a failed PDF
-without a second payment POST. Synthetic browser responses verify frontend behavior; persisted
+Finish in the in-app browser with **Charge receipt regression** and **Charge receipt retry regression**.
+Collect ₹1,000 and verify the receipt toast, automatic return to Collections, paid balance,
+one payment POST and zero PDF requests. Synthetic browser responses verify frontend behavior. Persisted
 PDF generation and missing-blob recovery are covered by the backend HTTP regression.
 
-Run the focused FinalPaymentReviewDialog.test.tsx and paymentReceiptSummary.test.ts tests, npm run ts, and npm run docs:check.
+Run the focused `FeeCollectionPreviewDialog.test.tsx` tests, `npm run ts`, and `npm run docs:check`.
 
 Browser acceptance: collect cash fees and charges → Receipt in Receipts; Reconciliation shows six non-cash tabs with Cheque selected by default, and saved Cash-tab links fall back to Cheque. Record each non-cash method → Provisional Receipt; approve → linked Receipt; reject → rejected history without an official document. Check fee-only, charge-only, combined, PDF download filename, payment method, long student names and narrow screens. Old cashier confirmation flags must never finalize a new non-cash payment. Mixed non-cash instruments must fail validation. Backend behavior and test suites: [Receipt lifecycle](../../../Shikshamitra-BE/docs/modules/finance/references/receipt-lifecycle.md).
 

@@ -11,6 +11,7 @@ import { EmptyContent } from 'src/components/empty-content';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useGetRefundPolicyVersionsQuery } from 'src/redux/finance/refundPolicy';
+import { useGetProrationPolicyVersionsQuery } from 'src/redux/finance/prorationPolicy';
 import { useGetCollectionPolicyVersionsQuery } from 'src/redux/finance/collectionPolicy';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Alert, Stack, Button, Skeleton, Typography, DialogActions } from '@mui/material';
@@ -100,9 +101,16 @@ export function AttachedPolicyImpactDialog({
     options: { skip: !canFetch || props.family !== 'refund', refetchOnMountOrArgChange: false },
     popupConfig: { error: false },
   });
-  const query = props.family === 'refund' ? refund : collection;
+  const proration = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetProrationPolicyVersionsQuery,
+    params,
+    options: { skip: !canFetch || props.family !== 'proration', refetchOnMountOrArgChange: false },
+    popupConfig: { error: false },
+  });
+  const query = props.family === 'proration' ? proration : props.family === 'refund' ? refund : collection;
   const version = query.currentData?.items?.find(
-    (item: { id: string; policyId: string }) => item.id === versionId && item.policyId === policyId
+    (item: { id: string; policyId: string }) => item.id === versionId && (props.family === 'proration' || item.policyId === policyId)
   );
   const snapshot = version && parsePolicyVersionSnapshot(version.snapshotJson);
   const policy = snapshot && Object.keys(snapshot).length ? snapshot : undefined;

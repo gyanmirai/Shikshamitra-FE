@@ -26,7 +26,7 @@ Backend contracts, migration and historical-data handling are owned by the [back
 
 `feeStructureModel.test.ts` verifies legacy-field removal and mandatory payment-term validation. `feeStructureFields.test.tsx` verifies the absent switch, visible payment frequency and rejection of a head without a published frequency. Browser checks cover add/edit, both themes and narrow viewports.
 
-The workspace uses a visible structure list beside the three-step editor. Add and Copy share one row above the structure search. At narrower widths the same list opens in a drawer, with paired creation actions also available in the workspace toolbar. Structure navigation preserves each mounted editor's unsaved values and saved step. The earlier [UI and language proposal](fee-structure-ui-redesign.md) supplies background; the active layout is described here.
+The workspace uses a visible structure list beside the three-step editor. Search appears above the Copy and Add actions. At narrower widths the same list opens in a drawer, with paired creation actions also available in the workspace toolbar. Switching away from an edited structure uses the shared **Discard Unsaved Changes?** confirmation: **Keep editing** preserves the current values and selection; **Discard changes** restores the last saved record and continues to the selected structure. Unsaved new structures are removed locally on discard; saved drafts are never deleted by this action. Add and Copy use the same guard. Clean, saved and currently selected structures do not prompt, and busy requests block navigation. The earlier [UI and language proposal](fee-structure-ui-redesign.md) supplies background; the active layout is described here.
 
 Backend rules, exact permissions, migration and API contracts are owned by [the backend implementation reference](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md).
 
@@ -36,15 +36,39 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 2. Open the full-screen workspace dialog. Its horizontal class tabs come from the scoped metadata response, not the generic class API.
 3. Add a Fee Structure draft. Enter its name. Eligible current default policies initialize once in a new draft.
    **Copy structure**, immediately after **Add structure**, opens a compact dialog. Its searchable source dropdown groups every saved structure by class using only the current metadata's accessible classes (same medium, board and academic year). Choose a source and confirm the destination class and structure name, then Submit. The existing create API saves a new draft with fresh structure/line identities, preserving amounts (including variable nulls), fee-head flags, pinned payment terms and policy versions, concession scope and customized installments. Duplicate names get an editable copy-name suggestion; backend uniqueness and attachment permissions still apply. The new draft is selected without discarding other mounted edits. Failed writes retain the selection/name and reuse the creation request ID for an unchanged retry. Loading failures offer Retry and never show a partial source list as complete. Copy is available under the existing Fee Structure Add permission and absent from view-only workspaces.
-4. In **Fee Heads & Terms**, shared form section cards group **General Information** (Structure name) and **Fee Heads** (the table and annual total). Use **+ Fee Head** beside the Fee Heads section. The shared Add/Edit dialog collects an available fee head, annual amount, and published payment frequency (the exact Payment Term version), with variable-pricing and optional flags. Save commits a complete validated row to the local structure draft.
+4. In **Fee Heads & Terms**, use **+ Fee Head** to select a fee head and a published payment frequency. For a fixed recurring fee with one installment per covered calendar month, turn on **Charge per month** and enter the monthly amount. The fee row shows the monthly rate and the term total. For a variable fee, enter the amount during student assignment.
 5. View opens read-only fee-head details and an installment breakdown with dates, allocations, amounts and totals. **Fee Head Details** uses the same shared detail section and label/value fields as the concession policy's **General Information**, with responsive columns and section help. Authorized draft editors can choose **Edit installments** to customize locally or restore the inherited schedule. Replacing a customized term requires confirmation when saving the row.
-6. In **Policies**, review the Collection and Refund policy selections. Both are required to complete this setup. Each row shows its selected name, version, and coverage. Edit opens the picker, where the eye action opens the shared read-only policy drawer for the row's version and preserves the picker search. The refund picker lists the fee heads covered by that version and accepts a selected-head policy only when at least one head overlaps. A mismatch leaves the existing selection intact and explains how to proceed. The Policies step rechecks the attached refund version when fee heads change. Missing attachments or a known mismatch block **Review & Continue**. Proration and Concession Policy selection, scope controls, defaults, lookup requests and review columns remain absent from Fee Structure settings.
+6. In **Policies**, review the Collection and Refund policy selections. Both are required to complete this setup. Each row shows its selected name, version, and coverage. Edit opens the picker. Activate a picker row to open its exact version in the read-only drawer and use the check icon to attach the policy. Closing the drawer preserves the picker search. The refund picker lists covered fee heads on separate lines and accepts a selected-head policy only when at least one head overlaps. A mismatch leaves the existing selection intact and explains how to proceed. The Policies step rechecks the attached refund version when fee heads change. Missing attachments or a known mismatch block **Review & Continue**. Proration and Concession Policy selection, scope controls, defaults, lookup requests and review columns remain absent from Fee Structure settings.
 7. Add at least one fee head before saving. To move past **Fee Heads & Terms**, include at least one required fee head. An optional-only draft can be saved and completed later. Each fixed row requires an entered amount, and each row requires a published Payment Term. Policy configuration may remain incomplete in a draft. The backend rejects invalid selected relationships.
 8. Open **Review & Publish** for backend readiness errors, mismatch warnings, per-head policy/accounting coverage and resolved installments. **Structure Summary** includes the Collection Policy and Refund Policy names using the shared `DetailField` label/value treatment. **Publish Readiness** (or **Publication Validation** for published records) follows the summary, then **Policy Coverage** and **Payment Schedules**. Shared accordions contain warnings and per-head schedules.
 9. Publish only after saving and obtaining a ready review. The server revalidates and protects the configuration. The success popup offers **Continue** to stay in the current workspace or **Exit** to return to the Fee Structure list. Exit uses the workspace’s unsaved changes guard.
-10. Published cards offer **Create Revision**. The draft opens with the original name and highlights any matching saved name in the class, including the published source. Enter a unique name to save and proceed. A name-only save preserves fee heads, payment terms and policies. The published card retains its saved review after master settings change.
+10. Published cards offer **Create Revision**. The draft opens with the original name and highlights any matching saved name in the class. Enter a unique name and change the Fee Heads & Terms configuration before saving or proceeding. A rejected save keeps the edits and returns to Fee Heads & Terms. The published card retains its saved review after master settings change.
+
+Every successful **Create Revision** action opens a separate draft returned by the
+API, even if another draft from the same published source has been renamed and saved.
+The client generates a new request ID for each completed action and retains that ID
+after failures so a retry reopens only that command's draft. The workspace clears the
+structure search, keeps one entry per saved ID across list refreshes, and preserves
+other drafts' saved and unsaved input. The published source remains a separate
+protected record. A draft response says it is ready for editing; a retry returning
+a published revision says it is already published. Neither message claims an
+additional draft was created by a retry.
 
 ## Common components and interaction rules
+
+Proration policy details opened from the Fee Structure policy picker reuse the shared Policy
+details drawer. This context shows saved configuration, fee-head rules, version and audit details
+only; it omits the editable Proration Preview calculator. The calculator remains available in the
+Proration Policy workspace. Viewing details preserves the picker search and does not attach or
+change the policy.
+
+The editor footer uses **Draft** and **Publish** for its save and publication
+buttons. An explicit **Draft** click confirms when the saved draft is already up to date,
+without issuing a redundant write or clearing its readiness result. If Formik
+blocks saving because of invalid name, amount, or payment-term fields on another
+step, the editor returns to **Fee heads & terms**, shows the validation guidance,
+and focuses the first invalid field. Validation and revision server checks remain
+in place.
 
 The Policies step indicator remains pending on a new draft and on first entering
 the step, including when collection-policy setup is missing. It shows an error only
@@ -165,7 +189,7 @@ Default initialization waits for a complete successful family list and requires 
 
 The subject creation form is the validation reference: name/amount errors appear after blur or Save, guidance stays under the owning field, and the fields use shared `ShakingTextField`. Policy requiredness is visible on the policy card. Collection is validated on the Policies step before proceeding to Review and remains required at publication; Refund remains optional. Proration and Concession are not selected or required here. Receipt Book has no control or new request field.
 
-`buildStructureChanges` compares the immutable saved baseline and sends only changed fields. Head operations use saved line IDs; clearing a policy sends a null family; schedule replacement is explicit and atomic. An unchanged revision save sends an empty PATCH to check name uniqueness and the saved version. Other unchanged saves remain local. Request IDs remain stable for an identical retry. A changed command uses a different request ID. A changed save replaces the local candidate and class cache with the canonical response.
+`buildStructureChanges` compares the immutable saved baseline and sends only changed fields. Head operations use saved line IDs; clearing a policy sends a null family; schedule replacement is explicit and atomic. An unchanged revision save sends an empty PATCH so the server can check name uniqueness, the saved version, and the fee-head configuration against the published parent. Other unchanged saves remain local. Request IDs remain stable for an identical retry. A changed command uses a different request ID. A changed save replaces the local candidate and class cache with the canonical response.
 
 All added Fee Heads appear in the common overview table. Edit/View opens a focused form for pricing, amounts, terms, optionality, and the existing schedule dialog. The shared stepper preserves Formik values. Policy-only heads never create rows; backend Review explains overlap and conflicting scope.
 
@@ -206,6 +230,7 @@ New editor rows retain the existing false default; no database migration or back
 ## Contextual policy impact
 
 The Policies step contains only Collection, Proration and Refund cards. Historical concession fields remain in the read contract for compatibility and are not editable or included in settings PATCH commands. Request-level policy selection is not implemented by this change; see the [backend behavior](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md).
+New structures automatically select the current version of the academic-year default Proration Policy when the catalog contains exactly one eligible default and the user can select it. **Use academic-year default** clears the version pin and lets Finance resolve the default dynamically. Saved drafts retain their existing selection or fallback.
 The other policy families retain their existing selection controls without new head selectors.
 Cards use a centered, bounded two-column grid on desktop and a single column below the medium breakpoint.
 
@@ -240,7 +265,7 @@ The focused editor/model/catalog suite passes 22 tests, including legacy attachm
 
 ## Guided workspace (2026-10-05)
 
-The timetable-style full-screen dialog displays scoped class tabs horizontally across the top at every viewport width. Tabs scroll within their row when needed. The class panel displays one selected structure, with a searchable shared selector in the editor toolbar when several exist. Other editors remain mounted so switching structures preserves unsaved names, policy pins, pricing and custom schedules. Newly saved drafts keep their editor identity and selection when the list refetches; an older list response cannot replace a newer save response.
+The timetable-style full-screen dialog displays scoped class tabs horizontally across the top at every viewport width. Tabs scroll within their row when needed. The class panel displays one selected structure beside a searchable structure list. Visited saved editors remain mounted. Unsaved names, policy pins, pricing and custom schedules require a Keep editing or Discard changes decision before leaving the active structure. Discard remounts only the affected editor from its saved record without issuing save or delete requests. Newly saved drafts keep their editor identity and selection when the list refetches; an older list response cannot replace a newer save response.
 
 The workspace uses a flex-height chain. The existing `CustomStepperWithFormik` owns the scrolling body, horizontal step indicators and stable action footer. Its source and API are unchanged. Fee Structure keeps its canonical candidate, validation and changed-only save flow in the owning editor; the stepper delegates actions to that workflow. The primary forward action is **Save & next** during editing and **Next** in read-only sessions. **Save draft** stays on the current step; Back preserves input. A failed save never advances. Successful saves replace the candidate with canonical server data before the next stage renders. Saved structures resume their last navigation step using a metadata/class/structure-scoped local preference; financial values and unsaved drafts are never stored there.
 
@@ -292,7 +317,8 @@ small warning dot at the right, with an accessible label and tooltip. The dot re
 items and clears after a successful save or discard; new unsaved structures also show it.
 The structure sidebar follows the Report list's 320px panel, always-visible search, rounded
 document rows, selected border and restrained hover transitions. Motion respects reduced-motion
-preferences. Searching and switching preserve mounted editors; Add structure clears the filter.
+preferences. Searching preserves mounted editors; switching protects unsaved edits with the shared
+Keep editing / Discard changes confirmation. Add structure clears the filter after the guard permits it.
 The shared stepper's
 buttons sit directly in the bottom footer without a status-text row underneath.
 

@@ -2,18 +2,16 @@
 
 import type { PolicyVersion } from 'src/screens/finance/policies/hooks/useFinancePolicyVersion';
 
-import { useId, useMemo, useState, useEffect } from 'react';
 import { alpha } from '@mui/material/styles';
-import { Box, Alert, Stack, Paper, Drawer, Button, Typography, TablePagination } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useId, useRef, useMemo, useState, useEffect } from 'react';
+import { Box, Alert, Stack, Paper, Drawer, Button, Typography } from '@mui/material';
 import VersionSidebar from 'src/screens/finance/policies/components/version/VersionSidebar';
 import VersionDiffTable from 'src/screens/finance/policies/components/version/VersionDiffTable';
 import FinancePolicySkeleton from 'src/screens/finance/policies/components/FinancePolicySkeleton';
 import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
+import PolicyHistoryPagination from 'src/screens/finance/policies/components/version/PolicyHistoryPagination';
 
 import {
   formatHistoryField,
@@ -64,6 +62,7 @@ export default function AccountCategoryVersionDrawer({
   onClose,
 }: Props) {
   const titleId = useId();
+  const drawerPaperRef = useRef<HTMLDivElement>(null);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   useEffect(() => {
     setSelectedVersionId(null);
@@ -106,6 +105,25 @@ export default function AccountCategoryVersionDrawer({
   const selectedVersion =
     versions.find((version) => version.eventId === selectedVersionId) ?? versions[0];
   const drawerTitle = `${recordType.replace(/\b\w/g, (letter) => letter.toUpperCase())} Version History`;
+  const totalCount = data?.totalCount ?? versions.length;
+  const handlePageChange = (nextPage: number) => {
+    drawerPaperRef.current?.focus();
+    onPageChange?.(nextPage);
+  };
+  const pagination = onPageChange && totalCount > pageSize && (
+    <PolicyHistoryPagination
+      page={page}
+      pageSize={pageSize}
+      totalCount={totalCount}
+      onPageChange={handlePageChange}
+      ariaLabel="Version history pages"
+    />
+  );
+  const backToLatest = page > 0 && onPageChange && (
+    <Button size="small" onClick={() => handlePageChange(0)} sx={{ mt: 1 }}>
+      Back to latest versions
+    </Button>
+  );
 
   return (
     <Drawer
@@ -116,7 +134,9 @@ export default function AccountCategoryVersionDrawer({
         backdrop: { sx: { bgcolor: (theme) => alpha(theme.palette.common.black, 0.32) } },
       }}
       PaperProps={{
+        ref: drawerPaperRef,
         role: 'dialog',
+        tabIndex: -1,
         'aria-modal': true,
         'aria-labelledby': titleId,
         sx: { width: { xs: '100%', sm: 'min(960px, 96vw)' }, maxWidth: '100%' },
@@ -135,7 +155,6 @@ export default function AccountCategoryVersionDrawer({
           title={drawerTitle}
           titleId={titleId}
           helpText={`${title}. Review recorded changes, who made them, and the values before and after each change. Select a version from the newest-first list. Times use ${Intl.DateTimeFormat().resolvedOptions().timeZone}.`}
-          badges={<Label>Read Only</Label>}
           onClose={onClose}
         />
         {isLoading ? (
@@ -156,6 +175,7 @@ export default function AccountCategoryVersionDrawer({
             >
               Version history could not be loaded. Please try again.
             </Alert>
+            {backToLatest}
           </Box>
         ) : selectedVersion ? (
           <Box
@@ -172,7 +192,7 @@ export default function AccountCategoryVersionDrawer({
             <Box
               sx={{
                 width: { xs: '100%', md: 240 },
-                height: { xs: 208, md: '100%' },
+                height: { xs: pagination ? 248 : 208, md: '100%' },
                 flexShrink: 0,
                 minHeight: 0,
               }}
@@ -183,6 +203,7 @@ export default function AccountCategoryVersionDrawer({
                 isLatestPage={page === 0}
                 selectedVersionId={selectedVersion.eventId}
                 onSelectVersion={setSelectedVersionId}
+                pagination={pagination}
               />
             </Box>
             <Scrollbar sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
@@ -206,54 +227,18 @@ export default function AccountCategoryVersionDrawer({
         ) : (
           <Box sx={{ p: 3, flex: 1 }}>
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, textAlign: 'center' }}>
-              <Typography variant="subtitle2">No history recorded yet</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Recorded changes to this {recordType.toLowerCase()} will appear here.
+              <Typography variant="subtitle2">
+                {page > 0 ? 'No versions on this page' : 'No history recorded yet'}
               </Typography>
+              {page === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  Recorded changes to this {recordType.toLowerCase()} will appear here.
+                </Typography>
+              )}
+              {backToLatest}
             </Paper>
           </Box>
         )}
-        <Box
-          sx={{
-            px: 2,
-            py: 1.5,
-            bgcolor: 'background.paper',
-            borderTop: 1,
-            borderColor: 'divider',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 1,
-            flexShrink: 0,
-          }}
-        >
-          <Typography variant="caption" color="text.secondary" role="status">
-            {!isLoading && !isError && versions.length > 0
-              ? `Showing ${page * pageSize + 1}–${page * pageSize + versions.length} of ${data?.totalCount ?? versions.length} recorded versions`
-              : 'Read-only history'}
-          </Typography>
-          {onPageChange && (
-            <TablePagination
-              component="div"
-              sx={{ maxWidth: '100%' }}
-              count={data?.totalCount ?? (page + 1) * pageSize}
-              page={page}
-              rowsPerPage={pageSize}
-              rowsPerPageOptions={[]}
-              onPageChange={(_, nextPage) => onPageChange(nextPage)}
-              slotProps={{ actions: { previousButton: { disabled: isLoading || page === 0 }, nextButton: { disabled: isLoading || (page + 1) * pageSize >= (data?.totalCount ?? 0) } } }}
-            />
-          )}
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={onClose}
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          >
-            Close
-          </Button>
-        </Box>
       </Box>
     </Drawer>
   );

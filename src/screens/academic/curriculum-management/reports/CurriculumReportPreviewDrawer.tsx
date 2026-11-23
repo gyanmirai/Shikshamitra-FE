@@ -196,9 +196,6 @@ const CurriculumReportPreviewDrawerContent = ({
           flexShrink: 0,
         })}
       >
-        <Button variant="outlined" color="inherit" size="small" onClick={onClose}>
-          Close
-        </Button>
         <Button
           variant="contained"
           size="small"

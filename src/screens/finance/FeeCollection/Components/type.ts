@@ -1,6 +1,7 @@
 import type { FormikProps } from 'formik';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
+import type { AppliedChargeWaiver } from 'src/redux/feeCollection/feeCollection';
 
 export interface IFeeData {
   id: string | number;
@@ -105,6 +106,7 @@ export interface IFeeCharge {
   paid?: number;
   reconciliationAmount?: number;
   waivedAmount?: number;
+  waiverHistory?: AppliedChargeWaiver[] | null;
   canWaive?: boolean;
   explanation?: string;
   status?: number | string;

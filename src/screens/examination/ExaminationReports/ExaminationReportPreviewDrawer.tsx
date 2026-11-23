@@ -173,7 +173,7 @@ const ExaminationReportPreviewDrawerContent = ({
           />
         )}
         <Tooltip title="Close">
-          <IconButton onClick={onClose} size="small" sx={{ color: 'inherit', ml: 1 }}>
+          <IconButton aria-label="Close report preview" onClick={onClose} size="small" sx={{ color: 'inherit', ml: 1 }}>
             <Iconify icon="mdi:close" width={20} />
           </IconButton>
         </Tooltip>
@@ -311,9 +311,6 @@ const ExaminationReportPreviewDrawerContent = ({
           flexShrink: 0,
         }}
       >
-        <Button variant="outlined" color="inherit" size="small" onClick={onClose}>
-          Close
-        </Button>
         <Button
           variant="contained"
           size="small"

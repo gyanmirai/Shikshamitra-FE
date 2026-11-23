@@ -7,8 +7,12 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { FeeMonth, FeeCollectionStatusOptions } from 'src/enums/fee-collection-type';
 import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
+import {
+  FeeMonth,
+  FeeCollectionStatusType,
+  FeeCollectionStatusOptions,
+} from 'src/enums/fee-collection-type';
 import {
   Box,
   Paper,
@@ -90,6 +94,7 @@ export const getAcademicYearMonthOptions = (
 const STATUS_OPTIONS = [
   { label: 'All', value: 'All' },
   ...FeeCollectionStatusOptions.map((s) => ({ label: s.label, value: String(s.value) })),
+  { label: 'Cancelled', value: String(FeeCollectionStatusType.Cancelled) },
 ];
 
 const SELECTION_FILTER_OPTIONS: Array<{

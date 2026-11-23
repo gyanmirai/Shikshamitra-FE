@@ -70,15 +70,15 @@ describe('grade scale details', () => {
     expect(result.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
   });
 
-  it('retains one permitted edit action and sends both close controls through the existing callback', () => {
+  it('retains the permitted edit action and dismisses through the single header close', () => {
     const { onClose, onEdit } = renderDrawer();
     expect(screen.getByRole('dialog', { name: scale.name })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     expect(onEdit).toHaveBeenCalledOnce();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Close grade scale details' }));
-    expect(onClose).toHaveBeenCalledTimes(2);
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it('does not expose editing without permission', () => {

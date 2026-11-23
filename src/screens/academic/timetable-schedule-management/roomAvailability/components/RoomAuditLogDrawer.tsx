@@ -268,21 +268,6 @@ const RoomAuditLogDrawerContent = ({
       {/* Footer */}
       <Divider />
       <TablePagination component="div" count={totalCount} page={page} rowsPerPage={20} rowsPerPageOptions={[20]} onPageChange={(_, value) => setPage(value)} />
-      <Stack
-        direction="row"
-        justifyContent="flex-end"
-        sx={{ px: { xs: 2, sm: 3 }, py: 1.75, flexShrink: 0, bgcolor: 'background.paper' }}
-      >
-        <Button
-          variant="outlined"
-          color="inherit"
-          onClick={onClose}
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-        >
-          Close
-        </Button>
-      </Stack>
     </Drawer>
   );
 };

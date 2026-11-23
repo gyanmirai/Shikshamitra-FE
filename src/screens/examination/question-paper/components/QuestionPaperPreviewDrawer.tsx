@@ -97,9 +97,6 @@ export default function QuestionPaperPreviewDrawer({
           borderColor: 'divider',
         }}
       >
-        <Button variant="outlined" color="inherit" onClick={onClose}>
-          Close
-        </Button>
         <Button
           variant="contained"
           disabled={isLoading || !printHtml}

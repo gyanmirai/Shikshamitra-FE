@@ -57,11 +57,11 @@ export function useSaveStructureDraftMutation() {
     (args: any) => ({
       unwrap: async () => {
         await new Promise((resolve) => setTimeout(resolve, 300));
-        copyFixtureStatus.attempts++;
+        copyFixtureStatus.attempts += 1;
         if (copyMode === 'race' && copyFixtureStatus.attempts === 1) copyCurrentVersion = 3;
         if (args.standardFeeStructures.refundPolicyVersionId !== `refund-v${copyCurrentVersion}`) {
           window.dispatchEvent(new Event('copy-fixture-state'));
-          throw {
+          throw Object.assign(new Error('The selected policy version changed.'), {
             data: {
               error: {
                 data: {
@@ -71,7 +71,7 @@ export function useSaveStructureDraftMutation() {
                 },
               },
             },
-          };
+          });
         }
         const existing = Object.values(fixtureClassRecords)
           .flat()
@@ -88,7 +88,7 @@ export function useSaveStructureDraftMutation() {
         };
         fixtureClassRecords[args.standardId] ??= [];
         fixtureClassRecords[args.standardId].push(record);
-        copyFixtureStatus.created++;
+        copyFixtureStatus.created += 1;
         window.dispatchEvent(new Event('copy-fixture-state'));
         return record;
       },
@@ -278,6 +278,8 @@ if (new URLSearchParams(window.location.search).has('revision-name')) {
       concurrencyStamp: 'revision-stamp',
     },
   ];
+  if (new URLSearchParams(window.location.search).has('new-revision'))
+    fixtureClassRecords.class = fixtureClassRecords.class.slice(0, 1);
 }
 if (navigationCount > 2 && navigationCount <= 100)
   fixtureClassRecords.class = Array.from({ length: navigationCount }, (_, index) => ({
@@ -432,6 +434,31 @@ export default function useFixtureApi({
           if (action === 'publish') {
             saved = { ...saved, status: 0, publicationReview: preview(saved) };
             return saved;
+          }
+          if (action === 'revision') {
+            const rows = fixtureClassRecords[args.standardId];
+            const source = rows.find((item) => item.id === args.structureId);
+            const existing = rows.find(
+              (item) => item.id === args.requestId && item.previousRevisionId === source.id
+            );
+            if (existing) return structuredClone(existing);
+            const revision = {
+              ...structuredClone(source),
+              id: args.requestId ?? crypto.randomUUID(),
+              status: 1,
+              previousRevisionId: source.id,
+              revisionNumber:
+                Math.max(
+                  ...rows
+                    .filter((item) => item.revisionRootId === source.revisionRootId)
+                    .map((item) => item.revisionNumber)
+                ) + 1,
+              concurrencyStamp: crypto.randomUUID(),
+              publicationReview: undefined,
+              feeHeads: source.feeHeads.map((line: any) => ({ ...line, id: crypto.randomUUID() })),
+            };
+            rows.push(revision);
+            return structuredClone(revision);
           }
           return saved;
         } finally {

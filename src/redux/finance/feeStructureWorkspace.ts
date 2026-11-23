@@ -3,7 +3,7 @@ import { financeModuleType, financePolicyType, paymentTermType } from 'src/redux
 import { financeModuleApi } from './financeModuleApi';
 import { financeFeeStructureApi } from './financeFeeStructure';
 
-export type PolicyFamily = 'collection' | 'concession' | 'refund';
+export type PolicyFamily = 'collection' | 'concession' | 'refund' | 'proration';
 export interface StructureInstallment {
   sourcePaymentTermInstallmentId: string;
   sequence: number;
@@ -20,6 +20,7 @@ export interface StructureLine {
   feeHeadName?: string;
   categoryName?: string;
   amount: number | null;
+  monthlyRate?: number | null;
   isVariable?: boolean;
   isOneTime: boolean;
   isOptional: boolean;
@@ -43,6 +44,8 @@ export interface StructureCandidate {
   concessionPolicyVersionId: string | null;
   refundPolicyId: string | null;
   refundPolicyVersionId: string | null;
+  prorationPolicyId?: string | null;
+  prorationPolicyVersionId?: string | null;
   concessionFeeHeadScope: 'EntireFeeStructure' | 'SelectedFeeHeads';
   concessionApplicableFeeHeadIds: string[];
 }
@@ -105,6 +108,7 @@ export interface StructurePreview {
     collection: string;
     concession: string;
     refund: string;
+    proration?: string | null;
     accounting: string;
   }[];
   schedules: {
@@ -188,6 +192,7 @@ export const feeStructureWorkspaceApi = financeModuleApi.injectEndpoints({
         paymentTermType.paymentTerm,
         { type: financePolicyType.collectionPolicy, id: `year:${academicYearId}` },
         { type: financePolicyType.refundPolicy, id: `year:${academicYearId}` },
+        { type: financePolicyType.prorationPolicy, id: `year:${academicYearId}` },
       ],
     }),
     getStructureTermSchedule: builder.query<
@@ -337,12 +342,12 @@ export const feeStructureWorkspaceApi = financeModuleApi.injectEndpoints({
     }),
     reviseStructure: builder.mutation<
       StructureRecord,
-      { structureId: string; standardId: string; concurrencyStamp: string }
+      { structureId: string; standardId: string; concurrencyStamp: string; requestId?: string }
     >({
-      query: ({ structureId, concurrencyStamp }) => ({
+      query: ({ structureId, concurrencyStamp, requestId }) => ({
         url: `/fee-structures/${structureId}/revisions`,
         method: 'POST',
-        body: { concurrencyStamp },
+        body: { concurrencyStamp, requestId },
       }),
       invalidatesTags: classTags,
     }),

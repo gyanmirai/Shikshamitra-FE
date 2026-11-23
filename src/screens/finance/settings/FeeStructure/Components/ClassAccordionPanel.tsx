@@ -1,3 +1,5 @@
+import type { StructureRecord } from 'src/redux/finance/feeStructureWorkspace';
+
 import { useGetStructureDetailQuery } from 'src/redux/finance/feeStructureWorkspace';
 import { GlobalIcons } from 'src/utils/icons';
 import { Label } from 'src/components/label';
@@ -6,6 +8,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { EmptyContent } from 'src/components/empty-content';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import {
@@ -136,6 +139,8 @@ export default function ClassAccordionPanel({
   };
   const desktop = useResponsive('up', 'lg');
   const [dirtyKeys, setDirtyKeys] = useState<Set<string>>(new Set());
+  const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
+  const [editorVersions, setEditorVersions] = useState<Record<string, number>>({});
   const [savedCards, setSavedCards] = useState<
     Record<string, { card: IClassWiseFeeStructureCard; previousStamp?: string }>
   >({});
@@ -171,24 +176,94 @@ export default function ClassAccordionPanel({
   );
   const activeKey = cards.some(({ key }) => key === selectedKey) ? selectedKey : cards[0]?.key;
   if (activeKey) visitedKeys.current.add(activeKey);
-  const addNew = useCallback(() => {
-    draftCounter.current += 1;
-    const key = `draft-${classId}-${draftCounter.current}`;
-    setLocalDrafts((previous) => [
-      ...previous,
-      {
-        __draftId: key,
-        name: '',
-        feeHeads: [],
-        status: FeeStructureLockStatusType.Unlocked,
-        classId,
-        feeStructureMetaDataId,
-      },
-    ]);
-    setSelectedKey(key);
+  const requestNavigation = useCallback(
+    (proceed: () => void) => {
+      if (busy) return;
+      if (activeKey && dirtyKeys.has(activeKey)) setPendingNavigation(() => proceed);
+      else proceed();
+    },
+    [activeKey, busy, dirtyKeys]
+  );
+  const selectStructure = (key: string) => {
+    if (key === activeKey) {
+      setListOpen(false);
+      return;
+    }
+    requestNavigation(() => {
+      setSelectedKey(key);
+      setListOpen(false);
+    });
+  };
+  const discardAndNavigate = () => {
+    if (busy || !pendingNavigation) return;
+    if (activeKey) {
+      // Unmount only this editor so reopening starts from its latest saved record.
+      visitedKeys.current.delete(activeKey);
+      setEditorVersions((previous) => ({
+        ...previous,
+        [activeKey]: (previous[activeKey] ?? 0) + 1,
+      }));
+      setLocalDrafts((previous) =>
+        previous.filter((draft) => draft.__draftId !== activeKey || !!draft._id)
+      );
+      setNames((previous) => {
+        const next = { ...previous };
+        delete next[activeKey];
+        return next;
+      });
+      setDirtyKeys((previous) => {
+        const next = new Set(previous);
+        next.delete(activeKey);
+        return next;
+      });
+    }
+    setPendingNavigation(null);
+    pendingNavigation();
+  };
+  const openRevision = (record: StructureRecord) => {
+    const existing = cards.find(({ card }) => card._id === record.id);
+    const card = mapToCardModel(record, classId, feeStructureMetaDataId);
+    if (!existing) {
+      setLocalDrafts((previous) =>
+        previous.some((draft) => draft._id === record.id)
+          ? previous
+          : [...previous, { ...card, __draftId: record.id }]
+      );
+    } else if (!existing.isLocal && !visitedKeys.current.has(existing.key)) {
+      setSavedCards((previous) => ({
+        ...previous,
+        [existing.key]: { card, previousStamp: existing.sourceStamp },
+      }));
+    }
+    setSelectedKey(existing?.key ?? record.id);
     setSearch('');
     setListOpen(false);
-  }, [classId, feeStructureMetaDataId]);
+  };
+  const addNew = useCallback(() => {
+    requestNavigation(() => {
+      draftCounter.current += 1;
+      const key = `draft-${classId}-${draftCounter.current}`;
+      setLocalDrafts((previous) => [
+        ...previous,
+        {
+          __draftId: key,
+          name: '',
+          feeHeads: [],
+          status: FeeStructureLockStatusType.Unlocked,
+          classId,
+          feeStructureMetaDataId,
+        },
+      ]);
+      setSelectedKey(key);
+      setSearch('');
+      setListOpen(false);
+    });
+  }, [classId, feeStructureMetaDataId, requestNavigation]);
+  const openCopyDialog = () =>
+    requestNavigation(() => {
+      setListOpen(false);
+      copyDialog.onTrue();
+    });
   useEffect(() => {
     onRegisterAddNew?.(addNew);
   }, [addNew, onRegisterAddNew]);
@@ -269,10 +344,7 @@ export default function ClassAccordionPanel({
             fullWidth
             aria-label="Copy Structure"
             startIcon={<Iconify icon={GlobalIcons.copy} />}
-            onClick={() => {
-              setListOpen(false);
-              copyDialog.onTrue();
-            }}
+            onClick={openCopyDialog}
             disabled={busy}
           >
             Copy Structure
@@ -333,10 +405,7 @@ export default function ClassAccordionPanel({
                   selected={selected}
                   disabled={busy}
                   aria-current={selected ? 'true' : undefined}
-                  onClick={() => {
-                    setSelectedKey(key);
-                    setListOpen(false);
-                  }}
+                  onClick={() => selectStructure(key)}
                   sx={{
                     minHeight: 56,
                     minWidth: 0,
@@ -385,10 +454,10 @@ export default function ClassAccordionPanel({
                     {name}
                   </Typography>
                 </ListItemButton>
-                <Box ref={actionRef(key)} sx={{ flexShrink: 0 }} />
                 <Label color={published ? 'success' : draft ? 'warning' : 'default'} sx={{ mr: 1 }}>
                   {published ? 'Published' : draft ? 'Draft' : 'Status unavailable'}
                 </Label>
+                <Box ref={actionRef(key)} sx={{ flexShrink: 0 }} />
               </Box>
             );
           })}
@@ -462,7 +531,7 @@ export default function ClassAccordionPanel({
                 variant="outlined"
                 startIcon={<Iconify icon={GlobalIcons.copy} />}
                 disabled={busy}
-                onClick={copyDialog.onTrue}
+                onClick={openCopyDialog}
               >
                 Copy Structure
               </Button>
@@ -524,7 +593,7 @@ export default function ClassAccordionPanel({
             .filter(({ key }) => visitedKeys.current.has(key))
             .map(({ card, key, isLocal, sourceStamp }, index) => (
               <Box
-                key={key}
+                key={`${key}:${editorVersions[key] ?? 0}`}
                 sx={{
                   display: key === activeKey ? 'flex' : 'none',
                   flexDirection: 'column',
@@ -549,6 +618,7 @@ export default function ClassAccordionPanel({
                   }
                   onBusyChange={busyChange}
                   onPublished={onPublished}
+                  onRevisionReady={openRevision}
                   onDirtyChange={(dirty) => dirtyChange(key, dirty)}
                   onSaved={(saved) => {
                     dirtyChange(key, false);
@@ -577,6 +647,41 @@ export default function ClassAccordionPanel({
             ))}
         </Box>
       </Box>
+      {pendingNavigation && (
+        <ConfirmDialog
+          open
+          title="Discard Unsaved Changes?"
+          content={`Your unsaved changes to “${activeName}” will be lost if you continue.`}
+          icon={<Iconify icon={GlobalIcons.warning} width={24} color="warning.main" />}
+          cancelText="Keep editing"
+          disableBackdropClick
+          disableCancel={busy}
+          disableEscapeKeyDown={busy}
+          sx={{ zIndex: (theme) => theme.zIndex.modal + 2 }}
+          onClose={() => {
+            if (!busy) setPendingNavigation(null);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.stopPropagation();
+              if (!busy) setPendingNavigation(null);
+            }
+          }}
+          action={
+            <Button
+              type="button"
+              size="small"
+              variant="contained"
+              color="error"
+              disabled={busy}
+              startIcon={<Iconify icon={GlobalIcons.delete} />}
+              onClick={discardAndNavigate}
+            >
+              Discard changes
+            </Button>
+          }
+        />
+      )}
       {canAdd && copyDialog.value && (
         <CopyFeeStructureDialog
           feeStructureMetadataId={feeStructureMetaDataId}

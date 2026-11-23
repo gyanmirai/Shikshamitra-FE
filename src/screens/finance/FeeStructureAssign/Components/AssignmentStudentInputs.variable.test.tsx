@@ -32,6 +32,7 @@ const candidate = {
       feeHeadId: 'hostel',
       feeHeadName: 'Hostel',
       isVariable: true,
+      supportsMonthlyRate: true,
       isOptional: false,
       configuredAmount: null,
     },
@@ -39,6 +40,7 @@ const candidate = {
       feeHeadId: 'transport',
       feeHeadName: 'Transport',
       isVariable: true,
+      supportsMonthlyRate: true,
       isOptional: true,
       configuredAmount: null,
       supportsTransportSource: true,
@@ -72,16 +74,22 @@ function Harness({
   });
   return (
     <AssignmentStudentInputs
-      candidate={editing ? {
-        ...candidate,
-        heads: [...candidate.heads, {
-          ...candidate.heads[2],
-          feeHeadId: 'activity',
-          feeHeadName: 'Activity',
-          isOptional: true,
-        }],
-      } : candidate}
-      canOverrideAmount={editing}
+      candidate={
+        editing
+          ? {
+              ...candidate,
+              heads: [
+                ...candidate.heads,
+                {
+                  ...candidate.heads[2],
+                  feeHeadId: 'activity',
+                  feeHeadName: 'Activity',
+                  isOptional: true,
+                },
+              ],
+            }
+          : candidate
+      }
       request={request}
       onChange={(value) => {
         changed(value);
@@ -100,7 +108,7 @@ describe('variable student inputs', () => {
     const transport = within(screen.getByRole('region', { name: 'Transport' }));
     expect(transport.getByText('Optional', { exact: true })).toBeVisible();
     expect(hostel.getByRole('textbox', { name: 'Monthly amount' })).toHaveAccessibleDescription(
-      'Total for the selected dates'
+      'Charged for each covered month.'
     );
     expect(hostel.getByRole('textbox', { name: 'Monthly amount' })).toHaveValue('');
     expect(transport.queryByRole('textbox', { name: 'Monthly amount' })).not.toBeInTheDocument();
@@ -114,9 +122,7 @@ describe('variable student inputs', () => {
     expect(tuition.getByText('Required')).toBeInTheDocument();
     expect(tuition.queryByRole('textbox')).not.toBeInTheDocument();
     expect(tuition.queryByRole('checkbox')).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('option', { name: 'Transport service' })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Transport service' })).not.toBeInTheDocument();
   });
 
   it('keeps blank distinct from zero and clears a deselected optional amount', () => {
@@ -127,6 +133,7 @@ describe('variable student inputs', () => {
     const field = transport.getByRole('textbox', { name: 'Monthly amount' });
     fireEvent.change(field, { target: { value: '1200.01' } });
     expect(changed.mock.lastCall?.[0].variableFeeHeads[0].amount).toBe(1200.01);
+    expect(changed.mock.lastCall?.[0].variableFeeHeads[0].isMonthlyRate).toBe(true);
     expect(field).toHaveValue('₹ 1,200.01');
     fireEvent.change(field, { target: { value: '' } });
     expect(changed.mock.lastCall?.[0].variableFeeHeads[0].amount).toBeNull();
@@ -137,15 +144,29 @@ describe('variable student inputs', () => {
     expect(transport.queryByRole('textbox', { name: 'Monthly amount' })).not.toBeInTheDocument();
   });
 
-  it('lets an authorized correction change and remove a fixed optional fee', () => {
+  it('uses a monthly amount directly for a variable fee with a monthly term', () => {
+    const changed = vi.fn();
+    render(<Harness changed={changed} />);
+    const hostel = within(screen.getByRole('region', { name: 'Hostel' }));
+    expect(hostel.queryByRole('checkbox', { name: 'Charge per month' })).not.toBeInTheDocument();
+    fireEvent.change(hostel.getByRole('textbox', { name: 'Monthly amount' }), {
+      target: { value: '5000' },
+    });
+    expect(changed.mock.lastCall?.[0].variableFeeHeads[0]).toMatchObject({
+      amount: 5000,
+      isMonthlyRate: true,
+    });
+  });
+
+  it('keeps the fixed optional amount read-only while allowing selection during correction', () => {
     const changed = vi.fn();
     render(<Harness changed={changed} editing />);
     const optional = screen.getByRole('checkbox', { name: 'Activity' });
     fireEvent.click(optional);
-    const amount = screen.getByLabelText(/Activity amount/);
-    expect(amount).toHaveValue('₹ 5,000');
-    fireEvent.change(amount, { target: { value: '1800.50' } });
-    expect(changed.mock.lastCall?.[0].feeHeadDetails).toEqual([{ feeHeadId: 'activity', amount: 1800.5 }]);
+    const activity = within(screen.getByRole('region', { name: 'Activity' }));
+    expect(activity.getByText('₹ 5,000')).toBeVisible();
+    expect(activity.queryByLabelText(/Activity amount/)).not.toBeInTheDocument();
+    expect(changed.mock.lastCall?.[0].feeHeadDetails).toEqual([]);
     fireEvent.click(optional);
     expect(changed.mock.lastCall?.[0].selectedOptionalFeeHeadIds).toEqual([]);
     expect(changed.mock.lastCall?.[0].feeHeadDetails).toEqual([]);

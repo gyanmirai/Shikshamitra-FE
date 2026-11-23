@@ -27,6 +27,7 @@ import FeeStructureHeadDialog from './FeeStructureHeadDialog';
 import { amountError, paymentTermError } from '../feeStructureModel';
 
 interface Props {
+  scope: { feeStructureMetadataId: string; standardId: string };
   prerequisites?: FinancePrerequisite[];
   onRefreshPrerequisites?: () => void;
   adding: boolean;
@@ -59,6 +60,7 @@ interface Props {
 }
 
 export default function FeeStructureHeadsStep({
+  scope,
   prerequisites = [],
   onRefreshPrerequisites,
   adding,
@@ -253,6 +255,11 @@ export default function FeeStructureHeadsStep({
               isFilter={false}
               isShowedDense={false}
               showToolbar={false}
+              tableContainerProps={
+                fillHeight && !lines.length
+                  ? { sx: { '& .simplebar-content': { height: 1 } } }
+                  : undefined
+              }
               noDataText={
                 writable
                   ? 'No fee heads added.'
@@ -347,6 +354,11 @@ export default function FeeStructureHeadsStep({
                             ? 'Not set'
                             : structureMoney(row.amount)}
                       </Typography>
+                      {row.monthlyRate != null && (
+                        <Typography variant="caption" color="text.secondary">
+                          {structureMoney(row.monthlyRate)} / month
+                        </Typography>
+                      )}
                       {row.amountError && (
                         <FormHelperText
                           error
@@ -387,7 +399,7 @@ export default function FeeStructureHeadsStep({
                       </Typography>
                       {row.paymentTermVersionId && (
                         <Typography variant="caption" color="text.secondary">
-                          Version {row.paymentTermVersionNumber ?? '?'}
+                          v{row.paymentTermVersionNumber ?? '?'}
                           {row.scheduleMode === 'Customized' ? ' · Customized installments' : ''}
                         </Typography>
                       )}
@@ -477,6 +489,7 @@ export default function FeeStructureHeadsStep({
       )}
       {(dialog.value || adding) && (
         <FeeStructureHeadDialog
+          scope={scope}
           line={editingLine}
           revealErrors={submitted && !!editingLine}
           amountInput={editingLine ? amountInputs[editingLine.feeHeadId] : undefined}

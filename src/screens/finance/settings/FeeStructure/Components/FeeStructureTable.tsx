@@ -164,7 +164,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         }
         tableId="fee-structure-table"
         tableTitle="Fee structures"
-        exportLabel="Export current page"
+        exportLabel="Export"
         serverSideFilter
         filters={filters}
         onServerFilter={(next) => {

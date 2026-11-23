@@ -6,6 +6,7 @@ export type ConfirmDialogProps = Omit<DialogProps, 'title' | 'content'> & {
   onClose: () => void;
   title: React.ReactNode;
   action: React.ReactNode;
+  secondaryAction?: React.ReactNode;
   content?: React.ReactNode;
   icon?: React.ReactNode;
   disableBackdropClick?: boolean;

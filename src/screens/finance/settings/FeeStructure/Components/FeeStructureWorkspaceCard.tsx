@@ -57,6 +57,7 @@ import {
   structurePolicyError,
   buildStructureChanges,
   duplicateStructureNameError,
+  unchangedRevisionFeeHeadsError,
 } from '../feeStructureModel';
 
 import type { IClassWiseFeeStructureCard } from '../type';
@@ -70,6 +71,7 @@ interface Props {
   isActive?: boolean;
   onSaved?: (saved: IClassWiseFeeStructureCard) => void;
   onPublished?: (name: string) => void;
+  onRevisionReady?: (revision: StructureRecord) => void;
   onDeleted?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
@@ -99,6 +101,12 @@ const families: {
       'Defines eligibility for matching heads. Attaching a policy does not approve a refund.',
     empty: 'Not attached',
   },
+  {
+    key: 'proration',
+    label: 'Proration Policy',
+    description: 'Choose a policy for this fee structure or use the academic-year default.',
+    empty: 'Academic-year default',
+  },
 ];
 
 export default function FeeStructureWorkspaceCard({
@@ -109,6 +117,7 @@ export default function FeeStructureWorkspaceCard({
   isActive = true,
   onSaved,
   onPublished,
+  onRevisionReady,
   onDeleted,
   onDirtyChange,
   onBusyChange,
@@ -238,6 +247,7 @@ export default function FeeStructureWorkspaceCard({
         const raw = {
           collection: collectionItems,
           refund: refundItems,
+          proration: undefined,
         }[family.key]?.find(
           (policy) =>
             policy.id === candidate[`${family.key}PolicyId`] &&
@@ -292,6 +302,7 @@ export default function FeeStructureWorkspaceCard({
   const [policiesSubmitted, setPoliciesSubmitted] = useState(false);
   const defaultsHandled = useRef(new Set<StructurePolicyFamily>());
   const patchRequest = useRef<{ fingerprint: string; id: string } | undefined>(undefined);
+  const revisionRequest = useRef<{ fingerprint: string; id: string } | undefined>(undefined);
   const canEdit = !viewOnly && !locked && !!settings?.permissions[record ? 'edit' : 'add'];
   const missingFeeHeads = canEdit && !hasFeeHeads;
   const missingRequiredFeeHead =
@@ -476,6 +487,10 @@ export default function FeeStructureWorkspaceCard({
       touch('name');
       setTab('heads');
     }
+    if (message === unchangedRevisionFeeHeadsError) {
+      setConfirmation(null);
+      setTab('heads');
+    }
     setError(message);
   };
   const accept = (saved: StructureRecord) => {
@@ -553,6 +568,7 @@ export default function FeeStructureWorkspaceCard({
       const changes = record ? buildStructureChanges(JSON.parse(baseline), candidate) : undefined;
       const unchanged = !!record && !Object.keys(changes ?? {}).length;
       if (unchanged && !draftRevision) {
+        if (!advancing) shikshaMitraToast.success({ message: 'Draft is already up to date.' });
         return true;
       }
       const fingerprint = JSON.stringify({ changes, stamp: candidate.concurrencyStamp });
@@ -568,6 +584,8 @@ export default function FeeStructureWorkspaceCard({
       if (!unchanged) {
         accept(saved);
         shikshaMitraToast.success({ message: 'Draft saved. Review readiness before publishing.' });
+      } else if (!advancing) {
+        shikshaMitraToast.success({ message: 'Draft is already up to date.' });
       }
       return true;
     } catch (cause) {
@@ -575,7 +593,7 @@ export default function FeeStructureWorkspaceCard({
       return false;
     }
   };
-  const navigate = (step: number) => {
+  const navigate = async (step: number) => {
     if (navigationBusy || step === activeStep) return;
     if (
       step > activeStep &&
@@ -585,6 +603,7 @@ export default function FeeStructureWorkspaceCard({
       return;
     }
     if (step === 2 && !validatePolicies()) return;
+    if (step > activeStep && draftRevision && canEdit && !(await save(true))) return;
     setTab(workflowKeys[step]);
   };
   const saveAndNext = async () => {
@@ -638,10 +657,18 @@ export default function FeeStructureWorkspaceCard({
           });
       }
       if (action === 'revision') {
-        await revise(args).unwrap();
+        const fingerprint = JSON.stringify(args);
+        if (revisionRequest.current?.fingerprint !== fingerprint)
+          revisionRequest.current = { fingerprint, id: uuidv4() };
+        const revision = await revise({ ...args, requestId: revisionRequest.current.id }).unwrap();
+        onRevisionReady?.(revision);
         shikshaMitraToast.success({
-          message: 'Draft revision created. Select it from the structures list.',
+          message:
+            revision.status === FeeStructureLockStatusType.Locked
+              ? 'This revision is already published.'
+              : 'Draft revision ready for editing.',
         });
+        revisionRequest.current = undefined;
       }
       setConfirmation(null);
     } catch (cause) {
@@ -835,8 +862,7 @@ export default function FeeStructureWorkspaceCard({
                 width: 240,
                 minWidth: 240,
                 height: 'auto',
-                maxHeight: '100%',
-                alignSelf: 'flex-start',
+                alignSelf: 'stretch',
                 flexShrink: 0,
                 '& .MuiStepConnector-root': { ml: 2.75, flex: '0 0 auto' },
                 '& .MuiStepConnector-line': { minHeight: 32 },
@@ -903,26 +929,33 @@ export default function FeeStructureWorkspaceCard({
               onSave={async () => {
                 await save();
               }}
+              onSaveValidationError={() => {
+                focusErrorPending.current = true;
+                setSubmitted(true);
+                setTab('heads');
+                setError('Check the highlighted fields before saving or reviewing.');
+              }}
               showSaveButton={writable}
-              saveButtonLabel="Save Draft"
+              saveButtonLabel="Draft"
               nextButtonLabel={
                 writable ? (tab === 'policies' ? 'Review & Continue' : 'Save & Continue') : 'Next'
               }
-              finalButtonLabel="Publish Structure"
+              finalButtonLabel="Publish"
               disableSubmit={!canPublish || !!publishBlockReason}
               saveButtonProps={{
                 loading: saving,
                 disabled:
-                  navigationBusy || (!record && families.some(({ key }) => catalogs[key].loading)),
+                  navigationBusy || (!record && families.some(({ key }) => catalogs[key]?.loading)),
               }}
               backButtonProps={{ disabled: navigationBusy }}
               saveAndNextButtonProps={{
+                startIcon: activeStep === 2 ? <Iconify icon={GlobalIcons.publish} /> : null,
                 loading: saving || publishing,
                 title: activeStep === 2 ? publishBlockReason || undefined : undefined,
                 disabled:
                   navigationBusy ||
                   (!locked && activeStep === 1 && !policiesValid) ||
-                  (writable && !record && families.some(({ key }) => catalogs[key].loading)),
+                  (writable && !record && families.some(({ key }) => catalogs[key]?.loading)),
                 sx: {
                   ...(activeStep === 2 && !canPublish && { display: 'none' }),
                 },
@@ -948,6 +981,7 @@ export default function FeeStructureWorkspaceCard({
                 >
                   {tab === 'heads' && (
                     <FeeStructureHeadsStep
+                      scope={scope}
                       prerequisites={publicationRequirements.filter(
                         (item) => item.key !== 'collection-policy'
                       )}
@@ -1033,6 +1067,15 @@ export default function FeeStructureWorkspaceCard({
                         locked={!!locked}
                         busy={navigationBusy}
                         onChange={(key, version) => {
+                          if (key === 'proration' && !version) {
+                            defaultsHandled.current.add(key);
+                            change({
+                              ...candidate,
+                              prorationPolicyId: null,
+                              prorationPolicyVersionId: null,
+                            });
+                            return;
+                          }
                           const policy = settings.policies.find(
                             (item) => item.family === key && item.versionId === version
                           );
@@ -1146,7 +1189,7 @@ export default function FeeStructureWorkspaceCard({
             onClick={confirm}
           >
             {confirmation === 'publish'
-              ? 'Publish Structure'
+              ? 'Publish'
               : confirmation === 'revision'
                 ? 'Create Revision'
                 : confirmation === 'delete'

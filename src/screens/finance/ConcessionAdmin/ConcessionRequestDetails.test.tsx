@@ -332,7 +332,8 @@ describe('concession request detail drawer', () => {
   it('keeps the drawer closable during loading and hides stale data on a failed detail fetch', () => {
     api.detail = { isFetching: true, isLoading: true, refetch: api.retry };
     const loading = show();
-    expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /^Close / })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
     expect(screen.queryByText('Tuition support')).not.toBeInTheDocument();
     loading.unmount();
     api.detail = { currentData: { data: request }, isError: true, refetch: api.retry };

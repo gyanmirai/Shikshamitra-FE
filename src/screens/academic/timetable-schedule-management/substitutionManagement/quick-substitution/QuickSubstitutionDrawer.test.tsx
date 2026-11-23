@@ -39,6 +39,8 @@ it('assigns the clipped absence window and refreshes coverage without closing th
   fireEvent.click(await screen.findByRole('radio', { name: 'Select Free Teacher' }));
   fireEvent.click(screen.getByRole('button', { name: 'Assign substitute' }));
   await screen.findByText('0 periods need cover');
+  expect(screen.getByRole('button', { name: 'Close substitution drawer' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
   expect(saved).toMatchObject({
     originalTeacherId: 'original-1',
     substituteTeacherId: 'substitute-1',

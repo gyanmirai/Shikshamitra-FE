@@ -128,6 +128,14 @@ it('lets the user continue in the current class or exit after publication', asyn
 
   reportPublication();
   expect(published().getByText(/Annual fees/)).toBeVisible();
+  expect(
+    published()
+      .getAllByRole('button')
+      .map((button) => button.textContent)
+  ).toEqual(['Exit', 'Continue']);
+  expect(published().getByRole('button', { name: 'Exit' })).toHaveClass('MuiButton-outlined');
+  expect(published().getByRole('button', { name: 'Continue' })).toHaveClass('MuiButton-contained');
+  expect(published().getByRole('button', { name: 'Continue' }).querySelector('svg')).toBeNull();
   fireEvent.click(published().getByRole('button', { name: 'Continue' }));
   await waitFor(() =>
     expect(screen.queryByRole('dialog', { name: 'Fee Structure Published' })).toBeNull()

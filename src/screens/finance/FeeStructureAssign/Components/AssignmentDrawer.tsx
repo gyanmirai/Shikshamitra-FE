@@ -81,11 +81,13 @@ export default function AssignmentDrawer({
       ? 'Review Prepared Fees'
       : status === 'NeedsAttention'
         ? 'Review Fee Assignment'
-        : students.length > 1
-          ? editAssignedPolicies
-            ? 'Bulk Edit Fee Structures'
-            : 'Bulk Assign Fee Structure'
-          : 'Assign Fee Structure';
+        : students.length === 1 && status === 'Selected'
+          ? 'Edit Admission Fee Selection'
+          : students.length > 1
+            ? editAssignedPolicies
+              ? 'Bulk Edit Fee Structures'
+              : 'Bulk Assign Fee Structure'
+            : 'Assign Fee Structure';
   const title =
     students.length === 1 && students[0].studentName
       ? `${taskTitle} for ${students[0].studentName}`
@@ -108,10 +110,9 @@ export default function AssignmentDrawer({
             'aria-label': title,
             'aria-modal': true,
             sx: {
-              width:
-                viewing && (!structureEditing || showingSavedView)
-                  ? { xs: '100%', sm: 'min(760px, 92vw)' }
-                  : { xs: '100%', md: students.length > 1 ? 1200 : 960 },
+              width: viewing
+                ? { xs: '100%', sm: 'min(760px, 92vw)' }
+                : { xs: '100%', md: students.length > 1 ? 1200 : 960 },
               maxWidth: '100%',
               overflow: 'hidden',
             },

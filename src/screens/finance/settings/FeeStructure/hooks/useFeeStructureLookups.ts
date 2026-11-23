@@ -285,7 +285,7 @@ export default function useFeeStructureLookups(
     context,
     heads,
     terms,
-    catalogs: { collection, refund },
+    catalogs: { collection, refund, proration: catalogState(policiesEnabled && !!permissions.prorationRead) },
     scheduleTerm,
     termDetail,
   };

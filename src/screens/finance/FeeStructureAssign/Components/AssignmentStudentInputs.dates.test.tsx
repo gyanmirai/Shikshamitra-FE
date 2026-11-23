@@ -6,7 +6,7 @@ import type {
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import AssignmentStudentInputs from './AssignmentStudentInputs';
 import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
@@ -104,6 +104,43 @@ function Harness({
   );
 }
 describe('shared assignment date picker', () => {
+  it('summarizes required service dates and only shows a picker for optional fees during correction', () => {
+    render(
+      <AssignmentStudentInputs
+        candidate={{
+          ...candidate,
+          heads: [
+            ...candidate.heads,
+            { ...candidate.heads[0], feeHeadId: 'bus', feeHeadName: 'Bus', isOptional: true },
+          ],
+        }}
+        request={{
+          studentId: 'student',
+          academicYearId: 'year',
+          standardFeeStructureId: 'structure',
+          editAssignmentId: 'saved',
+          selectedOptionalFeeHeadIds: ['bus'],
+          feeHeadDetails: [],
+          servicePeriods: [],
+        }}
+        disabled={false}
+        canOverrideDates
+        onChange={vi.fn()}
+        yearBounds={assignmentYearBounds(year, 'year')}
+        flat
+      />
+    );
+    const required = within(screen.getByRole('region', { name: 'Tuition' }));
+    expect(required.getByText('Service dates')).toBeVisible();
+    expect(required.queryByLabelText('Effective start – end date')).not.toBeInTheDocument();
+    expect(required.queryByRole('button', { name: 'Use transport dates' })).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: 'Bus' })).getByLabelText(
+        'Effective start – end date'
+      )
+    ).not.toHaveAttribute('readonly');
+  });
+
   it('shows verified admission dates without allowing an academic-year bypass', () => {
     const period = {
       feeHeadId: 'tuition',
@@ -130,8 +167,10 @@ describe('shared assignment date picker', () => {
         flat
       />
     );
-    expect(screen.getByLabelText('Start – end date')).toHaveValue('2026-08-20 to 2027-05-14');
-    expect(screen.getByLabelText('Start – end date')).toHaveAttribute('readonly');
+    expect(screen.getByLabelText('Effective start – end date')).toHaveValue(
+      '2026-08-20 to 2027-05-14'
+    );
+    expect(screen.getByLabelText('Effective start – end date')).toHaveAttribute('readonly');
     expect(screen.queryByRole('combobox', { name: 'Service period' })).not.toBeInTheDocument();
   });
 
@@ -147,7 +186,7 @@ describe('shared assignment date picker', () => {
   it('starts on the academic-year range and accepts a custom range without a reason', () => {
     const changed = vi.fn();
     render(<Harness changed={changed} />);
-    const dates = screen.getByLabelText('Start – end date');
+    const dates = screen.getByLabelText('Effective start – end date');
     expect(dates).toHaveValue('2026-06-15 to 2027-05-14');
     expect(dates).toHaveAttribute('data-min', year.startDate);
     expect(dates).toHaveAttribute('data-max', year.endDate);
@@ -173,14 +212,14 @@ describe('shared assignment date picker', () => {
 
   it('disables the picker when dates are unavailable', () => {
     render(<Harness changed={vi.fn()} available={false} />);
-    expect(screen.getByLabelText('Start – end date')).toBeDisabled();
+    expect(screen.getByLabelText('Effective start – end date')).toBeDisabled();
     expect(screen.getByText('Selected academic year dates are unavailable.')).toBeVisible();
   });
 
   it.each(['invalid', ''])('blocks preview for an invalid or cleared date draft (%s)', (draft) => {
     const changed = vi.fn();
     render(<Harness changed={changed} />);
-    const dates = screen.getByLabelText('Start – end date');
+    const dates = screen.getByLabelText('Effective start – end date');
     fireEvent.change(dates, { target: { value: '2026-08-01 to 2026-10-31' } });
     fireEvent.change(dates, { target: { value: draft } });
     expect(
@@ -229,6 +268,8 @@ it('shows saved transport dates in a bulk correction without sharing a student t
       flat
     />
   );
-  expect(screen.getByLabelText('Start – end date')).toHaveValue('2026-08-01 to 2027-05-14');
+  expect(screen.getByLabelText('Effective start – end date')).toHaveValue(
+    '2026-08-01 to 2027-05-14'
+  );
   expect(screen.queryByRole('combobox', { name: 'Transport record' })).not.toBeInTheDocument();
 });

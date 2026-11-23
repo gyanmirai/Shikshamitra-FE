@@ -39,6 +39,7 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
   default: () => [state.mutate, { isLoading: false }],
 }));
 vi.mock('src/redux/finance/feeStructureWorkspace', () => ({
+  useGetStructureTermScheduleQuery: vi.fn(),
   useSaveStructureDraftMutation: vi.fn(),
   usePreviewStructureMutation: vi.fn(),
   usePublishStructureMutation: vi.fn(),
@@ -83,10 +84,13 @@ vi.mock('src/components/adaptive-three-dots-actions', () => ({
   ),
 }));
 vi.mock('src/components/customDialog', () => ({
-  default: ({ title, children }: any) =>
+  default: ({ title, children, handleClose, disableClose }: any) =>
     createPortal(
       <div role="dialog" aria-label={title}>
         <h2>{title}</h2>
+        <button type="button" disabled={disableClose} onClick={handleClose}>
+          Close
+        </button>
         {children}
       </div>,
       document.body
@@ -106,6 +110,15 @@ const term = {
 };
 // Row/editor tests do not resolve the separate policy catalog unless they supply one.
 const catalog = { items: [], ready: false, loading: false, error: false, retry: vi.fn() };
+const prorationDefault = {
+  family: 'proration',
+  id: 'school-proration',
+  versionId: 'school-proration-v2',
+  name: 'School Proration',
+  versionNumber: 2,
+  isCurrent: true,
+  isDefault: true,
+};
 const initialData = {
   name: '',
   classId: 'class',
@@ -151,7 +164,7 @@ beforeEach(() => {
     context: { isLoading: false, isFetching: false, isError: false },
     heads: { isFetching: false, isError: false },
     terms: { ...catalog },
-    catalogs: { collection: catalog, refund: catalog },
+    catalogs: { collection: catalog, refund: catalog, proration: catalog },
     termDetail: {},
   };
 });
@@ -174,10 +187,76 @@ async function addValidHead() {
   await screen.findByRole('button', { name: 'Edit Tuition' });
 }
 
+it('stores a fixed monthly amount separately from the term total', async () => {
+  state.lookups.settings.terms = [
+    {
+      ...term,
+      installments: [
+        { sequence: 1, coverageStartDate: '2026-04-01', coverageEndDate: '2026-04-30' },
+        { sequence: 2, coverageStartDate: '2026-05-01', coverageEndDate: '2026-05-31' },
+      ],
+    },
+  ];
+  render(ui());
+  await addHead();
+  const dialog = within(screen.getByRole('dialog', { name: 'Add Fee Head' }));
+  fireEvent.click(dialog.getByLabelText('Charge per month'));
+  fireEvent.change(dialog.getByRole('textbox', { name: /Monthly amount/ }), {
+    target: { value: '5000' },
+  });
+  fireEvent.click(dialog.getByRole('button', { name: 'Save' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Edit Tuition' }));
+  expect(screen.getByRole('textbox', { name: /Monthly amount/ })).toHaveValue('₹ 5,000');
+  expect(screen.getByRole('group', { name: 'Annual amount for Tuition' })).toHaveTextContent(
+    '10,000'
+  );
+});
+
 async function chooseCollection(name: string) {
   fireEvent.click(screen.getByRole('button', { name: /^(Select|Change) Collection Policy$/ }));
   fireEvent.click(await screen.findByRole('button', { name: `Select ${name} version 1` }));
 }
+
+it.each([false, true])(
+  'saves the proration default after the catalog loads unless fallback was chosen (%s)',
+  async (useFallback) => {
+    Object.assign(state.lookups.settings.permissions, { proration: true, prorationRead: true });
+    state.lookups.catalogs.proration = { ...catalog, loading: true };
+    const view = render(ui());
+    fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
+      target: { value: 'Annual fees' },
+    });
+    await addValidHead();
+    fireEvent.click(screen.getByRole('button', { name: 'Step 2: Policies' }));
+
+    const policy = within(screen.getByRole('group', { name: 'Proration Policy' }));
+    if (useFallback) {
+      fireEvent.click(policy.getByRole('button', { name: 'Select Proration Policy' }));
+      fireEvent.click(
+        within(screen.getByRole('dialog', { name: 'Choose Proration Policy' })).getByRole('button', {
+          name: 'Use academic-year default',
+        })
+      );
+    }
+
+    state.lookups.settings = { ...state.lookups.settings, policies: [prorationDefault] };
+    state.lookups.catalogs = { ...state.lookups.catalogs, proration: { ...catalog, ready: true } };
+    view.rerender(ui());
+    expect(
+      policy.getByText(useFallback ? 'Use academic-year default' : 'School Proration')
+    ).toBeVisible();
+
+    state.mutate.mockImplementation(({ standardFeeStructures }) => ({
+      unwrap: async () => ({ ...standardFeeStructures, id: 'saved', status: 1 }),
+    }));
+    fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
+    await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
+    expect(state.mutate.mock.calls[0][0].standardFeeStructures).toMatchObject({
+      prorationPolicyId: useFallback ? null : 'school-proration',
+      prorationPolicyVersionId: useFallback ? null : 'school-proration-v2',
+    });
+  }
+);
 
 it('retains the unsaved name when suspending and resuming an editor without saving', async () => {
   const view = render(ui());
@@ -269,7 +348,7 @@ it('blocks Next and direct Review when collection is missing while allowing inco
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   expect(screen.getByText('Collection Policy is required')).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Save Draft' })).not.toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Draft' })).not.toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
   expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
     'aria-current',
@@ -404,7 +483,7 @@ it('ignores an outstanding preview when a newer saved structure arrives', async 
     resolvePreview({ isReady: true, errors: [], warnings: [], coverage: [], schedules: [] });
   });
   expect(screen.queryByRole('heading', { name: 'Policy Coverage' })).toBeNull();
-  expect(screen.getByRole('button', { name: 'Publish Structure' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
 });
 
 it('keeps the current step and entered name when Save & next fails', async () => {
@@ -516,13 +595,12 @@ it('saves both required policies before allowing review and publication of the s
     schedules: [],
   };
   render(ui(record, true, undefined, onPublished));
-  const publishButton = () =>
-    screen.getByRole('button', { name: 'Publish Structure' }) as HTMLButtonElement;
-  expect(screen.queryByRole('button', { name: 'Publish Structure' })).toBeNull();
+  const publishButton = () => screen.getByRole('button', { name: 'Publish' }) as HTMLButtonElement;
+  expect(screen.queryByRole('button', { name: 'Publish' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeEnabled();
   await chooseCollection('collection prerna policy');
-  expect(screen.queryByRole('button', { name: 'Publish Structure' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Publish' })).toBeNull();
   // Reviewing unsaved input must not permit publishing the older server record.
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(ready) });
   fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
@@ -530,9 +608,9 @@ it('saves both required policies before allowing review and publication of the s
   expect(screen.queryByText('All configuration checks passed.')).toBeNull();
   expect(publishButton().disabled).toBe(true);
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(saved) });
-  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   await waitFor(() => expect(screen.queryByRole('button', { name: 'Discard Changes' })).toBeNull());
-  expect(screen.getByRole('button', { name: 'Save Draft' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Draft' })).toBeEnabled();
   expect(state.mutate.mock.calls[1][0].changes).toEqual({
     policies: { collection: { policyId: policy.id, policyVersionId: policy.versionId } },
   });
@@ -546,7 +624,7 @@ it('saves both required policies before allowing review and publication of the s
   fireEvent.click(
     await screen
       .findByRole('dialog')
-      .then((dialog) => within(dialog).getByRole('button', { name: 'Publish Structure' }))
+      .then((dialog) => within(dialog).getByRole('button', { name: 'Publish' }))
   );
   await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(4));
   expect(state.mutate.mock.calls[3][0]).toEqual({
@@ -590,7 +668,7 @@ it('offers only structure policies and preserves a legacy concession attachment 
   expect(
     screen.queryByText(/Concession Policy|Concession eligibility|Concession Fee Heads/)
   ).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   await waitFor(() => expect(state.mutate).toHaveBeenCalled());
   expect(state.mutate.mock.calls[0][0].changes).toEqual({ name: 'Renamed fees' });
   expect(state.mutate.mock.calls[0][0].standardFeeStructures.concessionPolicyVersionId).toBe(
@@ -670,7 +748,159 @@ const savedRecord = (head = savedHead()) => ({
   feeHeads: [head],
 });
 
-it.each(['Save Draft', 'Save & Continue', 'Step 2: Policies', 'Step 3: Review & publish'])(
+it.each([1, 0])(
+  'hands the returned revision (status %s) to the workspace without replacing its publication',
+  async (status) => {
+    const published = { ...savedRecord(), status: 0 };
+    const revision = {
+      ...savedRecord(),
+      id: 'revision',
+      revisionNumber: 3,
+      previousRevisionId: published.id,
+      status,
+    };
+    const onRevisionReady = vi.fn();
+    const onSaved = vi.fn();
+    state.mutate.mockReturnValue({ unwrap: async () => revision });
+    render(
+      <ThemeProvider theme={theme}>
+        <FeeStructureWorkspaceCard
+          index={0}
+          initialData={{ ...initialData, record: published }}
+          onRevisionReady={onRevisionReady}
+          onSaved={onSaved}
+        />
+      </ThemeProvider>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Create Revision' }));
+    await act(async () => {
+      fireEvent.click(
+        within(screen.getByRole('dialog')).getByRole('button', { name: 'Create Revision' })
+      );
+    });
+    expect(onRevisionReady).toHaveBeenCalledWith(revision);
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(state.policyToast).toHaveBeenCalledWith({
+      message:
+        status === 0 ? 'This revision is already published.' : 'Draft revision ready for editing.',
+    });
+    expect(screen.getByRole('button', { name: 'Create Revision' })).toBeVisible();
+  }
+);
+
+it('keeps revision confirmation open without success feedback when the request fails', async () => {
+  const onRevisionReady = vi.fn();
+  state.mutate.mockReturnValue({
+    unwrap: async () => {
+      throw new Error('Revision failed');
+    },
+  });
+  render(
+    <ThemeProvider theme={theme}>
+      <FeeStructureWorkspaceCard
+        index={0}
+        initialData={{ ...initialData, record: { ...savedRecord(), status: 0 } }}
+        onRevisionReady={onRevisionReady}
+      />
+    </ThemeProvider>
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Create Revision' }));
+  await act(async () => {
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Create Revision' })
+    );
+  });
+  expect(onRevisionReady).not.toHaveBeenCalled();
+  expect(state.policyToast).not.toHaveBeenCalled();
+  expect(screen.getByRole('dialog')).toBeVisible();
+});
+
+it('reuses the revision request ID after failure and changes it for the next separate revision', async () => {
+  const revision = {
+    ...savedRecord(),
+    id: 'revision',
+    previousRevisionId: 'saved',
+    revisionNumber: 2,
+  };
+  state.mutate
+    .mockReturnValueOnce({
+      unwrap: async () => {
+        throw new Error('Connection lost');
+      },
+    })
+    .mockReturnValue({ unwrap: async () => revision });
+  render(ui({ ...savedRecord(), status: 0 }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create Revision' }));
+  const confirmRevision = async () => {
+    await act(async () => {
+      fireEvent.click(
+        within(screen.getByRole('dialog')).getByRole('button', { name: 'Create Revision' })
+      );
+    });
+  };
+  await confirmRevision();
+  const first = state.mutate.mock.calls[0][0];
+  expect(first.requestId).toEqual(expect.any(String));
+  await confirmRevision();
+  expect(state.mutate.mock.calls[1][0].requestId).toBe(first.requestId);
+  fireEvent.click(screen.getByRole('button', { name: 'Create Revision' }));
+  await confirmRevision();
+  expect(state.mutate.mock.calls[2][0].requestId).not.toBe(first.requestId);
+});
+
+it('acknowledges an unchanged draft on Review without sending a write or clearing readiness', async () => {
+  state.lookups.settings.permissions.publish = true;
+  const record = {
+    ...savedRecord(),
+    collectionPolicyId: 'collection',
+    collectionPolicyVersionId: 'collection-v1',
+    refundPolicyId: 'refund',
+    refundPolicyVersionId: 'refund-v1',
+  };
+  state.mutate.mockReturnValue({
+    unwrap: async () => ({
+      isReady: true,
+      errors: [],
+      warnings: [],
+      coverage: [],
+      schedules: [],
+      candidate: structureCandidate(record),
+    }),
+  });
+  render(ui(record));
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Step 3: Review & publish' }));
+  });
+  expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
+  state.mutate.mockClear();
+  state.policyToast.mockClear();
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
+  });
+  expect(state.policyToast).toHaveBeenCalledWith({ message: 'Draft is already up to date.' });
+  expect(state.mutate).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
+});
+
+it('returns to Fee heads & terms when Draft finds an invalid field on another step', async () => {
+  render(ui(savedRecord(savedHead({ amount: null }))));
+  fireEvent.click(screen.getByRole('button', { name: 'Step 2: Policies' }));
+  expect(screen.getByRole('region', { name: 'Policies' })).toBeVisible();
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
+  });
+  expect(screen.getByRole('region', { name: 'Fee heads & terms' })).toBeVisible();
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'Check the highlighted fields before saving or reviewing.'
+  );
+  expect(screen.getByRole('group', { name: 'Annual amount for Tuition' })).toHaveAttribute(
+    'data-invalid',
+    'true'
+  );
+  expect(state.mutate).not.toHaveBeenCalled();
+});
+
+it.each(['Draft', 'Save & Continue', 'Step 2: Policies', 'Step 3: Review & publish'])(
   'requires a fee head before using %s',
   async (action) => {
     render(ui({ ...savedRecord(), feeHeads: [] }));
@@ -722,7 +952,7 @@ it('saves an optional-only draft and continues after a fee head is made required
     target: { value: renamed.name },
   });
   await act(async () => {
-    fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   });
   expect(state.mutate).toHaveBeenCalledWith(
     expect.objectContaining({ changes: { name: renamed.name } })
@@ -751,7 +981,7 @@ it('saves an editable revision name as a name-only change', async () => {
   expect(name).toBeEnabled();
   fireEvent.change(name, { target: { value: 'annual FEE revision' } });
   expect(name).toHaveValue('Annual FEE revision');
-  fireEvent.click(screen.getByRole('button', { name: /^Save Draft$/i }));
+  fireEvent.click(screen.getByRole('button', { name: /^Draft$/i }));
   await waitFor(() =>
     expect(state.mutate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -782,7 +1012,7 @@ it('shows an inherited duplicate revision name and blocks unchanged saves until 
   expect(state.mutate).not.toHaveBeenCalled();
 
   fireEvent.change(name, { target: { value: 'Revised fees' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   await waitFor(() =>
     expect(state.mutate).toHaveBeenCalledWith(
       expect.objectContaining({ structureId: revision.id, changes: { name: 'Revised fees' } })
@@ -796,7 +1026,7 @@ it('checks an unchanged revision name with the server when the class list missed
   });
   render(ui({ ...savedRecord(), revisionNumber: 2, previousRevisionId: 'published' }));
   const name = screen.getByRole('textbox', { name: /Structure name/i });
-  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   await waitFor(() => expect(name).toHaveAccessibleDescription(/already exists in this class/i));
   expect(state.mutate).toHaveBeenCalledWith(
     expect.objectContaining({ structureId: 'saved', changes: {} })
@@ -810,7 +1040,7 @@ it('shows a duplicate revision name as a focused field error', async () => {
   render(ui({ ...savedRecord(), revisionNumber: 2, previousRevisionId: 'published' }));
   const name = screen.getByRole('textbox', { name: /Structure name/i });
   fireEvent.change(name, { target: { value: 'Other fees' } });
-  fireEvent.click(screen.getByRole('button', { name: /^Save Draft$/i }));
+  fireEvent.click(screen.getByRole('button', { name: /^Draft$/i }));
   await waitFor(() => {
     expect(name).toHaveAccessibleDescription(/already exists in this class/i);
     expect(name).toHaveFocus();
@@ -854,12 +1084,12 @@ it('opens saved drafts with direct fee-head actions and keeps them available aft
   expect(screen.getByRole('button', { name: 'Edit Tuition' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Delete Tuition' })).toBeTruthy();
   expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Edit Tuition' })).toBeTruthy());
   fireEvent.change(screen.getByRole('textbox', { name: 'Structure name' }), {
     target: { value: 'Changed fees' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   await waitFor(() => expect(state.mutate).toHaveBeenCalledOnce());
   await waitFor(() =>
     expect(screen.getByRole('textbox', { name: 'Structure name' })).toHaveValue(record.name)
@@ -960,7 +1190,7 @@ it('shows field-specific row errors after validation and carries them into Edit 
 it('keeps labelled row errors visible under the fee-head name on mobile', async () => {
   state.mobile = true;
   render(ui(savedRecord(savedHead({ paymentTermId: null, paymentTermVersionId: null }))));
-  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   const errors = await screen.findByRole('group', { name: 'Errors for Tuition' });
   expect(
     within(errors).getByText(
@@ -973,7 +1203,7 @@ it('keeps labelled row errors visible under the fee-head name on mobile', async 
 
 it('shows the structure name error alongside row errors without sending an invalid draft', async () => {
   render(ui({ ...savedRecord(savedHead({ paymentTermId: null })), name: '' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   expect(await screen.findByText('Enter a name for this Fee Structure.')).toBeTruthy();
   expect(screen.getByRole('textbox', { name: /Structure name/ })).toHaveAttribute(
     'aria-invalid',
@@ -1049,7 +1279,7 @@ it('saves variable pricing with null amount while retaining frequency and option
   state.mutate.mockReturnValue({
     unwrap: () => Promise.resolve({ id: 'saved', name: 'Variable fees', status: 1, feeHeads: [] }),
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
   await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
   expect(state.mutate.mock.calls[0][0].standardFeeStructures.feeHeads[0]).toMatchObject({
     isVariable: true,
@@ -1091,7 +1321,7 @@ it.each(['0', '12.25'])(
       unwrap: () =>
         Promise.resolve({ ...structureCandidate(), id: 'saved', name: 'Annual fees', status: 1 }),
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
     await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
     expect(state.mutate.mock.calls[0][0].standardFeeStructures.feeHeads[0].amount).toBe(
       Number(amount)

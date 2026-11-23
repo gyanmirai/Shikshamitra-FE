@@ -2,7 +2,6 @@
 
 import type { PolicyVersion } from 'src/screens/finance/policies/hooks/useFinancePolicyVersion';
 
-import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -117,7 +116,6 @@ export default function ConcessionTypeVersionHistoryDrawer({
           title="Concession Type Version History"
           titleId="concession-type-version-title"
           helpText={`Review recorded changes${concessionTypeName ? ` for ${concessionTypeName}` : ''}. Select a version to see its author, date, and Before/After values. Viewing history does not change the concession type.`}
-          badges={<Label>Read Only</Label>}
           onClose={onClose}
         />
         {isFetching && <LinearProgress aria-label="Loading concession type version history" />}
@@ -187,19 +185,17 @@ export default function ConcessionTypeVersionHistoryDrawer({
             </Typography>
           </Box>
         )}
-        <Box
-          sx={{
-            px: 2,
-            py: 1.5,
-            bgcolor: 'background.paper',
-            borderTop: 1,
-            borderColor: 'divider',
-            display: 'flex',
-            justifyContent: onBackToDetails ? 'space-between' : 'flex-end',
-            flexShrink: 0,
-          }}
-        >
-          {onBackToDetails && (
+        {onBackToDetails && (
+          <Box
+            sx={{
+              px: 2,
+              py: 1.5,
+              bgcolor: 'background.paper',
+              borderTop: 1,
+              borderColor: 'divider',
+              flexShrink: 0,
+            }}
+          >
             <Button
               size="small"
               variant="outlined"
@@ -208,16 +204,8 @@ export default function ConcessionTypeVersionHistoryDrawer({
             >
               Back to details
             </Button>
-          )}
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={onClose}
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          >
-            Close
-          </Button>
-        </Box>
+          </Box>
+        )}
       </Box>
     </Drawer>
   );

@@ -335,16 +335,23 @@ it('requires both term IDs and preserves pinned versions and customized schedule
   expect(withDefaultPaymentTerm(line, undefined)).toBe(line);
 });
 
-it('omits retired proration fields when adapting a legacy response', () => {
-  const legacy = {
-    ...structureCandidate(),
-    prorationPolicyId: 'old',
-    prorationPolicyVersionId: 'old-v1',
-  };
-  const adapted = structureCandidate(legacy);
-  expect(adapted).not.toHaveProperty('prorationPolicyId');
-  expect(adapted).not.toHaveProperty('prorationPolicyVersionId');
+it('preserves an explicitly saved proration version without resending it on a name edit', () => {
+  const adapted = structureCandidate({ prorationPolicyId: 'saved', prorationPolicyVersionId: 'saved-v1' });
+  expect(adapted.prorationPolicyId).toBe('saved');
+  expect(adapted.prorationPolicyVersionId).toBe('saved-v1');
   expect(buildStructureChanges(adapted, { ...adapted, name: 'Changed name' })).toEqual({
     name: 'Changed name',
   });
+});
+
+it('saves and clears the optional proration policy version independently', () => {
+  const inherited = structureCandidate();
+  const attached = structureCandidate({
+    prorationPolicyId: 'proration-policy',
+    prorationPolicyVersionId: 'proration-version',
+  });
+  expect(buildStructureChanges(inherited, attached)).toEqual({
+    policies: { proration: { policyId: 'proration-policy', policyVersionId: 'proration-version' } },
+  });
+  expect(buildStructureChanges(attached, inherited)).toEqual({ policies: { proration: null } });
 });

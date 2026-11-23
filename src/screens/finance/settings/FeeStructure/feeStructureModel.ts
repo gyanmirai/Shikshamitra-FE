@@ -7,16 +7,18 @@ import type {
 } from 'src/redux/finance/feeStructureWorkspace';
 
 export type StructurePolicyFamily = Exclude<PolicyFamily, 'concession'>;
-export const structurePolicyFamilies: StructurePolicyFamily[] = ['collection', 'refund'];
+export const structurePolicyFamilies: StructurePolicyFamily[] = ['collection', 'refund', 'proration'];
 
 /** Setup completion requires a policy and its pinned version; drafts may remain incomplete. */
 export const structurePolicyError = (
   candidate: StructureCandidate,
   family: StructurePolicyFamily
 ) =>
-  !candidate[`${family}PolicyId`]?.trim() || !candidate[`${family}PolicyVersionId`]?.trim()
-    ? `${family === 'collection' ? 'Collection' : 'Refund'} Policy is required`
-    : '';
+  family === 'proration'
+    ? ''
+    : !candidate[`${family}PolicyId`]?.trim() || !candidate[`${family}PolicyVersionId`]?.trim()
+      ? `${family === 'collection' ? 'Collection' : 'Refund'} Policy is required`
+      : '';
 
 /** Exact server contract: do not refill explicit nulls with a previous/default attachment. */
 export const structureCandidate = (source?: Partial<StructureRecord>): StructureCandidate => ({
@@ -29,6 +31,7 @@ export const structureCandidate = (source?: Partial<StructureRecord>): Structure
     feeHeadName: line.feeHeadName,
     categoryName: line.categoryName,
     amount: line.amount,
+    ...(line.monthlyRate != null && { monthlyRate: line.monthlyRate }),
     isOneTime: line.isOneTime,
     isOptional: line.isOptional,
     scheduleMode: line.scheduleMode,
@@ -47,12 +50,16 @@ export const structureCandidate = (source?: Partial<StructureRecord>): Structure
   concessionPolicyVersionId: source?.concessionPolicyVersionId ?? null,
   refundPolicyId: source?.refundPolicyId ?? null,
   refundPolicyVersionId: source?.refundPolicyVersionId ?? null,
+  prorationPolicyId: source?.prorationPolicyId ?? null,
+  prorationPolicyVersionId: source?.prorationPolicyVersionId ?? null,
   concessionFeeHeadScope: source?.concessionFeeHeadScope ?? 'EntireFeeStructure',
   concessionApplicableFeeHeadIds: [...(source?.concessionApplicableFeeHeadIds ?? [])],
 });
 
 export const duplicateStructureNameError =
   'A Fee Structure with this name already exists in this class. Choose a different name.';
+export const unchangedRevisionFeeHeadsError =
+  'Change at least one fee head or payment schedule from the published structure before saving this revision.';
 
 export const structureError = (error: unknown): string => {
   const response = error as {
@@ -70,6 +77,8 @@ export const structureError = (error: unknown): string => {
     return 'This structure changed in another session. Refresh and review the latest version before saving.';
   if ((problem?.code ?? response?.data?.errorCode)?.includes('DuplicateName'))
     return duplicateStructureNameError;
+  if ((problem?.code ?? response?.data?.errorCode)?.includes('UnchangedRevisionFeeHeads'))
+    return unchangedRevisionFeeHeadsError;
   return (
     problem?.data?.Errors?.join('\n') ||
     response?.data?.data?.Errors?.join('\n') ||
@@ -108,7 +117,7 @@ export function buildStructureChanges(
   structurePolicyFamilies.forEach((family) => {
     const id = `${family}PolicyId` as const;
     const version = `${family}PolicyVersionId` as const;
-    if (before[id] !== after[id] || before[version] !== after[version])
+    if ((before[id] ?? null) !== (after[id] ?? null) || (before[version] ?? null) !== (after[version] ?? null))
       policies[family] = after[id]
         ? {
             policyId: after[id],
@@ -122,6 +131,7 @@ export function buildStructureChanges(
     .map((line) => ({
       feeHeadId: line.feeHeadId,
       ...Object.fromEntries(fields.map((key) => [key, line[key]])),
+      ...(line.monthlyRate != null && { monthlyRate: line.monthlyRate }),
       ...schedule(line),
     }));
   const update = after.feeHeads
@@ -134,6 +144,8 @@ export function buildStructureChanges(
       fields.forEach((key) => {
         if (line[key] !== old[key]) patch[key] = line[key];
       });
+      if ((old.monthlyRate ?? null) !== (line.monthlyRate ?? null))
+        patch.monthlyRate = line.monthlyRate ?? null;
       if (!same(schedule(old), schedule(line))) patch.schedule = schedule(line);
       return Object.keys(patch).length > 1 ? [patch] : [];
     });

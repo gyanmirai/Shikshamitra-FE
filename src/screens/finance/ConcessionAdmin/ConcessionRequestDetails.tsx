@@ -15,7 +15,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
-import { Box, Stack, Alert, Drawer, Button, Skeleton, Typography, IconButton } from '@mui/material';
+import { Stack, Alert, Drawer, Button, Skeleton, Typography, IconButton } from '@mui/material';
 import { ConcessionRequestStatusEnum as Status } from 'src/redux/finance/ConcessionManagement/types';
 import {
   useGetConcessionRequestByIdQuery,
@@ -254,28 +254,6 @@ export default function ConcessionRequestDetails({
           )}
         </Stack>
       </Scrollbar>
-      <Box
-        sx={{
-          px: { xs: 2, sm: 3 },
-          py: 1.75,
-          borderTop: 1,
-          borderColor: 'divider',
-          flexShrink: 0,
-          display: 'flex',
-          justifyContent: 'flex-end',
-        }}
-      >
-        <Button
-          type="button"
-          variant="outlined"
-          color="inherit"
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
-        >
-          Close
-        </Button>
-      </Box>
     </Drawer>
   );
 }

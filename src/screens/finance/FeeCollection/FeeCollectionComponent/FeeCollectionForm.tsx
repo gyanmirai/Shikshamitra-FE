@@ -20,7 +20,6 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -41,11 +40,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import { isFinancePaymentNameField, sanitizeFinanceName } from 'src/utils/finance-name';
-import {
-  useCollectFeeMutation,
-  useGetCollectFormQuery,
-  useDownloadReceiptPdfMutation,
-} from 'src/redux/feeCollection/feeCollection';
+import { useCollectFeeMutation, useGetCollectFormQuery } from 'src/redux/feeCollection/feeCollection';
 import {
   Box,
   Paper,
@@ -248,7 +243,10 @@ const FeeCollectComponentForm = ({
   const [filters, setFilters] = useState<FeeLedgerFilters>(FEE_LEDGER_INITIAL_FILTERS);
   const selectionOwnership = useRef(createSelectionOwnership());
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [expandedSummaryGroups, setExpandedSummaryGroups] = useState({
+    fees: false,
+    charges: false,
+  });
   const [receiptPreviewState, setReceiptPreviewState] = useState<ReceiptPreviewState>({
     feeReceipt: null,
     chargeReceipt: null,
@@ -260,7 +258,6 @@ const FeeCollectComponentForm = ({
   >({ fee: 'idle', charge: 'idle' });
   const receiptPreviewRequest = useRef(0);
   const [lastCollectResponse, setLastCollectResponse] = useState<CollectFeeOutput | null>(null);
-  const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [collectionError, setCollectionError] = useState<string | null>(null);
   const [collectionOutcomeUncertain, setCollectionOutcomeUncertain] = useState(false);
@@ -374,15 +371,6 @@ const FeeCollectComponentForm = ({
       ? collectionAdapter.collect(input)
       : collectFee({ ...input, studentId: String(studentRecord?.id ?? '') }).unwrap();
   };
-
-  const [downloadReceiptPdf] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDownloadReceiptPdfMutation,
-    popupConfig: {
-      error: false,
-      success: false,
-    },
-  });
 
   const academicMonthsFromContext = useMemo(
     () =>
@@ -611,6 +599,7 @@ const FeeCollectComponentForm = ({
         total: c.amount,
         paid: c.paidAmount,
         waivedAmount: c.waivedAmount,
+        waiverHistory: c.waiverHistory,
         canWaive: c.canWaive,
         explanation: c.explanation,
         dueDate: c.dueDate,
@@ -859,6 +848,13 @@ const FeeCollectComponentForm = ({
       setFilters(FEE_LEDGER_INITIAL_FILTERS);
       setCollectionError(null);
       setCollectionOutcomeUncertain(false);
+      setPreviewOpen(false);
+      setExpandedSummaryGroups({ fees: false, charges: false });
+      setLastCollectResponse(null);
+      receiptPreviewRequest.current += 1;
+      setReceiptPreviewState({ feeReceipt: null, chargeReceipt: null });
+      setFeeReceiptBlobUrl(null);
+      setChargeReceiptBlobUrl(null);
       collectionRefreshRequest.current += 1;
       setCollectionRefreshFailed(false);
       setCollectionRefreshing(false);
@@ -908,18 +904,20 @@ const FeeCollectComponentForm = ({
       previous &&
       previous !== formData?.allocationRevision &&
       !submissionInFlight.current &&
-      !collectionOutcomeUncertain
+      !collectionOutcomeUncertain &&
+      !lastCollectResponse
     ) {
       submissionRef.current = null;
       setPreviewOpen(false);
     }
-  }, [formData?.allocationRevision, collectionOutcomeUncertain]);
+  }, [formData?.allocationRevision, collectionOutcomeUncertain, lastCollectResponse]);
   const overallOutstanding =
     (formData?.summary?.pendingFee ?? 0) +
     (formData?.charges ?? []).reduce(
       (sum: number, charge: ChargeDetail) => sum + charge.pendingAmount,
       0
     );
+  const optionalServiceCredit = formData?.summary?.optionalServiceCredit ?? 0;
   const studentMetrics = [
     { label: 'Total fees', amount: formData?.summary?.totalFee ?? 0 },
     { label: 'Paid fees', amount: formData?.summary?.paidFee ?? 0, tone: 'success' },
@@ -939,6 +937,9 @@ const FeeCollectComponentForm = ({
       ),
     },
     { label: 'Total outstanding', amount: overallOutstanding, tone: 'warning' },
+    ...(optionalServiceCredit > 0
+      ? [{ label: 'Available service credit', amount: optionalServiceCredit, tone: 'success' }]
+      : []),
   ];
 
   const resolveAllocatedDueFeeId = (row: AllocatedFeeRow): string => {
@@ -1043,16 +1044,12 @@ const FeeCollectComponentForm = ({
   ];
 
   const loadReceiptPdf = async (receiptId: string, scope: 'fee' | 'charge') => {
+    if (!collectionAdapter) return;
     const request = receiptPreviewRequest.current;
     const setBlobUrl = scope === 'fee' ? setFeeReceiptBlobUrl : setChargeReceiptBlobUrl;
     setReceiptPdfStatus((previous) => ({ ...previous, [scope]: 'loading' }));
     try {
-      const blob = collectionAdapter
-        ? await collectionAdapter.downloadReceiptPdf(receiptId, scope)
-        : await downloadReceiptPdf({
-            receiptId,
-            ...(scope === 'charge' ? { receiptType: scope } : {}),
-          }).unwrap();
+      const blob = await collectionAdapter.downloadReceiptPdf(receiptId, scope);
       if (request !== receiptPreviewRequest.current) return;
       setBlobUrl(URL.createObjectURL(blob));
       setReceiptPdfStatus((previous) => ({ ...previous, [scope]: 'ready' }));
@@ -1179,23 +1176,32 @@ const FeeCollectComponentForm = ({
     try {
       const collectResponse = await submitCollection(prepareCollectionCommand());
 
+      const receiptCount =
+        Number(Boolean(collectResponse.feeReceiptId)) +
+        Number(Boolean(collectResponse.chargeReceiptId));
+      const receiptLabel = isCash ? 'Receipt' : 'Provisional receipt';
+      const collectionMessage = isCash
+        ? 'Payment collected and fees settled. Cash Income awaits independent Cash Management approval.'
+        : `${formatNumber(collectResponse.receivedAmount, 'INR')} payment saved as pending verification. Finance approval in Reconciliation will confirm the payment and issue an official receipt.`;
       shikshaMitraToast.success({
-        message: isCash
-          ? 'Payment collected and fees settled. Cash Income awaits independent Cash Management approval.'
-          : `${formatNumber(collectResponse.receivedAmount, 'INR')} payment saved as pending verification. Finance approval in Reconciliation will confirm the payment and issue an official receipt.`,
+        message:
+          !collectionAdapter && receiptCount > 0
+            ? `${receiptLabel}${receiptCount === 1 ? '' : 's'} generated.`
+            : collectionMessage,
       });
-      setPreviewOpen(false);
       submissionRef.current = null;
-      setLastCollectResponse(collectResponse);
       setCollectionOutcomeUncertain(false);
-      resetCollectedDraft();
-      if (!(await showGeneratedReceiptDialog(collectResponse))) {
-        if (collectResponse.auditSummary || collectionAdapter) {
-          setOutcomeDialogOpen(true);
-        } else {
-          onCancel?.(null, true);
-        }
+      if (!collectionAdapter) {
+        setPreviewOpen(false);
+        resetCollectedDraft();
+        onCancel?.(null, true);
+        return;
       }
+
+      setLastCollectResponse(collectResponse);
+      resetCollectedDraft();
+      setPreviewOpen(true);
+      await prepareReceiptDownloads(collectResponse);
     } catch (err) {
       if (parseApiProblemDetail(err).errorCode === 'ShikshaMitra:FeeCollection:AllocationChanged') {
         submissionRef.current = null;
@@ -1513,15 +1519,13 @@ const FeeCollectComponentForm = ({
   // ── Fee Structure Not Assigned: show empty state ───────────────────────────
   const isFeeStructureAssigned = formData?.student?.isFeeStructureAssigned;
 
-  const showGeneratedReceiptDialog = async (collectResponse: CollectFeeOutput) => {
-    setLastCollectResponse(collectResponse);
-    if (collectionAdapter && !collectionAdapter.canViewReceipts) return false;
+  const prepareReceiptDownloads = async (collectResponse: CollectFeeOutput) => {
+    if (!collectionAdapter?.canViewReceipts) return;
     const hasFeeReceipt = collectResponse.feeReceiptId;
     const hasChargeReceipt = collectResponse.chargeReceiptId;
 
-    if (!hasFeeReceipt && !hasChargeReceipt) return false;
+    if (!hasFeeReceipt && !hasChargeReceipt) return;
 
-    // Set receipt preview state with fee and/or charge receipts
     setReceiptPreviewState({
       feeReceipt: hasFeeReceipt
         ? {
@@ -1546,15 +1550,12 @@ const FeeCollectComponentForm = ({
       fee: hasFeeReceipt ? 'loading' : 'idle',
       charge: hasChargeReceipt ? 'loading' : 'idle',
     });
-    setReceiptDialogOpen(true);
 
     // Each receipt owns its progress and failure; one unavailable PDF does not hide the other.
     await Promise.all([
       hasFeeReceipt && loadReceiptPdf(collectResponse.feeReceiptId!, 'fee'),
       hasChargeReceipt && loadReceiptPdf(collectResponse.chargeReceiptId!, 'charge'),
     ]);
-
-    return true;
   };
 
   const handleDownloadReceipt = (receipt: GeneratedReceipt | null, blobUrl: string | null) => {
@@ -1567,9 +1568,9 @@ const FeeCollectComponentForm = ({
     document.body.removeChild(anchor);
   };
 
-  const handleReceiptDialogClose = () => {
+  const closeCompletedReview = () => {
     receiptPreviewRequest.current += 1;
-    setReceiptDialogOpen(false);
+    setPreviewOpen(false);
     setReceiptPreviewState({ feeReceipt: null, chargeReceipt: null });
     setLastCollectResponse(null);
     setFeeReceiptBlobUrl(null);
@@ -1875,15 +1876,9 @@ const FeeCollectComponentForm = ({
                         : undefined
                     }
                     data={filteredLedgerData}
+                    allFeeGroups={ledgerData.monthWise}
                     activeTab={filters.activeTab}
                     layout="ledger"
-                    onPeriodFocus={(period) => {
-                      const [periodYear, periodMonth] = period.split('-');
-                      handleFilterChange({
-                        ...filters,
-                        month: `${Number(periodMonth) - 1}-${periodYear}`,
-                      });
-                    }}
                     selectedItems={ledgerSelectedItems}
                     charges={ledgerChargeIds}
                     selectedFeeCandidates={isAmountOnly ? undefined : formik.values.selectedItems}
@@ -2012,8 +2007,10 @@ const FeeCollectComponentForm = ({
                               roundToWholeRupees={false}
                               decimalScale={2}
                               onValueChange={(values, source) => {
-                                if (source.source === 'event')
+                                if (source.source === 'event') {
+                                  setExpandedSummaryGroups({ fees: false, charges: false });
                                   updatePayment('amount', values.value);
+                                }
                               }}
                               onBlur={formik.handleBlur}
                               error={Boolean(
@@ -2325,6 +2322,13 @@ const FeeCollectComponentForm = ({
                       </Box>
                     )}
                     <SelectedCollectionItems
+                      expandedGroups={expandedSummaryGroups}
+                      onToggleGroup={(group) =>
+                        setExpandedSummaryGroups((current) => ({
+                          ...current,
+                          [group]: !current[group],
+                        }))
+                      }
                       emptyText={
                         !hasCollectibleItems
                           ? 'No payment is needed. There is no outstanding amount to collect.'
@@ -2480,7 +2484,7 @@ const FeeCollectComponentForm = ({
           </LoadingButton>
         </Stack>
       </DialogActions>
-      {collectLoading && !previewOpen && !receiptDialogOpen && (
+      {collectLoading && !previewOpen && (
         <Box
           role="status"
           aria-live="polite"
@@ -2501,124 +2505,6 @@ const FeeCollectComponentForm = ({
         </Box>
       )}
 
-      <CustomDialog
-        open={receiptDialogOpen}
-        handleClose={handleReceiptDialogClose}
-        title="Payment Receipts"
-        maxWidth="xs"
-        hasForm={false}
-      >
-        <DialogScrollContent>
-          <Stack spacing={1.5}>
-            {(['fee', 'charge'] as const).map((scope) => {
-              const receipt =
-                scope === 'fee'
-                  ? receiptPreviewState.feeReceipt
-                  : receiptPreviewState.chargeReceipt;
-              const blobUrl = scope === 'fee' ? feeReceiptBlobUrl : chargeReceiptBlobUrl;
-              if (!receipt) return null;
-              const separate = Boolean(
-                receiptPreviewState.feeReceipt && receiptPreviewState.chargeReceipt
-              );
-              const label = separate
-                ? scope === 'fee'
-                  ? 'Fee receipt'
-                  : 'Charge receipt'
-                : 'Receipt';
-              const status = receiptPdfStatus[scope];
-              return (
-                <Paper key={scope} variant="outlined" sx={{ p: 1.5 }}>
-                  <Stack spacing={1}>
-                    <Typography variant="subtitle2">
-                      {label}
-                      {receipt.receiptNumber ? ` · ${receipt.receiptNumber}` : ''}
-                    </Typography>
-                    {status === 'loading' && (
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        spacing={1}
-                        role="status"
-                        aria-label={`Loading ${scope} receipt`}
-                      >
-                        <CircularProgress size={16} />
-                        <Typography variant="body2">Preparing download…</Typography>
-                      </Stack>
-                    )}
-                    {status === 'error' && (
-                      <Alert
-                        severity="error"
-                        action={
-                          <Button
-                            size="small"
-                            color="inherit"
-                            onClick={() => loadReceiptPdf(receipt.id, scope)}
-                          >
-                            Retry receipt
-                          </Button>
-                        }
-                      >
-                        {RECEIPT_PDF_ERROR}
-                      </Alert>
-                    )}
-                    {status === 'ready' && blobUrl && (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        sx={{ alignSelf: 'flex-start' }}
-                        startIcon={<Iconify icon="mdi:download" />}
-                        onClick={() => handleDownloadReceipt(receipt, blobUrl)}
-                      >
-                        {separate ? `Download ${scope}` : 'Download'}
-                      </Button>
-                    )}
-                  </Stack>
-                </Paper>
-              );
-            })}
-          </Stack>
-        </DialogScrollContent>
-        <DialogActions>
-          <Button
-            variant="contained"
-            size="small"
-            onClick={handleReceiptDialogClose}
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-          >
-            Done
-          </Button>
-        </DialogActions>
-      </CustomDialog>
-
-      <CustomDialog
-        open={outcomeDialogOpen}
-        handleClose={() => {
-          setOutcomeDialogOpen(false);
-          setLastCollectResponse(null);
-          // Reset form for next fee collection instead of closing
-          formik.resetForm();
-        }}
-        title="Payment summary"
-        maxWidth="sm"
-        hasForm={false}
-      >
-        {lastCollectResponse && (
-          <FeeCollectionOutcomePanel
-            collectResponse={lastCollectResponse}
-            showAuditTrail={!collectionAdapter}
-            receiptAccessUnavailable={Boolean(
-              collectionAdapter && !collectionAdapter.canViewReceipts
-            )}
-            onClose={() => {
-              setOutcomeDialogOpen(false);
-              setLastCollectResponse(null);
-              onCancel?.(null, true);
-            }}
-          />
-        )}
-      </CustomDialog>
-
-      {/* ── Fee Collection Preview Dialog ── */}
       <FeeCollectionPreviewDialog
         bankAccounts={bankAccountOptions}
         open={previewOpen}
@@ -2634,6 +2520,93 @@ const FeeCollectComponentForm = ({
         oneTimeFeeHeadIds={oneTimeFeeHeadIds}
         academicYear={
           currentYear?.name || (currentYear?.year ? String(currentYear.year) : undefined)
+        }
+        completion={
+          lastCollectResponse
+            ? {
+                onDone: closeCompletedReview,
+                content:
+                  receiptPreviewState.feeReceipt || receiptPreviewState.chargeReceipt ? (
+                    <Stack spacing={1.5}>
+                      <Typography variant="subtitle1">Payment recorded</Typography>
+                      {(['fee', 'charge'] as const).map((scope) => {
+                        const receipt =
+                          scope === 'fee'
+                            ? receiptPreviewState.feeReceipt
+                            : receiptPreviewState.chargeReceipt;
+                        const blobUrl = scope === 'fee' ? feeReceiptBlobUrl : chargeReceiptBlobUrl;
+                        if (!receipt) return null;
+                        const separate = Boolean(
+                          receiptPreviewState.feeReceipt && receiptPreviewState.chargeReceipt
+                        );
+                        const label = separate
+                          ? scope === 'fee'
+                            ? 'Fee receipt'
+                            : 'Charge receipt'
+                          : 'Receipt';
+                        const status = receiptPdfStatus[scope];
+                        return (
+                          <Paper key={scope} variant="outlined" sx={{ p: 1.5 }}>
+                            <Stack spacing={1}>
+                              <Typography variant="subtitle2">
+                                {label}
+                                {receipt.receiptNumber ? ` · ${receipt.receiptNumber}` : ''}
+                              </Typography>
+                              {status === 'loading' && (
+                                <Stack
+                                  direction="row"
+                                  alignItems="center"
+                                  spacing={1}
+                                  role="status"
+                                  aria-label={`Loading ${scope} receipt`}
+                                >
+                                  <CircularProgress size={16} />
+                                  <Typography variant="body2">Preparing download…</Typography>
+                                </Stack>
+                              )}
+                              {status === 'error' && (
+                                <Alert
+                                  severity="error"
+                                  action={
+                                    <Button
+                                      size="small"
+                                      color="inherit"
+                                      onClick={() => loadReceiptPdf(receipt.id, scope)}
+                                    >
+                                      Retry receipt
+                                    </Button>
+                                  }
+                                >
+                                  {RECEIPT_PDF_ERROR}
+                                </Alert>
+                              )}
+                              {status === 'ready' && blobUrl && (
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ alignSelf: 'flex-start' }}
+                                  startIcon={<Iconify icon="mdi:download" />}
+                                  onClick={() => handleDownloadReceipt(receipt, blobUrl)}
+                                >
+                                  {separate ? `Download ${scope}` : 'Download'}
+                                </Button>
+                              )}
+                            </Stack>
+                          </Paper>
+                        );
+                      })}
+                    </Stack>
+                  ) : (
+                    <FeeCollectionOutcomePanel
+                      collectResponse={lastCollectResponse}
+                      showAuditTrail={!collectionAdapter}
+                      receiptAccessUnavailable={Boolean(
+                        collectionAdapter && !collectionAdapter.canViewReceipts
+                      )}
+                    />
+                  ),
+              }
+            : undefined
         }
       />
     </Box>

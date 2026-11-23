@@ -107,6 +107,7 @@ export interface FeeSummary {
   totalFee: number;
   paidFee: number;
   pendingFee: number;
+  optionalServiceCredit?: number;
 }
 
 export interface FeeLedgerLine {
@@ -165,6 +166,13 @@ export interface FeeLedgerMonth {
   items: FeeLedgerLine[];
 }
 
+export interface AppliedChargeWaiver {
+  id: string;
+  appliedAt: string;
+  amount: number;
+  reason: string;
+}
+
 export interface ChargeDetail {
   chargeId: string;
   sourceType: 'Charge' | 'LateFee';
@@ -175,6 +183,7 @@ export interface ChargeDetail {
   paidAmount: number;
   pendingAmount: number;
   waivedAmount: number;
+  waiverHistory?: AppliedChargeWaiver[] | null;
   canWaive: boolean;
   explanation?: string;
   /** Authoritative obligation due date for system-generated late fees. */
