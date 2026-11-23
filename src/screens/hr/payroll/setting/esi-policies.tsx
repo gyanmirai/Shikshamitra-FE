@@ -321,16 +321,6 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
           </Stack>
         </Box>
         <Divider />
-        <DialogActions>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={() => setView(null)}
-          >
-            Close
-          </Button>
-        </DialogActions>
       </Drawer>
       {archiveTarget && (
         <EsiPolicyArchiveDialog

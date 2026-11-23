@@ -2,8 +2,37 @@ import type { StructureInstallment } from 'src/redux/finance/feeStructureWorkspa
 
 import { roundUpAmount } from 'src/utils/whole-rupee-amount';
 
+export function resolveStructureInstallments(
+  installments: StructureInstallment[],
+  overrides: StructureInstallment[]
+) {
+  return [...installments].sort((a, b) => a.sequence - b.sequence).map((master) => {
+    const override = overrides.find(
+      (row) => row.sourcePaymentTermInstallmentId === master.sourcePaymentTermInstallmentId
+    );
+    return Object.fromEntries(
+      Object.entries(master).map(([key, value]) => [
+        key,
+        override?.[key as keyof StructureInstallment] ?? value,
+      ])
+    ) as unknown as StructureInstallment;
+  });
+}
+
+export function monthlyInstallmentCount(rows: StructureInstallment[]) {
+  const months = rows
+    .filter((row) => row.coverageStartDate && row.coverageEndDate &&
+      row.coverageStartDate.slice(0, 7) === row.coverageEndDate.slice(0, 7))
+    .map((row) => row.coverageStartDate!.slice(0, 7));
+  return new Set(months).size === rows.length ? months.length : 0;
+}
+
 /** Display preview of PaymentTermScheduleResolver; saved amounts remain server-owned. */
-export function structureScheduleAmounts(amount: number | null, rows: StructureInstallment[]) {
+export function structureScheduleAmounts(
+  amount: number | null,
+  rows: StructureInstallment[],
+  monthlyRate?: number | null
+) {
   if (
     amount === null ||
     !Number.isFinite(amount) ||
@@ -17,6 +46,10 @@ export function structureScheduleAmounts(amount: number | null, rows: StructureI
     Math.abs(rows.reduce((sum, row) => sum + (row.allocationPercentage ?? 0), 0) - 100) > 0.000001
   ) {
     return rows.map(() => null);
+  }
+  if (monthlyRate != null) {
+    const installmentAmount = monthlyInstallmentCount(rows) ? roundUpAmount(monthlyRate) : null;
+    return rows.map(() => installmentAmount);
   }
 
   const total = roundUpAmount(amount);

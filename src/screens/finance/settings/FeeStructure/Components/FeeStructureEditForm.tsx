@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { Iconify } from 'src/components/iconify';
+import { stylesMode } from 'src/theme/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { tabsClasses } from '@mui/material/Tabs';
 import { useDispatch, useSelector } from 'react-redux';
@@ -115,7 +116,8 @@ export default function FeeStructureEditForm({
               },
               selected: {
                 bgcolor: 'action.selected',
-                borderColor: 'success.main',
+                borderColor: 'common.black',
+                [stylesMode.dark]: { borderColor: 'text.primary' },
                 color: 'text.primary',
                 fontWeight: 500,
                 '&:hover': { bgcolor: 'action.selected', color: 'text.primary' },

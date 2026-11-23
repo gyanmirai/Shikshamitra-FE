@@ -1,4 +1,4 @@
-import type { AssignmentPreview } from 'src/redux/finance/studentFeeAssignment';
+import type { AssignmentHead, AssignmentPreview } from 'src/redux/finance/studentFeeAssignment';
 
 import { useId } from 'react';
 import { Label } from 'src/components/label';
@@ -12,7 +12,9 @@ import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicyShar
 import { DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import { selectableAssignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 
-import { groupAssignmentInstallments } from './assignmentReviewPresentation';
+import { optionalServiceStatus } from './optionalServiceStatus';
+import AssignmentProrationDetails from './AssignmentProrationDetails';
+import { groupFeeHeadProration, groupAssignmentInstallments } from './assignmentReviewPresentation';
 
 // Embedded evidence tables: the drawer body owns vertical scrolling, while each
 // shared table contains horizontal overflow at narrow widths.
@@ -34,7 +36,7 @@ export default function AssignmentReview({
   committed?: boolean;
 }) {
   const headsExpanded = useBoolean(true);
-  const scheduleExpanded = useBoolean(true);
+  const scheduleExpanded = useBoolean(committed);
   const regionId = useId();
   const headsRegion = `${regionId}-heads`;
   const scheduleRegion = `${regionId}-schedule`;
@@ -61,6 +63,12 @@ export default function AssignmentReview({
     0
   );
   const legacy = data.calculationVersion === 'LegacyUnknown';
+  const hasProration =
+    data.reductionTotal > 0 || data.policies.some((policy) => policy.family === 'proration');
+  const feeHeadProration =
+    hasProration && !legacy
+      ? groupFeeHeadProration(data.lines.filter((line) => !line.optionalServicePeriodId))
+      : null;
   const tableId = `assignment-${data.studentId}-${data.structureId}-${committed ? 'saved' : 'preview'}`;
   const money = (value: number) => formatNumber(value, data.currency);
   const summary = (
@@ -85,14 +93,17 @@ export default function AssignmentReview({
         {data.registrationJoiningDate && (
           <DetailField label="Joining date" value={fDate(data.registrationJoiningDate)} />
         )}
-        {data.assignmentSource === 'Admission' && (
+        {committed && data.assignmentSource === 'Admission' && (
           <DetailField label="Assignment source" value="Admission" />
         )}
         {committed && cancelledAmount > 0 && (
           <DetailField label="Cancelled installments" value={money(cancelledAmount)} />
         )}
-        {data.reductionTotal > 0 && (
-          <DetailField label="Proration reduction" value={money(data.reductionTotal)} />
+        {hasProration && (committed || data.reductionTotal !== 0) && (
+          <>
+            <DetailField label="Scheduled fees" value={money(data.scheduledTotal)} />
+            <DetailField label="Proration reduction" value={money(data.reductionTotal)} />
+          </>
         )}
         <Box sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
           <DetailField
@@ -178,14 +189,22 @@ export default function AssignmentReview({
               icon="mdi:format-list-bulleted"
               title="Fee Breakdown"
               action={expansionAction('fee breakdown', headsRegion, headsExpanded)}
-              helpText="Saved fee-head selections, payment-term versions, service dates and assigned amounts. Unselected optional fees are identified separately."
+              helpText="Selected fees, payment terms, and service dates. When proration applies, the breakdown shows the scheduled amount, reduction, and rule used."
             >
               <Collapse in={headsExpanded.value} id={headsRegion}>
                 <CustomizableTable
                   {...embeddedTableProps}
                   tableId={`${tableId}-heads`}
                   tableTitle="Assignment fee-head breakdown"
-                  data={data.heads.map((head) => ({ ...head, _id: head.feeHeadId }))}
+                  data={data.heads.map((head) => ({
+                    ...head,
+                    _id: head.feeHeadId,
+                    proration: feeHeadProration?.get(head.feeHeadId),
+                    serviceStatus: optionalServiceStatus(
+                      head,
+                      stoppedFeeHeadIds.has(head.feeHeadId)
+                    ),
+                  }))}
                   noDataText="No fee heads recorded for this assignment."
                   columns={[
                     {
@@ -195,7 +214,8 @@ export default function AssignmentReview({
                       minWidth: 180,
                       width: '40%',
                       isSort: false,
-                      isFilter: true,
+                      isFilter: committed,
+                      cellSx: { verticalAlign: 'top' },
                       render: (_value, head) => (
                         <Stack spacing={0.5}>
                           <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
@@ -204,8 +224,16 @@ export default function AssignmentReview({
                           <Typography variant="caption" color="text.secondary">
                             {head.isOptional ? 'Optional' : 'Required'}
                             {!head.included && <Label>Not selected</Label>}
-                            {stoppedFeeHeadIds.has(head.feeHeadId) && (
-                              <Label>Service stopped</Label>
+                            {head.serviceStatus.label && (
+                              <Label
+                                color={
+                                  head.serviceStatus.stopped || head.serviceStatus.label === 'Ended'
+                                    ? 'default'
+                                    : 'success'
+                                }
+                              >
+                                {head.serviceStatus.label}
+                              </Label>
                             )}
                           </Typography>
                           {head.included && head.zeroAmountReason && (
@@ -222,7 +250,8 @@ export default function AssignmentReview({
                       filterType: 'string' as const,
                       minWidth: 180,
                       isSort: false,
-                      isFilter: true,
+                      isFilter: committed,
+                      cellSx: { verticalAlign: 'top' },
                       render: (_value, head) =>
                         head.included ? (
                           <Stack spacing={0.5}>
@@ -236,18 +265,54 @@ export default function AssignmentReview({
                                 {head.servicePeriod.reason}
                               </Typography>
                             )}
-                            {(head.servicePeriod?.startDate || head.servicePeriod?.endDate) && (
+                            {(!head.serviceStatus.latestPeriod ||
+                              head.originalOptionalServiceEndDate) &&
+                              (head.servicePeriod?.startDate || head.servicePeriod?.endDate) && (
+                                <Typography variant="caption" color="text.secondary">
+                                  Service period:{' '}
+                                  {head.servicePeriod.startDate
+                                    ? fDate(head.servicePeriod.startDate)
+                                    : '—'}{' '}
+                                  –{' '}
+                                  {head.servicePeriod.endDate
+                                    ? fDate(head.servicePeriod.endDate)
+                                    : '—'}
+                                </Typography>
+                              )}
+                            <AssignmentProrationDetails
+                              head={head as AssignmentHead}
+                              calculation={head.proration}
+                              currency={data.currency}
+                            />
+                            {head.serviceStatus.stopped && head.optionalServiceEndDate && (
                               <Typography variant="caption" color="text.secondary">
-                                Service period:{' '}
-                                {head.servicePeriod.startDate
-                                  ? fDate(head.servicePeriod.startDate)
-                                  : '—'}{' '}
-                                –{' '}
-                                {head.servicePeriod.endDate
-                                  ? fDate(head.servicePeriod.endDate)
-                                  : '—'}
+                                Cancellation effective {fDate(head.optionalServiceEndDate)}
                               </Typography>
                             )}
+                            {!head.serviceStatus.stopped && head.serviceStatus.latestPeriod && (
+                              <Typography variant="caption" color="text.secondary">
+                                {head.originalOptionalServiceEndDate ||
+                                (head.optionalServicePeriods?.length ?? 0) > 1
+                                  ? 'Restarted'
+                                  : 'Service dates'}{' '}
+                                {fDate(head.serviceStatus.latestPeriod.startDate)} to{' '}
+                                {fDate(head.serviceStatus.latestPeriod.endDate)}
+                              </Typography>
+                            )}
+                            {head.serviceStatus.latestPeriod && (
+                              <Typography variant="caption" color="text.secondary">
+                                {money(head.serviceStatus.latestPeriod.monthlyRate)} / month ·{' '}
+                                {head.serviceStatus.latestPeriod.prorationPolicyName} v
+                                {head.serviceStatus.latestPeriod.prorationPolicyVersion}
+                              </Typography>
+                            )}
+                            {head.originalOptionalServiceEndDate &&
+                              head.serviceStatus.latestPeriod && (
+                                <Typography variant="caption" color="text.secondary">
+                                  Original cancellation effective{' '}
+                                  {fDate(head.originalOptionalServiceEndDate)}
+                                </Typography>
+                              )}
                           </Stack>
                         ) : (
                           '—'
@@ -259,18 +324,39 @@ export default function AssignmentReview({
                       filterType: 'number' as const,
                       minWidth: 130,
                       align: 'left',
-                      cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
+                      cellSx: {
+                        textAlign: 'right',
+                        fontVariantNumeric: 'tabular-nums',
+                        verticalAlign: 'top',
+                      },
                       isSort: false,
-                      isFilter: true,
+                      isFilter: committed,
                       render: (value, head) => (
                         <Stack spacing={0.5}>
                           <Typography
                             variant="subtitle2"
                             sx={{ fontVariantNumeric: 'tabular-nums' }}
                           >
-                            {money(value)}
+                            {head.included || committed ? money(value) : '—'}
                           </Typography>
-                          {!head.included && (
+                          {head.included && head.amountBasis === 'MonthlyRate' && (
+                            <Typography variant="caption" color="text.secondary">
+                              {money(head.effectiveAmount)} / month
+                            </Typography>
+                          )}
+                          {head.included &&
+                            head.proration &&
+                            (committed || head.proration.reduction !== 0) && (
+                              <>
+                                <Typography variant="caption" color="text.secondary">
+                                  Scheduled {money(head.proration.scheduled)}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Reduction {money(head.proration.reduction)}
+                                </Typography>
+                              </>
+                            )}
+                          {committed && !head.included && (
                             <Typography variant="caption" color="text.secondary">
                               Not assigned
                             </Typography>

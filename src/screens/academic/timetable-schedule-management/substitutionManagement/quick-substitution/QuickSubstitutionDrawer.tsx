@@ -60,41 +60,34 @@ export function QuickSubstitutionDrawer({ context, onClose }: Props) {
           Timetable View and Add permissions are required to arrange substitutions.
         </Alert>
       ) : (
-        <>
-          <Box sx={{ p: 2, overflow: 'auto', minHeight: 0, flex: 1 }}>
-            {affected.isFetching ? (
-              <LinearProgress aria-label="Loading affected periods" />
-            ) : affected.isError ? (
-              <Alert
-                severity="error"
-                action={<Button onClick={() => affected.refetch()}>Retry</Button>}
-              >
-                Affected periods could not be loaded.
-              </Alert>
-            ) : lectures.length === 0 ? (
-              <Alert severity="info">
-                No substitution needed. No published timetable periods are affected.
-              </Alert>
-            ) : (
-              <Stack spacing={1.5}>
-                <Typography variant="subtitle2">
-                  {remaining} {remaining === 1 ? 'period needs' : 'periods need'} cover
-                </Typography>
-                <QuickSubstitutionLectures
-                  lectures={lectures}
-                  selectedKey=""
-                  disabled={affected.isFetching}
-                  onSelect={setSelected}
-                />
-              </Stack>
-            )}
-          </Box>
-          <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-            <Button onClick={close} disabled={affected.isFetching}>
-              Close
-            </Button>
-          </Box>
-        </>
+        <Box sx={{ p: 2, overflow: 'auto', minHeight: 0, flex: 1 }}>
+          {affected.isFetching ? (
+            <LinearProgress aria-label="Loading affected periods" />
+          ) : affected.isError ? (
+            <Alert
+              severity="error"
+              action={<Button onClick={() => affected.refetch()}>Retry</Button>}
+            >
+              Affected periods could not be loaded.
+            </Alert>
+          ) : lectures.length === 0 ? (
+            <Alert severity="info">
+              No substitution needed. No published timetable periods are affected.
+            </Alert>
+          ) : (
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2">
+                {remaining} {remaining === 1 ? 'period needs' : 'periods need'} cover
+              </Typography>
+              <QuickSubstitutionLectures
+                lectures={lectures}
+                selectedKey=""
+                disabled={affected.isFetching}
+                onSelect={setSelected}
+              />
+            </Stack>
+          )}
+        </Box>
       )}
     </QuickSubstitutionShell>
   );

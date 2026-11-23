@@ -7,11 +7,12 @@ import type {
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { fDate } from 'src/utils/format-time';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
-import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Box, Stack, Alert, Typography } from '@mui/material';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { Stack, Alert, Button, Divider, Typography } from '@mui/material';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { DetailField } from 'src/screens/finance/components/detail-view';
 import {
@@ -24,6 +25,12 @@ import {
 import AssignmentReview from './AssignmentReview';
 import AssignmentPolicies from './AssignmentPolicies';
 import OptionalFeeServiceStops from './OptionalFeeServiceStops';
+import AssignmentFeeHeadSummary from './AssignmentFeeHeadSummary';
+import { groupFeeHeadProration } from './assignmentReviewPresentation';
+import AssignmentStepperFrame, {
+  assignmentEditSteps,
+  assignmentEditPadding,
+} from './AssignmentStepperFrame';
 
 export default function AssignedPolicyEditor({
   data,
@@ -33,8 +40,10 @@ export default function AssignedPolicyEditor({
   onDirtyChange,
   children,
   canStopOptionalService,
+  canRestartOptionalService,
   canOverridePolicies = true,
   onOptionalServiceSaved,
+  onEditFees,
 }: {
   data: AssignmentDetails;
   onCancel: () => void;
@@ -43,8 +52,10 @@ export default function AssignedPolicyEditor({
   onDirtyChange: (dirty: boolean) => void;
   children?: ReactNode;
   canStopOptionalService?: boolean;
+  canRestartOptionalService?: boolean;
   canOverridePolicies?: boolean;
   onOptionalServiceSaved?: () => void;
+  onEditFees?: () => void;
 }) {
   const [save, state] = useAssignmentUpdatePoliciesMutation();
   const policyOptions = useAssignmentPolicyOptionsQuery(
@@ -57,6 +68,10 @@ export default function AssignedPolicyEditor({
   const [reachedStep, setReachedStep] = useState(0);
   const [serviceBusy, setServiceBusy] = useState(false);
   const busy = state.isLoading || serviceBusy;
+  const feeHeadProration =
+    activeStep === 1 && data.assignment.calculationVersion !== 'LegacyUnknown'
+      ? groupFeeHeadProration(data.assignment.lines.filter((line) => !line.optionalServicePeriodId))
+      : undefined;
   const policiesDiffer = (policies: AssignmentPolicySelection[]) =>
     policies.some(
       (policy) =>
@@ -138,9 +153,9 @@ export default function AssignedPolicyEditor({
     return () => onDirtyChange(false);
   }, [formik.dirty, onDirtyChange]);
   return (
-    <Box sx={{ display: 'flex', flex: 1, minHeight: 0, pt: 2 }}>
+    <AssignmentStepperFrame savedAssignment>
       <CustomStepperWithFormik
-        steps={['Structure & policies', 'Fees & dates', 'Review & save']}
+        steps={assignmentEditSteps}
         activeStep={activeStep}
         initialValues={formik.initialValues}
         formikInstance={formik}
@@ -164,7 +179,24 @@ export default function AssignedPolicyEditor({
           if (index <= reachedStep) setActiveStep(index);
         }}
         validateForwardStepClick
-        saveAndNextButtonProps={{ loading: busy, disabled: busy, color: 'inherit' }}
+        saveAndNextButtonProps={{
+          loading: busy,
+          disabled: busy,
+          color: 'inherit',
+          startIcon: (
+            <Iconify
+              icon={
+                activeStep < 2
+                  ? 'mdi:arrow-right'
+                  : policiesChanged
+                    ? GlobalIcons.submit
+                    : GlobalIcons.cancel
+              }
+              width={20}
+            />
+          ),
+          endIcon: null,
+        }}
         backButtonProps={{ disabled: busy }}
         renderItem={() => (
           <Stack
@@ -174,7 +206,7 @@ export default function AssignedPolicyEditor({
             sx={{
               flex: 1,
               minHeight: 0,
-              p: { xs: 2, sm: 3 },
+              p: assignmentEditPadding,
               '& > *': { flexShrink: 0 },
             }}
           >
@@ -184,7 +216,7 @@ export default function AssignedPolicyEditor({
                 <FormSectionCard
                   title="Fee Structure"
                   icon="mdi:file-document-outline"
-                  descriptionTooltip="The saved structure is protected by existing financial activity. Policies and supported optional services can still be updated."
+                  descriptionTooltip="The saved fee structure and revision for this student and academic year."
                 >
                   <DetailField
                     label="Fee structure"
@@ -216,50 +248,64 @@ export default function AssignedPolicyEditor({
             )}
             {activeStep === 1 && (
               <>
-                <Alert severity="info">
-                  {data.structureEditBlocker ||
-                    'Existing financial activity protects the assigned amounts and service dates. Use the supported optional-service cancellation to stop future unpaid installments.'}
-                </Alert>
+                {!onEditFees && (
+                  <Alert severity="info">
+                    {data.structureEditBlocker ||
+                      'The assigned amounts and service dates are read-only in this editor.'}
+                  </Alert>
+                )}
                 <FormSectionCard
                   title="Required Fee Heads"
                   icon="mdi:format-list-checks"
-                  descriptionTooltip="Required assigned fees remain included. Their amounts and dates are read-only when financial activity exists."
-                >
-                  {(data.assignment.heads ?? [])
-                    .filter((head) => !head.isOptional && head.included)
-                    .map((head) => (
-                      <Box
-                        key={head.feeHeadId}
-                        sx={{
-                          display: 'grid',
-                          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                          gap: 1.5,
-                        }}
+                  descriptionTooltip="Review the saved amounts, service dates and proration for the required fees."
+                  action={
+                    onEditFees && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<Iconify icon={GlobalIcons.edit} />}
+                        disabled={formik.dirty || busy}
+                        onClick={onEditFees}
                       >
-                        <DetailField
-                          label={head.feeHeadName}
-                          value={formatNumber(head.obligation, data.assignment.currency)}
-                        />
-                        <DetailField
-                          label="Service dates"
-                          value={
-                            head.servicePeriod?.startDate && head.servicePeriod?.endDate
-                              ? `${fDate(head.servicePeriod.startDate)} – ${fDate(head.servicePeriod.endDate)}`
-                              : 'Not recorded'
+                        Edit fees
+                      </Button>
+                    )
+                  }
+                >
+                  <Stack spacing={1.5} divider={<Divider flexItem />}>
+                    {(data.assignment.heads ?? [])
+                      .filter((head) => !head.isOptional && head.included)
+                      .map((head) => (
+                        <AssignmentFeeHeadSummary
+                          key={head.feeHeadId}
+                          head={head}
+                          currency={data.assignment.currency}
+                          calculation={feeHeadProration?.get(head.feeHeadId)}
+                          serviceDetails={
+                            <DetailField
+                              label="Service dates"
+                              value={
+                                head.servicePeriod?.startDate && head.servicePeriod?.endDate
+                                  ? `${fDate(head.servicePeriod.startDate)} – ${fDate(head.servicePeriod.endDate)}`
+                                  : 'Not recorded'
+                              }
+                            />
                           }
                         />
-                      </Box>
-                    ))}
+                      ))}
+                  </Stack>
                 </FormSectionCard>
                 {(data.assignment.heads ?? []).some((head) => head.isOptional) && (
                   <OptionalFeeServiceStops
                     assignment={data.assignment}
+                    feeHeadProration={feeHeadProration}
+                    canRestart={canRestartOptionalService}
                     disabled={!canStopOptionalService || formik.dirty || busy}
                     disabledReason={
                       !canStopOptionalService
                         ? 'Optional service cancellation requires the Stop Optional Service permission and an active enrollment.'
                         : formik.dirty
-                          ? 'Save or discard the pending policy changes before stopping an optional service.'
+                          ? 'Save or discard the pending policy changes before changing an optional service.'
                           : busy
                             ? 'Another fee assignment operation is in progress.'
                             : undefined
@@ -268,7 +314,7 @@ export default function AssignedPolicyEditor({
                     onBusyChange={setServiceBusy}
                   />
                 )}
-                {!canStopOptionalService && (
+                {!canStopOptionalService && !onEditFees && (
                   <Typography variant="body2" color="text.secondary">
                     Optional service cancellation requires the fee assignment Stop Optional Service
                     permission and an active enrollment.
@@ -310,6 +356,6 @@ export default function AssignedPolicyEditor({
           </Stack>
         )}
       />
-    </Box>
+    </AssignmentStepperFrame>
   );
 }

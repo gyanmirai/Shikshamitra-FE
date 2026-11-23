@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Box, Stack, Button, Drawer, Divider, Typography } from '@mui/material';
+import { Box, Stack, Drawer, Divider, Typography } from '@mui/material';
 
 import { getLeavePolicyTitle } from '../leave-policy-workspace-utils';
 import { StatusChip, DrawerHeader, PolicySection } from './HRPolicySharedUI';
@@ -92,12 +92,6 @@ export function LeavePolicyDetailsDrawer({
           </Stack>
         </Box>
       ) : null}
-      <Divider />
-      <Stack direction="row" justifyContent="flex-end" sx={{ px: { xs: 2, sm: 3 }, py: 1.75 }}>
-        <Button size="small" variant="outlined" onClick={onClose}>
-          Close
-        </Button>
-      </Stack>
     </Drawer>
   );
 }

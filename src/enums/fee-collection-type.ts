@@ -39,6 +39,7 @@ export enum FeeCollectionStatusType {
   InReconciliation = 5,
   Waived = 6,
   NoFeeAssigned = 7,
+  Cancelled = 8,
 }
 
 export const FeeCollectionStatusOptions = [
@@ -77,6 +78,7 @@ export const FeeCollectionStatusTypeColors: Record<FeeCollectionStatusType, Labe
   [FeeCollectionStatusType.InReconciliation]: 'primary',
   [FeeCollectionStatusType.Waived]: 'default',
   [FeeCollectionStatusType.NoFeeAssigned]: 'default',
+  [FeeCollectionStatusType.Cancelled]: 'default',
 };
 
 export const feeInstallmentStatusLabel = (status: FeeCollectionStatusType): string => {

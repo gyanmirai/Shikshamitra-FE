@@ -63,3 +63,20 @@ it('announces correction-needed steps without presenting them as completed', () 
     'step'
   );
 });
+
+it('notifies the owner when save validation fails without calling the save handler', async () => {
+  const onSave = vi.fn();
+  const onSaveValidationError = vi.fn();
+  render(
+    content({
+      showSaveButton: true,
+      initialValues: { name: '' },
+      validationSchema: Yup.object({ name: Yup.string().required() }),
+      onSave,
+      onSaveValidationError,
+    })
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(onSaveValidationError).toHaveBeenCalledOnce());
+  expect(onSave).not.toHaveBeenCalled();
+});

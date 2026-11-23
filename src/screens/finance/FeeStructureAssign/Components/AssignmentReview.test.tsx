@@ -71,7 +71,9 @@ const preview: AssignmentPreview = {
     demandDate: '2026-04-01',
     allocationPercentage: 8.33,
     scheduledAmount: 100,
-    proratedAmount: 80,
+    proratedAmount: i < 10 ? 80 : 100,
+    reductionAmount: i < 10 ? 20 : 0,
+    ruleType: 'Daily',
     paidAmount: 30,
     outstandingAmount: 50,
     explanation: 'Reviewed service charge',
@@ -102,18 +104,28 @@ describe('assignment review evidence', () => {
   it('shows canonical totals, skipped heads and every installment without hidden paging', () => {
     mount();
     expect(screen.getByText('Total to assign').nextElementSibling).toHaveTextContent('₹ 1,000');
+    expect(screen.getByText('Scheduled fees').nextElementSibling).toHaveTextContent('₹ 1,200');
+    expect(screen.getByText('Proration reduction').nextElementSibling).toHaveTextContent('₹ 200');
     expect(screen.queryByText('Before service adjustment')).not.toBeInTheDocument();
     expect(screen.queryByText('Service reduction')).not.toBeInTheDocument();
     const heads = within(
       screen.getByRole('table', { name: 'Assignment fee-head breakdown table' })
     );
     expect(heads.getByText('Not selected')).toBeInTheDocument();
-    expect(heads.getByText('Not assigned')).toBeInTheDocument();
+    expect(heads.queryByText('Not assigned')).not.toBeInTheDocument();
     expect(heads.getByText('Monthly · v3')).toBeInTheDocument();
+    const tuition = within(heads.getByRole('row', { name: /tuition/i }));
+    expect(tuition.getByText('Daily proration')).toBeVisible();
+    expect(tuition.getByText('Scheduled ₹ 1,200')).toBeVisible();
+    expect(tuition.getByText('Reduction ₹ 200')).toBeVisible();
+    expect(tuition.getByText('₹ 1,000')).toBeVisible();
+    const transport = within(heads.getByRole('row', { name: /transport/i }));
+    expect(transport.queryByText(/reduction/i)).not.toBeInTheDocument();
     expect(
       heads.queryByRole('button', { name: 'Tuition service details' })
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Configured dates are in the past.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand installment schedule' }));
     const schedule = within(
       screen.getByRole('table', { name: 'Assignment installment schedule table' })
     );
@@ -130,12 +142,79 @@ describe('assignment review evidence', () => {
     expect(screen.queryByRole('button', { name: /edit|service details/i })).not.toBeInTheDocument();
   });
 
+  it('explains the stored monthly cutoff factor and whole-rupee result', () => {
+    mount(
+      {
+        ...preview,
+        heads: [{ ...preview.heads[0], obligation: 4688 }],
+        lines: [
+          {
+            ...preview.lines[0],
+            ruleType: 'MonthlyCutoff',
+            roundingMode: 'RoundUpRupee',
+            scheduledAmount: 10_000,
+            proratedAmount: 4688,
+            reductionAmount: 5312,
+            factor: 0.46875,
+            explanation: 'Monthly cutoff evaluated across 16 service months.',
+          },
+        ],
+        scheduledTotal: 10_000,
+        proratedTotal: 4688,
+        reductionTotal: 5312,
+      },
+      true
+    );
+    const heads = within(
+      screen.getByRole('table', { name: 'Assignment fee-head breakdown table' })
+    );
+    expect(heads.getByText('Monthly cutoff', { exact: true })).toBeVisible();
+    expect(
+      heads.getByText('₹ 10,000 × 46.875% → ₹ 4,688 (rounded up to a whole rupee)')
+    ).toBeVisible();
+    expect(heads.getByText('Monthly cutoff evaluated across 16 service months.')).toBeVisible();
+  });
+
+  it('shows separate saved factors when a monthly fee was calculated by installment', () => {
+    mount({
+      ...preview,
+      heads: [
+        { ...preview.heads[0], amountBasis: 'MonthlyRate', effectiveAmount: 100, obligation: 150 },
+      ],
+      lines: [
+        {
+          ...preview.lines[0],
+          scheduledAmount: 100,
+          proratedAmount: 50,
+          reductionAmount: 50,
+          factor: 0.5,
+        },
+        {
+          ...preview.lines[1],
+          scheduledAmount: 100,
+          proratedAmount: 100,
+          reductionAmount: 0,
+          factor: 1,
+        },
+      ],
+    });
+    const heads = within(
+      screen.getByRole('table', { name: 'Assignment fee-head breakdown table' })
+    );
+    expect(heads.getByText('₹ 200 − ₹ 50 = ₹ 150')).toBeVisible();
+    const details = heads.getByText('Calculation by installment').closest('details')!;
+    expect(within(details).getByText('Installment 1 ₹ 100 × 50% → ₹ 50')).toBeInTheDocument();
+    expect(within(details).getByText('Installment 2 ₹ 100 × 100% → ₹ 100')).toBeInTheDocument();
+    expect(within(details).getAllByText('Reviewed service charge')).toHaveLength(1);
+  });
+
   it('collapses evidence tables independently while keeping totals and policies available', async () => {
     mount();
     const heads = screen.getByRole('button', { name: 'Collapse fee breakdown' });
-    const schedule = screen.getByRole('button', { name: 'Collapse installment schedule' });
+    const schedule = screen.getByRole('button', { name: 'Expand installment schedule' });
     expect(heads).toHaveAttribute('aria-expanded', 'true');
-    expect(schedule).toHaveAttribute('aria-expanded', 'true');
+    expect(schedule).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(schedule);
     fireEvent.click(heads);
     await waitFor(
       () =>
@@ -175,6 +254,7 @@ describe('assignment review evidence', () => {
     expect(screen.queryByText('Before service adjustment')).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: 'Coverage amount' })).not.toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Recorded Amount' })).toBeInTheDocument();
+    expect(screen.queryByText('Daily proration')).not.toBeInTheDocument();
     const schedule = within(
       screen.getByRole('table', { name: 'Assignment installment schedule table' })
     );

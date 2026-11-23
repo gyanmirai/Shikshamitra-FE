@@ -3,18 +3,26 @@ module: finance
 domain: proration-policy-frontend-flow
 content_type: Reference
 status: implemented
-updated_on: 2026-10-29
+updated_on: 2026-11-23
 owner: frontend-team
 audience: humans-and-agents
 ---
 
-# Review the Proration Policy frontend and complete its flow
+# Proration Policy frontend flow
 
-TL;DR: the Proration Policy screen now uses the typed backend contract and participates in the real Finance flow. It has no fabricated Fee Heads, uses exact action permissions, supports Draft/Active/Archived lifecycle and version history, persists Fee Structure attachment, captures day-level charge periods in single and bulk assignment, offers a server-authoritative calculation preview for saved policies, and exposes stored scheduled-versus-prorated evidence in the collection ledger.
+Finance configures a versioned Proration Policy per academic year. The policy supplies fee-head rules for student joining and early withdrawal. Fee Structure supplies the fee amount and billing period.
 
 Product rules, calculations, backend architecture, API, persistence, permissions, and rollout are canonical in [Proration Policy backend end-to-end](../../../../Shikshamitra-BE/docs/modules/finance/references/proration-policy-end-to-end.md).
 
-> This page records both the original review findings and their implemented disposition.
+## Operational flow
+
+1. In **Finance → Policies → Proration Policy**, create or edit a policy for the academic year. Set joining and early-withdrawal rules for each applicable recurring fee head. The selected active default is available to fee preparation for that year.
+2. Save a draft, then open **View → Proration Preview** to try a fee head, scheduled amount, billing-period dates, and actual service dates. Joining, withdrawal, and full-month presets are available. The server returns the saved policy version, scheduled charge, prorated charge, reduction, and explanation. Editing an input clears the displayed result. The preview creates no dues.
+3. Activate the policy for use. In Admission or Finance Fee Structure Assignment, use the verified joining or service dates to preview student fees. The academic-year default applies automatically where eligible. Authorized Admission staff can select another eligible active proration version in the fee preparation flow.
+4. Confirm fee preparation or assignment. Finance saves the policy version and calculation with the affected dues. Later policy edits apply to new preparations, and an existing fee preparation reuses its saved calculation.
+5. For an early withdrawal, preview the effect using the approved last billable date and the saved policy. For an eligible optional service restart, preview the new service period before confirmation.
+
+The historical rollout notes below describe the earlier implementation. The operational flow above reflects current policy placement.
 
 The Proration Policy workspace shows Draft, Active and Archived policies in one table, matching Collection and Concession.
 Archived shows a server count scoped to the selected academic year; the archive/restore cache tags refresh this count and the list.
@@ -56,9 +64,9 @@ The checklist uses the same Yup schema as submission and counts Daily/Monthly re
 The drawer keeps its header/footer fixed, moves the summary into the scrollable content on narrow screens, and locks inputs and dismissal during blocking loading/saving.
 Save and reopen persist both configurations, and cloning retains them.
 Policy creation does not require student dates.
-Fee Structure creation, editing, defaults and review no longer expose Proration Policy. The attachment-impact client was removed.
-Assignment and assigned-policy editing show only concession, collection and refund selectors; new assignments do not inherit proration; historical assignment and charge evidence remains readable.
-Assignment edits submit three selectable families, and the backend rejects proration overrides.
+Fee Structure → Policies offers an optional Proration Policy selection. Choose an active policy for the same academic year or use the academic-year default. The draft saves the exact selected version.
+Finance Fee Structure Assignment uses the published structure override when present and otherwise resolves the academic-year default. Assigned-policy editing does not replace the saved proration calculation.
+Authorized proration overrides are available in eligible Admission preparation and optional-service restart flows.
 
 Focused validation: run `useProrationPolicyForm.test.ts`, `ProrationFeeHeadsSection.test.tsx`, and the policy default lifecycle tests; AssignmentWorkflow tests cover policy selection; backend regression tests cover removal of template inheritance.
 Use the local component fixture at `e2e/fixtures/proration-policy` to inspect both event forms in the in-app browser without backend writes.

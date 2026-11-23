@@ -2,6 +2,7 @@ import type { ReactNode, ComponentProps } from 'react';
 import type { PaymentTermListItem } from 'src/redux/finance/paymentTerm';
 import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
 
+import userEvent from '@testing-library/user-event';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 
@@ -161,11 +162,30 @@ describe('PaymentTermTable', () => {
 
     expect(draftRow.getByText('Draft')).toBeInTheDocument();
     expect(activeRow.getByText('Active')).toBeInTheDocument();
-    expect(activeRow.getByText('Default')).toBeInTheDocument();
+    expect(activeRow.queryByText('Default')).not.toBeInTheDocument();
+    expect(activeRow.getByRole('img', { name: 'Default payment term' })).toHaveAttribute(
+      'tabindex',
+      '0'
+    );
+    expect(draftRow.queryByRole('img', { name: 'Default payment term' })).not.toBeInTheDocument();
+    expect(archivedRow.queryByRole('img', { name: 'Default payment term' })).not.toBeInTheDocument();
     expect(activeRow.getByText('v1')).toBeInTheDocument();
     expect(archivedRow.getByText('Archived')).toBeInTheDocument();
     expect(archivedRow.queryByText('Draft')).not.toBeInTheDocument();
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+  });
+
+  it('shows the default tooltip on focus without opening the payment term', async () => {
+    render(
+      <PaymentTermTable {...baseProps} data={[createTerm({ status: 'Active', isDefault: true })]} />
+    );
+
+    const indicator = screen.getByRole('img', { name: 'Default payment term' });
+    await userEvent.tab();
+    expect(indicator).toHaveFocus();
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Default payment term');
+    fireEvent.click(indicator);
+    expect(callbacks.onView).not.toHaveBeenCalled();
   });
 
   it('keeps activation in row actions after removing the status toggle', () => {

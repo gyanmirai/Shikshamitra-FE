@@ -4,7 +4,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AssignmentWorkflow from './AssignmentWorkflow';
@@ -18,6 +20,9 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   previewStop: vi.fn(),
   stop: vi.fn(),
+  restartContext: vi.fn(),
+  previewRestart: vi.fn(),
+  restart: vi.fn(),
   viewSaved: vi.fn(),
   close: vi.fn(),
   completed: vi.fn(),
@@ -31,10 +36,18 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
   DatePicker: ({
     label,
     onChange,
+    disabled,
   }: {
     label: string;
     onChange: (date: ReturnType<typeof dayjs>) => void;
-  }) => <input aria-label={label} onChange={(event) => onChange(dayjs(event.target.value))} />,
+    disabled?: boolean;
+  }) => (
+    <input
+      aria-label={label}
+      disabled={disabled}
+      onChange={(event) => onChange(dayjs(event.target.value))}
+    />
+  ),
 }));
 vi.mock('src/components/custom-select', () => ({
   default: ({ label, options, onChange, value, disabled }: any) => (
@@ -141,6 +154,9 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   useAssignmentUpdatePoliciesMutation: () => [mocks.update, {}],
   useAssignmentOptionalServiceStopPreviewMutation: () => [mocks.previewStop, {}],
   useAssignmentOptionalServiceStopMutation: () => [mocks.stop, {}],
+  useAssignmentOptionalServiceRestartContextQuery: mocks.restartContext,
+  useAssignmentOptionalServiceRestartPreviewMutation: () => [mocks.previewRestart, {}],
+  useAssignmentOptionalServiceRestartMutation: () => [mocks.restart, {}],
   assignmentError: () => 'Preview again',
   assignmentErrorCode: (error: any) => error?.data?.error?.code ?? '',
   useAssignmentCandidatesQuery: () => ({
@@ -192,7 +208,8 @@ function mount(
   ],
   canOverride = false,
   editAssignedPolicies = false,
-  canStop = false
+  canStop = false,
+  canAssign = true
 ) {
   const store = configureStore({
     reducer: (
@@ -203,7 +220,7 @@ function mount(
         auth: {
           permissions: [
             'View',
-            'Add',
+            ...(canAssign ? ['Add'] : []),
             ...(canOverride ? ['OverridePolicies'] : []),
             ...(canStop ? ['StopOptionalService'] : []),
           ].map((name) => ({ name: `Finance.Fees.StructureAssign.${name}`, isGranted: true })),
@@ -215,14 +232,16 @@ function mount(
   const ui = () => (
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
-        <AssignmentWorkflow
-          students={students}
-          academicYearId="year"
-          onClose={mocks.close}
-          onCompleted={mocks.completed}
-          onViewSavedAssignment={mocks.viewSaved}
-          editAssignedPolicies={editAssignedPolicies}
-        />
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <AssignmentWorkflow
+            students={students}
+            academicYearId="year"
+            onClose={mocks.close}
+            onCompleted={mocks.completed}
+            onViewSavedAssignment={mocks.viewSaved}
+            editAssignedPolicies={editAssignedPolicies}
+          />
+        </LocalizationProvider>
       </ThemeProvider>
     </Provider>
   );
@@ -273,38 +292,242 @@ it('opens the existing assignment when server context corrects a stale unassigne
   expect(mocks.commit).not.toHaveBeenCalled();
 });
 
-it('shows every saved optional fee and opens the saved view after confirming a stop', async () => {
-  const heads = [
-    {
-      feeHeadId: 'transport',
-      feeHeadName: 'Transport',
-      included: true,
-      isOptional: true,
-      servicePeriod: { startDate: '2026-07-01', endDate: '2027-04-30' },
-    },
-    { feeHeadId: 'activity', feeHeadName: 'Activity', included: false, isOptional: true },
-    { feeHeadId: 'club', feeHeadName: 'Club', included: true, isOptional: true },
-  ];
+it.each([
+  {
+    feeName: 'Transport',
+    installmentCount: 1,
+    cancelledAmount: 500,
+    prepaidCredit: 300,
+    recorded: false,
+  },
+  { feeName: 'Meals', installmentCount: 0, cancelledAmount: 0, prepaidCredit: 0, recorded: false },
+  {
+    feeName: 'Transport',
+    installmentCount: 1,
+    cancelledAmount: 500,
+    prepaidCredit: 300,
+    recorded: true,
+  },
+])(
+  'handles cancellation for $feeName with recorded stop $recorded',
+  async ({ feeName, installmentCount, cancelledAmount, prepaidCredit, recorded }) => {
+    const heads = [
+      {
+        feeHeadId: 'tuition',
+        feeHeadName: 'Tuition',
+        included: true,
+        obligation: 4688,
+        servicePeriod: { startDate: '2026-11-20', endDate: '2027-06-30' },
+      },
+      {
+        feeHeadId: 'transport',
+        feeHeadName: 'Transport',
+        included: true,
+        isOptional: true,
+        obligation: 500,
+        servicePeriod: { startDate: '2026-07-01', endDate: '2027-04-30' },
+        ...(recorded && {
+          optionalServiceEndDate: '2026-11-30',
+          canReviewOptionalServiceCancellation: true,
+        }),
+      },
+      {
+        feeHeadId: 'activity',
+        feeHeadName: 'Activity',
+        included: false,
+        isOptional: true,
+        configuredAmount: 200,
+      },
+      {
+        feeHeadId: 'meals',
+        feeHeadName: 'Meals',
+        included: true,
+        isOptional: true,
+        obligation: 750,
+        servicePeriod: { startDate: '2026-07-01', endDate: '2027-04-30' },
+      },
+      { feeHeadId: 'club', feeHeadName: 'Club', included: true, isOptional: true },
+    ];
+    mocks.details.mockReturnValue({
+      data: {
+        assignment: {
+          ...result(),
+          heads,
+          policies: [],
+          lines: [
+            {
+              feeHeadId: 'tuition',
+              scheduledAmount: 10000,
+              proratedAmount: 4688,
+              reductionAmount: 5312,
+              ruleType: 'MonthlyCutoff',
+              factor: 0.46875,
+              roundingMode: 'RoundUpRupee',
+            },
+            { feeHeadId: 'transport', outstandingAmount: 500, paidAmount: 0 },
+            { feeHeadId: 'meals', outstandingAmount: 0, paidAmount: 750 },
+            { feeHeadId: 'club', optionalServiceCancellationAmount: 250, outstandingAmount: 0 },
+            { feeHeadId: 'club', outstandingAmount: 100, paidAmount: 0 },
+          ],
+        },
+      },
+    });
+    mocks.previewStop.mockReturnValue({
+      unwrap: async () => ({
+        installmentCount,
+        cancelledAmount,
+        prepaidCredit,
+        outstandingReduction: cancelledAmount - prepaidCredit,
+        previewToken: 'stop-token',
+      }),
+    });
+    mocks.stop.mockReturnValue({
+      unwrap: async () => ({ installmentCount, cancelledAmount }),
+    });
+    mount(
+      [{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }],
+      false,
+      true,
+      true
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(await screen.findByRole('checkbox', { name: 'Activity' })).not.toBeChecked();
+    expect(screen.getByText('Monthly cutoff', { exact: true })).toBeVisible();
+    expect(
+      screen.getByText('₹ 10,000 × 46.875% → ₹ 4,688 (rounded up to a whole rupee)')
+    ).toBeVisible();
+    expect(screen.getByRole('checkbox', { name: 'Transport' })).toBeChecked();
+    expect(screen.getByText('₹ 500')).toBeVisible();
+    expect(screen.getByText('₹ 750')).toBeVisible();
+    expect(screen.getByText('Configured amount').nextElementSibling).toHaveTextContent('₹ 200');
+    expect(screen.getByRole('button', { name: 'Cancel service for Meals' })).toBeEnabled();
+    expect(screen.getByText('Service stopped')).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Cancel service for Club' })
+    ).not.toBeInTheDocument();
+    const action = screen.getByRole('button', { name: `Cancel service for ${feeName}` });
+    if (recorded) {
+      expect(screen.getByText('Cancellation recorded')).toBeVisible();
+      expect(action).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Enable service for Transport' })).toBeEnabled();
+      fireEvent.click(action);
+      expect(screen.queryByLabelText('Cancellation effective date')).not.toBeInTheDocument();
+      expect(mocks.previewStop).not.toHaveBeenCalled();
+      expect(mocks.stop).not.toHaveBeenCalled();
+      return;
+    }
+
+    fireEvent.click(action);
+    const date = await screen.findByLabelText('Cancellation effective date');
+    fireEvent.change(date, { target: { value: '2026-11-30' } });
+    fireEvent.change(screen.getByRole('textbox', { name: /Reason for stopping service/ }), {
+      target: { value: 'Transport ended' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Preview cancellation' }));
+    expect(mocks.stop).not.toHaveBeenCalled();
+    expect(
+      await screen.findByText(
+        installmentCount ? /1 installment totaling/ : /There are no installments eligible/
+      )
+    ).toBeVisible();
+    if (prepaidCredit) {
+      expect(
+        screen.getByText(/Outstanding fees decrease by ₹ 200. Prepaid service credit is ₹ 300/)
+      ).toBeVisible();
+    }
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm cancellation' }));
+    expect(await screen.findByText('Committed amount 12000')).toBeVisible();
+    expect(mocks.stop).toHaveBeenCalledWith(
+      expect.objectContaining({ previewToken: 'stop-token' })
+    );
+    expect(mocks.previewStop).toHaveBeenCalledWith(
+      expect.objectContaining({ lastServiceDate: '2026-11-29' })
+    );
+    expect(mocks.viewSaved).toHaveBeenCalledTimes(1);
+    expect(mocks.completed).not.toHaveBeenCalled();
+  }
+);
+
+it('reviews a stopped service schedule before saving and requires a fresh preview after a conflict', async () => {
   mocks.details.mockReturnValue({
     data: {
       assignment: {
         ...result(),
-        heads,
-        policies: [],
-        lines: [
-          { feeHeadId: 'transport', outstandingAmount: 500, paidAmount: 0 },
-          { feeHeadId: 'club', optionalServiceCancellationAmount: 250, outstandingAmount: 0 },
-          { feeHeadId: 'club', outstandingAmount: 100, paidAmount: 0 },
+        academicYearId: 'year',
+        heads: [
+          {
+            feeHeadId: 'transport',
+            feeHeadName: 'Transport',
+            included: true,
+            isOptional: true,
+            obligation: 500,
+            optionalServiceEndDate: '2026-11-30',
+            servicePeriod: { startDate: '2026-07-01', endDate: '2027-04-30' },
+          },
         ],
+        policies: [],
+        lines: [],
       },
     },
   });
-  mocks.previewStop.mockReturnValue({
-    unwrap: async () => ({ installmentCount: 1, cancelledAmount: 500, previewToken: 'stop-token' }),
+  mocks.restartContext.mockReturnValue({
+    data: {
+      earliestStartDate: '2026-12-01',
+      latestEndDate: '2027-04-30',
+      monthlyRate: 750,
+      defaultProrationPolicyVersionId: 'proration-v2',
+      defaultPaymentTermVersionId: 'term-v1',
+      prorationPolicies: [{ versionId: 'proration-v2', name: 'Month cutoff', version: 2 }],
+      paymentTerms: [{ versionId: 'term-v1', name: 'Monthly', version: 1 }],
+      prepaidCredit: 300,
+    },
   });
-  mocks.stop.mockReturnValue({
-    unwrap: async () => ({ installmentCount: 1, cancelledAmount: 500 }),
-  });
+  const quote = {
+    startDate: '2026-12-01',
+    endDate: '2027-04-30',
+    monthlyRate: 750,
+    scheduledTotal: 750,
+    prorationReduction: 250,
+    assignedTotal: 500,
+    prepaidCredit: 300,
+    existingInstallments: [
+      {
+        dueFeeId: 'january',
+        installmentLabel: 'January 2027',
+        coverageStartDate: '2027-01-01',
+        coverageEndDate: '2027-01-31',
+        billedAmount: 750,
+        outstandingAmount: 0,
+      },
+    ],
+    lines: [
+      {
+        feeHeadId: 'transport',
+        installmentLabel: 'December 2026',
+        sequence: 1,
+        dueDate: '2026-12-10',
+        scheduledAmount: 750,
+        proratedAmount: 500,
+        reductionAmount: 250,
+        ruleType: 'Daily',
+        factor: 2 / 3,
+        eligibleDays: 20,
+      },
+    ],
+  };
+  mocks.previewRestart
+    .mockReturnValueOnce({ unwrap: async () => ({ ...quote, previewToken: 'old-token' }) })
+    .mockReturnValueOnce({ unwrap: async () => ({ ...quote, previewToken: 'fresh-token' }) });
+  mocks.restart
+    .mockReturnValueOnce({
+      unwrap: async () => {
+        throw Object.assign(new Error('Stale preview'), {
+          data: { error: { code: 'Finance:StalePreview' } },
+        });
+      },
+    })
+    .mockReturnValueOnce({ unwrap: async () => quote });
+
   mount(
     [{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }],
     false,
@@ -312,25 +535,118 @@ it('shows every saved optional fee and opens the saved view after confirming a s
     true
   );
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  expect(await screen.findByRole('checkbox', { name: 'Activity' })).not.toBeChecked();
-  expect(screen.getByRole('checkbox', { name: 'Transport' })).toBeChecked();
-  expect(screen.getByText('Service stopped')).toBeVisible();
-  expect(screen.queryByRole('button', { name: 'Stop service for Club' })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Stop service for Transport' }));
-  fireEvent.change(await screen.findByLabelText('Last service date'), {
-    target: { value: '2026-11-30' },
+  fireEvent.click(await screen.findByRole('button', { name: 'Enable service for Transport' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Preview monthly breakdown' }));
+  expect(await screen.findByText('December 2026')).toBeVisible();
+  expect(screen.getByText('Daily proration')).toBeVisible();
+  expect(screen.getByText('20 service days')).toBeVisible();
+  expect(screen.getByText('₹ 750 × 66.666667% → ₹ 500')).toBeVisible();
+  expect(screen.getByText('Prepaid service credit').nextElementSibling).toHaveTextContent('₹ 300');
+  expect(screen.getByText('Existing installments')).toBeVisible();
+  expect(screen.getByText('January 2027')).toBeVisible();
+  expect(screen.getByText('₹ 750 · ₹ 0')).toBeVisible();
+  expect(mocks.restart).not.toHaveBeenCalled();
+  expect(mocks.previewRestart).toHaveBeenCalledWith({
+    studentId: 'one',
+    academicYearId: 'year',
+    feeHeadId: 'transport',
+    startDate: '2026-12-01',
+    endDate: '2027-04-30',
+    monthlyRate: 750,
+    prorationPolicyVersionId: 'proration-v2',
+    paymentTermVersionId: 'term-v1',
+    requestId: expect.any(String),
   });
-  fireEvent.change(screen.getByRole('textbox', { name: /Reason for stopping service/ }), {
-    target: { value: 'Transport ended' },
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Preview cancellation' }));
-  expect(mocks.stop).not.toHaveBeenCalled();
-  fireEvent.click(await screen.findByRole('button', { name: 'Cancel future installments' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm service restart' }));
+  expect(await screen.findByText(/preview has expired or changed/i)).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Confirm service restart' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview monthly breakdown' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Confirm service restart' }));
   expect(await screen.findByText('Committed amount 12000')).toBeVisible();
-  expect(mocks.stop).toHaveBeenCalledWith(expect.objectContaining({ previewToken: 'stop-token' }));
+  expect(mocks.restart).toHaveBeenLastCalledWith({
+    ...mocks.previewRestart.mock.lastCall?.[0],
+    previewToken: 'fresh-token',
+  });
+  expect(mocks.previewRestart.mock.lastCall?.[0].requestId).toBe(
+    mocks.previewRestart.mock.calls[0][0].requestId
+  );
   expect(mocks.viewSaved).toHaveBeenCalledTimes(1);
   expect(mocks.completed).not.toHaveBeenCalled();
 });
+
+it.each([
+  { canAssign: false, canStop: true, restarted: false },
+  { canAssign: true, canStop: false, restarted: false },
+  { canAssign: true, canStop: true, restarted: true },
+])(
+  'hides Enable service when canAssign=$canAssign, canStop=$canStop, and restarted=$restarted',
+  async ({ canAssign, canStop, restarted }) => {
+    mocks.details.mockReturnValue({
+      data: {
+        assignment: {
+          ...result(),
+          heads: [
+            {
+              feeHeadId: 'transport',
+              feeHeadName: 'Transport',
+              included: true,
+              isOptional: true,
+              obligation: 750,
+              ...(restarted && {
+                originalOptionalServiceEndDate: '2026-11-30',
+                optionalServicePeriods: [
+                  {
+                    startDate: '2090-12-01',
+                    endDate: '2091-03-31',
+                    cancellationEffectiveDate: '2090-12-01',
+                  },
+                  {
+                    startDate: '2090-12-01',
+                    endDate: '2091-03-31',
+                    cancellationEffectiveDate: null,
+                  },
+                ],
+              }),
+            },
+          ],
+          lines: [{ feeHeadId: 'transport', optionalServiceCancellationAmount: 200 }],
+          policies: [
+            {
+              family: 'collection',
+              policyId: 'collection-policy',
+              versionId: 'collection-version',
+              name: 'Student collection',
+              version: 1,
+              headTreatment: {},
+            },
+            {
+              family: 'refund',
+              policyId: 'refund-policy',
+              versionId: 'refund-version',
+              name: 'Student refund',
+              version: 1,
+              headTreatment: {},
+            },
+          ],
+        },
+      },
+    });
+    mount(
+      [{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }],
+      true,
+      true,
+      canStop,
+      canAssign
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(await screen.findByText(restarted ? 'Scheduled' : 'Service stopped')).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Enable service for Transport' })
+    ).not.toBeInTheDocument();
+    expect(mocks.restartContext).not.toHaveBeenCalled();
+    if (restarted) expect(screen.getByText('Original cancellation date')).toBeVisible();
+  }
+);
 
 it('prefills the admission selection without asking staff to choose the structure again', async () => {
   mocks.contextState = {
@@ -338,8 +654,10 @@ it('prefills the admission selection without asking staff to choose the structur
       {
         studentId: 'one',
         status: 'Selected',
+        source: 'Admission',
         structureId: 'structure',
         joiningDate: '2026-08-20T00:00:00Z',
+        prorationPolicy: { name: 'Monthly school fees', version: 3 },
         selectedOptionalFeeHeadIds: [],
         admissionFeeHeadIds: ['tuition'],
         chargeStartDate: '2026-08-20T00:00:00Z',
@@ -352,6 +670,10 @@ it('prefills the admission selection without asking staff to choose the structur
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: 'Fee structure' })).toHaveValue('structure')
   );
+  const proration = await screen.findByRole('heading', { name: 'Fee Proration' });
+  expect(proration).toBeVisible();
+  expect(screen.getByText('Student Applications')).toBeVisible();
+  expect(screen.getByText('Monthly school fees · v3')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
   await waitFor(() =>
@@ -600,7 +922,7 @@ describe('assignment review and commit boundaries', () => {
     await selectStructure();
     fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
     await screen.findByText('This preview has expired. Preview again before assigning fees.');
-    expect(screen.getByRole('button', { name: 'Assign fees (1)' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Assign fees' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Review and refresh' }));
     expect(await screen.findByRole('button', { name: 'Preview assignments' })).toBeEnabled();
     expect(mocks.commit).not.toHaveBeenCalled();
@@ -657,6 +979,24 @@ describe('assignment review and commit boundaries', () => {
     expect(screen.queryByText('Committed amount 12000')).not.toBeInTheDocument();
   }, 15000);
 
+  it('shows plain saving feedback for one student', async () => {
+    let finish!: () => void;
+    const pending = new Promise<void>((resolve) => { finish = resolve; });
+    mocks.commit.mockImplementation(() => ({
+      unwrap: async () => {
+        await pending;
+        return { assignmentId: 'saved', outcome: 'Assigned', assignment: result() };
+      },
+    }));
+    mount();
+    await selectStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Assign fees' }));
+    expect(await screen.findByRole('progressbar', { name: 'Saving…' })).toBeVisible();
+    finish();
+    await screen.findByText('Committed amount 12000');
+  });
+
   it('retrieves the saved result with the same token after a lost response and expiry', async () => {
     const reviewedAt = Date.now();
     mocks.preview.mockImplementation(() => ({
@@ -681,14 +1021,14 @@ describe('assignment review and commit boundaries', () => {
     mount();
     await selectStructure();
     fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Assign fees (1)' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Assign fees' }));
     await screen.findByText(
       'Assignment status could not be confirmed. Retry this review to safely retrieve any saved assignments.'
     );
     expect(screen.queryByText('Committed amount 12000')).not.toBeInTheDocument();
     const clock = vi.spyOn(Date, 'now').mockReturnValue(reviewedAt + 21 * 60_000);
     try {
-      fireEvent.click(screen.getByRole('button', { name: 'Assign fees (1)' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Assign fees' }));
       await screen.findByText('Committed amount 12000');
       expect(mocks.commit.mock.calls[1][0]).toEqual(mocks.commit.mock.calls[0][0]);
       expect(screen.getByText('Already assigned')).toBeVisible();
@@ -833,6 +1173,7 @@ describe('assignment review and commit boundaries', () => {
       data: {
         assignment: {
           ...result(),
+          lines: [],
           academicYearId: 'year',
           policies: [
             {
@@ -894,6 +1235,7 @@ describe('assignment review and commit boundaries', () => {
       data: {
         assignment: {
           ...result(),
+          lines: [],
           academicYearId: 'year',
           policies: [
             {
@@ -1073,7 +1415,7 @@ describe('assignment review and commit boundaries', () => {
         policyOverrideReason: 'Approved student exception',
       })
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Assign fees (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Assign fees' }));
     await screen.findByText('Committed amount 12000');
     expect(mocks.commit).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -1090,7 +1432,7 @@ describe('assignment review and commit boundaries', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
     await screen.findByText('Preview amount 12000');
     expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Assign fees (1)' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Assign fees' })).toBeEnabled();
     expect(
       screen.queryByRole('button', { name: 'Include transport for one' })
     ).not.toBeInTheDocument();
@@ -1104,7 +1446,7 @@ describe('assignment review and commit boundaries', () => {
     await selectStructure();
     fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
     await screen.findByText('Preview amount 12000');
-    expect(screen.getByRole('button', { name: 'Assign fees (1)' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Assign fees' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     fireEvent.click(screen.getByRole('button', { name: 'Include transport for one' }));
     expect(screen.queryByRole('button', { name: /Assign fees/ })).not.toBeInTheDocument();
@@ -1170,7 +1512,7 @@ describe('assignment review and commit boundaries', () => {
       })
     );
     expect(mocks.commit).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Assign fees (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Assign fees' }));
     await screen.findByText('Committed amount 12000');
     expect(mocks.commit).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -1199,7 +1541,7 @@ describe('assignment review and commit boundaries', () => {
     await selectStructure();
     fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
     await screen.findByText('Preview amount 12000');
-    fireEvent.click(screen.getByRole('button', { name: 'Assign fees (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Assign fees' }));
     await screen.findByText('Committed amount 12000');
     expect(mocks.commit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -1306,7 +1648,16 @@ function unpaidContext(studentId = 'one') {
       ...result(studentId),
       structureId: 'structure',
       revisionNumber: 1,
-      heads: [{ feeHeadId: 'tuition', included: true, isOptional: false }],
+      lines: [],
+      heads: [
+        {
+          feeHeadId: 'tuition',
+          feeHeadName: 'Tuition',
+          obligation: 12000,
+          included: true,
+          isOptional: false,
+        },
+      ],
       policies: [
         {
           family: 'collection',
@@ -1329,8 +1680,18 @@ function unpaidContext(studentId = 'one') {
 
 it('prefills unpaid assignment edits and submits the saved identity and concurrency with a reason', async () => {
   const reason = 'x'.repeat(501);
-  mocks.contextState = { data: [unpaidContext()] };
+  const context = unpaidContext();
+  mocks.contextState = { data: [context] };
+  mocks.details.mockReturnValue({
+    data: { assignment: context.assignedAssignment, concurrencyStamp: 'stamp-one' },
+  });
   mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], false, true);
+  expect(await screen.findByRole('region', { name: 'Assigned policy fields' })).toBeVisible();
+  expect(screen.queryByRole('textbox', { name: /Fee structure change reason/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  expect(await screen.findByText('Required Fee Heads')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Preview assignments' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Edit fees' }));
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: 'Fee structure' })).toHaveValue('structure')
   );
@@ -1421,7 +1782,12 @@ it('keeps unchanged saved policy overrides when editing unpaid fees without anot
   const context = unpaidContext();
   context.assignedAssignment.policies[0].versionId = 'collection-version';
   mocks.contextState = { data: [context] };
+  mocks.details.mockReturnValue({
+    data: { assignment: context.assignedAssignment, concurrencyStamp: 'stamp-one' },
+  });
   mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], false, true);
+  fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Edit fees' }));
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: 'Fee structure' })).toHaveValue('structure')
   );
@@ -1464,6 +1830,8 @@ it('falls back to policy editing when a refreshed unpaid context becomes paid', 
     true,
     true
   );
+  fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Edit fees' }));
   await screen.findByRole('combobox', { name: 'Fee structure' });
   mocks.contextState = {
     data: [
@@ -1473,5 +1841,8 @@ it('falls back to policy editing when a refreshed unpaid context becomes paid', 
   view.refresh();
   expect(await screen.findByText('Student Policies')).toBeVisible();
   expect(screen.queryByRole('combobox', { name: 'Fee structure' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  expect(await screen.findByText('Required Fee Heads')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Edit fees' })).not.toBeInTheDocument();
   expect(mocks.commit).not.toHaveBeenCalled();
 });

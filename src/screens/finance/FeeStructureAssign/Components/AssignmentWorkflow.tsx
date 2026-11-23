@@ -13,6 +13,7 @@ import type {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import * as Yup from 'yup';
+import isEqual from 'lodash/isEqual';
 import { Label } from 'src/components/label';
 import { fDate } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
@@ -26,7 +27,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { DetailField } from 'src/screens/finance/components/detail-view';
+import { DetailGrid, DetailField } from 'src/screens/finance/components/detail-view';
 import { AssignmentFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
 import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
 import { isFinancePrerequisiteMissing } from 'src/screens/finance/components/financePrerequisites';
@@ -60,10 +61,16 @@ import AssignmentReview from './AssignmentReview';
 import AssignmentPolicies from './AssignmentPolicies';
 import AssignedPolicyEditor from './AssignedPolicyEditor';
 import AssignmentStudentInputs from './AssignmentStudentInputs';
+import { optionalServiceStatus } from './optionalServiceStatus';
+import OptionalFeeServiceRestart from './OptionalFeeServiceRestart';
 import PreparedAssignmentHandoff from './PreparedAssignmentHandoff';
 import { assignmentCurrencyTotals } from './assignmentReviewPresentation';
 import { assignmentEditRequest, assignmentEditReasonError } from './assignmentEditRequest';
 import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
+import AssignmentStepperFrame, {
+  assignmentEditSteps,
+  assignmentEditPadding,
+} from './AssignmentStepperFrame';
 import {
   assignmentInputError,
   assignmentPolicyError,
@@ -386,7 +393,7 @@ function AssignmentEditor({
   academicYearId,
   academicYearName,
   editAssignedPolicies = false,
-  editAssignedStructure = false,
+  editAssignedStructure: canEditAssignedStructure = false,
   onStructureEditResolved,
   onClose,
   onCompleted,
@@ -399,9 +406,18 @@ function AssignmentEditor({
   contexts: AssignmentContext[];
   onAssignedConflict: () => void;
 }) {
+  const isBulk = students.length > 1;
+  const [correctionRequested, setCorrectionRequested] = useState(false);
+  const [serviceSaved, setServiceSaved] = useState(false);
+  const [serviceBusy, setServiceBusy] = useState(false);
+  const editAssignedStructure =
+    canEditAssignedStructure && (isBulk || correctionRequested) && !serviceSaved;
+  useEffect(() => {
+    if (!canEditAssignedStructure) setCorrectionRequested(false);
+  }, [canEditAssignedStructure]);
   useEffect(
-    () => onStructureEditResolved?.(editAssignedStructure || editAssignedPolicies),
-    [editAssignedStructure, editAssignedPolicies, onStructureEditResolved]
+    () => onStructureEditResolved?.(editAssignedStructure),
+    [editAssignedStructure, onStructureEditResolved]
   );
   const { permissions } = useSelector((state: RootState) => state.auth);
   const currentYear = useSelector((state: RootState) => state.globalState?.currentYear);
@@ -418,20 +434,23 @@ function AssignmentEditor({
     permissions,
     `${financePermissions.fees.structureAssign}.OverridePolicies`
   );
-  const canOverrideAmount = hasGrantedPermission(
-    permissions,
-    `${financePermissions.fees.structureAssign}.OverrideAmount`
-  );
   const canStopOptionalService =
     hasGrantedPermission(
       permissions,
       `${financePermissions.fees.structureAssign}.StopOptionalService`
     ) && students[0]?.isActive !== false;
+  const canRestartOptionalService =
+    canAssign &&
+    canStopOptionalService &&
+    hasGrantedPermission(permissions, `${financePermissions.fees.structureAssign}.View`);
   const dispatch = useDispatch();
-  const [serviceSaved, setServiceSaved] = useState(false);
+  const onOptionalServiceSaved = () => {
+    setServiceSaved(true);
+    onViewSavedAssignment?.();
+  };
   const editingPolicies =
     editAssignedPolicies &&
-    (canOverridePolicies || canStopOptionalService) &&
+    (canOverridePolicies || canStopOptionalService || canEditAssignedStructure) &&
     !editAssignedStructure &&
     !serviceSaved;
   const setPolicyDirty = useCallback((dirty: boolean) => dispatch(setIsChanges(dirty)), [dispatch]);
@@ -470,7 +489,6 @@ function AssignmentEditor({
   const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.studentId ?? '');
   const [studentSearch, setStudentSearch] = useState('');
   const [studentPage, setStudentPage] = useState(1);
-  const isBulk = students.length > 1;
   const [preview, setPreview] = useState<AssignmentBulkPreview>();
   const [outcomes, setOutcomes] = useState<AssignmentBulkResult>();
   const [error, setError] = useState('');
@@ -492,7 +510,8 @@ function AssignmentEditor({
     previewState.isLoading ||
     commitState.isLoading ||
     previewOneState.isLoading ||
-    commitOneState.isLoading;
+    commitOneState.isLoading ||
+    serviceBusy;
   useEffect(() => {
     onBusyChange?.(busy);
     return () => onBusyChange?.(false);
@@ -775,7 +794,7 @@ function AssignmentEditor({
     requests: Yup.array().min(1, 'Select students to assign.'),
   });
 
-  const studentDetails = viewing ? (
+  const studentDetails = !isBulk && (viewing || editAssignedStructure) ? (
     <FormSectionCard
       title="Student Details"
       icon="mdi:account-school-outline"
@@ -808,7 +827,6 @@ function AssignmentEditor({
   if (
     viewing &&
     editingPolicies &&
-    (canOverridePolicies || canStopOptionalService) &&
     !assigned.isError &&
     assigned.data?.assignment
   ) {
@@ -816,15 +834,18 @@ function AssignmentEditor({
       <AssignedPolicyEditor
         data={assigned.data}
         canStopOptionalService={canStopOptionalService}
+        canRestartOptionalService={canRestartOptionalService}
         canOverridePolicies={canOverridePolicies}
+        onEditFees={
+          canEditAssignedStructure && assigned.data.canEditStructure !== false
+            ? () => setCorrectionRequested(true)
+            : undefined
+        }
         onCancel={onClose}
         onSaved={() => {
           (onCompleted ?? onClose)();
         }}
-        onOptionalServiceSaved={() => {
-          setServiceSaved(true);
-          onViewSavedAssignment?.();
-        }}
+        onOptionalServiceSaved={onOptionalServiceSaved}
         onBusyChange={onBusyChange}
         onDirtyChange={setPolicyDirty}
       >
@@ -888,16 +909,18 @@ function AssignmentEditor({
     );
 
   return (
-    <Box sx={{ display: 'flex', flex: 1, minHeight: 0, pt: 2, bgcolor: 'background.paper' }}>
+    <AssignmentStepperFrame savedAssignment={editAssignedStructure && !isBulk}>
       <CustomStepperWithFormik
         contentScrollMode={isBulk ? 'regions' : 'step'}
         initialValues={initialValues}
-        steps={editAssignedStructure ? [steps[0], steps[1], 'Review & save'] : steps}
+        steps={editAssignedStructure ? assignmentEditSteps : steps}
         activeStep={activeStep}
         validationSchema={validationSchema}
         loadingLabel={
           operationPhase === 'commit'
-            ? `Assigning ${selectedPreviewItems.length} student${selectedPreviewItems.length === 1 ? '' : 's'}…`
+            ? isBulk
+              ? `Assigning ${selectedPreviewItems.length} student${selectedPreviewItems.length === 1 ? '' : 's'}…`
+              : 'Saving…'
             : `Previewing ${students.length - committedIds.size} student${students.length - committedIds.size === 1 ? '' : 's'}…`
         }
         showSaveButton={false}
@@ -982,7 +1005,7 @@ function AssignmentEditor({
             ? complete
               ? 'Close'
               : 'Review remaining students'
-            : `${editAssignedStructure ? 'Save fee changes' : 'Assign fees'} (${selectedPreviewItems.length})`
+            : `${editAssignedStructure ? 'Save fee changes' : 'Assign fees'}${isBulk ? ` (${selectedPreviewItems.length})` : ''}`
         }
         saveAndNextButtonProps={{
           size: 'small',
@@ -1150,7 +1173,7 @@ function AssignmentEditor({
             <Stack
               spacing={2}
               sx={{
-                p: 2,
+                p: editAssignedStructure && !isBulk ? assignmentEditPadding : 2,
                 minWidth: 0,
                 ...(isBulk && { flex: 1, minHeight: 0, overflow: 'hidden' }),
                 '& > .MuiAlert-root, & > section': { flexShrink: 0 },
@@ -1214,6 +1237,7 @@ function AssignmentEditor({
                 </Box>
               )}
 
+              {activeStep === 0 && studentDetails}
               {activeStep === 0 && (
                 <FormSectionCard
                   title="Fee Structure"
@@ -1367,20 +1391,41 @@ function AssignmentEditor({
                   const admissionContext = contexts.find(
                     (item) => item.studentId === student.studentId
                   );
-                  const admissionPeriods =
-                    candidate && !editAssignedStructure
-                      ? admissionServicePeriods(
-                          candidate,
-                          admissionContext,
-                          candidate.heads
-                            .filter((head) => head.isOptional)
-                            .map((head) => head.feeHeadId)
-                        )
-                      : [];
+                  const savedServiceAssignment =
+                    !isBulk && editAssignedStructure
+                      ? admissionContext?.assignedAssignment
+                      : undefined;
+                  const hasPendingAssignmentChanges =
+                    savedServiceAssignment &&
+                    candidate &&
+                    request &&
+                    admissionContext &&
+                    (savedServiceAssignment.structureId !== candidate.id ||
+                      !isEqual(
+                        { ...request, editReason: '' },
+                        assignmentEditRequest(admissionContext, candidate, academicYearId)
+                      ));
+                  const prorationPolicy = admissionContext?.prorationPolicy;
+                  const joinedBeforeYear =
+                    !!admissionContext?.joiningDate &&
+                    !!academicYearBounds &&
+                    admissionContext.joiningDate.slice(0, 10) <
+                      academicYearBounds.start.format('YYYY-MM-DD');
+                  const admissionPeriods = candidate
+                    ? admissionServicePeriods(
+                        candidate,
+                        admissionContext,
+                        candidate.heads
+                          .filter((head) => head.isOptional)
+                          .map((head) => head.feeHeadId)
+                      )
+                    : [];
                   const studentCandidate = candidate && {
                     ...candidate,
                     heads: candidate.heads.map((head) => ({
                       ...head,
+                      usesSingleServiceMonth:
+                        head.usesSingleServiceMonth && Boolean(admissionContext?.joiningDate),
                       servicePeriod:
                         admissionPeriods.find((period) => period.feeHeadId === head.feeHeadId) ??
                         head.servicePeriod,
@@ -1640,7 +1685,7 @@ function AssignmentEditor({
                               {editAssignedStructure
                                 ? 'Changes apply to all '
                                 : contexts.some((source) => source.source === 'Admission')
-                                  ? 'Each student keeps their admission dates and confirmed fee choices. Other settings apply to all '
+                                  ? 'Finance uses each student’s own joining date for eligible fees. The fee choices apply to all '
                                   : 'The same policies, fees and dates apply to all '}
                               {committedIds.size ? 'remaining' : 'selected'} students.
                               {editAssignedStructure &&
@@ -1677,36 +1722,50 @@ function AssignmentEditor({
                             <AssignmentReview data={outcome.result.assignment} committed />
                           ) : (
                             <>
-                              {activeStep < 2 && admissionContext?.source === 'Admission' && (
-                                <Box
-                                  sx={{
-                                    display: 'grid',
-                                    gridTemplateColumns: {
-                                      xs: '1fr',
-                                      sm: 'repeat(2, minmax(0, 1fr))',
-                                    },
-                                    gap: 1.5,
-                                  }}
-                                >
-                                  <DetailField
-                                    label="Joining date"
-                                    value={
-                                      admissionContext.joiningDate
-                                        ? fDate(admissionContext.joiningDate)
-                                        : 'Not recorded'
-                                    }
-                                  />
-                                  <DetailField label="Date source" value="Admission" />
-                                  <DetailField
-                                    label="Proration policy"
-                                    value={
-                                      admissionContext.prorationPolicy
-                                        ? `${admissionContext.prorationPolicy.name} · v${admissionContext.prorationPolicy.version}`
-                                        : 'No applicable policy; full scheduled charge'
-                                    }
-                                  />
-                                </Box>
-                              )}
+                              {activeStep === 0 &&
+                                !configuringBulk &&
+                                (admissionContext?.source === 'Admission' || prorationPolicy) && (
+                                  <FormSectionCard
+                                    title="Fee Proration"
+                                    icon="mdi:calendar-range"
+                                    descriptionTooltip="Finance uses the joining date recorded in Student Applications, where available, and the same fee-head rules when calculating the preview."
+                                  >
+                                    <DetailGrid desktopColumns={2}>
+                                      <DetailField
+                                        label="Joining date"
+                                        value={
+                                          admissionContext?.joiningDate
+                                            ? fDate(admissionContext.joiningDate)
+                                            : 'Not recorded'
+                                        }
+                                        secondary={
+                                          admissionContext?.joiningDate
+                                            ? 'Student Applications'
+                                            : undefined
+                                        }
+                                      />
+                                      <DetailField
+                                        label={
+                                          editAssignedStructure
+                                            ? 'Saved proration policy'
+                                            : 'Proration policy'
+                                        }
+                                        value={
+                                          prorationPolicy
+                                            ? `${prorationPolicy.name} · v${prorationPolicy.version}`
+                                            : 'No applicable policy'
+                                        }
+                                      />
+                                    </DetailGrid>
+                                    <Typography variant="body2" color="text.secondary">
+                                      {joinedBeforeYear
+                                        ? 'Full fees apply because the student joined before the academic year started.'
+                                        : editAssignedStructure
+                                          ? 'Review the policy and recalculated amounts in the assignment preview.'
+                                          : 'Review the scheduled fees, reductions and final amounts before assigning.'}
+                                    </Typography>
+                                  </FormSectionCard>
+                                )}
                               {activeStep === 0 && candidate && request && (
                                 <AssignmentPolicies
                                   key={request.studentId}
@@ -1723,32 +1782,94 @@ function AssignmentEditor({
                                   }
                                 />
                               )}
-                              {activeStep === 1 && candidate && request && (
-                                <FormSectionCard title="Fees & Dates" icon="mdi:format-list-checks">
-                                  {assignmentFeeSelectionError(candidate, request) && (
-                                    <Alert severity="info" sx={{ mb: 2 }}>
-                                      {admissionContext?.source === 'Admission' &&
-                                      admissionContext.structureId
-                                        ? 'Select at least one fee in Admission, then refresh this assignment.'
-                                        : assignmentFeeSelectionError(candidate, request)}
-                                    </Alert>
-                                  )}
-                                  <AssignmentStudentInputs
-                                    key={student.studentId}
-                                    candidate={studentCandidate ?? candidate}
-                                    request={request}
-                                    onChange={updateRequest}
-                                    canOverrideDates={canOverrideDates}
-                                    canOverrideAmount={canOverrideAmount}
-                                    allowTransportSource={!isBulk}
-                                    disabled={busy}
-                                    yearBounds={serviceBounds(candidate)}
-                                    validationBounds={academicYearBounds}
-                                    showErrors={showInputErrors}
-                                    flat
-                                  />
-                                </FormSectionCard>
-                              )}
+                              {activeStep === 1 &&
+                                candidate &&
+                                request &&
+                                (() => {
+                                  const fields = (
+                                    <>
+                                      {assignmentFeeSelectionError(candidate, request) && (
+                                        <Alert severity="info" sx={{ mb: 2 }}>
+                                          {admissionContext?.source === 'Admission' &&
+                                          admissionContext.structureId
+                                            ? 'Select at least one fee in Admission, then refresh this assignment.'
+                                            : assignmentFeeSelectionError(candidate, request)}
+                                        </Alert>
+                                      )}
+                                      <AssignmentStudentInputs
+                                        key={student.studentId}
+                                        candidate={studentCandidate ?? candidate}
+                                        request={request}
+                                        savedAssignment={admissionContext?.assignedAssignment}
+                                        onChange={updateRequest}
+                                        canOverrideDates={canOverrideDates}
+                                        allowTransportSource={!isBulk}
+                                        disabled={busy}
+                                        yearBounds={serviceBounds(candidate)}
+                                        validationBounds={academicYearBounds}
+                                        showErrors={showInputErrors}
+                                        flat
+                                        optionalServiceAction={(feeHeadId) => {
+                                          if (!savedServiceAssignment) return null;
+                                          const head = savedServiceAssignment.heads.find(
+                                            (item) =>
+                                              item.feeHeadId === feeHeadId &&
+                                              item.included &&
+                                              !item.isOneTime
+                                          );
+                                          if (!head) return null;
+                                          const status = optionalServiceStatus(
+                                            head,
+                                            savedServiceAssignment.lines.some(
+                                              (line) =>
+                                                line.feeHeadId === feeHeadId &&
+                                                (line.optionalServiceCancellationAmount ?? 0) > 0
+                                            )
+                                          );
+                                          if (!status.label) return null;
+                                          return (
+                                            <>
+                                              <Label
+                                                color={
+                                                  status.stopped || status.label === 'Ended'
+                                                    ? 'default'
+                                                    : 'success'
+                                                }
+                                              >
+                                                {status.label}
+                                              </Label>
+                                              {status.stopped && canRestartOptionalService && (
+                                                <OptionalFeeServiceRestart
+                                                  assignment={savedServiceAssignment}
+                                                  head={head}
+                                                  disabledReason={
+                                                    busy
+                                                      ? 'Another fee assignment operation is in progress.'
+                                                      : hasPendingAssignmentChanges
+                                                        ? 'Save or discard pending assignment changes before enabling this service.'
+                                                        : undefined
+                                                  }
+                                                  onSaved={onOptionalServiceSaved}
+                                                  onBusyChange={setServiceBusy}
+                                                />
+                                              )}
+                                            </>
+                                          );
+                                        }}
+                                      />
+                                    </>
+                                  );
+                                  return editAssignedStructure ? (
+                                    fields
+                                  ) : (
+                                    <FormSectionCard
+                                      title="Fees & Dates"
+                                      icon="mdi:format-list-checks"
+                                    >
+                                      {fields}
+                                    </FormSectionCard>
+                                  );
+                                })()}
                               {outcome?.errorMessage && !studentPreview?.preview && (
                                 <Alert
                                   severity={
@@ -1789,6 +1910,6 @@ function AssignmentEditor({
           );
         }}
       />
-    </Box>
+    </AssignmentStepperFrame>
   );
 }

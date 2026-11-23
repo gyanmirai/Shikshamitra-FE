@@ -6,7 +6,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import HelpTooltip from 'src/components/help-tooltip';
-import { Box, Stack, Button, Drawer, IconButton, Typography } from '@mui/material';
+import { Box, Stack, Drawer, IconButton, Typography } from '@mui/material';
 
 import AcademicAuditDetailsContent from './AcademicAuditDetailsContent';
 
@@ -95,27 +95,6 @@ export const AcademicAuditDetailsDrawer = ({
       {event && <AcademicAuditDetailsContent event={event} />}
     </Scrollbar>
 
-    <Box
-      sx={{
-        p: 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        gap: 1,
-        borderTop: '1px solid',
-        borderColor: 'divider',
-        bgcolor: 'background.neutral',
-      }}
-    >
-      <Button
-        variant="outlined"
-        startIcon={<Iconify icon="mdi:close" />}
-        onClick={onClose}
-        size="small"
-      >
-        Close
-      </Button>
-    </Box>
   </Drawer>
 );
 

@@ -25,6 +25,15 @@ export function policyImpactSnapshotCoverage(
   currentVersionId: string
 ): ImpactPolicyData | undefined {
   const identity = { id, currentVersionId };
+  if (family === 'proration') {
+    const rules = read(policy, 'rules');
+    if (!Array.isArray(rules)) return undefined;
+    const prorationFeeHeadIds = rules.flatMap((rule) => {
+      const feeHeadId = rule && typeof rule === 'object' ? read(rule, 'feeHeadId') : null;
+      return typeof feeHeadId === 'string' ? [feeHeadId] : [];
+    });
+    return { ...identity, prorationFeeHeadIds };
+  }
   if (family === 'refund') {
     const scope = read(policy, 'feeHeadScope');
     const ids = read(policy, 'applicableFeeHeadIds');

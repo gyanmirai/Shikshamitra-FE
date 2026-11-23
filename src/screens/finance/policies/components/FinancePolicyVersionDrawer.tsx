@@ -1,9 +1,7 @@
 'use client';
 
 import { alpha } from '@mui/material/styles';
-import { Label } from 'src/components/label';
-import { useMemo, useCallback } from 'react';
-import { GlobalIcons } from 'src/utils/icons';
+import { useRef, useMemo, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Alert, Paper, Drawer, Button, Typography } from '@mui/material';
@@ -29,6 +27,7 @@ export default function FinancePolicyVersionDrawer({
   onClose,
   policy,
 }: FinancePolicyVersionDrawerProps) {
+  const drawerPaperRef = useRef<HTMLDivElement>(null);
   const {
     versions,
     selectedVersion,
@@ -71,6 +70,24 @@ export default function FinancePolicyVersionDrawer({
 
   if (!policy) return null;
 
+  const handlePageChange = (nextPage: number) => {
+    drawerPaperRef.current?.focus();
+    setPage(nextPage);
+  };
+  const pagination = totalCount > pageSize && (
+    <PolicyHistoryPagination
+      page={page}
+      pageSize={pageSize}
+      totalCount={totalCount}
+      onPageChange={handlePageChange}
+    />
+  );
+  const backToLatest = page > 0 && (
+    <Button size="small" onClick={() => handlePageChange(0)} sx={{ mt: 1 }}>
+      Back to latest versions
+    </Button>
+  );
+
   return (
     <Drawer
       anchor="right"
@@ -84,7 +101,9 @@ export default function FinancePolicyVersionDrawer({
         },
       }}
       PaperProps={{
+        ref: drawerPaperRef,
         role: 'dialog',
+        tabIndex: -1,
         'aria-modal': true,
         'aria-labelledby': 'policy-versions-title',
         sx: {
@@ -112,8 +131,6 @@ export default function FinancePolicyVersionDrawer({
           title="Policy Version History"
           titleId="policy-versions-title"
 
-          badges={<Label color="default">Read Only</Label>}
-
           onClose={onClose}
         />
 
@@ -135,6 +152,7 @@ export default function FinancePolicyVersionDrawer({
             >
               Unable to load version history for this policy.
             </Alert>
+            {backToLatest}
           </Box>
         ) : versions.length === 0 ? (
           <Box
@@ -163,8 +181,9 @@ export default function FinancePolicyVersionDrawer({
                 sx={{ color: 'text.disabled', mb: 1.5 }}
               />
               <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
-                No version history recorded yet.
+                {page > 0 ? 'No versions on this page.' : 'No version history recorded yet.'}
               </Typography>
+              {backToLatest}
             </Paper>
           </Box>
         ) : (
@@ -183,7 +202,7 @@ export default function FinancePolicyVersionDrawer({
             <Box
               sx={{
                 width: { xs: '100%', md: 240 },
-                height: { xs: 208, md: '100%' },
+                height: { xs: pagination ? 248 : 208, md: '100%' },
                 flexShrink: 0,
                 minHeight: 0,
               }}
@@ -194,6 +213,7 @@ export default function FinancePolicyVersionDrawer({
                 selectedVersionId={selectedVersionId}
                 onSelectVersion={handleSelectVersion}
                 isLatestPage={page === 0}
+                pagination={pagination}
               />
             </Box>
 
@@ -213,33 +233,6 @@ export default function FinancePolicyVersionDrawer({
           </Box>
         )}
 
-        {/* Footer */}
-        <Box
-          sx={{
-            px: 2,
-            py: 1.5,
-            bgcolor: 'background.paper',
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            gap: 1,
-            flexWrap: 'wrap',
-            flexShrink: 0,
-          }}
-        >
-          <PolicyHistoryPagination page={page} pageSize={pageSize} totalCount={totalCount}
-            isLoading={isLoading} onPageChange={setPage} />
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={onClose}
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          >
-            Close
-          </Button>
-        </Box>
       </Box>
     </Drawer>
   );

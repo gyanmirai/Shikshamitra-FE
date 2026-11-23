@@ -30,6 +30,11 @@ export function assignmentYearBounds(
 export const serializeServiceDate = (date: Dayjs | null) =>
   date?.isValid() ? `${date.format('YYYY-MM-DD')}T00:00:00Z` : undefined;
 
+export function endOfServiceMonth(start: Dayjs, end: Dayjs) {
+  const monthEnd = start.endOf('month');
+  return monthEnd.isAfter(end, 'day') ? end : monthEnd;
+}
+
 export function servicePeriodErrors(
   period: AssignmentServicePeriod,
   bounds?: AssignmentYearBounds
@@ -62,7 +67,9 @@ export function assignmentServiceDateError(
   bounds?: AssignmentYearBounds
 ): string | undefined {
   return candidate.heads
-    .filter((head) => !head.isOptional || request.selectedOptionalFeeHeadIds.includes(head.feeHeadId))
+    .filter(
+      (head) => !head.isOptional || request.selectedOptionalFeeHeadIds.includes(head.feeHeadId)
+    )
     .map((head) => {
       const period = request.servicePeriods.find((item) => item.feeHeadId === head.feeHeadId);
       if (!period) return undefined;

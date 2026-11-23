@@ -7,7 +7,7 @@ import { render, screen, within, cleanup, fireEvent } from '@testing-library/rea
 
 import ClassAccordionPanel from './ClassAccordionPanel';
 
-const state = vi.hoisted(() => ({ records: [] as any[], loading: false }));
+const state = vi.hoisted(() => ({ records: [] as any[], loading: false, revision: null as any }));
 vi.mock('../hooks/useClassWiseFeeStructureHooks', () => ({
   useFetchStandardFeeStructures: () => ({
     data: state.records,
@@ -30,12 +30,18 @@ vi.mock('./FeeStructureWorkspaceCard', () => ({
     onBusyChange,
     onNameChange,
     onSaved,
+    onRevisionReady,
   }: any) {
     const [name, setName] = React.useState(initialData.name || '');
     const fieldId = React.useId();
     const [step, setStep] = React.useState(0);
     return (
       <div>
+        {initialData.status === 0 && (
+          <button type="button" onClick={() => onRevisionReady?.(state.revision)}>
+            Open revision response
+          </button>
+        )}
         <label htmlFor={fieldId}>
           Draft name
           <input
@@ -94,6 +100,152 @@ function setup(canAdd = true) {
   return render(ui(canAdd));
 }
 
+it('opens the returned revision before a list refresh and keeps one editor after refetch', () => {
+  const view = setup();
+  state.revision = {
+    ...state.records[1],
+    id: 'revision',
+    status: 1,
+    revisionNumber: 2,
+    previousRevisionId: 'activity',
+    concurrencyStamp: 'revision-stamp',
+  };
+  fireEvent.click(screen.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Search structures' }), {
+    target: { value: 'no match' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Open revision response' }));
+  const navigation = within(screen.getByRole('list', { name: 'Fee structures' }));
+  expect(screen.getByRole('textbox', { name: 'Search structures' })).toHaveValue('');
+  expect(navigation.getAllByRole('button')).toHaveLength(3);
+  expect(navigation.getAllByRole('button', { name: 'Activity fees' })).toHaveLength(2);
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Revised fees in progress' },
+  });
+  state.records = [...state.records, state.revision];
+  view.rerender(ui());
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue(
+    'Revised fees in progress'
+  );
+  expect(navigation.getAllByRole('button')).toHaveLength(3);
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  fireEvent.click(navigation.getByRole('button', { name: 'Activity fees' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Activity fees');
+  fireEvent.click(screen.getByRole('button', { name: 'Open revision response' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue(
+    'Revised fees in progress'
+  );
+  expect(navigation.getAllByRole('button')).toHaveLength(3);
+});
+
+it('opens an existing revision without replacing its visited editor or saved input', () => {
+  const view = setup();
+  state.revision = {
+    ...state.records[1],
+    id: 'revision',
+    name: 'Existing revision',
+    status: 1,
+    revisionNumber: 3,
+    previousRevisionId: 'activity',
+    concurrencyStamp: 'revision-stamp',
+  };
+  state.records = [...state.records, state.revision];
+  view.rerender(ui());
+  fireEvent.click(screen.getByRole('button', { name: 'Existing revision' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Saved revision changes' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Open revision response' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Saved revision changes');
+  expect(
+    within(screen.getByRole('list', { name: 'Fee structures' })).getAllByRole('button')
+  ).toHaveLength(3);
+});
+
+it('uses the returned full revision when the class list only has its summary', () => {
+  const view = setup();
+  state.revision = {
+    ...state.records[1],
+    id: 'revision',
+    name: 'Existing revision',
+    status: 1,
+    revisionNumber: 3,
+    previousRevisionId: 'activity',
+    concurrencyStamp: 'revision-stamp',
+  };
+  const { feeHeads, ...summary } = state.revision;
+  state.records = [...state.records, summary];
+  view.rerender(ui());
+  fireEvent.click(screen.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Open revision response' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Existing revision');
+  expect(
+    within(screen.getByRole('list', { name: 'Fee structures' })).getAllByRole('button')
+  ).toHaveLength(3);
+});
+
+it('reopens the renamed saved revision after requesting it again from its published parent', () => {
+  const view = setup();
+  state.revision = {
+    ...state.records[1],
+    id: 'revision',
+    status: 1,
+    revisionNumber: 3,
+    previousRevisionId: 'activity',
+    concurrencyStamp: 'revision-stamp',
+  };
+  const navigation = within(screen.getByRole('list', { name: 'Fee structures' }));
+  fireEvent.click(navigation.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Open revision response' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Renamed saved revision' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  state.revision = {
+    ...state.revision,
+    name: 'Renamed saved revision',
+    concurrencyStamp: 'saved-Renamed saved revision',
+  };
+  state.records = [...state.records, state.revision];
+  view.rerender(ui());
+  fireEvent.click(navigation.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Open revision response' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Renamed saved revision');
+  expect(navigation.getByRole('button', { name: 'Renamed saved revision' })).toHaveAttribute(
+    'aria-current',
+    'true'
+  );
+  expect(navigation.getAllByRole('button')).toHaveLength(3);
+});
+
+it('selects another new revision while retaining the earlier renamed and saved draft', () => {
+  setup();
+  state.revision = {
+    ...state.records[1],
+    id: 'revision-one',
+    status: 1,
+    revisionNumber: 3,
+    previousRevisionId: 'activity',
+    concurrencyStamp: 'revision-one-stamp',
+  };
+  const navigation = within(screen.getByRole('list', { name: 'Fee structures' }));
+  fireEvent.click(navigation.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Open revision response' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'First saved revision' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  fireEvent.click(navigation.getByRole('button', { name: 'Activity fees' }));
+  state.revision = { ...state.revision, id: 'revision-two', revisionNumber: 4 };
+  fireEvent.click(screen.getByRole('button', { name: 'Open revision response' }));
+  expect(navigation.getAllByRole('button')).toHaveLength(4);
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Activity fees');
+  fireEvent.click(navigation.getByRole('button', { name: 'First saved revision' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('First saved revision');
+});
+
 it('shows the sidebar skeleton while the first class request is pending', () => {
   state.records = [];
   state.loading = true;
@@ -102,6 +254,103 @@ it('shows the sidebar skeleton while the first class request is pending', () => 
     within(screen.getByRole('complementary')).getByLabelText('Loading fee structures')
   ).toBeVisible();
   expect(screen.queryByText('No fee structures')).toBeNull();
+});
+
+it('asks before switching a dirty structure and keeps all input when continuing to edit', () => {
+  setup();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Unsaved fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Activity fees' }));
+  const confirmation = screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' });
+  expect(within(confirmation).getByText(/Unsaved fees/)).toBeVisible();
+  fireEvent.click(within(confirmation).getByRole('button', { name: 'Keep editing' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Unsaved fees');
+  expect(screen.getByRole('button', { name: 'Unsaved fees' })).toHaveAttribute(
+    'aria-current',
+    'true'
+  );
+});
+
+it('discards only unsaved edits before switching and restores the last saved values on return', () => {
+  setup();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Saved fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Discard these edits' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Activity fees');
+  expect(screen.queryByRole('button', { name: 'Discard these edits' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Saved fees' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Saved fees');
+  fireEvent.click(screen.getByRole('button', { name: 'Activity fees' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+it('does not prompt for clean, saved or currently selected structures', () => {
+  setup();
+  fireEvent.click(screen.getByRole('button', { name: 'Activity fees' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Activity fees updated' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Activity fees updated' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  fireEvent.click(screen.getByRole('button', { name: 'General fees' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+it('removes an unsaved new structure only after confirming discard', () => {
+  setup();
+  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Never saved' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'General fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(screen.queryByRole('button', { name: 'Never saved' })).toBeNull();
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('General fees');
+});
+
+it('also guards Add Structure so a dirty editor cannot be bypassed', () => {
+  setup();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Unsaved fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
+  expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('');
+  expect(screen.getByRole('button', { name: 'General fees' })).toBeVisible();
+});
+
+it('restores the saved editor when discarding to open Copy Structure', () => {
+  setup();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Unsaved fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Copy Structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('General fees');
+  expect(screen.queryByRole('button', { name: 'Unsaved fees' })).toBeNull();
+});
+
+it('dismisses only the switch confirmation on Escape and preserves edits', () => {
+  setup();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Unsaved fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.keyDown(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' }), {
+    key: 'Escape',
+  });
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Unsaved fees');
 });
 
 it('shows status for an unopened structure and numbers the filtered list', () => {
@@ -114,7 +363,7 @@ it('shows status for an unopened structure and numbers the filtered list', () =>
   expect(within(screen.getByRole('list', { name: 'Fee structures' })).getByText('1')).toBeVisible();
 });
 
-it('keeps edits and updates the structure list name when switching between structures', () => {
+it('keeps edits and updates the list name when cancelling a structure switch', () => {
   setup();
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'Annual school fees' },
@@ -124,8 +373,7 @@ it('keeps edits and updates the structure list name when switching between struc
     'true'
   );
   fireEvent.click(screen.getByRole('button', { name: /Activity fees/ }));
-  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Activity fees');
-  fireEvent.click(screen.getByRole('button', { name: /Annual school fees/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
   expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Annual school fees');
   expect(screen.queryByRole('combobox', { name: 'Fee structure' })).toBeNull();
 });
@@ -154,6 +402,7 @@ it('preserves changed structure navigation and save state without an extra dot',
   });
   expect(navigation.getByRole('button', { name: 'Updated general fees' })).toBeVisible();
   expect(navigation.queryByText('Unsaved changes')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
   fireEvent.click(navigation.getByRole('button', { name: 'Activity fees' }));
   expect(navigation.queryByRole('img', { name: 'Unsaved changes' })).toBeNull();
   fireEvent.click(navigation.getByRole('button', { name: /Updated general fees/ }));
@@ -171,12 +420,14 @@ it('filters structures without losing edits and clears the filter when adding a 
   const navigation = within(screen.getByRole('list', { name: 'Fee structures' }));
   expect(navigation.queryByRole('button', { name: /Updated general fees/ })).toBeNull();
   fireEvent.click(navigation.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
   fireEvent.change(search, { target: { value: '' } });
   fireEvent.click(navigation.getByRole('button', { name: /Updated general fees/ }));
   expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Updated general fees');
   fireEvent.change(search, { target: { value: 'no matching structure' } });
   expect(screen.getByText('No structures match your search.')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(search).toHaveValue('');
   const newStructure = navigation.getByRole('button', { name: /New fee structure/ });
   expect(newStructure).toHaveAttribute('aria-current', 'true');
@@ -186,12 +437,13 @@ it('filters structures without losing edits and clears the filter when adding a 
   expect(within(newStructure).queryByRole('img', { name: 'Unsaved changes' })).toBeNull();
 });
 
-it('selects a new local draft and preserves its name after visiting a saved structure', () => {
+it('selects a new local draft and preserves its saved name after visiting another structure', () => {
   setup();
   fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'Bus fees' },
   });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
   fireEvent.click(screen.getByRole('button', { name: /General fees/ }));
   fireEvent.click(screen.getByRole('button', { name: /Bus fees/ }));
   expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Bus fees');
@@ -259,6 +511,7 @@ it('mounts only activated editors for fifty saved structures and preserves visit
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'Draft preserved' },
   });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
   fireEvent.click(screen.getByRole('button', { name: 'Fees 49' }));
   expect(screen.getAllByLabelText('Draft name')).toHaveLength(2);
   fireEvent.click(screen.getByRole('button', { name: 'Draft preserved' }));

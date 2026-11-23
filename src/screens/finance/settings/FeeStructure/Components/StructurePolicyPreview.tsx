@@ -2,6 +2,10 @@ import type { StructureSettings } from 'src/redux/finance/feeStructureWorkspace'
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
+  useGetProrationPolicyByIdQuery,
+  useGetProrationPolicyVersionsQuery,
+} from 'src/redux/finance/prorationPolicy';
+import {
   useGetRefundPolicyByIdQuery,
   useGetRefundPolicyVersionsQuery,
 } from 'src/redux/finance/refundPolicy';
@@ -43,7 +47,14 @@ export default function StructurePolicyPreview({
     options: { skip: option.family !== 'refund' || !settings.permissions.refundRead },
     popupConfig: { error: false },
   });
-  const query = option.family === 'collection' ? collection : refund;
+  const proration = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetProrationPolicyByIdQuery,
+    params: option.id,
+    options: { skip: option.family !== 'proration' || !settings.permissions.prorationRead },
+    popupConfig: { error: false },
+  });
+  const query = option.family === 'proration' ? proration : option.family === 'collection' ? collection : refund;
   const detail = query.currentData;
   const verified = detail?.currentVersionId === option.versionId && detail?.id === option.id;
   const versionChanged = !!detail && !verified;
@@ -67,7 +78,18 @@ export default function StructurePolicyPreview({
     },
     popupConfig: { error: false },
   });
-  const versionQuery = option.family === 'collection' ? collectionVersion : refundVersion;
+  const prorationVersion = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetProrationPolicyVersionsQuery,
+    params: args,
+    options: {
+      skip: !versionChanged || option.family !== 'proration' || !settings.permissions.prorationRead,
+    },
+    popupConfig: { error: false },
+  });
+  const versionQuery = option.family === 'proration'
+    ? prorationVersion
+    : option.family === 'collection' ? collectionVersion : refundVersion;
   const exactRecord = versionQuery.currentData?.items.find(
     (item: { id: string }) => item.id === option.versionId
   );
@@ -80,6 +102,7 @@ export default function StructurePolicyPreview({
     <FinancePolicyDetailsDrawer
       open
       aboveDialog
+      showProrationSimulation={false}
       onClose={() => {
         if (versionChanged) onRefreshOptions();
         onClose();
@@ -94,8 +117,8 @@ export default function StructurePolicyPreview({
         status: 'Active',
         version: option.versionNumber,
         isDefault: !!option.isDefault,
-        effectiveFrom: verified ? (detail.effectiveFrom ?? null) : null,
-        effectiveTo: verified ? (detail.effectiveTo ?? null) : null,
+        effectiveFrom: verified && 'effectiveFrom' in detail ? (detail.effectiveFrom ?? null) : null,
+        effectiveTo: verified && 'effectiveTo' in detail ? (detail.effectiveTo ?? null) : null,
         updatedAt: verified ? (detail.updatedAt ?? '') : '',
         updatedBy: verified ? (detail.updatedBy ?? '') : '',
         creationTime: verified ? detail.creationTime : undefined,

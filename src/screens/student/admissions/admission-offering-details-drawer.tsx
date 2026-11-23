@@ -290,21 +290,6 @@ export function AdmissionOfferingDetailsDrawer({
       </Scrollbar>
 
       <Divider />
-      <Stack
-        direction="row"
-        justifyContent="flex-end"
-        spacing={1}
-        sx={{ px: { xs: 2, sm: 3 }, py: 1.5, flexShrink: 0 }}
-      >
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<Iconify icon="mdi:close" />}
-          onClick={onClose}
-        >
-          Close
-        </Button>
-      </Stack>
     </Drawer>
   );
 }

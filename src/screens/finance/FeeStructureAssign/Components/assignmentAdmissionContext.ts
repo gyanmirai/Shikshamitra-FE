@@ -5,25 +5,40 @@ import type {
   AssignmentServicePeriod,
 } from 'src/redux/finance/studentFeeAssignment';
 
+import dayjs from 'dayjs';
+
+import { endOfServiceMonth, serializeServiceDate } from './assignmentServiceDates';
+
 export function admissionServicePeriods(
   candidate: AssignmentCandidate,
   context?: AssignmentContext,
   optionalHeadIds: string[] = context?.selectedOptionalFeeHeadIds ?? []
 ): AssignmentServicePeriod[] {
-  if (!context?.joiningDate || !context.chargeStartDate || !context.chargeEndDate) return [];
+  if (
+    !context?.applicationId ||
+    !context.joiningDate ||
+    !context.chargeStartDate ||
+    !context.chargeEndDate
+  )
+    return [];
+  const { applicationId } = context;
+  const actualJoining = dayjs(context.joiningDate.slice(0, 10));
+  const chargeStart = dayjs(context.chargeStartDate.slice(0, 10));
+  const joining = actualJoining.isAfter(chargeStart, 'day') ? actualJoining : chargeStart;
+  const boardStart = candidate.boardStartDate && dayjs(candidate.boardStartDate.slice(0, 10));
+  const start = boardStart && boardStart.isAfter(joining, 'day') ? boardStart : joining;
+  const end = dayjs((candidate.boardEndDate ?? context.chargeEndDate).slice(0, 10));
+  if (!start.isValid() || !end.isValid() || end.isBefore(start, 'day')) return [];
   return candidate.heads
-    .filter(
-      (head) =>
-        !head.isOneTime &&
-        (!head.isOptional || optionalHeadIds.includes(head.feeHeadId)) &&
-        context.admissionFeeHeadIds?.includes(head.feeHeadId)
-    )
+    .filter((head) => !head.isOptional || optionalHeadIds.includes(head.feeHeadId))
     .map((head) => ({
       feeHeadId: head.feeHeadId,
       source: 'Registration',
-      sourceReferenceId: context.applicationId ?? undefined,
-      startDate: context.chargeStartDate!,
-      endDate: context.chargeEndDate!,
+      sourceReferenceId: applicationId,
+      startDate: serializeServiceDate(start),
+      endDate: serializeServiceDate(
+        head.isOneTime || head.usesSingleServiceMonth ? endOfServiceMonth(start, end) : end
+      ),
     }));
 }
 
@@ -39,11 +54,12 @@ export function admissionAssignmentRequest(
     studentId,
     academicYearId,
     standardFeeStructureId: candidate.id,
-    ...(candidate.boardStartDate && candidate.boardEndDate && {
-      chargePeriodSource: 'BoardAcademicYear',
-      chargeStartDate: candidate.boardStartDate,
-      chargeEndDate: candidate.boardEndDate,
-    }),
+    ...(candidate.boardStartDate &&
+      candidate.boardEndDate && {
+        chargePeriodSource: 'BoardAcademicYear',
+        chargeStartDate: candidate.boardStartDate,
+        chargeEndDate: candidate.boardEndDate,
+      }),
     selectedOptionalFeeHeadIds,
     servicePeriods: admissionServicePeriods(candidate, context, selectedOptionalFeeHeadIds),
     feeHeadDetails: [],
@@ -60,7 +76,7 @@ export function mergeAssignmentInputs(
   previousSource?: AssignmentRequest
 ): AssignmentRequest {
   const confirmed = context?.status !== 'Assigned' && context?.structureId === candidate.id;
-  const {selectedOptionalFeeHeadIds} = next;
+  const { selectedOptionalFeeHeadIds } = next;
   const includedHeads = new Set(
     candidate.heads
       .filter((head) => !head.isOptional || selectedOptionalFeeHeadIds.includes(head.feeHeadId))
@@ -89,6 +105,9 @@ export function mergeAssignmentInputs(
       )
     );
   if (current.editAssignmentId) {
+    const optionalHeads = new Set(
+      candidate.heads.filter((head) => head.isOptional).map((head) => head.feeHeadId)
+    );
     const previousPeriods = new Map(
       previousSource?.servicePeriods.map((period) => [period.feeHeadId, period])
     );
@@ -98,6 +117,11 @@ export function mergeAssignmentInputs(
     );
     servicePeriods.splice(0);
     includedHeads.forEach((feeHeadId) => {
+      if (!optionalHeads.has(feeHeadId)) {
+        const saved = currentPeriods.get(feeHeadId);
+        if (saved) servicePeriods.push(saved);
+        return;
+      }
       const proposed = nextPeriods.get(feeHeadId);
       const explicitlyChanged =
         previousSource &&
@@ -121,16 +145,7 @@ export function mergeAssignmentInputs(
   (next.variableFeeHeads ?? [])
     .filter(included)
     .forEach((head) => variableAmounts.set(head.feeHeadId, head));
-  const fixedAmounts = !current.editAssignmentId || !previousSource || next.studentId === current.studentId
-    ? next.feeHeadDetails
-    : candidate.heads.flatMap(({ feeHeadId }) => {
-        const proposed = next.feeHeadDetails.find((item) => item.feeHeadId === feeHeadId);
-        const previous = previousSource.feeHeadDetails.find((item) => item.feeHeadId === feeHeadId);
-        const kept = previous?.amount === proposed?.amount
-          ? current.feeHeadDetails.find((item) => item.feeHeadId === feeHeadId)
-          : proposed;
-        return kept && includedHeads.has(feeHeadId) ? [kept] : [];
-      });
+  const fixedAmounts = current.editAssignmentId ? current.feeHeadDetails : next.feeHeadDetails;
   return {
     ...next,
     studentId: current.studentId,

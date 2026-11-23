@@ -48,22 +48,31 @@ const versions: PolicyVersion[] = [
 
 describe('PolicyAuditTimeline', () => {
   it('groups events by date and keeps the audit diff available after collapsing a day', async () => {
-    render(
-      <PolicyAuditTimeline versions={versions} valueContext={{}} policyName="Merit Scholarship" />
-    );
+    render(<PolicyAuditTimeline versions={versions} valueContext={{}} />);
 
     const dateButton = screen.getByRole('button', { name: /05-10-2026 2 events/i });
     expect(screen.getByRole('button', { name: /30-09-2026 1 event/i })).toBeInTheDocument();
     expect(screen.getByText('10:57 AM')).toBeInTheDocument();
     expect(screen.getByText('Policy updated')).toBeInTheDocument();
+    const reasonOnly = screen.getByRole('button', {
+      name: /Policy activated.*View event details/i,
+    });
+    fireEvent.click(reasonOnly);
     expect(screen.getByText('No changes recorded')).toBeInTheDocument();
+    expect(screen.queryByText('v3')).not.toBeInTheDocument();
+    expect(screen.queryByText('Merit Scholarship')).not.toBeInTheDocument();
 
     fireEvent.click(dateButton);
     expect(dateButton).toHaveAttribute('aria-expanded', 'false');
     await waitFor(() => expect(screen.queryByText('Policy updated')).not.toBeInTheDocument());
 
     fireEvent.click(dateButton);
-    fireEvent.click(screen.getByText('Policy updated'));
+    const changes = screen.getByRole('button', {
+      name: /Policy updated.*Admin DDVS.*10:57 AM.*View recorded changes/i,
+    });
+    expect(changes).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(changes);
+    expect(changes).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('Recorded changes for updated')).toBeInTheDocument();
   });
 });

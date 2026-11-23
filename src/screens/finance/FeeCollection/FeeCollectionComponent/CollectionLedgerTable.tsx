@@ -98,9 +98,10 @@ export default function CollectionLedgerTable({
   getAllocatedAmount,
   selectedFeeCandidates = selectedItems,
   selectedChargeCandidates = charges,
+  allFeeGroups = data.monthWise,
 }: FeeLedgerListProps & {
   layout: CollectionLayout;
-  onPeriodFocus?: (period: string) => void;
+  allFeeGroups?: FeeLedgerListProps['data']['monthWise'];
   groupByInstallment?: boolean;
   oneTimeFeeHeadIds?: ReadonlySet<string>;
   getAllocatedAmount?: (item: SelectedItem | IFeeCharge) => number;
@@ -112,6 +113,13 @@ export default function CollectionLedgerTable({
   const allowWaivers = useContext(FeeCollectionWaiverContext);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const fullSchedule = allFeeGroups.flatMap((group) => group.items);
+  const unsettledHeads = new Set(
+    fullSchedule.filter((item) => item.status !== FeeCollectionStatusType.Paid).map((item) => item.feeHeadId)
+  );
+  const settledHeads = new Set(
+    fullSchedule.filter((item) => !unsettledHeads.has(item.feeHeadId)).map((item) => item.feeHeadId)
+  );
   const rows: LedgerRow[] = data.monthWise.flatMap((group) =>
     group.items.map((item) => {
       const period = toPeriod(group.month, group.year ?? year);
@@ -216,7 +224,10 @@ export default function CollectionLedgerTable({
     return (
       <Checkbox
         size="small"
-        checked={candidates.length > 0 && count === eligible.length}
+        checked={
+          count === eligible.length &&
+          candidates.some((row) => row.status !== FeeCollectionStatusType.Cancelled)
+        }
         indeterminate={count > 0 && count < eligible.length}
         disabled={!eligible.length}
         inputProps={{ 'aria-label': label }}
@@ -267,7 +278,10 @@ export default function CollectionLedgerTable({
       render: (_value, row) => (
         <Checkbox
           size="small"
-          checked={isSelected(row as LedgerRow) || !collectible(row as LedgerRow)}
+          checked={
+            row.status !== FeeCollectionStatusType.Cancelled &&
+            (isSelected(row as LedgerRow) || !collectible(row as LedgerRow))
+          }
           disabled={!collectible(row as LedgerRow)}
           inputProps={{ 'aria-label': `Select ${row.feeHeadName}, ${row.periodLabel}` }}
           onClick={(event) => event.stopPropagation()}
@@ -282,7 +296,11 @@ export default function CollectionLedgerTable({
       isFilter: false,
       render: (_value, row) => (
         <Box>
-          <Typography variant="body2" fontWeight={600}>
+          <Typography
+            variant="body2"
+            fontWeight={600}
+            sx={{ textDecoration: !row.charge && settledHeads.has(row.feeHeadId) ? 'line-through' : undefined }}
+          >
             {row.feeHeadName}
           </Typography>
           {row.charge && row.charge.sourceType !== 'LateFee' && !row.charge.isSystemGenerated && (
@@ -393,7 +411,7 @@ export default function CollectionLedgerTable({
           const outstanding = group.items
             .filter(collectible)
             .reduce((sum, row) => sum + row.outstanding, 0);
-          const expanded = !(collapsedGroups[group.id] ?? (index !== 0 && !selected.length));
+          const expanded = !(collapsedGroups[group.id] ?? index !== 0);
           const groupColumns: IColumn[] = columns
             .filter(
               (column) =>
@@ -501,7 +519,10 @@ export default function CollectionLedgerTable({
                     <Typography
                       component="h3"
                       variant="subtitle1"
-                      sx={{ overflowWrap: 'anywhere' }}
+                      sx={{
+                        overflowWrap: 'anywhere',
+                        textDecoration: groupedByFeeHead && settledHeads.has(group.id) ? 'line-through' : undefined,
+                      }}
                     >
                       {group.title}
                     </Typography>
@@ -756,13 +777,6 @@ export default function CollectionLedgerTable({
                       secondary={detail.withdrawalProrationExplanation ?? undefined}
                     />
                   )}
-                  {detail.charge?.explanation && (
-                    <DetailField
-                      label="Charge explanation"
-                      value={detail.charge.explanation}
-                      fullWidth
-                    />
-                  )}
                   {detail.charge?.waivedAmount != null && (
                     <DetailField
                       label="Charge waived"
@@ -771,6 +785,36 @@ export default function CollectionLedgerTable({
                   )}
                 </DetailGrid>
               </DetailSection>
+              {!!detail.charge?.waiverHistory?.length && (
+                <DetailSection title="Waiver history" icon={GlobalIcons.documentIcon}>
+                  <CustomizableTable
+                    tableId="collection-applied-waivers"
+                    tableTitle="Waiver history"
+                    variant="embedded"
+                    columns={[
+                      {
+                        id: 'appliedAt',
+                        label: 'Applied on',
+                        render: (value: string) => dayjs(value).format('D MMM YYYY'),
+                      },
+                      {
+                        id: 'amount',
+                        label: 'Waived amount',
+                        align: 'right',
+                        render: (value: number) => formatNumber(value, 'INR'),
+                      },
+                      { id: 'reason', label: 'Reason', cellSx: { overflowWrap: 'anywhere' } },
+                    ]}
+                    data={detail.charge.waiverHistory}
+                    showToolbar={false}
+                    isPagination={false}
+                    isSearch={false}
+                    isFilter={false}
+                    isShowedDense={false}
+                    tableContainerProps={{ sx: { height: 'auto' } }}
+                  />
+                </DetailSection>
+              )}
               {allowWaivers &&
                 (detail.charge
                   ? detail.charge.canWaive !== false &&

@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { renderWithProviders } from 'src/test/test-utils';
-import { screen, fireEvent } from '@testing-library/react';
+import { act, screen, fireEvent } from '@testing-library/react';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
@@ -147,6 +147,10 @@ describe('PaymentTermDetailsDrawer version history', () => {
       screen.getByRole('heading', { name: 'Payment Term Version History' })
     ).toBeInTheDocument();
     expect(screen.getByRole('table', { name: 'Changes in version 2' })).toBeInTheDocument();
+    expect(screen.queryByText('Read Only')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^\d+ fields?$/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Back to details' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Saved version details' }));
     expect(screen.getByRole('button', { name: 'View version 2' })).toHaveAttribute(
       'aria-pressed',
@@ -195,12 +199,13 @@ describe('PaymentTermDetailsDrawer version history', () => {
   });
 
   it('uses section cards and opens history without the removed tab strip', () => {
+    const onClose = vi.fn();
     renderDrawer(
       <PaymentTermDetailsDrawer
         open
         paymentTermId="term-id"
         initialTab="details"
-        onClose={vi.fn()}
+        onClose={onClose}
       />
     );
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
@@ -212,7 +217,9 @@ describe('PaymentTermDetailsDrawer version history', () => {
     expect(
       screen.getByRole('button', { name: 'Installment Schedule information' })
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Version history' }));
+    const openHistory = screen.getByRole('button', { name: 'Version history' });
+    act(() => openHistory.focus());
+    fireEvent.click(openHistory);
     expect(
       screen.getByRole('heading', { name: 'Payment Term Version History' })
     ).toBeInTheDocument();
@@ -221,8 +228,10 @@ describe('PaymentTermDetailsDrawer version history', () => {
       'aria-pressed',
       'true'
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Back to details' }));
-    expect(screen.getByRole('heading', { name: 'General Information' })).toBeInTheDocument();
+    const history = screen.getByRole('dialog', { name: 'Payment Term Version History' });
+    expect(history).toHaveFocus();
+    fireEvent.keyDown(history, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('searches the policy-style version sidebar and clears a filtered-empty result', () => {
@@ -259,7 +268,7 @@ describe('PaymentTermDetailsDrawer version history', () => {
       screen.getByRole('status', { name: 'Loading payment term details' })
     ).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'General Information' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close Quarterly Payment Term' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

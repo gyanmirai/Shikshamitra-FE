@@ -275,25 +275,6 @@ export default function CashDetails({
           )}
         </Stack>
       </Scrollbar>
-      <Stack
-        direction="row"
-        spacing={1}
-        justifyContent="flex-end"
-        useFlexGap
-        flexWrap="wrap"
-        sx={{ px: { xs: 2, sm: 3 }, py: 1.75, borderTop: 1, borderColor: 'divider' }}
-      >
-        <Button
-          ref={closeButton}
-          variant="outlined"
-          size="small"
-          disabled={Boolean(deposit)}
-          startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
-          onClick={onClose}
-        >
-          Close
-        </Button>
-      </Stack>
       {deposit && data && (
         <CashCommandDialog
           key={deposit.id}

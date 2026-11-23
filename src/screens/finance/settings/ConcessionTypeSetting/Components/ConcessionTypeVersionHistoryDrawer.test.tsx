@@ -60,6 +60,8 @@ describe('Concession Type version history', () => {
   it('selects the newest version and shows recorded Before/After values', () => {
     renderDrawer(<ConcessionTypeVersionHistoryDrawer {...props} />);
     expect(screen.getByRole('dialog', { name: 'Concession Type Version History' })).toBeVisible();
+    expect(screen.queryByText('Read Only')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'View version 2' })).toHaveAttribute(
       'aria-pressed',
       'true'
@@ -75,7 +77,7 @@ describe('Concession Type version history', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Back to details' }));
     expect(props.onBackToDetails).toHaveBeenCalledOnce();
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close Concession Type Version History' }));
     expect(props.onClose).toHaveBeenCalledOnce();
   });
 

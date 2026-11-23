@@ -51,10 +51,15 @@ export const isLedgerItemCollectible = (item: {
   due: number;
   lateFeeAmount?: number;
   status?: number | string;
-}) =>
-  normalizeLedgerStatus(item.status, 0, item.due + (item.lateFeeAmount ?? 0)) !==
-    FeeCollectionStatusType.Paid &&
-  (item.due > 0 || (item.lateFeeAmount ?? 0) > 0);
+}) => {
+  const balance = item.due + (item.lateFeeAmount ?? 0);
+  const status = normalizeLedgerStatus(item.status, 0, balance);
+  return (
+    status !== FeeCollectionStatusType.Paid &&
+    status !== FeeCollectionStatusType.Cancelled &&
+    (item.due > 0 || (item.lateFeeAmount ?? 0) > 0)
+  );
+};
 
 export const createSelectionOwnership = (): SelectionOwnership => ({
   manual: { items: new Set(), charges: new Set() },

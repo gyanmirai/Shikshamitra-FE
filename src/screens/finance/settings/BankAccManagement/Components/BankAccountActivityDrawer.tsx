@@ -698,29 +698,6 @@ function BankActivityContent({
           </>
         )}
       </Box>
-      <Stack
-        direction="row"
-        justifyContent="flex-end"
-        spacing={1}
-        sx={{
-          px: { xs: 2, sm: 3 },
-          py: 1.75,
-          borderTop: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          flexShrink: 0,
-        }}
-      >
-        <Button
-          size="small"
-          color="inherit"
-          variant="outlined"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
-        >
-          Close
-        </Button>
-      </Stack>
       {selected && (
         <BankActivityMovementDialog
           row={selected}

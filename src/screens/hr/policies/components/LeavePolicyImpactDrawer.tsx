@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { HrNotice, HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
-import { Box, Chip, Stack, Button, Drawer, Divider, Typography } from '@mui/material';
+import { Box, Chip, Stack, Drawer, Divider, Typography } from '@mui/material';
 
 import { DrawerHeader } from './HRPolicySharedUI';
 
@@ -92,22 +92,6 @@ export function LeavePolicyImpactDrawer({
             </Stack>
           ) : null}
         </Box>
-
-        {review ? (
-          <>
-            <Divider />
-            <Stack
-              direction="row"
-              justifyContent="flex-end"
-              spacing={1.5}
-              sx={{ px: 2.5, py: 2, bgcolor: 'background.paper', flexShrink: 0 }}
-            >
-              <Button onClick={onClose} disabled={archiving} size="small" variant="outlined">
-                Close
-              </Button>
-            </Stack>
-          </>
-        ) : null}
       </Box>
     </Drawer>
   );

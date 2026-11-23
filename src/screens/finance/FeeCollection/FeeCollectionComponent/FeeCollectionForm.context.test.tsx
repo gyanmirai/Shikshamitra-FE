@@ -201,11 +201,18 @@ vi.mock('src/components/preview-document/pdf-preview', () => ({
   default: ({ title, url }: any) => <div role="document" aria-label={title} data-url={url} />,
 }));
 vi.mock('./preview/FeeCollectionPreviewDialog', () => ({
-  default: ({ open, onConfirm, academicYear }: any) =>
+  default: ({ open, onConfirm, academicYear, completion }: any) =>
     open ? (
-      <button type="button" onClick={onConfirm}>
-        Review {academicYear}
-      </button>
+      <div role="dialog" aria-label="Review Payment">
+        {completion ? (
+          <>
+            {completion.content}
+            <button type="button" onClick={completion.onDone}>Done</button>
+          </>
+        ) : (
+          <button type="button" onClick={onConfirm}>Review {academicYear}</button>
+        )}
+      </div>
     ) : null,
 }));
 
@@ -283,7 +290,7 @@ const adapter = (overrides: Partial<FeeCollectionAdapter> = {}): FeeCollectionAd
 });
 const beginCollection = async (yearName = '2026-2027') => {
   fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-  await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
+  await screen.findByRole('button', { name: /^Payments \(/ });
   fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '500' } });
   await waitFor(() => expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 500'));
   fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
@@ -332,6 +339,7 @@ describe('embedded Finance collection context', () => {
     const context = adapter({ data });
     render(<FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />);
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
+    fireEvent.click(await screen.findByRole('button', { name: /^Payments \(/ }));
     await screen.findByRole('row', { name: 'Form fee, June 2026' });
     expect(screen.queryByRole('button', { name: /Reorder Form fee/ })).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
@@ -381,6 +389,7 @@ describe('embedded Finance collection context', () => {
       await waitFor(() =>
         expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 250.25')
       );
+      fireEvent.click(screen.getByRole('button', { name: /^Payments \(/ }));
       const rows = within(
         screen.getByRole('table', { name: 'Selected collection items' })
       ).getAllByRole('row');
@@ -474,19 +483,15 @@ describe('embedded Finance collection context', () => {
     expect(screen.getByRole('button', { name: 'Clear All' })).toHaveClass('MuiButton-outlined');
     expect(screen.queryByText(/\d+ items? selected/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-    await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
-    const feeItems = screen.getByRole('button', { name: /Payments \(1\)/ });
-    fireEvent.click(feeItems);
+    const feeItems = await screen.findByRole('button', { name: /Payments \(1\)/ });
     expect(feeItems).toHaveAttribute('aria-expanded', 'false');
-    await waitFor(() =>
-      expect(screen.queryByRole('row', { name: 'Form fee, Jun 2026' })).not.toBeInTheDocument()
-    );
     expect(screen.getByLabelText('Amount to collect *')).toBeVisible();
     fireEvent.click(feeItems);
     expect(feeItems).toHaveAttribute('aria-expanded', 'true');
     await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
     expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 250');
+    expect(feeItems).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
   });
 
@@ -631,7 +636,7 @@ describe('embedded Finance collection context', () => {
       />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-    await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
+    await screen.findByRole('button', { name: /^Payments \(/ });
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     const confirm = await screen.findByRole('button', { name: 'Review 2026-2027' });
     fireEvent.click(confirm);
@@ -699,7 +704,7 @@ describe('embedded Finance collection context', () => {
       />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-    await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
+    await screen.findByRole('button', { name: /^Payments \(/ });
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
@@ -759,7 +764,7 @@ describe('embedded Finance collection context', () => {
       <FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-    await screen.findByRole('row', { name: 'Tuition, Jun 2026' });
+    await screen.findByRole('button', { name: /^Payments \(/ });
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '600' } });
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
@@ -905,7 +910,7 @@ describe('embedded Finance collection context', () => {
       combined: true,
     },
   ])(
-    'groups late fees into the charge receipt for $grouping collection ($principal principal, $ordinary ordinary)',
+    'announces generated $grouping receipts and closes Collections checkout ($principal principal, $ordinary ordinary)',
     async ({ grouping, principal, ordinary, fee, charge, combined }) => {
       const collectOutput = {
         ...output,
@@ -931,45 +936,40 @@ describe('embedded Finance collection context', () => {
         totalAmount: principal + 60600 + ordinary,
       };
       mocks.defaultCollect.mockReturnValue({ unwrap: () => Promise.resolve(collectOutput) });
-      mocks.defaultDownload.mockReturnValue({
-        unwrap: () => Promise.resolve(new Blob(['receipt'], { type: 'application/pdf' })),
-      });
-      render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
+      const onCancel = vi.fn();
+      render(
+        <FeeCollectComponentForm student={student} academicYear={academicYear} onCancel={onCancel} />
+      );
       await beginCollection();
-      const receipts = await screen.findByRole('dialog', { name: 'Payment Receipts' });
-      if (fee !== undefined && charge !== undefined) {
-        await within(receipts).findByRole('button', { name: 'Download fee' });
-        await within(receipts).findByRole('button', { name: 'Download charge' });
-      } else {
-        await within(receipts).findByRole('button', { name: 'Download' });
-      }
-      expect(within(receipts).queryByRole('document')).not.toBeInTheDocument();
-      expect(mocks.defaultDownload).toHaveBeenCalledTimes(combined || fee === undefined ? 1 : 2);
+      await waitFor(() => expect(onCancel).toHaveBeenCalledExactlyOnceWith(null, true));
+      expect(screen.queryByRole('dialog', { name: 'Review Payment' })).not.toBeInTheDocument();
+      expect(shikshaMitraToast.success).toHaveBeenCalledWith({
+        message: combined || fee === undefined ? 'Receipt generated.' : 'Receipts generated.',
+      });
+      expect(mocks.defaultDownload).not.toHaveBeenCalled();
     }
   );
 
-  it('keeps native Student collection and charge receipt routing intact', async () => {
+  it('closes native collection with a payment message when the response has no receipt', async () => {
     mocks.defaultCollect.mockReturnValue({
       unwrap: () =>
         Promise.resolve({
           ...output,
           studentId: 'student-one',
           feeReceiptId: undefined,
-          chargeReceiptId: 'charge-receipt',
-          chargeReceiptNumber: 'CH-1',
+          chargeReceiptId: undefined,
         }),
     });
-    mocks.defaultDownload.mockReturnValue({
-      unwrap: () => Promise.resolve(new Blob(['receipt'], { type: 'application/pdf' })),
-    });
-    render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
-    await beginCollection();
-    await waitFor(() =>
-      expect(mocks.defaultDownload).toHaveBeenCalledWith({
-        receiptId: 'charge-receipt',
-        receiptType: 'charge',
-      })
+    const onCancel = vi.fn();
+    render(
+      <FeeCollectComponentForm student={student} academicYear={academicYear} onCancel={onCancel} />
     );
+    await beginCollection();
+    await waitFor(() => expect(onCancel).toHaveBeenCalledExactlyOnceWith(null, true));
+    expect(shikshaMitraToast.success).toHaveBeenCalledWith({
+      message: expect.stringMatching(/^Payment collected and fees settled/),
+    });
+    expect(mocks.defaultDownload).not.toHaveBeenCalled();
     expect(mocks.defaultCollect).toHaveBeenCalledWith(
       expect.objectContaining({
         studentId: 'student-one',
@@ -979,7 +979,7 @@ describe('embedded Finance collection context', () => {
     );
   });
 
-  it('keeps a collected charge successful when its PDF fails and retries only the receipt', async () => {
+  it('retries only the receipt when an embedded collection PDF fails', async () => {
     const chargeOutput = {
       ...output,
       studentId: 'student-one',
@@ -988,21 +988,25 @@ describe('embedded Finance collection context', () => {
       chargeReceiptNumber: 'CH-1',
       paidCharges: [{ chargeId: 'charge-one', chargeName: 'Charge', amountPaid: 500 }],
     };
-    mocks.defaultCollect.mockReturnValue({ unwrap: () => Promise.resolve(chargeOutput) });
     let rejectPdf!: (error: unknown) => void;
     const pendingPdf = new Promise<Blob>((_resolve, reject) => {
       rejectPdf = reject;
     });
-    mocks.defaultDownload.mockReturnValueOnce({ unwrap: () => pendingPdf }).mockReturnValue({
-      unwrap: () => Promise.resolve(new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
+    const downloadReceiptPdf = vi.fn()
+      .mockReturnValueOnce(pendingPdf)
+      .mockResolvedValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' }));
+    const context = adapter({
+      collect: vi.fn().mockResolvedValue(chargeOutput),
+      canViewReceipts: true,
+      downloadReceiptPdf,
     });
-    render(<FeeCollectComponentForm student={student} academicYear={academicYear} />);
+    render(<FeeCollectComponentForm collectionAdapter={context} academicYear={academicYear} />);
     await beginCollection();
     await screen.findByRole('status', { name: 'Loading charge receipt' });
     expect(screen.queryByText(/receipt preview is unavailable/)).not.toBeInTheDocument();
     expect(screen.getByLabelText('Amount to collect *')).toHaveValue('');
     expect(screen.queryByText(/exceeds the payable amount/)).not.toBeInTheDocument();
-    await waitFor(() => expect(mocks.refetch).toHaveBeenCalled());
+    await waitFor(() => expect(context.refetch).toHaveBeenCalled());
     await act(async () => {
       rejectPdf({ status: 404 });
     });
@@ -1014,18 +1018,9 @@ describe('embedded Finance collection context', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry receipt' }));
     await screen.findByRole('button', { name: 'Download' });
     expect(screen.getByRole('button', { name: 'Download' })).toBeEnabled();
-    expect(mocks.defaultCollect).toHaveBeenCalledTimes(1);
-    expect(mocks.defaultDownload).toHaveBeenCalledTimes(2);
-    expect(mocks.defaultDownload).toHaveBeenLastCalledWith({
-      receiptId: 'charge-receipt',
-      receiptType: 'charge',
-    });
-    expect(mocks.queries).toHaveBeenCalledWith(
-      expect.objectContaining({
-        currentQueryAndMutation: mocks.downloadMutation,
-        popupConfig: expect.objectContaining({ error: false }),
-      })
-    );
+    expect(context.collect).toHaveBeenCalledTimes(1);
+    expect(downloadReceiptPdf).toHaveBeenCalledTimes(2);
+    expect(downloadReceiptPdf).toHaveBeenLastCalledWith('charge-receipt', 'charge');
   });
 
   it('keeps both PDF URLs valid as separate fee and charge receipts finish loading', async () => {
@@ -1143,7 +1138,7 @@ describe('embedded Finance collection context', () => {
       <FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-    await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
+    await screen.findByRole('button', { name: /^Payments \(/ });
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
     view.rerender(
       <FeeCollectComponentForm

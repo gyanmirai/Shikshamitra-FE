@@ -13,7 +13,6 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useGetAdmissionApplicant360Query } from 'src/redux/student/admissions/admission-applicants-api';
 import {
-  Box,
   List,
   Stack,
   Drawer,
@@ -231,19 +230,6 @@ export default function AdmissionApplicant360Screen() {
           )}
         </Stack>
       </Scrollbar>
-      <Box
-        component="footer"
-        sx={{ p: { xs: 1.5, sm: 2 }, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
-      >
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={close}
-          startIcon={<Iconify icon="mdi:close" />}
-        >
-          Close
-        </Button>
-      </Box>
     </Drawer>
   );
 }

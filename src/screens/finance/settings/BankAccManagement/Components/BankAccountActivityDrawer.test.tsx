@@ -301,13 +301,13 @@ describe('credit and debit bank activity drawer', () => {
     expect(screen.getByRole('button', { name: 'Add expense' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Deposit cash' })).not.toBeInTheDocument();
   });
-  it('uses one close path for the header, footer, Escape and backdrop', () => {
+  it('uses one close path for the header, Escape and backdrop', () => {
     const close = vi.fn();
     show({ onClose: close });
     fireEvent.click(screen.getByRole('button', { name: 'Close School Bank' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
     fixture.shell.onClose({}, 'escapeKeyDown');
     fixture.shell.onClose({}, 'backdropClick');
-    expect(close).toHaveBeenCalledTimes(4);
+    expect(close).toHaveBeenCalledTimes(3);
   });
 });

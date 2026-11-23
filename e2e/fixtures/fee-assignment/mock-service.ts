@@ -5,6 +5,7 @@ import type {
   AssignmentPreview,
   AssignmentContext,
   AssignmentCandidate,
+  OptionalServiceRestartResult,
 } from 'src/redux/finance/studentFeeAssignment';
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
@@ -65,6 +66,13 @@ const stamps = new Map<string, number>();
 const unpaidEdit = new URLSearchParams(window.location.search).has('unpaidEdit');
 const paidEdit = new URLSearchParams(window.location.search).has('paidEdit');
 const optionalService = new URLSearchParams(window.location.search).has('optionalService');
+const optionalServiceRestart = new URLSearchParams(window.location.search).has(
+  'optionalServiceRestart'
+);
+const restartAlreadyBilled = new URLSearchParams(window.location.search).has(
+  'restartAlreadyBilled'
+);
+const activateTransport = new URLSearchParams(window.location.search).has('activateTransport');
 const bulkSidebar = new URLSearchParams(window.location.search).has('bulkSidebar');
 const installmentStress = new URLSearchParams(window.location.search).has('installmentStress');
 
@@ -150,6 +158,20 @@ if (new URLSearchParams(window.location.search).has('variableFees')) {
     isVariable: true,
     configuredAmount: null,
     effectiveAmount: null,
+  });
+}
+if (new URLSearchParams(window.location.search).has('financeFeeDefaults')) {
+  candidate.boardStartDate = '2026-04-01';
+  candidate.boardEndDate = '2027-02-15';
+  candidate.heads[1].supportsMonthlyRate = true;
+  candidate.heads.push({
+    ...candidate.heads[0],
+    feeHeadId: 'registration',
+    feeHeadName: 'Registration Fee',
+    usesSingleServiceMonth: true,
+    configuredAmount: 100,
+    effectiveAmount: 100,
+    amountBasis: 'OneTime',
   });
 }
 const saved = new Map<string, AssignmentCommit>();
@@ -352,7 +374,7 @@ if (unpaidEdit) {
       academicYearId: 'year',
       standardFeeStructureId: candidate.id,
       selectedOptionalFeeHeadIds:
-        optionalService && studentId === 'student-one' ? ['transport'] : [],
+        optionalService && !activateTransport && studentId === 'student-one' ? ['transport'] : [],
       servicePeriods: [],
       feeHeadDetails: [],
       variableFeeHeads: candidate.heads
@@ -360,6 +382,16 @@ if (unpaidEdit) {
         .map((head) => ({ feeHeadId: head.feeHeadId, amount: 5000 })),
     })
   );
+}
+if (optionalServiceRestart) {
+  const assignment = saved.get('student-one')?.assignment;
+  const transport = assignment?.heads.find((head) => head.feeHeadId === 'transport');
+  const cancelled = assignment?.lines.filter((line) => line.feeHeadId === 'transport').at(-1);
+  if (transport && cancelled) {
+    transport.optionalServiceEndDate = restartAlreadyBilled ? '2026-12-31' : '2026-11-15';
+    cancelled.optionalServiceCancellationAmount = cancelled.outstandingAmount;
+    cancelled.outstandingAmount = 0;
+  }
 }
 const realApi = new URLSearchParams(window.location.search).has('realApi');
 const realBaseQuery = fetchBaseQuery({ baseUrl: '/api' });
@@ -403,6 +435,138 @@ export const api = createApi({
       };
     }
     if (args.url.endsWith('/policy-options')) return { data: policyOptions };
+    if (args.url.endsWith('/history')) {
+      const entries = [
+        {
+          id: 'history-transport',
+          action: 'Optional service added',
+          occurredAt: '2026-11-23T10:30:00+05:30',
+          actor: 'Finance admin',
+          changes: [
+            { field: 'Transport · assigned amount', feeHead: 'Transport', detail: 'assigned amount', before: null, after: 750, format: 'money' },
+            { field: 'Transport · December · installment amount', feeHead: 'Transport', installment: 'December',
+              detail: 'installment amount', before: 400, after: 750, format: 'money' },
+          ],
+        },
+        {
+          id: 'history-initial',
+          action: 'Fee structure assigned',
+          occurredAt: '2026-11-20T09:00:00+05:30',
+          actor: 'Finance admin',
+          changes: [{ field: 'Fee structure', before: null, after: 'Class 5 fees 2026–27 · v2' }],
+        },
+      ];
+      return {
+        data: {
+          items: entries,
+          totalCount: entries.length,
+          currency: 'INR',
+          hasIncompleteEvidence: false,
+        },
+      };
+    }
+    if (optionalServiceRestart && args.url.includes('/optional-service-restart')) {
+      if (args.url.endsWith('/context')) {
+        return {
+          data: {
+            earliestStartDate: restartAlreadyBilled ? '2026-12-31' : '2026-12-01',
+            latestEndDate: restartAlreadyBilled ? '2027-01-31' : '2026-12-31',
+            monthlyRate: 750,
+            defaultProrationPolicyVersionId: 'proration-v1',
+            defaultPaymentTermVersionId: 'monthly-v1',
+            prorationPolicies: [
+              { versionId: 'proration-v1', name: 'Daily service proration', version: 1 },
+            ],
+            paymentTerms: [{ versionId: 'monthly-v1', name: 'Monthly', version: 1 }],
+            prepaidCredit: 300,
+          },
+        };
+      }
+      const { startDate, endDate, monthlyRate, previewToken } = args.body;
+      const result: OptionalServiceRestartResult = {
+        startDate,
+        endDate,
+        monthlyRate,
+        scheduledTotal: restartAlreadyBilled ? 0 : monthlyRate,
+        prorationReduction: 0,
+        assignedTotal: restartAlreadyBilled ? 0 : monthlyRate,
+        prepaidCredit: 300,
+        existingInstallments: restartAlreadyBilled
+          ? [
+              {
+                dueFeeId: 'existing-january-transport',
+                installmentLabel: 'January 2027',
+                coverageStartDate: '2027-01-01',
+                coverageEndDate: '2027-01-31',
+                billedAmount: 750,
+                outstandingAmount: 100,
+              },
+            ]
+          : [],
+        lines: restartAlreadyBilled
+          ? []
+          : [
+              {
+                feeHeadId: 'transport',
+                feeHeadName: 'Transport',
+                installmentLabel: 'December 2026',
+                sequence: 3,
+                dueDate: '2026-12-10',
+                coverageStartDate: startDate,
+                coverageEndDate: '2026-12-31',
+                eligibleDays: 31,
+                optionalServicePeriodId: 'restart-period',
+                ruleType: 'Daily',
+                factor: 1,
+                allocationPercentage: 100,
+                scheduledAmount: monthlyRate,
+                proratedAmount: monthlyRate,
+                reductionAmount: 0,
+                paidAmount: 0,
+                outstandingAmount: monthlyRate,
+              },
+            ],
+      };
+      if (args.url.endsWith('/preview'))
+        return { data: { ...result, previewToken: 'restart-preview' } };
+      const savedAssignment = saved.get('student-one');
+      if (!savedAssignment || previewToken !== 'restart-preview') {
+        return { error: { status: 409, data: { code: 'Finance:Assignment:StalePreview' } } };
+      }
+      const { assignment } = savedAssignment;
+      saved.set('student-one', {
+        ...savedAssignment,
+        assignment: {
+          ...assignment,
+          scheduledTotal: assignment.scheduledTotal + result.scheduledTotal,
+          proratedTotal: assignment.proratedTotal + result.assignedTotal,
+          lines: [...assignment.lines, ...result.lines],
+          heads: assignment.heads.map((head) =>
+            head.feeHeadId !== 'transport'
+              ? head
+              : {
+                  ...head,
+                  included: true,
+                  optionalServiceEndDate: undefined,
+                  originalOptionalServiceEndDate: head.optionalServiceEndDate,
+                  obligation: head.obligation + result.assignedTotal,
+                  optionalServicePeriods: [
+                    {
+                      id: 'restart-period',
+                      startDate,
+                      endDate,
+                      monthlyRate,
+                      assignedAmount: result.assignedTotal,
+                      prorationPolicyName: 'Daily service proration',
+                      prorationPolicyVersion: 1,
+                    },
+                  ],
+                }
+          ),
+        },
+      });
+      return { data: result };
+    }
     if (optionalService && /\/optional-service-stop(?:\/preview)?$/.test(args.url)) {
       const assignment = saved.get('student-one')?.assignment;
       const line = assignment?.lines

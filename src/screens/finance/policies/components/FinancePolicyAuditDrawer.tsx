@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Alert, Paper, Stack, Drawer, Button, Typography } from '@mui/material';
@@ -27,11 +26,12 @@ export default function FinancePolicyAuditDrawer({
   onClose,
   policy,
 }: FinancePolicyAuditDrawerProps) {
-  const { versions, isLoading, isError, refetch, page, pageSize, totalCount, setPage } = useFinancePolicyVersion({
-    open,
-    policyId: policy?.id,
-    policyType: policy?.policyType,
-  });
+  const { versions, isLoading, isError, refetch, page, pageSize, totalCount, setPage } =
+    useFinancePolicyVersion({
+      open,
+      policyId: policy?.id,
+      policyType: policy?.policyType,
+    });
 
   const valueContext = useMemo(() => {
     const labelsById: Record<string, string> = {};
@@ -84,7 +84,6 @@ export default function FinancePolicyAuditDrawer({
           title="Policy Audit Trail"
           titleId="policy-audit-title"
           descriptionDisplay="tooltip"
-          badges={<Label color="default">Read Only</Label>}
           onClose={onClose}
         />
 
@@ -182,39 +181,31 @@ export default function FinancePolicyAuditDrawer({
                 key={`${policy.id}:${page}`}
                 versions={versions}
                 valueContext={valueContext}
-                policyName={policy.policyName}
               />
             )}
           </Box>
         </Scrollbar>
 
-        {/* Footer */}
-        <Box
-          sx={{
-            px: 2,
-            py: 1.5,
-            bgcolor: 'background.paper',
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            gap: 1,
-            flexWrap: 'wrap',
-            flexShrink: 0,
-          }}
-        >
-          <PolicyHistoryPagination page={page} pageSize={pageSize} totalCount={totalCount}
-            isLoading={isLoading} onPageChange={setPage} />
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={onClose}
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        {totalCount > pageSize && (
+          <Box
+            sx={{
+              px: 2,
+              py: 1,
+              bgcolor: 'background.paper',
+              borderTop: 1,
+              borderColor: 'divider',
+              flexShrink: 0,
+            }}
           >
-            Close
-          </Button>
-        </Box>
+            <PolicyHistoryPagination
+              page={page}
+              pageSize={pageSize}
+              totalCount={totalCount}
+              isLoading={isLoading}
+              onPageChange={setPage}
+            />
+          </Box>
+        )}
       </Box>
     </Drawer>
   );

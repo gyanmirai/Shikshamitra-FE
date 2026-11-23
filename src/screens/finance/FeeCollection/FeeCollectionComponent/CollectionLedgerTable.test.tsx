@@ -112,6 +112,33 @@ const ledgerProps = (): FeeLedgerListProps => ({
 });
 
 describe('collection ledger schedule display', () => {
+  it('shows a cancelled installment as unselected history', () => {
+    const props = ledgerProps();
+    props.chargesData = [];
+    const [installment] = props.data.monthWise[0].items;
+    props.data.monthWise[0].items = [
+      {
+        ...installment,
+        total: 0,
+        paid: 0,
+        due: 0,
+        lateFeeAmount: 0,
+        status: FeeCollectionStatusType.Cancelled,
+      },
+    ];
+    render(
+      <LedgerTestProviders>
+        <CollectionLedgerTable {...props} layout="ledger" activeTab="by-fee-head" />
+      </LedgerTestProviders>
+    );
+    const badge = screen
+      .getAllByText('Cancelled', { exact: true })
+      .find((element) => element.closest('tbody'))!;
+    const selection = within(badge.closest('tr')!).getByRole('checkbox');
+    expect(selection).toBeDisabled();
+    expect(selection).not.toBeChecked();
+  });
+
   it.each(['by-fee-head', 'by-month'] as const)(
     'strikes through all paid fee text when grouped %s',
     (activeTab) => {
@@ -673,11 +700,15 @@ describe('collection ledger waiver capabilities', () => {
     }
   );
 
-  it('keeps charge explanations and waiver amounts in charge details', () => {
+  it('shows applied waiver history and hides the charge calculation explanation', () => {
     const props = ledgerProps();
     Object.assign(props.chargesData![0], {
       explanation: 'Per-day late fee; 5 chargeable days.',
       waivedAmount: 20,
+      waiverHistory: [
+        { id: 'one', appliedAt: '2026-06-11', amount: 8, reason: 'First applied waiver' },
+        { id: 'two', appliedAt: '2026-06-12', amount: 12, reason: 'Second applied waiver' },
+      ],
       sourceType: 'LateFee',
       isSystemGenerated: true,
       dueDate: '2026-06-01',
@@ -704,7 +735,10 @@ describe('collection ledger waiver capabilities', () => {
     expect(
       screen.getByText('5 overdue days considered; grace and exception days are excluded.')
     ).toBeVisible();
-    expect(screen.getByText('Per-day late fee; 5 chargeable days.')).toBeVisible();
+    expect(screen.queryByText('Per-day late fee; 5 chargeable days.')).not.toBeInTheDocument();
+    const history = within(screen.getByRole('table', { name: 'Waiver history table' }));
+    expect(history.getByText('First applied waiver')).toBeVisible();
+    expect(history.getByText('Second applied waiver')).toBeVisible();
     expect(screen.getByText('Charge waived')).toBeVisible();
     expect(screen.queryByText('Refund')).not.toBeInTheDocument();
     expect(screen.queryByText('Proration')).not.toBeInTheDocument();

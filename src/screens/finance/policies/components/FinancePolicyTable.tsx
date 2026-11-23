@@ -18,6 +18,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { DefaultIndicator } from 'src/screens/finance/components/DefaultIndicator';
 import {
   Box,
   Chip,
@@ -30,7 +31,6 @@ import {
 import {
   useGetRefundPoliciesQuery,
   useGetRefundPolicyByIdQuery,
-  useCloneRefundPolicyMutation,
   useArchiveRefundPolicyMutation,
   useUnarchiveRefundPolicyMutation,
 } from 'src/redux/finance/refundPolicy';
@@ -65,6 +65,7 @@ import {
 
 import { policyTableFilterArgs } from './policyTableQuery';
 import FinancePolicyAuditDrawer from './FinancePolicyAuditDrawer';
+import RefundPolicyCloneDialog from './RefundPolicyCloneDialog';
 import { usePolicyTableState } from '../hooks/usePolicyTableState';
 import FinancePolicyDetailsDrawer from './FinancePolicyDetailsDrawer';
 import FinancePolicyVersionDrawer from './FinancePolicyVersionDrawer';
@@ -150,6 +151,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
   const versionDialog = useBoolean();
 
   const [selected, setSelected] = React.useState<IFinancePolicyRow | null>(null);
+  const [refundPolicyToClone, setRefundPolicyToClone] = React.useState<IFinancePolicyRow | null>(null);
   const [policyFilters, setPolicyFilters] = React.useState<IParams['filters']>([]);
   const [policySorts, setPolicySorts] = React.useState<IParams['sorts']>([]);
 
@@ -355,7 +357,6 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
     useCloneConcessionPolicyMutation();
   const [archiveRefundPolicy] = useArchiveRefundPolicyMutation();
   const [unarchiveRefundPolicy] = useUnarchiveRefundPolicyMutation();
-  const [cloneRefundPolicy, { isLoading: isRefundCloning }] = useCloneRefundPolicyMutation();
   const [archiveProrationPolicy] = useArchiveProrationPolicyMutation();
   const [unarchiveProrationPolicy] = useUnarchiveProrationPolicyMutation();
   const [cloneProrationPolicy, { isLoading: isProrationCloning }] =
@@ -387,7 +388,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
   } = useGetRefundPolicyByIdQuery(selected?.id || '', {
     skip: !selected?.id || !detailsDialog.value || !isRefundKind,
   });
-  const { data: prorationPolicyDetails, isLoading: isProrationDetailsLoading } =
+  const { currentData: prorationPolicyDetails, isFetching: isProrationDetailsFetching } =
     useGetProrationPolicyByIdQuery(selected?.id || '', {
       skip: !selected?.id || !detailsDialog.value || !isProrationKind,
     });
@@ -408,7 +409,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
         ? isRefundDetailsLoading ||
         Boolean(selected && detailsDialog.value && !refundPolicyDetails && !isRefundDetailsError)
         : isProrationKind
-          ? isProrationDetailsLoading
+          ? isProrationDetailsFetching && !prorationPolicyDetails
           : isGenericDetailsLoading;
 
   const [deletePolicy, { isLoading: isDeleting }] = useQueryAndMutation({
@@ -453,13 +454,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
               {value}
             </Typography>
             {(row as IFinancePolicyRow).isDefault && (
-              <Chip
-                label="Default"
-                size="small"
-                color="primary"
-                variant={isRefundKind ? 'soft' : 'outlined'}
-                sx={{ height: 20, flexShrink: 0, ...(isRefundKind && { fontSize: 11 }) }}
-              />
+              <DefaultIndicator label="Default policy" />
             )}
           </Box>
         ),
@@ -833,9 +828,12 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
                         isCloning ||
                         isCollectionCloning ||
                         isConcessionCloning ||
-                        isRefundCloning ||
                         isProrationCloning,
                       onClick: async () => {
+                        if (isRefundKind) {
+                          setRefundPolicyToClone(policy);
+                          return;
+                        }
                         try {
                           if (isCollectionKind) {
                             await cloneCollectionPolicy({
@@ -846,13 +844,6 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
                             }).unwrap();
                           } else if (isConcessionKind) {
                             await cloneConcessionPolicy({
-                              id: policy.id,
-                              body: {
-                                targetAcademicYearId: academicYearId || policy.academicYearId,
-                              },
-                            }).unwrap();
-                          } else if (isRefundKind) {
-                            await cloneRefundPolicy({
                               id: policy.id,
                               body: {
                                 targetAcademicYearId: academicYearId || policy.academicYearId,
@@ -1010,13 +1001,11 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
       cloneCollectionPolicy,
       archiveRefundPolicy,
       unarchiveRefundPolicy,
-      cloneRefundPolicy,
       archiveProrationPolicy,
       unarchiveProrationPolicy,
       cloneProrationPolicy,
       isCollectionCloning,
       isConcessionCloning,
-      isRefundCloning,
       isProrationCloning,
       canEditPolicy,
       canClonePolicy,
@@ -1191,6 +1180,13 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
           )
         }
       />
+
+      {refundPolicyToClone && (
+        <RefundPolicyCloneDialog
+          policy={refundPolicyToClone}
+          onClose={() => setRefundPolicyToClone(null)}
+        />
+      )}
 
       {/* Details Dialog */}
       <FinancePolicyDetailsDrawer

@@ -5,7 +5,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Stack, Button, Typography, IconButton } from '@mui/material';
+import { Box, Stack, Typography, IconButton } from '@mui/material';
 import { notificationRecordId } from 'src/redux/academic-notifications/delivery-adapters';
 
 import { StatusBadge } from './LessonDiaryDetailFields';
@@ -117,32 +117,27 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
         </Stack>
       </Scrollbar>
 
-      {/* Drawer Footer Actions */}
-      <Box
-        sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          flexWrap: 'wrap',
-          gap: 1,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-        }}
-      >
-        {diaryId && (
-          <TeacherDiaryNotificationActions key={diaryId} diaryId={diaryId} teacherName={plan.teacherName} />
-        )}
-        <Button
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:close" />}
-          onClick={onClose}
-          size="small"
+      {diaryId && (
+        <Box
+          sx={{
+            p: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            flexWrap: 'wrap',
+            gap: 1,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+          }}
         >
-          Close
-        </Button>
-      </Box>
+          <TeacherDiaryNotificationActions
+            key={diaryId}
+            diaryId={diaryId}
+            teacherName={plan.teacherName}
+          />
+        </Box>
+      )}
     </Drawer>
   );
 };

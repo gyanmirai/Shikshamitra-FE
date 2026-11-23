@@ -47,6 +47,22 @@ export const api = createApi({
   tagTypes: [...Object.values(financeModuleType), ...Object.values(financePolicyType)],
   baseQuery: async (input: any) => {
     const args = typeof input === 'string' ? { url: input } : input;
+    if (args.url.endsWith('/simulate') && args.method === 'POST') {
+      const policy = policies.get(args.url.split('/').at(-2));
+      if (policy) {
+        const { scheduledAmount } = args.body;
+        return {
+          data: {
+            scheduledAmount,
+            proratedAmount: scheduledAmount / 2,
+            reductionAmount: scheduledAmount / 2,
+            factor: 0.5,
+            policyVersion: policy.version,
+            explanation: 'Sample result for the half-month withdrawal rule.',
+          },
+        };
+      }
+    }
     if (args.url.endsWith('/clone') && args.method === 'POST') {
       const source = policies.get(args.url.split('/').at(-2));
       if (source && cloneScenario === 'blocked')

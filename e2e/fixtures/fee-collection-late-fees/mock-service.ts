@@ -106,10 +106,16 @@ export function resetFixture(scenario?: 'statuses' | 'selection' | 'settled' | '
       ...charges[0], chargeId: 'waived-manual-charge', sourceId: 'waived-manual-charge',
       sourceType: 'Charge', name: 'Fully Waived Manual Charge', isSystemGenerated: false,
       amount: 5000, paidAmount: 0, waivedAmount: 5000, pendingAmount: 0, canWaive: false, status: 6,
+      waiverHistory: [{ id: 'manual-waiver', appliedAt: '2026-10-01T12:00:00+05:30', amount: 5000, reason: 'Approved charge waiver' }],
     };
     const partiallyWaived: ChargeDetail = {
       ...charges[0], name: 'Partially Waived Late Fee - Jun 2026',
       amount: 1000, paidAmount: 300, waivedAmount: 200, pendingAmount: 500, canWaive: true, status: 4,
+      explanation: 'Synthetic charge calculation',
+      waiverHistory: [
+        { id: 'late-waiver-2', appliedAt: '2026-10-02T12:00:00+05:30', amount: 125, reason: 'Second partial waiver' },
+        { id: 'late-waiver-1', appliedAt: '2026-10-01T12:00:00+05:30', amount: 75, reason: 'First partial waiver' },
+      ],
     };
     charges = scenario === 'waiver-full' ? [fullyWaived]
       : scenario === 'waiver-partial' ? [partiallyWaived] : [fullyWaived, partiallyWaived];
@@ -342,7 +348,13 @@ export const fixtureBaseQuery = async (args: string | FetchArgs) => {
         charge.pendingAmount = money(charge.pendingAmount - waivedAmount);
         charge.status = charge.pendingAmount === 0 ? 6 : charge.status;
         charge.canWaive = charge.pendingAmount > 0;
-        return { data: { id: 'fixture-waiver', ...body, studentId: student.studentId, academicYearId: 'year-2026', waivedAmount, remainingAmount: charge.pendingAmount, creationTime: '2026-10-01T12:00:00+05:30' } };
+        const creationTime = '2026-10-01T12:00:00+05:30';
+        const id = `fixture-waiver-${(charge.waiverHistory?.length ?? 0) + 1}`;
+        charge.waiverHistory = [
+          { id, appliedAt: creationTime, amount: waivedAmount, reason: body.reason },
+          ...(charge.waiverHistory ?? []),
+        ];
+        return { data: { id, ...body, studentId: student.studentId, academicYearId: 'year-2026', waivedAmount, remainingAmount: charge.pendingAmount, creationTime } };
       }
       if (url === '/fee-collections') {
         return { data: { totalCount: 1, items: [{

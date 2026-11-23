@@ -129,6 +129,15 @@ export const criticalIconCollections: IconifyJSON[] = [
     "width": 24,
     "height": 24,
     "icons": {
+      "alert-outline": {
+        "body": "<path fill=\"currentColor\" d=\"M12 2L1 21h22M12 6l7.53 13H4.47M11 10v4h2v-4m-2 6v2h2v-2\"/>"
+      },
+      "archive": {
+        "body": "<path fill=\"currentColor\" d=\"M3 3h18v4H3zm1 5h16v13H4zm5.5 3a.5.5 0 0 0-.5.5V13h6v-1.5a.5.5 0 0 0-.5-.5z\"/>"
+      },
+      "star": {
+        "body": "<path fill=\"currentColor\" d=\"M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2L9.19 8.62L2 9.24l5.45 4.73L5.82 21z\"/>"
+      },
       "bank-outline": {
         "body": "<path fill=\"currentColor\" d=\"M6.5 10h-2v7h2zm6 0h-2v7h2zm8.5 9H2v2h19zm-2.5-9h-2v7h2zm-7-6.74L16.71 6H6.29zm0-2.26L2 6v2h19V6z\"/>"
       },

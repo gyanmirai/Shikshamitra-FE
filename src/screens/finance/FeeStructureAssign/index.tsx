@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AssignmentDrawer from './Components/AssignmentDrawer';
+import AssignmentHistoryDrawer from './Components/AssignmentHistoryDrawer';
 import FeeStructureAssignTable from './Components/FeeStructureAssignTable';
 
 import type { IFeeStructureData } from './Components/type';
@@ -19,6 +20,7 @@ export default function FeeStructureAssign() {
 
   const [students, setStudents] = useState<IFeeStructureData[]>([]);
   const [editAssignedPolicies, setEditAssignedPolicies] = useState(false);
+  const [history, setHistory] = useState<{ student: IFeeStructureData; yearId: string }>();
   const openAssignment = (selected: IFeeStructureData[], edit = false) => {
     setEditAssignedPolicies(edit);
     setStudents(selected);
@@ -47,6 +49,9 @@ export default function FeeStructureAssign() {
       <FeeStructureAssignTable
         onAssignStructure={(student) => openAssignment([student])}
         onEdit={(student) => openAssignment([student], true)}
+        onHistory={(student) => {
+          if (currentYear?.id) setHistory({ student, yearId: currentYear.id });
+        }}
         onBulkAssign={(selected) =>
           openAssignment(
             selected,
@@ -61,6 +66,15 @@ export default function FeeStructureAssign() {
         editAssignedPolicies={editAssignedPolicies}
         onClose={close}
       />
+      {history && history.yearId === currentYear?.id && (
+        <AssignmentHistoryDrawer
+          key={`${history.yearId}:${history.student.studentId}`}
+          student={history.student}
+          academicYearId={history.yearId}
+          academicYearName={currentYear.name}
+          onClose={() => setHistory(undefined)}
+        />
+      )}
     </Box>
   );
 }

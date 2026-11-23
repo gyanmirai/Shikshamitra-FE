@@ -61,7 +61,7 @@ The bank activity drawer is temporarily disabled at the user's request: the open
 
 When enabled, open a bank-name link or its row in Bank Accounts. The read-only right drawer
 contains exactly Credit and Debit tabs, with masked identity, academic-year
-context, header/section help and a fixed Close footer. Each tab uses the shared
+context, header and section help, and a header close button. Each tab uses the shared
 server table with column filters, search, sorting, columns, pagination, density,
 fullscreen and complete Excel/PDF export. Credit includes incoming activity and
 cash credits; pending amounts and cash in transit are separate columns. Debit
@@ -260,7 +260,7 @@ allocations, including zero remaining concession. Pending INR values come from t
 raw percentage inputs are never displayed as currency. Pending proposals have separate subtotals
 and retain the saved requested total. Rejected/cancelled requests explicitly show no applied benefit.
 Document status uses upload metadata even when preview URLs are redacted by permissions.
-The drawer uses the Student Information reference typography, combines the GR number with the student name, includes roll number, and keeps two fields per row in Student Information and Concession Details (stacked on mobile). Each fee head uses the shared accordion with a visible subtotal. Remarks and activity are omitted. The drawer includes section help, one body scroll and a fixed Close footer; changing student or
+The drawer uses the Student Information reference typography, combines the GR number with the student name, includes roll number, and keeps two fields per row in Student Information and Concession Details (stacked on mobile). Each fee head uses the shared accordion with a visible subtotal. Remarks and activity are omitted. The drawer includes section help, one body scroll, and a header close button. Changing student or
 academic year closes it. Linked refunds appear when present. Review/submit, Edit, Approve, Reject, Reverse, Delete and refund creation
 retain their existing permission, state, reason and confirmation workflows.
 
@@ -342,9 +342,9 @@ Charge authoring keeps academic scope and selected students in the form. Search 
 Income Category, Expense Category and Bank Accounts use `AccountCategoryVersionDrawer`, matching
 Policy Version History: a searchable newest-first version sidebar, selected-version
 author/date/action and a Field/Before/After table. Category tags remain hidden;
-codes and other audit values retain their category formatting. The responsive
-drawer keeps its header and Close footer fixed while the version list and changes
-scroll independently. Changes uses the shared rounded accordion and history cards have
+codes and other audit values retain their category formatting. The version list and changes
+scroll independently. Pagination appears inside the Versions sidebar when more than one page is available.
+Close the drawer with the header button or Escape. Changes uses the shared rounded accordion and history cards have
 8 px gaps. Bank account numbers remain masked in the comparison. All three drawers identify missing
 legacy audit details and distinguish loading, no history and request errors, with
 Retry on errors. Category and bank-account forms use the same section cards as
@@ -435,8 +435,9 @@ highlight clears the amount; manual selections still limit the collection. Group
 payment priority or the amount-only candidate set. No fee-head priority editor is introduced.
 Configured fee rows have numbered positions; table sorting and summary dragging cannot change
 the automatic allocation sequence. Charge ordering remains in its existing separate group.
-Review Payment shows each funded fee head once, with its funded periods
-and combined allocation. Charges appear individually when funded. Collection submits every candidate due ID,
+Review Payment shows each funded fee head once, with its first and last funded month
+and combined allocation. A range with gaps also shows the number of selected months.
+Charges appear individually when funded. Collection submits every candidate due ID,
 including unfunded rows, and the revision through `automaticAllocation`. A changed-policy/balance rejection refreshes the form and requires
 another review; an uncertain network outcome retains the original retry key.
 Policies and historical snapshots without the setting retain **Existing selection order**.
@@ -452,12 +453,16 @@ Status. The payment term appears beside the fee head. Fee heads with one install
 ledger appear first in the fee-head view with a **One time** chip. The Filters button expands Month, Fee Head, Status,
 Group by and all four selection presets. Grouping by month uses the same cards and preserves
 selection, payment drafts and allocation order; additional charges retain a separate group.
+Fully paid fee-head titles are struck through based on the full schedule. Typing a collection
+amount updates ledger checks without expanding ledger groups and collapses both payment summary groups.
 View opens the row's full breakdown, including proration, concessions, refunds, reconciliation
 and the existing waiver controls. The compact read-only dialog groups due period, installment
 and status in Fee Details (Charge Details for charges), followed by Amount Breakdown with a
 prominent outstanding amount. Its shared section grid uses two columns when space allows and
 stacks on narrow screens; the scrollable body keeps the outlined Close action reachable.
 Amounts retain the ledger's existing values and shared INR display formatting.
+Charge Details shows applied waiver dates, amounts and reasons in Waiver history when the server
+returns the authorized records.
 The record header and each section expose a keyboard-accessible information control, following
 the Policy view's section typography and help pattern.
 The group list owns vertical scrolling and each embedded table contains horizontal scrolling.
@@ -479,8 +484,8 @@ The student identity card uses compact padding and a smaller avatar. Selected-it
 compact, with a separate field group below. Summary guidance lives in the header info tooltip;
 fields show validation errors without routine instructional helper text.
 Collect and Cancel remain in the bottom footer; mobile stacks the payment summary after the fee groups. Hidden selections
-are counted visibly when filters exclude them. Review Payment provides the confirmation action and
-the collection result provides the receipt downloads.
+are counted visibly when filters exclude them. Review Payment provides the confirmation action.
+Checkout closes after the receipt toast.
 
 Selection Filters operate on the student's complete ledger independently of the Month,
 Fee Head, Status, and grouping controls, which only change the visible rows.
@@ -639,7 +644,7 @@ Concession and adjustment workflows should preserve approval and audit behavior.
 4. A new concession request lists active types only. Editing an existing request may resolve its inactive historical type.
 5. Before upload, the shared upload control filters extensions and checks size; the concession upload API repeats extension, MIME, signature, and size validation. The backend expires unattached staged files after 24 hours. Saved evidence opens in the shared preview dialog through an authenticated request-scoped URL only when `ViewDocument` is granted.
 6. Missing mandatory evidence blocks approval. Optional evidence is shown and uploadable but is not required.
-7. Version History opens from each row's action menu in the same wide, read-only layout as Payment Terms: a searchable newest-first version sidebar, selected-version author/date/action, and a Field/Before/After comparison table. Missing field-level audit data remains explicitly identified. Fixed Back to details and Close actions preserve the table context.
+7. Version History opens from each row's action menu with searchable versions in newest-first order, author and date for the selected version, and a Field/Before/After comparison table. Missing field-level audit data is identified. Back to details opens the separate record view. The header close button and Escape return to the list.
 
 ### Concession request and approval
 
@@ -679,9 +684,9 @@ touch or submission, with live allocation-total feedback retained.
 The read-only drawer follows the Concession Policy section-card layout, with General Information
 and Installment Schedule sections, saved values, and section help. It omits the tab/context strip
 and the redundant Displayed schedule heading. Use Version history in the schedule section or
-the table's Version History action to inspect immutable snapshots; Back to details returns to
-the record. General Information reuses the Concession Policy detail section and its bold uppercase
-field labels. History reuses the policy version sidebar and Before/After table: versions are searchable
+the table's Version History action to inspect immutable snapshots. The header close button and
+Escape return to the list. General Information reuses the Concession Policy detail section and its
+bold uppercase field labels. History reuses the policy version sidebar and Before/After table: versions are searchable
 by version, author, date, or reason. Comparisons use recorded schedule snapshots only; term identity
 and defaults are not retroactively attributed to older versions. Missing preceding snapshots are
 explicitly identified. Saved version details expands the full snapshot and installment schedule.
@@ -763,11 +768,15 @@ Fee Head Configuration bounds its fee-head rows in a dedicated internal scroll a
 3. Version History compares each snapshot with its predecessor and shows field-level changes, actor, timestamp, action, status, and reason when present.
 4. Audit Trail presents those same immutable records as create, update, clone, archive, and unarchive lifecycle events, so policy audit evidence cannot drift from version history.
 
-Collection and Concession use the same read-only audit drawer and date-grouped
-activity cards. The bounded desktop drawer provides a wider comparison area and
-becomes full width on mobile. Policy identity and activity count remain visible
-while the timeline scrolls. Expanding an event shows its recorded reason and a
-Before/After table; events without a diff state that no changes were recorded.
+Collection, Concession, Refund, and Proration use the same audit drawer and date-grouped
+activity rows. The header close control and Escape dismiss the drawer. Policy identity and
+activity count remain visible while the timeline scrolls, and pagination appears when events
+span multiple pages. Each event shows its action, actor, and time. Expanding it shows the
+recorded reason and Before/After values when available.
+
+Refund Policy's Clone action asks for a target academic year before creating the draft. If
+validation fails, the dialog keeps the chosen year and shows the reason so the user can retry
+or choose a different year. Switch the workspace to the target year to view a cross-year copy.
 
 The version-history drawer uses a searchable snapshot list and a separate scrolling
 comparison. Accessible info icons explain read-only history, the Latest badge,
@@ -775,7 +784,7 @@ recorded change reasons, and Before/After values. The selected version remains
 visible when a search returns no matches, and clearing search restores the list.
 
 Collection, Concession, Refund and Proration Policy version drawers share Payment Terms'
-rounded history cards. Changes starts expanded with its field count visible in the header;
+rounded history cards. Changes starts expanded.
 Saved version details starts collapsed and displays the selected recorded snapshot, including
 unchanged settings. Selecting another version closes the saved-details card. Both cards keep
 their info controls independent of expansion. Concession Type history uses the same Changes
@@ -902,14 +911,10 @@ unique within the academic year; changing Board alone does not resolve a code co
 
 The cashier confirms directly in Review Payment for every payment method. For non-cash methods,
 Review Payment shows the reference details and records the payment for Finance verification.
-After collection succeeds, the payment draft and selected rows are cleared, and collection details
-refresh independently of PDF retrieval.
-The collection result provides download buttons for the generated receipts. Each receipt
-shows loading progress until its PDF arrives. If retrieval fails, the receipt shows
-“Payment was collected, but the receipt could not be generated. Please retry or contact support.”
-with **Retry receipt**. Retry downloads the existing receipt; it never repeats collection.
-A summary refresh failure preserves receipt access and blocks new collection until **Refresh fees**
-succeeds. Completing the receipt dialog returns to the refreshed collection list.
+After collection succeeds, a toast confirms receipt generation and checkout closes automatically.
+Collections refreshes the student balances, and authorized staff can download the PDF from **Receipts**.
+When the collection form is embedded in Admissions, its existing receipt download and retry controls
+remain in the payment result.
 
 1. In Fee Collection, cash offers one action to collect and issue a Receipt. All non-cash methods offer one action to record and issue a Provisional Receipt.
 2. Receipts lists fee, charge, and combined document types using the server label. Payment method and verification/link status are visible. The Receipt (Charge) option is included in the receipt-type filter.

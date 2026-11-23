@@ -31,5 +31,6 @@ export interface IFeeStructureData {
 export interface IFeeStructureTableProps {
   onAssignStructure: (row: IFeeStructureData) => void;
   onEdit?: (row: IFeeStructureData) => void;
+  onHistory?: (row: IFeeStructureData) => void;
   onBulkAssign?: (rows: IFeeStructureData[], standardId: string) => void;
 }

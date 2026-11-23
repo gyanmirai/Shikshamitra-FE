@@ -1,5 +1,67 @@
 import type { AssignmentLine, AssignmentPreview } from 'src/redux/finance/studentFeeAssignment';
 
+import { formatNumber } from 'src/utils/formate_number';
+
+const prorationRuleLabels: Record<string, string> = {
+  FullCharge: 'Full charge',
+  Daily: 'Daily proration',
+  MonthlyCutoff: 'Monthly cutoff',
+  FullMonthCharge: 'Full month charge',
+};
+const percent = new Intl.NumberFormat('en-IN', { style: 'percent', maximumFractionDigits: 6 });
+
+export function prorationRuleLabel(rule: string) {
+  return prorationRuleLabels[rule] ?? rule;
+}
+
+export function formatProrationFactor(factor: number) {
+  return percent.format(factor);
+}
+
+export function formatInstallmentProration(
+  line: Pick<AssignmentLine, 'scheduledAmount' | 'proratedAmount' | 'factor'>,
+  currency: string
+) {
+  const scheduled = formatNumber(line.scheduledAmount, currency);
+  const assigned = formatNumber(line.proratedAmount, currency);
+  return line.factor == null
+    ? `${scheduled} → ${assigned}`
+    : `${scheduled} × ${formatProrationFactor(line.factor)} → ${assigned}`;
+}
+
+export type FeeHeadProration = {
+  scheduled: number;
+  reduction: number;
+  rules: Set<string>;
+  lines: AssignmentLine[];
+};
+
+export function groupFeeHeadProration(lines: AssignmentLine[]) {
+  const heads = new Map<string, FeeHeadProration>();
+  lines.forEach((line) => {
+    const head = heads.get(line.feeHeadId) ?? {
+      scheduled: 0,
+      reduction: 0,
+      rules: new Set<string>(),
+      lines: [],
+    };
+    head.scheduled += line.scheduledAmount;
+    head.reduction += line.reductionAmount ?? line.scheduledAmount - line.proratedAmount;
+    if (line.ruleType) head.rules.add(prorationRuleLabel(line.ruleType));
+    head.lines.push(line);
+    heads.set(line.feeHeadId, head);
+  });
+  return heads;
+}
+
+export function formatSavedProrationExplanation(explanation: string) {
+  return explanation
+    .replace(/\b(?:FullCharge|Daily|MonthlyCutoff|FullMonthCharge)\b/g, (rule) =>
+      prorationRuleLabels[rule].toLowerCase()
+    )
+    .replace(/; factor \d+(?:\.\d+)?(?=; rounding applied once\.)/, '');
+}
+
 // Group recorded evidence only. Pricing, proration and rounding remain server-owned.
 export function groupAssignmentInstallments(lines: AssignmentLine[]) {
   const groups = new Map<
@@ -21,6 +83,7 @@ export function groupAssignmentInstallments(lines: AssignmentLine[]) {
       line.sequence,
       line.demandDate ?? null,
       line.dueDate,
+      line.optionalServicePeriodId ?? null,
     ]);
     const group = groups.get(id) ?? {
       id,

@@ -22,7 +22,7 @@ vi.mock('./StructurePolicyPreview', () => ({
   ),
 }));
 
-it.each(['collection', 'refund'] as const)(
+it.each(['collection', 'refund', 'proration'] as const)(
   'identifies the attached %s version, blocks re-selection and updates the selected row after changing',
   async (family) => {
     const onChange = vi.fn();
@@ -83,17 +83,18 @@ it.each(['collection', 'refund'] as const)(
       </Provider>
     );
     fireEvent.click(screen.getByRole('button', { name: `Change ${family} Policy` }));
+    expect(screen.queryByRole('button', { name: /^Close$/ })).not.toBeInTheDocument();
     const selected = await screen.findByRole('row', { selected: true });
     expect(within(selected).getByText('Version 1')).toBeVisible();
-    expect(within(selected).getByText('Selected')).toBeVisible();
-    expect(within(selected).queryByRole('button', { name: /^Select/ })).not.toBeInTheDocument();
+    expect(within(selected).getByRole('img', { name: 'Selected' })).toBeVisible();
+    expect(within(selected).queryByRole('button')).not.toBeInTheDocument();
     const search = screen.getByRole('textbox', { name: `Search ${family} policy choices` });
     fireEvent.change(search, { target: { value: 'School' } });
-    fireEvent.click(within(selected).getByRole('button', { name: 'View School policy version 1' }));
+    if (family === 'collection') fireEvent.click(selected);
+    else fireEvent.keyDown(selected, { key: 'Enter' });
     fireEvent.click(screen.getByText('Close preview of version-1'));
     expect(search).toHaveValue('School');
     expect(screen.getByRole('row', { selected: true })).toHaveTextContent('Version 1');
-    fireEvent.click(within(selected).getByText('Selected'));
     expect(onChange).not.toHaveBeenCalled();
     const other = screen.getByRole('button', { name: 'Select School policy version 2' });
     expect(other).toBeEnabled();
@@ -104,7 +105,7 @@ it.each(['collection', 'refund'] as const)(
     const dialog = await screen.findByRole('dialog');
     const nextSelected = within(dialog).getByRole('row', { selected: true });
     expect(within(nextSelected).getByText('Version 2')).toBeVisible();
-    expect(within(nextSelected).getByText('Selected')).toBeVisible();
+    expect(within(nextSelected).getByRole('img', { name: 'Selected' })).toBeVisible();
     expect(
       within(dialog).getByRole('button', { name: 'Select School policy version 1' })
     ).toBeEnabled();
@@ -164,4 +165,26 @@ it('lists the policy fee heads and rejects a refund policy without a matching fe
   expect(onChange).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Select Tuition refund version 1' }));
   expect(onChange).toHaveBeenCalledWith('refund', 'Tuition refund-v1');
+});
+
+it('reports an older fee structure API separately from a permission denial', () => {
+  const catalog = { items: [], loading: false, error: false, retry: vi.fn() };
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <FeeStructurePoliciesStep
+        candidate={structureCandidate()}
+        settings={{ policies: [], permissions: {} } as unknown as StructureSettings}
+        impacts={[{ key: 'proration', label: 'Proration Policy', description: '', empty: '', policyLabel: '' }]}
+        catalogs={{ collection: catalog, refund: catalog }}
+        writable
+        locked={false}
+        busy={false}
+        onChange={vi.fn()}
+        onView={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  expect(screen.getByText('The running Finance API does not support fee structure proration yet.')).toBeVisible();
+  expect(screen.queryByText('You do not have permission to browse this policy family.')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Select Proration Policy' })).toBeDisabled();
 });

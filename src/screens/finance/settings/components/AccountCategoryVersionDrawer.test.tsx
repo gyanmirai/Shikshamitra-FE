@@ -1,6 +1,6 @@
 import { it, vi, expect, describe } from 'vitest';
-import { screen, fireEvent, within } from '@testing-library/react';
 import { renderWithProviders } from 'src/test/test-utils';
+import { act, screen, within, fireEvent } from '@testing-library/react';
 
 import AccountCategoryVersionDrawer from './AccountCategoryVersionDrawer';
 
@@ -45,12 +45,15 @@ describe('Category version history drawer', () => {
           data={data}
           hiddenFields={['tags']}
           onClose={onClose}
+          onPageChange={vi.fn()}
         />
       );
       expect(screen.getByRole('dialog')).toHaveAccessibleName(
         new RegExp(`${recordType} Version History`, 'i')
       );
-      expect(screen.getByText('Read Only')).toBeVisible();
+      expect(screen.queryByText('Read Only')).not.toBeInTheDocument();
+      expect(screen.queryByText(/recorded versions$/)).not.toBeInTheDocument();
+      expect(screen.queryByRole('navigation', { name: 'Version history pages' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'View version 3' })).toHaveAttribute(
         'aria-pressed',
         'true'
@@ -81,10 +84,33 @@ describe('Category version history drawer', () => {
         screen.getByText('Changes and editor were not recorded for this older version.')
       ).toBeVisible();
       expect(screen.getByText('Editor not recorded', { exact: true })).toBeVisible();
-      fireEvent.click(screen.getByRole('button', { name: /^Close$/ }));
+      expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /^Close .+ Version History$/ }));
       expect(onClose).toHaveBeenCalledOnce();
     }
   );
+
+  it('keeps navigation to older versions when the list spans multiple pages', () => {
+    const onPageChange = vi.fn();
+    renderWithProviders(
+      <AccountCategoryVersionDrawer
+        open
+        title="School income"
+        recordType="Income category"
+        data={{ ...data, totalCount: 51 }}
+        onClose={vi.fn()}
+        onPageChange={onPageChange}
+      />
+    );
+
+    const pagination = screen.getByRole('navigation', { name: 'Version history pages' });
+    expect(within(pagination).getByRole('button', { name: 'Go to previous page' })).toBeDisabled();
+    const nextPage = within(pagination).getByRole('button', { name: 'Go to next page' });
+    act(() => nextPage.focus());
+    fireEvent.click(nextPage);
+    expect(onPageChange).toHaveBeenCalledWith(1);
+    expect(screen.getByRole('dialog')).toHaveFocus();
+  });
 
   it('keeps loading, error, and empty history distinct and allows retry', () => {
     const onRetry = vi.fn();

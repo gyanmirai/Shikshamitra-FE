@@ -27,7 +27,6 @@ import {
   Dialog,
   Select,
   MenuItem,
-  TextField,
   InputLabel,
   DialogTitle,
   FormControl,
@@ -49,6 +48,7 @@ import PaymentTermForm from './Components/PaymentTermForm';
 import { getCloneAcademicYears } from './cloneAcademicYears';
 import PaymentTermTable from './Components/PaymentTermTable';
 import PaymentTermDetailsDrawer from './Components/PaymentTermDetailsDrawer';
+import { ArchivePaymentTermDialog } from './Components/ArchivePaymentTermDialog';
 
 import type { IPaymentTerm } from './type';
 import type { IBoard } from './hooks/usePaymentTermForm';
@@ -105,7 +105,6 @@ const PaymentTerm = () => {
   const [detailsTarget, setDetailsTarget] = useState<PaymentTermDetailsTarget | null>(null);
   const [publishTarget, setPublishTarget] = useState<PaymentTermListItem | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<PaymentTermListItem | null>(null);
-  const [archiveReason, setArchiveReason] = useState('');
   const [restoreTarget, setRestoreTarget] = useState<PaymentTermListItem | null>(null);
   const [cloneSourceYearId, setCloneSourceYearId] = useState('');
   const [selectedBoardId, setSelectedBoardId] = useState('');
@@ -263,24 +262,25 @@ const PaymentTerm = () => {
     }
   }, [fetchPaymentTermById, publishTarget, publishVersion]);
 
-  const handleArchiveConfirm = useCallback(async () => {
-    const reason = archiveReason.trim();
-    if (!archiveTarget || !reason) return;
+  const handleArchiveConfirm = useCallback(
+    async (reason: string) => {
+      if (!archiveTarget) return;
 
-    try {
-      await archivePaymentTerm({
-        paymentTermId: archiveTarget.id,
-        body: { reason },
-      }).unwrap();
-      shikshaMitraToast.success({
-        message: `Payment term "${archiveTarget.name}" archived successfully.`,
-      });
-      setArchiveTarget(null);
-      setArchiveReason('');
-    } catch {
-      shikshaMitraToast.error({ message: 'Failed to archive the payment term.' });
-    }
-  }, [archivePaymentTerm, archiveReason, archiveTarget]);
+      try {
+        await archivePaymentTerm({
+          paymentTermId: archiveTarget.id,
+          body: { reason },
+        }).unwrap();
+        shikshaMitraToast.success({
+          message: `Payment term "${archiveTarget.name}" archived successfully.`,
+        });
+        setArchiveTarget(null);
+      } catch {
+        shikshaMitraToast.error({ message: 'Failed to archive the payment term.' });
+      }
+    },
+    [archivePaymentTerm, archiveTarget]
+  );
 
   const handleRestore = useCallback(async () => {
     if (!restoreTarget || restoreState.isLoading) return;
@@ -423,10 +423,7 @@ const PaymentTerm = () => {
             deletePaymentTermDialog.onTrue();
           }}
           onPublish={setPublishTarget}
-          onArchive={(term) => {
-            setArchiveTarget(term);
-            setArchiveReason('');
-          }}
+          onArchive={setArchiveTarget}
           onRestore={setRestoreTarget}
           canView={canView}
           canEdit={canEdit}
@@ -504,47 +501,13 @@ const PaymentTerm = () => {
         }
       />
 
-      <ConfirmDialog
-        open={Boolean(archiveTarget)}
-        icon="warning"
-        onClose={() => {
-          setArchiveTarget(null);
-          setArchiveReason('');
-        }}
-        title="Archive Payment Term"
-        content={
-          <Stack spacing={2}>
-            <Box>
-              Archive <strong>{archiveTarget?.name}</strong>? It will no longer be available for new
-              fee structures.
-            </Box>
-            <TextField
-              autoFocus
-              required
-              fullWidth
-              multiline
-              minRows={2}
-              label="Archive reason"
-              value={archiveReason}
-              inputProps={{ maxLength: 500 }}
-              onChange={(event) => setArchiveReason(event.target.value)}
-            />
-          </Stack>
-        }
-        action={
-          <LoadingButton
-            startIcon={<Iconify icon="mdi:archive-outline" />}
-            variant="contained"
-            color="error"
-            size="small"
-            loading={archiveState.isLoading}
-            disabled={!archiveReason.trim()}
-            onClick={handleArchiveConfirm}
-          >
-            Archive
-          </LoadingButton>
-        }
-      />
+      {archiveTarget && (
+        <ArchivePaymentTermDialog
+          name={archiveTarget.name}
+          onClose={() => setArchiveTarget(null)}
+          onArchive={handleArchiveConfirm}
+        />
+      )}
 
       <ConfirmDialog
         open={Boolean(restoreTarget)}

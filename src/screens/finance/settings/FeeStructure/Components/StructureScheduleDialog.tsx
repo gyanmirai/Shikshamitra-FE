@@ -21,7 +21,11 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { DetailGrid, DetailField } from 'src/screens/finance/components/detail-view';
 import { Box, Alert, Stack, Button, IconButton, Typography, DialogActions } from '@mui/material';
 
-import { structureScheduleAmounts } from './structureScheduleAmounts';
+import {
+  monthlyInstallmentCount,
+  structureScheduleAmounts,
+  resolveStructureInstallments,
+} from './structureScheduleAmounts';
 
 type Term = StructureSettings['terms'][number];
 interface Props {
@@ -42,19 +46,7 @@ export default function StructureScheduleDialog({
   onEdit,
 }: Props) {
   const [initialRows] = useState(() =>
-    [...term.installments]
-      .sort((a, b) => a.sequence - b.sequence)
-      .map((master) => {
-        const override = line.installmentOverrides.find(
-          (x) => x.sourcePaymentTermInstallmentId === master.sourcePaymentTermInstallmentId
-        );
-        return Object.fromEntries(
-          Object.entries(master).map(([key, value]) => [
-            key,
-            override?.[key as keyof StructureInstallment] ?? value,
-          ])
-        ) as unknown as StructureInstallment;
-      })
+    resolveStructureInstallments(term.installments, line.installmentOverrides)
   );
   const [rows, setRows] = useState(initialRows);
   const [confirmClose, setConfirmClose] = useState(false);
@@ -63,7 +55,7 @@ export default function StructureScheduleDialog({
     if (!readOnly && JSON.stringify(rows) !== JSON.stringify(initialRows)) setConfirmClose(true);
     else onClose();
   };
-  const amounts = structureScheduleAmounts(line.isVariable ? null : line.amount, rows);
+  const amounts = structureScheduleAmounts(line.isVariable ? null : line.amount, rows, line.monthlyRate);
   const totalAmount = amounts.every((amount) => amount !== null)
     ? amounts.reduce<number>((sum, amount) => sum + (amount ?? 0), 0)
     : null;
@@ -87,6 +79,10 @@ export default function StructureScheduleDialog({
     );
   };
   const save = () => {
+    if (line.monthlyRate != null && !monthlyInstallmentCount(rows)) {
+      setError('Monthly pricing requires one installment per covered calendar month.');
+      return;
+    }
     if (
       rows.some(
         (x) =>

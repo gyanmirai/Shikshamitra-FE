@@ -324,6 +324,7 @@ interface CustomStepperWithFormikProps {
     formik: any,
     setIsLoading: (val: boolean) => void
   ) => void;
+  onSaveValidationError?: () => void;
   validationSchema: any;
   renderItem: ({
     formik,
@@ -529,6 +530,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   errors = [],
   validateOnChange = false,
   onSave = () => {},
+  onSaveValidationError,
   isDisabledLabel = false,
   showSaveButton = true,
   disableSubmit = false,
@@ -602,6 +604,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       onSave?.(activeStep === steps.length - 1, formik.values, formik, isSaveLoading.setValue);
     } else {
       formik.setTouched(markTouchedFromErrors(validationErrors), true);
+      onSaveValidationError?.();
       focusFirstFormikError(validationErrors);
     }
   };

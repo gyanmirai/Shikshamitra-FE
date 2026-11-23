@@ -6,7 +6,75 @@ import type {
 
 import { it, expect } from 'vitest';
 
-import { mergeAssignmentInputs } from './assignmentAdmissionContext';
+import { admissionAssignmentRequest, mergeAssignmentInputs } from './assignmentAdmissionContext';
+
+it('defaults every included admission fee from joining to board end, with one month for a one-time fee', () => {
+  const candidate: AssignmentCandidate = {
+    id: 'structure',
+    name: 'KG fees',
+    academicYearId: 'year',
+    standardId: 'kg',
+    revisionNumber: 1,
+    total: 600,
+    boardStartDate: '2026-04-01',
+    boardEndDate: '2027-02-15',
+    heads: [
+      {
+        feeHeadId: 'registration',
+        feeHeadName: 'Registration',
+        isOneTime: false,
+        usesSingleServiceMonth: true,
+        isOptional: false,
+        included: true,
+        configuredAmount: 100,
+        effectiveAmount: 100,
+        amountBasis: 'AnnualTotal',
+        obligation: 100,
+        verification: 'Configured academic year',
+      },
+      {
+        feeHeadId: 'transport',
+        feeHeadName: 'Transport',
+        isOneTime: false,
+        isOptional: true,
+        included: false,
+        configuredAmount: 500,
+        effectiveAmount: null,
+        amountBasis: 'AnnualTotal',
+        obligation: 0,
+        verification: 'Configured academic year',
+      },
+    ],
+  };
+  const request = admissionAssignmentRequest('student', 'year', candidate, {
+    studentId: 'student',
+    academicYearId: 'year',
+    status: 'Selected',
+    applicationId: 'application',
+    structureId: 'structure',
+    joiningDate: '2026-09-10',
+    chargeStartDate: '2026-09-10',
+    chargeEndDate: '2027-03-31',
+    selectedOptionalFeeHeadIds: ['transport'],
+  } as AssignmentContext);
+  expect(request.editAssignmentId).toBeUndefined();
+  expect(request.servicePeriods).toEqual([
+    {
+      feeHeadId: 'registration',
+      source: 'Registration',
+      sourceReferenceId: 'application',
+      startDate: '2026-09-10T00:00:00Z',
+      endDate: '2026-09-30T00:00:00Z',
+    },
+    {
+      feeHeadId: 'transport',
+      source: 'Registration',
+      sourceReferenceId: 'application',
+      startDate: '2026-09-10T00:00:00Z',
+      endDate: '2027-02-15T00:00:00Z',
+    },
+  ]);
+});
 
 it('applies optional choices while preserving each student’s verified admission identity and dates', () => {
   const candidate = {
@@ -69,8 +137,8 @@ it('applies optional choices while preserving each student’s verified admissio
       feeHeadId: 'tuition',
       source: 'Registration',
       sourceReferenceId: 'second-application',
-      startDate: '2026-09-10',
-      endDate: '2027-03-31',
+      startDate: '2026-09-10T00:00:00Z',
+      endDate: '2027-03-31T00:00:00Z',
     },
   ]);
 });

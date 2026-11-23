@@ -3,6 +3,7 @@ import type { StructureLine, StructureSettings } from 'src/redux/finance/feeStru
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
+import { roundUpAmount } from 'src/utils/whole-rupee-amount';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
@@ -13,6 +14,8 @@ import { createFilterOptions } from '@mui/material/Autocomplete';
 import { FormSectionCard } from 'src/components/form-section-card';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetStructureTermScheduleQuery } from 'src/redux/finance/feeStructureWorkspace';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
@@ -29,6 +32,7 @@ import {
 } from '@mui/material';
 
 import { amountError, defaultPaymentTerm } from '../feeStructureModel';
+import { monthlyInstallmentCount, resolveStructureInstallments } from './structureScheduleAmounts';
 
 const filterHeads = createFilterOptions<{
   id: string;
@@ -38,6 +42,7 @@ const filterHeads = createFilterOptions<{
 }>({ stringify: (head) => `${head.name} ${head.categoryName}` });
 
 interface Props {
+  scope: { feeStructureMetadataId: string; standardId: string };
   line?: StructureLine;
   revealErrors?: boolean;
   amountInput?: string;
@@ -52,7 +57,17 @@ interface Props {
   onSave: (line: StructureLine) => void;
 }
 
+interface FeeHeadFormValues {
+  feeHeadId: string;
+  amount: string;
+  paymentTermVersionId: string;
+  isVariable: boolean;
+  isMonthlyRate: boolean;
+  isOptional: boolean;
+}
+
 export default function FeeStructureHeadDialog({
+  scope,
   line,
   revealErrors = false,
   amountInput,
@@ -72,16 +87,32 @@ export default function FeeStructureHeadDialog({
   const defaultTerm = settings.permissions.termsRead
     ? defaultPaymentTerm(settings.terms)
     : undefined;
-  const formik = useFormik({
+  const monthlyCount = (versionId: string): number => {
+    const term = settings.terms.find((entry) => entry.versionId === versionId);
+    const overrides = versionId === line?.paymentTermVersionId ? line.installmentOverrides : [];
+    const schedule: StructureSettings['terms'][number] | undefined = termSchedule.currentData;
+    const installments =
+      schedule?.versionId === versionId ? schedule.installments : term?.installments;
+    return monthlyInstallmentCount(resolveStructureInstallments(installments ?? [], overrides));
+  };
+  const retainedMonthlyTerm = (versionId: string): boolean =>
+    line?.monthlyRate != null &&
+    versionId === line.paymentTermVersionId &&
+    !(termSchedule.currentData?.versionId === versionId);
+  const formik = useFormik<FeeHeadFormValues>({
     initialValues: {
       feeHeadId: line?.feeHeadId ?? '',
-      amount: amountInput ?? (line?.amount == null ? '' : String(line.amount)),
+      amount:
+        line?.monthlyRate != null
+          ? String(line.monthlyRate)
+          : (amountInput ?? (line?.amount == null ? '' : String(line.amount))),
       paymentTermVersionId: line
         ? line.paymentTermId
           ? (line.paymentTermVersionId ?? '')
           : ''
         : (defaultTerm?.versionId ?? ''),
       isVariable: line?.isVariable ?? false,
+      isMonthlyRate: line?.monthlyRate != null,
       isOptional: line?.isOptional ?? false,
     },
     validateOnMount: revealErrors,
@@ -103,9 +134,17 @@ export default function FeeStructureHeadDialog({
         is: false,
         then: (schema) =>
           schema.test('amount', (value, context) => {
+            const { isMonthlyRate, paymentTermVersionId } = context.parent;
+            const months = isMonthlyRate ? monthlyCount(paymentTermVersionId) : 0;
             const error =
               amountError(value) ||
-              (value?.endsWith('.') ? 'Complete the amount after the decimal point.' : '');
+              (value?.endsWith('.') ? 'Complete the amount after the decimal point.' : '') ||
+              (isMonthlyRate && !months && !retainedMonthlyTerm(paymentTermVersionId)
+                ? 'Select a payment term with one installment per covered month.'
+                : '') ||
+              (months && roundUpAmount(Number(value)) * months > 9999999999.99
+                ? 'The monthly amount produces a term total above the allowed limit.'
+                : '');
             return error ? context.createError({ message: error }) : true;
           }),
       }),
@@ -119,6 +158,7 @@ export default function FeeStructureHeadDialog({
             settings.terms.some((term) => term.versionId === id)
         ),
       isVariable: Yup.boolean(),
+      isMonthlyRate: Yup.boolean(),
       isOptional: Yup.boolean(),
     }),
     onSubmit: (values, helpers) => {
@@ -131,13 +171,22 @@ export default function FeeStructureHeadDialog({
       const sameTerm =
         values.paymentTermVersionId === line?.paymentTermVersionId && !!line?.paymentTermId;
       const term = settings.terms.find((entry) => entry.versionId === values.paymentTermVersionId);
+      const rate = !values.isVariable && values.isMonthlyRate ? Number(values.amount) : null;
+      const months = rate != null ? monthlyCount(values.paymentTermVersionId) : 0;
       const next: StructureLine = {
         ...line,
         id: sameHead ? line?.id : undefined,
         feeHeadId: values.feeHeadId,
         feeHeadName: head?.name ?? line?.feeHeadName,
         categoryName: head?.categoryName ?? line?.categoryName,
-        amount: values.isVariable ? null : Number(values.amount),
+        amount: values.isVariable
+          ? null
+          : rate == null
+            ? Number(values.amount)
+            : months
+              ? roundUpAmount(rate) * months
+              : (line?.amount ?? null),
+        monthlyRate: rate,
         isVariable: values.isVariable,
         isOptional: values.isOptional,
         isOneTime: line?.isOneTime ?? false,
@@ -156,6 +205,31 @@ export default function FeeStructureHeadDialog({
     },
   });
   const { setFieldValue, values: dialogValues } = formik;
+  const selectedTerm = settings.terms.find(
+    (term) => term.versionId === dialogValues.paymentTermVersionId
+  );
+  const selectedTermId =
+    selectedTerm?.id ??
+    (dialogValues.paymentTermVersionId === line?.paymentTermVersionId ? line?.paymentTermId : null);
+  const termSchedule = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStructureTermScheduleQuery,
+    params: {
+      ...scope,
+      paymentTermId: selectedTermId ?? '',
+      versionId: dialogValues.paymentTermVersionId,
+    },
+    options: {
+      skip:
+        !settings.permissions.termsRead ||
+        !selectedTermId ||
+        !dialogValues.paymentTermVersionId ||
+        dialogValues.isVariable ||
+        !!line?.isOneTime ||
+        !!selectedTerm?.installments?.length,
+    },
+    popupConfig: { error: false },
+  });
   const { requestNavigation, confirmation } = useUnsavedNavigation(formik.dirty, {
     keepEditingLabel: 'Keep Editing',
     discardLabel: 'Discard Changes',
@@ -295,13 +369,18 @@ export default function FeeStructureHeadDialog({
                   display: 'grid',
                   gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr)',
                   columnGap: { xs: 1, sm: 2 },
+                  rowGap: 1,
                   '& > .MuiBox-root': { display: 'flex', alignItems: 'center' },
                   '& .MuiFormControlLabel-root': { m: 0, minWidth: 0 },
                   '& .MuiFormControlLabel-label': { overflowWrap: 'break-word' },
                   '& .MuiSwitch-root': { flexShrink: 0 },
                   '@media (max-width: 439px)': {
                     '& > .MuiBox-root': { alignItems: 'flex-start' },
-                    '& .MuiFormControlLabel-root': { flexDirection: 'column', textAlign: 'center' },
+                    '& .MuiFormControlLabel-root': {
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      textAlign: 'left',
+                    },
                     '& .MuiSwitch-root': { my: 1.25 },
                   },
                 }}
@@ -316,6 +395,7 @@ export default function FeeStructureHeadDialog({
                         disabled={busy}
                         onChange={(_event, checked) => {
                           formik.setFieldValue('isVariable', checked);
+                          formik.setFieldValue('isMonthlyRate', false);
                           formik.setFieldValue('amount', '');
                         }}
                       />
@@ -345,12 +425,33 @@ export default function FeeStructureHeadDialog({
                     disabled={busy}
                   />
                 </Box>
+                {!formik.values.isVariable &&
+                  !line?.isOneTime &&
+                  (formik.values.isMonthlyRate ||
+                    monthlyCount(formik.values.paymentTermVersionId) > 0) && (
+                    <Box>
+                      <FormControlLabel
+                        label="Charge per month"
+                        control={
+                          <Switch
+                            size="small"
+                            checked={formik.values.isMonthlyRate}
+                            disabled={busy}
+                            onChange={(_event, checked) => {
+                              formik.setFieldValue('isMonthlyRate', checked);
+                              formik.setFieldValue('amount', '');
+                            }}
+                          />
+                        }
+                      />
+                    </Box>
+                  )}
               </FormGroup>
               {!formik.values.isVariable && (
                 <ShakingTextField error={!!errorFor('amount')}>
                   <NumericFormatCustom
                     name="amount"
-                    label="Annual amount"
+                    label={formik.values.isMonthlyRate ? 'Monthly amount' : 'Annual amount'}
                     required
                     size="small"
                     fullWidth
@@ -368,7 +469,10 @@ export default function FeeStructureHeadDialog({
                     onBlur={formik.handleBlur}
                     disabled={busy}
                     error={!!errorFor('amount')}
-                    helperText={errorFor('amount')}
+                    helperText={
+                      errorFor('amount') ||
+                      (formik.values.isMonthlyRate ? 'Charged for each covered month.' : undefined)
+                    }
                   />
                 </ShakingTextField>
               )}

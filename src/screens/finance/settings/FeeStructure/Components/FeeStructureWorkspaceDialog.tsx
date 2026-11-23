@@ -102,13 +102,12 @@ export default function FeeStructureWorkspaceDialog({
         title="Fee Structure Published"
         content={`“${publishedName}” is now published. You can keep working here or return to the Fee Structure list.`}
         onClose={() => setPublishedName(null)}
-        cancelText="Continue"
-        action={
+        secondaryAction={
           <Button
             startIcon={<Iconify icon="mdi:exit-to-app" />}
             size="small"
             color="inherit"
-            variant="contained"
+            variant="outlined"
             disabled={busy}
             onClick={() => {
               setPublishedName(null);
@@ -116,6 +115,17 @@ export default function FeeStructureWorkspaceDialog({
             }}
           >
             Exit
+          </Button>
+        }
+        action={
+          <Button
+            autoFocus
+            size="small"
+            color="inherit"
+            variant="contained"
+            onClick={() => setPublishedName(null)}
+          >
+            Continue
           </Button>
         }
       />

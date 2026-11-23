@@ -13,7 +13,7 @@ type Props = {
   busy?: boolean;
   disableBackdropClick?: boolean;
   children: ReactNode;
-  actions: ReactNode;
+  actions?: ReactNode;
   onClose: () => void;
 };
 
@@ -77,15 +77,17 @@ export function AssignmentDrawerShell({
           {children}
         </FormBusyRegion>
       </Box>
-      <Stack
-        direction="row"
-        justifyContent="flex-end"
-        alignItems="center"
-        spacing={1}
-        sx={{ px: { xs: 2, sm: 3 }, py: 1.75, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
-      >
-        {actions}
-      </Stack>
+      {actions && (
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          alignItems="center"
+          spacing={1}
+          sx={{ px: { xs: 2, sm: 3 }, py: 1.75, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
+        >
+          {actions}
+        </Stack>
+      )}
     </Drawer>
   );
 }

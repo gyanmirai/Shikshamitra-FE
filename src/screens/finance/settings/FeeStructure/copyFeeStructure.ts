@@ -15,7 +15,7 @@ export function copyStructureCandidate(
   policies: StructureCopyPolicy[]
 ): StructureCandidate {
   const { concurrencyStamp, ...candidate } = structureCandidate(source);
-  (['collection', 'refund'] as const).forEach((family) => {
+  (['collection', 'refund', 'proration'] as const).forEach((family) => {
     const id = candidate[`${family}PolicyId`];
     if (!id) return;
     const policy = policies.find((item) => item.family === family && item.policyId === id);

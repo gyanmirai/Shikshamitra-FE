@@ -441,49 +441,32 @@ export default function GradeScaleDetailsDrawer({
         </Stack>
       </Box>
 
-      <Box
-        component="footer"
-        sx={{
-          px: { xs: 2, sm: 3 },
-          py: 1.75,
-          flexShrink: 0,
-          borderTop: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-        }}
-      >
-        <Stack
-          direction="row"
-          justifyContent="flex-end"
-          alignItems="center"
-          spacing={1}
-          useFlexGap
-          flexWrap="wrap"
+      {canEdit && onEdit && (
+        <Box
+          component="footer"
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            px: { xs: 2, sm: 3 },
+            py: 1.75,
+            flexShrink: 0,
+            borderTop: 1,
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+          }}
         >
           <Button
             type="button"
             size="small"
-            variant="outlined"
+            variant="contained"
             color="inherit"
-            startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
-            onClick={onClose}
+            startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
+            onClick={onEdit}
           >
-            Close
+            Edit
           </Button>
-          {canEdit && onEdit && (
-            <Button
-              type="button"
-              size="small"
-              variant="contained"
-              color="inherit"
-              startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
-              onClick={onEdit}
-            >
-              Edit
-            </Button>
-          )}
-        </Stack>
-      </Box>
+        </Box>
+      )}
     </Drawer>
   );
 }

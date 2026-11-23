@@ -108,6 +108,23 @@ describe('Fee assignment student table', () => {
     expect(onView).toHaveBeenCalledWith(row);
   });
 
+  it('opens a saved admission selection for editing before finance confirmation', () => {
+    const open = vi.fn();
+    render(<FeeStructureAssignTable onAssignStructure={open} />);
+    const row = {
+      studentId: 'student',
+      studentName: 'Aarav',
+      isActive: true,
+      assignmentState: 'Selected',
+      isFeeStructureAssigned: false,
+    };
+    const action = state.table.columns.find((column: any) => column.id === 'action');
+    const controls = render(action.render(undefined, row));
+    expect(controls.queryByRole('button', { name: /Assign fee structure/i })).not.toBeInTheDocument();
+    fireEvent.click(controls.getByRole('button', { name: 'Edit admission fee selection for Aarav' }));
+    expect(open).toHaveBeenCalledWith(row);
+  });
+
   it('keeps assigned rows read-only without policy override access and locks actions on refresh', () => {
     state.deniedPermissions = ['Finance.Fees.StructureAssign.OverridePolicies'];
     const onEdit = vi.fn();

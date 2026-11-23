@@ -26,10 +26,21 @@ interface VersionSidebarProps {
   selectedVersionId: string | null;
   onSelectVersion: (id: string) => void;
   isLatestPage?: boolean;
+  pagination?: React.ReactNode;
 }
 
-function VersionSidebar({ versions, selectedVersionId, onSelectVersion, isLatestPage = true }: VersionSidebarProps) {
+function VersionSidebar({
+  versions,
+  selectedVersionId,
+  onSelectVersion,
+  isLatestPage = true,
+  pagination,
+}: VersionSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const searchLabel = pagination ? 'Search this page' : 'Search versions';
+  const searchHelp = pagination
+    ? 'Search this page by version, author, date, or recorded change. Use the page controls to browse older versions.'
+    : 'Search by version, author, date, or recorded change.';
   const filteredVersions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return versions.filter((version) =>
@@ -63,7 +74,7 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion, isLatest
           <CustomTooltip
             arrow
             placement="right"
-            title="Versions are listed newest first. Latest marks the newest recorded snapshot. Search the current page by version, author, date, or recorded reason. Use the page controls for older versions."
+            title={`Versions are listed newest first. Latest marks the newest recorded snapshot. ${searchHelp}`}
           >
             <IconButton size="small" aria-label="Versions information">
               <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
@@ -79,10 +90,8 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion, isLatest
         fullWidth
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
-        placeholder="Search this page…"
-        label="Search this page"
+        label={searchLabel}
         slotProps={{
-          htmlInput: { 'aria-label': 'Search this page' },
           input: {
             startAdornment: (
               <InputAdornment position="start">
@@ -164,6 +173,7 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion, isLatest
           </Stack>
         )}
       </Scrollbar>
+      {pagination && <Box sx={{ flexShrink: 0, mt: 1 }}>{pagination}</Box>}
     </Paper>
   );
 }

@@ -7,7 +7,7 @@ import { Iconify } from 'src/components/iconify';
 import HelpTooltip from 'src/components/help-tooltip';
 import { alpha, useTheme } from '@mui/material/styles';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Box, Stack, Drawer, Avatar, Button, Tooltip, IconButton, Typography } from '@mui/material';
+import { Box, Stack, Drawer, Avatar, Tooltip, IconButton, Typography } from '@mui/material';
 
 import AuditDiffViewer from './AuditDiffViewer';
 import AuditImpactPanel from './AuditImpactPanel';
@@ -362,7 +362,7 @@ const AuditLogDetailsDrawer = ({
       </Box>
 
       {/* Footer Actions */}
-      {!loading && log && (
+      {!loading && log && canRestore && log.isRollbackAvailable && (
         <Box
           sx={{
             p: 2,
@@ -370,28 +370,16 @@ const AuditLogDetailsDrawer = ({
             backgroundColor: 'background.paper',
           }}
         >
-          <Stack direction="row" gap={1} justifyContent="flex-end" flexWrap="wrap">
-            <Stack direction="row" gap={1}>
-              {canRestore && log.isRollbackAvailable && (
-                <LoadingButton
-                  size="small"
-                  variant="outlined"
-                  color="warning"
-                  startIcon={<Iconify icon="mdi:undo-variant" width={16} />}
-                  onClick={() => onRestore?.(log)}
-                >
-                  Restore
-                </LoadingButton>
-              )}
-              <Button
-                size="small"
-                onClick={onClose}
-                startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                variant="outlined"
-              >
-                Close
-              </Button>
-            </Stack>
+          <Stack direction="row" justifyContent="flex-end">
+            <LoadingButton
+              size="small"
+              variant="outlined"
+              color="warning"
+              startIcon={<Iconify icon="mdi:undo-variant" width={16} />}
+              onClick={() => onRestore?.(log)}
+            >
+              Restore
+            </LoadingButton>
           </Stack>
         </Box>
       )}
