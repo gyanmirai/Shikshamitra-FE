@@ -1,17 +1,18 @@
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { AcademicNotificationRecentDelivery } from 'src/redux/academic-notifications/delivery-types';
-import type { AcademicNotificationEvent, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
+import type { AcademicNotificationCacheIdentity, AcademicNotificationCatalogueQueryState } from 'src/redux/academic-notifications/types';
 
 import { useRouter } from 'next/navigation';
 import { fDateTime } from 'src/utils/format-time';
 import { RouterLink } from 'src/routes/components';
 import CustomSelect from 'src/components/custom-select';
-import { Stack, Button, Typography } from '@mui/material';
 import { academicPaths } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Link, Alert, Stack, Button, Typography } from '@mui/material';
 import { notificationEventKeyLabel } from 'src/redux/academic-notifications/response-adapters';
 import { useAcademicNotificationRecentDeliveriesQuery } from 'src/redux/academic-notifications/delivery-api';
 
+import { NotificationFilterRow } from './notification-filter-row';
 
 function deliveryPath(item: AcademicNotificationRecentDelivery) {
   const query = new URLSearchParams({ view: 'history' });
@@ -32,13 +33,14 @@ function recentPath(eventKey?: string, cursor?: string) {
   return `${academicPaths.notification}?${query}`;
 }
 
-export function NotificationRecentDeliveries({ identity, events, eventKey, cursor }: {
+export function NotificationRecentDeliveries({ identity, catalogue, eventKey, cursor }: {
   identity: AcademicNotificationCacheIdentity;
-  events: AcademicNotificationEvent[];
+  catalogue: AcademicNotificationCatalogueQueryState;
   eventKey?: string;
   cursor?: string;
 }) {
   const router = useRouter();
+  const events = catalogue.isError ? [] : catalogue.currentData?.events ?? [];
   const eventOptions = events.filter((event) => event.availability.isAvailable || event.manualAvailability?.isAvailable)
     .map(({ definition }) => ({ value: definition.eventKey, label: notificationEventKeyLabel(definition.eventKey) }))
     .sort((first, second) => first.label.localeCompare(second.label));
@@ -56,9 +58,10 @@ export function NotificationRecentDeliveries({ identity, events, eventKey, curso
     column: 'notification', type: 'equals', value: selectedOption.value, valueType: 'enum',
     label: 'Notification', displayValue: selectedOption.label,
   }] : [];
+  const canFilter = !catalogue.isError && eventOptions.length > 0;
   const columns: IColumn[] = [
     { id: 'notification', label: 'Notification', rowHeader: true, minWidth: 160, isSort: false,
-      isFilter: eventOptions.length > 0, filterType: 'enum', enumOptions: eventOptions, render: (value) => value,
+      isFilter: canFilter, filterType: 'enum', enumOptions: eventOptions, render: (value) => value,
     },
     { id: 'createdAt', label: 'Created', minWidth: 160, isSort: false, isFilter: false },
   ];
@@ -68,21 +71,28 @@ export function NotificationRecentDeliveries({ identity, events, eventKey, curso
   }
 
   return (
-    <Stack gap={1} sx={{ p: 1, flex: 1, minHeight: 0 }}>
-      <Typography variant="subtitle2" component="h2">Recent Deliveries</Typography>
-      {eventOptions.length > 0 && (
+    <>
+      <Typography variant="subtitle1" component="h2" sx={{ px: 1 }}>Recent Deliveries</Typography>
+      <NotificationFilterRow>
         <CustomSelect label="Notification event" size="small" isSearch value={selectedEvent ?? 'all'}
           options={[{ value: 'all', label: 'All events' }, ...eventOptions]}
-          onChange={(value) => setEvent(value === 'all' ? undefined : String(value))}
-          sx={{ width: { xs: 1, sm: 320 } }} />
+          disabled={!canFilter}
+          onChange={(value) => setEvent(value === 'all' ? undefined : String(value))} />
+      </NotificationFilterRow>
+      {catalogue.isError && (
+        <Alert severity="warning" action={<Button color="inherit" size="small"
+          disabled={catalogue.isFetching} onClick={catalogue.refetch}>Retry</Button>}>
+          Notification event options could not be loaded.
+        </Alert>
       )}
       <CustomizableTable tableId="academic-notification-recent-deliveries" tableTitle="Recent Academic notifications"
         columns={columns} data={(current?.items ?? []).map((item) => ({
           id: item.operationId,
           notification: (
-            <Button size="small" component={RouterLink} href={deliveryPath(item)}>
+            <Link component={RouterLink} href={deliveryPath(item)} color="text.primary" underline="always"
+              variant="body2" sx={{ overflowWrap: 'anywhere', fontWeight: 'fontWeightMedium' }}>
               {notificationEventKeyLabel(item.eventKey)}
-            </Button>
+            </Link>
           ),
           createdAt: fDateTime(item.createdAt, 'DD MMM YYYY h:mm:ss a') ?? '—',
         }))}
@@ -91,16 +101,17 @@ export function NotificationRecentDeliveries({ identity, events, eventKey, curso
         isLoading={!current && query.isFetching} isRefreshing={Boolean(current) && query.isFetching}
         error={query.error} onRetry={query.refetch}
         noDataText={cursor ? 'No deliveries found on this page.' : 'No deliveries to show.'}
+        footerActions={(cursor || next) && (
+          <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="flex-end">
+            {cursor && <Button size="small" color="inherit" component={RouterLink}
+              href={recentPath(selectedEvent)}>Newest deliveries</Button>}
+            {next && (
+              <Button size="small" color="inherit" component={RouterLink}
+                href={recentPath(selectedEvent, next)}>Older deliveries</Button>
+            )}
+          </Stack>
+        )}
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }} tableContainerProps={{ sx: { height: 1, minHeight: 0 } }} />
-      {(cursor || next) && (
-        <Stack direction="row" gap={1} justifyContent="flex-end">
-          {cursor && <Button size="small" component={RouterLink} href={recentPath(selectedEvent)}>Newest</Button>}
-          {next && (
-            <Button size="small" component={RouterLink}
-              href={recentPath(selectedEvent, next)}>Older deliveries</Button>
-          )}
-        </Stack>
-      )}
-    </Stack>
+    </>
   );
 }

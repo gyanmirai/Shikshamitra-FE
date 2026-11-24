@@ -23,7 +23,7 @@ const views = [
 
 export default function AcademicNotificationScreen() {
   const tabId = useId();
-  const [templateActions, setTemplateActions] = useState<HTMLDivElement | null>(null);
+  const [workspaceActions, setWorkspaceActions] = useState<HTMLDivElement | null>(null);
   const scope = useNotificationWorkspaceScope();
   const filters = useNotificationWorkspaceState();
   const { view } = filters;
@@ -58,7 +58,10 @@ export default function AcademicNotificationScreen() {
               variant="scrollable"
               scrollButtons="auto"
               allowScrollButtonsMobile
-              slotProps={{ flexContainer: { gap: 1 } }}
+              slotProps={{
+                flexContainer: { gap: { xs: 0, sm: 1 } },
+                tab: { px: { xs: 1, sm: 2 } },
+              }}
               sx={{ flex: '1 1 26rem', minWidth: 0, borderRadius: 'inherit' }}
               onChange={(_, nextView: typeof view) => filters.setFilters({ view: nextView === 'rules' ? '' : nextView })}
             >
@@ -74,7 +77,7 @@ export default function AcademicNotificationScreen() {
                 />
               ))}
             </CustomTabs>
-            <Box ref={setTemplateActions} sx={{ ml: 'auto', maxWidth: 1, '&:empty': { display: 'none' } }} />
+            <Box ref={setWorkspaceActions} sx={{ ml: 'auto', maxWidth: 1, '&:empty': { display: 'none' } }} />
           </Paper>
           {views.map(({ value }) => (
             <Box
@@ -89,14 +92,15 @@ export default function AcademicNotificationScreen() {
                 <NotificationRulesWorkspace scope={scope} filters={filters} catalogue={catalogue} />
               )}
               {view === 'templates' && value === view && (
-                <NotificationTemplatesWorkspace scope={scope} filters={filters} catalogue={catalogue} actionTarget={templateActions} />
+                <NotificationTemplatesWorkspace scope={scope} filters={filters} catalogue={catalogue} actionTarget={workspaceActions} />
               )}
               {view === 'history' && value === view && (
                 <NotificationHistoryWorkspace
                   key={JSON.stringify(scope.identity)}
                   identity={scope.identity}
                   canManage={scope.canManage}
-                  events={catalogue.currentData?.events ?? []}
+                  catalogue={catalogue}
+                  actionTarget={workspaceActions}
                 />
               )}
             </Box>
