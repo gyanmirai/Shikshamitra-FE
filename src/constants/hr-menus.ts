@@ -396,12 +396,14 @@ const hrModule = () => ({
               children: [
                 {
                   ...payrollDocumentPages.monthly,
+                  icon: menuIconView('mdi:file-document-outline'),
                   _action: 'payroll-payslip-generation',
                   permissionName: payslipViewPermission,
                   preserveQueryParams: ['month'],
                 },
                 {
                   ...payrollDocumentPages.statement,
+                  icon: menuIconView('mdi:receipt-text-outline'),
                   _action: 'payroll-employee-statements',
                   permissionName: payslipViewPermission,
                   requiredAllPermissions: [hrPermissions.reportActions.view],
@@ -409,6 +411,7 @@ const hrModule = () => ({
                 },
                 {
                   ...payrollDocumentPages.register,
+                  icon: menuIconView('mdi:clipboard-list-outline'),
                   _action: 'payroll-school-payroll-register',
                   permissionName: payslipViewPermission,
                   requiredAllPermissions: [hrPermissions.reportActions.view],

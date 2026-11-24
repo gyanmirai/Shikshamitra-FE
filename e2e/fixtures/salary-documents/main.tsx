@@ -16,6 +16,9 @@ const permissions = [
   `${hrPermissions.payroll.generateSalarySlip}.Add`,
   `${hrPermissions.payroll.runPayroll}.View`,
   hrPermissions.payroll.runPayrollAdjustments,
+  hrPermissions.payroll.settings.root,
+  hrPermissions.payroll.settings.payrollDocuments,
+  hrPermissions.reportActions.view,
 ];
 const store = configureStore({
   reducer: {
@@ -29,7 +32,9 @@ const store = configureStore({
   },
   middleware: (getDefault) => getDefault().concat(api.middleware),
 });
-const dark = new URLSearchParams(window.location.search).get('theme') === 'dark';
+const params = new URLSearchParams(window.location.search);
+const dark = params.get('theme') === 'dark';
+const kind = params.get('view') === 'statement' ? 'statement' : 'monthly';
 createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
     <ThemeProvider
@@ -49,7 +54,7 @@ createRoot(document.getElementById('root')!).render(
             overflow: 'hidden',
           }}
         >
-          <PayrollDocumentPage kind="monthly" />
+          <PayrollDocumentPage kind={kind} />
         </Box>
       </LocalizationProvider>
     </ThemeProvider>

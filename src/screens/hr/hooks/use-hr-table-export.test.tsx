@@ -81,6 +81,18 @@ describe('complete HR table exports', () => {
       },
     });
   });
+  it('exports the same search and employee period as the salary statement preview', async () => {
+    const domain = {
+      dataSource: 'payroll_statement',
+      filters: { employeeIds: ['staff-1'], fromDate: '2026-09-01', toDate: '2026-10-01' },
+    };
+    const { result } = renderHook(() => useHrTableExport('hr-salary-documents', domain));
+    await act(() => result.current({ ...request, searchTerm: '2026-09' }));
+    expect(rpc.create.mock.lastCall?.[0].query).toMatchObject({
+      ...domain,
+      criteria: { search: '2026-09', filters: [], sorts: [] },
+    });
+  });
   beforeEach(() => {
     vi.useFakeTimers();
     Object.values(rpc).forEach((mock) => mock.mockReset());

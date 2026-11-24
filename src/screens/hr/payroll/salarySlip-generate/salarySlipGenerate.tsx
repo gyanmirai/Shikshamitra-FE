@@ -64,8 +64,10 @@ const PayslipPdfViewer = dynamic(() => import('./payslip-pdf-viewer'), { ssr: fa
 
 export default function PaySlipGenerationScreen({
   hideHeading = false,
+  issuedSelection,
 }: {
   hideHeading?: boolean;
+  issuedSelection?: { employeeId: string; employeeName: string; monthYear: string };
 }) {
   const printContentRef = useRef<HTMLDivElement>(null);
   const printButtonRef = useRef<HTMLButtonElement>(null);
@@ -78,8 +80,12 @@ export default function PaySlipGenerationScreen({
     pageStyle: '@page { size: A4; margin: 0; } @media print { body { margin: 0; } }',
     onPrintError: () => setPrintError(true),
   });
-  const [employee, setEmployee] = useState<{ id: string; label: string } | null>(null);
-  const [month, setMonth] = usePayrollMonth();
+  const [staff, setEmployee] = useState<{ id: string; label: string } | null>(null);
+  const [payrollMonth, setMonth] = usePayrollMonth();
+  const employee = issuedSelection
+    ? { id: issuedSelection.employeeId, label: issuedSelection.employeeName }
+    : staff;
+  const month = issuedSelection ? dayjs(`${issuedSelection.monthYear}-01`) : payrollMonth;
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(
     permissions,
@@ -389,35 +395,37 @@ export default function PaySlipGenerationScreen({
         </HrNotice>
       ) : (
         <>
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={1}
-            alignItems={{ md: 'center' }}
-            sx={{ px: 1 }}
-          >
-            <PaginatedSearchSelect
-              id="payslip-staff-member"
-              label="Staff member"
-              value={employee}
-              size="small"
-              sx={{ width: { xs: '100%', md: 320 } }}
-              minChars={2}
-              debounceMs={400}
-              fetchOptions={fetchEmployees}
-              filterOptions={(options) => options}
-              onChange={(_, value) => setEmployee(value)}
-              getOptionLabel={(option: { label: string }) => option.label}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-            />
-            <DatePicker
-              label="Pay period"
-              views={['month', 'year']}
-              value={month}
-              onChange={setMonth}
-              slotProps={{ textField: { size: 'small' } }}
-              sx={{ width: { xs: '100%', md: 220 } }}
-            />
-          </Stack>
+          {!issuedSelection && (
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={1}
+              alignItems={{ md: 'center' }}
+              sx={{ px: 1 }}
+            >
+              <PaginatedSearchSelect
+                id="payslip-staff-member"
+                label="Staff member"
+                value={employee}
+                size="small"
+                sx={{ width: { xs: '100%', md: 320 } }}
+                minChars={2}
+                debounceMs={400}
+                fetchOptions={fetchEmployees}
+                filterOptions={(options) => options}
+                onChange={(_, value) => setEmployee(value)}
+                getOptionLabel={(option: { label: string }) => option.label}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+              />
+              <DatePicker
+                label="Pay period"
+                views={['month', 'year']}
+                value={month}
+                onChange={setMonth}
+                slotProps={{ textField: { size: 'small' } }}
+                sx={{ width: { xs: '100%', md: 220 } }}
+              />
+            </Stack>
+          )}
           <Stack
             role="group"
             aria-label="Payslip actions"

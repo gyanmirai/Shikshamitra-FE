@@ -16,6 +16,16 @@ export type PayslipDocument = {
   paidAt: string | null;
   paymentReference: string | null;
 };
+export type IssuedPayslip = {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  employeeCode: string | null;
+  monthYear: string;
+  revision: number;
+  issuedAt: string;
+  isPaid: boolean;
+};
 export type PayslipDelivery = {
   id: string;
   documentId: string;
@@ -157,6 +167,13 @@ export const payslipApi = api.injectEndpoints({
       }),
       invalidatesTags: [...tags, employeeType.runPayroll],
     }),
+    getIssuedPayslips: builder.query<
+      { items: IssuedPayslip[]; totalCount: number },
+      { monthYear?: string; search?: string; skipCount: number; maxResultCount: number }
+    >({
+      query: (params) => ({ url: '/payroll/payslip-documents/issued', params }),
+      providesTags: tags,
+    }),
     getPayslipDocuments: builder.query<
       PayslipDocument[],
       { employeeId: string; monthYear: string }
@@ -231,6 +248,7 @@ export const {
   useCancelPayslipCorrectionMutation,
   useApplyPayslipCorrectionMutation,
   useSettlePayslipCorrectionMutation,
+  useGetIssuedPayslipsQuery,
   useGetPayslipDocumentsQuery,
   useLazyGetPayslipDocumentPdfQuery,
   useGetPayslipDeliveriesQuery,
