@@ -14,7 +14,7 @@ export default defineConfig({
         replacement: `${here}/../payment-term-template/icon-barrel.ts`,
       },
       {
-        find: /^src\/redux\/finance\/(chargeCategory|concessionType|financeRoutingApi)$/,
+        find: /^src\/redux\/finance\/(chargeCategory|concessionType|financeRoutingApi|collectionPolicy)$/,
         replacement: `${here}/mock-api.ts`,
       },
       { find: /^src\/redux\/customQueryAndMutation$/, replacement: `${here}/mock-query.ts` },

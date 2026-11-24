@@ -14,7 +14,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import { FinanceSettingDeleteDialog } from 'src/screens/finance/settings/components/FinanceSettingDeleteDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { exportTable } from 'src/components/customizabaleTable/table-export';
@@ -120,10 +120,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
     }
   }, [feeCategoryData, queryParams.page, queryParams.pageSize]);
 
-  const [deleteFeeCategory, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteFeeCategoryMutation,
-  });
+  const [deleteFeeCategory] = useDeleteFeeCategoryMutation();
 
   const [patchFeeCategoryStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -141,7 +138,6 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   const [feeHeadsCategoryId, setFeeHeadsCategoryId] = useState<string | null>(null);
   const [statusData, setStatusData] = useState<null | IFeeCategory>(null);
   const [deactivationReason, setDeactivationReason] = useState('');
-  const { confirmWithUndo } = useConfirmWithUndo();
 
   const feeHeadStatusConfirm = useBoolean();
   const [feeHeadStatusData, setFeeHeadStatusData] = useState<any | null>(null);
@@ -687,60 +683,22 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         </Box>
       </Drawer>
 
-      <ConfirmDialog
+      <FinanceSettingDeleteDialog
         open={deleteFeeCategoryDialog.value}
+        title="Delete Fee Category"
         onClose={() => {
           setSelectedFeeCategory(null);
           deleteFeeCategoryDialog.onFalse();
         }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete fee category{' '}
-            <strong>{selectedFeeCategory?.name}</strong>?
-          </>
+        onDelete={
+          canDelete && selectedFeeCategory?.isActive && !selectedFeeCategory.isUsedInDownstream
+            ? () => deleteFeeCategory({ id: selectedFeeCategory.id }).unwrap()
+            : undefined
         }
-        action={
-          <LoadingButton
-            startIcon={<Iconify icon="mdi:delete-outline" />}
-            variant="contained"
-            color="error"
-            size="small"
-            loading={isDeleteLoading}
-            onClick={async () => {
-              confirmWithUndo({
-                item: selectedFeeCategory,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    feeCategoryApi.util.updateQueryData(
-                      'getFeeCategories',
-                      categoryQueryArgs,
-                      (draft: any) => {
-                        const index = draft.items?.findIndex(
-                          (b: any) => b.id === (selectedFeeCategory as any)?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          draft.items.splice(index, 1);
-                          draft.totalCount = Math.max(0, (draft.totalCount ?? 0) - 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () =>
-                  deleteFeeCategory({
-                    id: (selectedFeeCategory as any).id,
-                  }),
-              });
-              deleteFeeCategoryDialog.onFalse();
-              setSelectedFeeCategory(null);
-            }}
-          >
-            Yes
-          </LoadingButton>
-        }
-      />
+        successMessage="Fee category deleted successfully."
+      >
+        Delete fee category <strong>{selectedFeeCategory?.name}</strong> and its fee heads?
+      </FinanceSettingDeleteDialog>
       <ConfirmDialog
         open={statusConfirm.value}
         disableCancel={isStatusLoading}

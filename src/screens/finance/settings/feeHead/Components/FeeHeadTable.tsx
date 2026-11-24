@@ -184,8 +184,9 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
                     onDelete(row as IFeeHead);
                   },
                   disabled: !access.canDelete || row?.isUsedInDownstream,
-                  tooltip:
-                    'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                  tooltip: row?.isUsedInDownstream
+                    ? 'This fee head is in use and cannot be deleted.'
+                    : undefined,
                   color: 'error.main',
                 },
               ]}

@@ -14,6 +14,7 @@ import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetAcademicHierarchyQuery } from 'src/redux/board/boardApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FinanceSettingDeleteDialog } from 'src/screens/finance/settings/components/FinanceSettingDeleteDialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
@@ -46,7 +47,7 @@ import {
 
 import PaymentTermForm from './Components/PaymentTermForm';
 import { getCloneAcademicYears } from './cloneAcademicYears';
-import PaymentTermTable from './Components/PaymentTermTable';
+import PaymentTermTable, { canDeletePaymentTerm } from './Components/PaymentTermTable';
 import PaymentTermDetailsDrawer from './Components/PaymentTermDetailsDrawer';
 import { ArchivePaymentTermDialog } from './Components/ArchivePaymentTermDialog';
 
@@ -102,6 +103,7 @@ const PaymentTerm = () => {
     filters: [],
   });
   const [selectedPaymentTerm, setSelectedPaymentTerm] = useState<IPaymentTerm | null>(null);
+  const selectedPaymentTermId = selectedPaymentTerm?.id;
   const [detailsTarget, setDetailsTarget] = useState<PaymentTermDetailsTarget | null>(null);
   const [publishTarget, setPublishTarget] = useState<PaymentTermListItem | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<PaymentTermListItem | null>(null);
@@ -217,21 +219,6 @@ const PaymentTerm = () => {
     fetchSourceTerms,
     targetAcademicYearId,
   ]);
-
-  const handleDeleteConfirm = useCallback(async () => {
-    if (!selectedPaymentTerm?.id) return;
-
-    try {
-      await deletePaymentTerm(selectedPaymentTerm.id).unwrap();
-      shikshaMitraToast.success({
-        message: `Payment term "${selectedPaymentTerm.paymentTermName}" deleted successfully.`,
-      });
-      deletePaymentTermDialog.onFalse();
-      setSelectedPaymentTerm(null);
-    } catch {
-      shikshaMitraToast.error({ message: 'Failed to delete payment term.' });
-    }
-  }, [deletePaymentTerm, deletePaymentTermDialog, selectedPaymentTerm]);
 
   const handlePublishConfirm = useCallback(async () => {
     if (!publishTarget) return;
@@ -419,6 +406,7 @@ const PaymentTerm = () => {
             addPaymentTermDrawer.onTrue();
           }}
           onDelete={(term) => {
+            if (!canDelete || !canDeletePaymentTerm(term)) return;
             setSelectedPaymentTerm(mapListItemToPaymentTerm(term));
             deletePaymentTermDialog.onTrue();
           }}
@@ -448,33 +436,23 @@ const PaymentTerm = () => {
         onClose={() => setDetailsTarget(null)}
       />
 
-      <ConfirmDialog
+      <FinanceSettingDeleteDialog
         open={deletePaymentTermDialog.value}
-        icon="warning"
+        title="Delete Payment Term"
         onClose={() => {
           deletePaymentTermDialog.onFalse();
           setSelectedPaymentTerm(null);
         }}
-        title="Delete Payment Term"
-        content={
-          <>
-            Delete payment term <strong>{selectedPaymentTerm?.paymentTermName}</strong>? Only an
-            unused first draft can be deleted.
-          </>
+        onDelete={
+          canDelete && selectedPaymentTermId
+            ? () => deletePaymentTerm(selectedPaymentTermId).unwrap()
+            : undefined
         }
-        action={
-          <LoadingButton
-            startIcon={<Iconify icon="mdi:delete-outline" />}
-            variant="contained"
-            color="error"
-            size="small"
-            loading={deleteState.isLoading}
-            onClick={handleDeleteConfirm}
-          >
-            Delete
-          </LoadingButton>
-        }
-      />
+        successMessage="Payment term deleted successfully."
+      >
+        Delete payment term <strong>{selectedPaymentTerm?.paymentTermName}</strong>? Only an
+        unused first draft can be deleted.
+      </FinanceSettingDeleteDialog>
 
       <ConfirmDialog
         open={Boolean(publishTarget)}

@@ -5,9 +5,11 @@ import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import FinanceIncomeCategoriesScreen from './index';
+import FinanceExpenseCategoriesScreen from '../ExpenseCategories/ExpenseCategories';
 
 const mocks = vi.hoisted(() => ({
   canDelete: true,
+  isActive: false,
   isUsed: false,
   isSystem: false,
   deletionReason: undefined as string | null | undefined,
@@ -50,7 +52,7 @@ vi.mock('src/redux/finance/incomeCategory', () => ({
         {
           id: 'income',
           name: mocks.isSystem ? 'None' : 'Donations',
-          isActive: true,
+          isActive: mocks.isActive,
           canDelete: !mocks.isUsed && !mocks.isSystem,
           isSystemCategory: mocks.isSystem,
           isUsedInDownstream: mocks.isUsed,
@@ -67,11 +69,25 @@ vi.mock('src/redux/finance/incomeCategory', () => ({
   useGetIncomeCategoryVersionsQuery: () => ({}),
   usePatchIncomeCategoryStatusMutation: () => [vi.fn(), { isLoading: false }],
 }));
+vi.mock('src/redux/finance/expenseCategory', () => ({
+  useGetExpenseCategoryQuery: () => ({
+    currentData: {
+      items: [{ id: 'expense', name: 'Supplies', isActive: false, canDelete: true, tags: [] }],
+      totalCount: 1,
+    },
+    isLoading: false,
+    isFetching: false,
+  }),
+  useDeleteExpenseCategoryMutation: () => [mocks.deleteCategory, { isLoading: mocks.deleting }],
+  useGetExpenseCategoryVersionsQuery: () => ({}),
+  usePatchExpenseCategoryStatusMutation: () => [vi.fn(), { isLoading: false }],
+}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.success } }));
 vi.mock('src/components/custom-breadcrumbs', () => ({ CustomBreadcrumbs: () => null }));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('./Components/IncomeCategoryForm', () => ({ default: () => null }));
+vi.mock('../ExpenseCategories/Components/ExpenseCategoryForm', () => ({ default: () => null }));
 vi.mock('src/screens/finance/settings/components/AccountCategoryVersionDrawer', () => ({
   default: () => null,
 }));
@@ -111,6 +127,7 @@ vi.mock('src/components/adaptive-three-dots-actions', () => ({
 describe('Income category deletion', () => {
   beforeEach(() => {
     mocks.canDelete = true;
+    mocks.isActive = false;
     mocks.isUsed = false;
     mocks.isSystem = false;
     mocks.deletionReason = undefined;
@@ -121,6 +138,7 @@ describe('Income category deletion', () => {
 
   it('keeps the built-in None category available by disabling edit, status and deletion', () => {
     mocks.isSystem = true;
+    mocks.isActive = true;
     render(<FinanceIncomeCategoriesScreen />);
     expect(screen.getByRole('switch', { name: 'Deactivate None' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled();
@@ -128,7 +146,15 @@ describe('Income category deletion', () => {
     expect(screen.getByRole('button', { name: 'Version history' })).toBeEnabled();
   });
 
-  it('allows an unused active category, then sends DELETE only after confirmation succeeds', async () => {
+  it('explains that active categories must be deactivated before deletion', () => {
+    mocks.isActive = true;
+    render(<FinanceIncomeCategoriesScreen />);
+    const action = screen.getByRole('button', { name: 'Delete' });
+    expect(action).toBeDisabled();
+    expect(action).toHaveAttribute('title', 'Deactivate this category before deleting it.');
+  });
+
+  it('deletes an unused inactive category after confirmation without a toast', async () => {
     mocks.deleteCategory.mockReturnValue({ unwrap: () => Promise.resolve() });
     render(<FinanceIncomeCategoriesScreen />);
     const action = screen.getByRole('button', { name: 'Delete' });
@@ -141,22 +167,20 @@ describe('Income category deletion', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(mocks.deleteCategory).toHaveBeenCalledExactlyOnceWith('income'));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(mocks.success).toHaveBeenCalled();
+    expect(mocks.success).not.toHaveBeenCalled();
   });
 
   it('leaves the record and confirmation visible when a new dependency rejects deletion', async () => {
     mocks.deleteCategory.mockReturnValue({
-      unwrap: () =>
-        Promise.reject(
-          Object.assign(new Error('Category in use'), {
-            data: {
-              error: {
-                code: 'Finance:Accounts:Settings:CategoryInUse',
-                message: 'One or more business rules were violated.',
-              },
-            },
-          })
-        ),
+      unwrap: vi.fn().mockRejectedValue({
+        status: 409,
+        data: {
+          error: {
+            code: 'Finance:Accounts:Settings:CategoryInUse',
+            message: 'One or more business rules were violated.',
+          },
+        },
+      }),
     });
     render(<FinanceIncomeCategoriesScreen />);
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
@@ -166,6 +190,23 @@ describe('Income category deletion', () => {
     );
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(mocks.success).not.toHaveBeenCalled();
+  });
+
+  it('shows the specific reason from a delete conflict in the confirmation', async () => {
+    mocks.deleteCategory.mockReturnValue({
+      unwrap: vi.fn().mockRejectedValue({
+        status: 409,
+        data: {
+          errorCode: 'Finance:Accounts:Settings:CategoryInUse',
+          detail: 'Used by transactions.',
+        },
+      }),
+    });
+    render(<FinanceIncomeCategoriesScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    const dialog = within(screen.getByRole('dialog'));
+    fireEvent.click(dialog.getByRole('button', { name: 'Delete' }));
+    expect(await dialog.findByRole('alert')).toHaveTextContent('Used by transactions.');
   });
 
   it('blocks referenced categories and explains their actual dependency state', () => {
@@ -210,5 +251,28 @@ describe('Income category deletion', () => {
     const dialog = within(screen.getByRole('dialog'));
     expect(dialog.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(dialog.getByRole('button', { name: 'Delete' })).toBeDisabled();
+  });
+
+  it('retains an expense category and offers retry when the server rejects deletion', async () => {
+    mocks.deleteCategory
+      .mockReturnValueOnce({
+        unwrap: vi.fn().mockRejectedValue({
+          status: 409,
+          data: { detail: 'Used by a refund policy.' },
+        }),
+      })
+      .mockReturnValueOnce({ unwrap: () => Promise.resolve() });
+
+    render(<FinanceExpenseCategoriesScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    const dialog = within(screen.getByRole('dialog'));
+    fireEvent.click(dialog.getByRole('button', { name: 'Delete' }));
+    expect(await dialog.findByRole('alert')).toHaveTextContent('Used by a refund policy.');
+    expect(screen.getAllByText('Supplies')).toHaveLength(2);
+    expect(mocks.success).not.toHaveBeenCalled();
+    fireEvent.click(dialog.getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(mocks.deleteCategory).toHaveBeenCalledTimes(2);
+    expect(mocks.success).toHaveBeenCalledOnce();
   });
 });

@@ -266,6 +266,13 @@ export const fixtureClassRecords: Record<string, any[]> = {
   class: [readyFixture, { ...readyFixture, id: 'second', name: 'Class 5 Activity Fees' }],
   other: [{ ...readyFixture, id: 'class-six-fees', name: 'Class 6 Annual Fees' }],
 };
+const deleteDrafts = new URLSearchParams(window.location.search).has('delete-drafts');
+if (deleteDrafts) {
+  fixtureClassRecords.class = [
+    { id: 'unused-draft', name: 'Unused Fee Structure Draft' },
+    { id: 'referenced-draft', name: 'Fee Structure Draft With New Dependency' },
+  ].map((draft) => ({ ...readyFixture, ...draft, revisionRootId: draft.id }));
+}
 const navigationCount = Number(new URLSearchParams(window.location.search).get('structures') ?? 0);
 if (new URLSearchParams(window.location.search).has('revision-name')) {
   fixtureClassRecords.class = [
@@ -412,6 +419,15 @@ export default function useFixtureApi({
         setLoading(true);
         try {
           if (action === 'preview') return preview(args.standardFeeStructures);
+          if (action === 'delete' && deleteDrafts) {
+            if (args.structureId === 'referenced-draft') {
+              throw { status: 409, data: { detail: 'This fee structure draft is now in use.' } };
+            }
+            fixtureClassRecords[args.classId] = (fixtureClassRecords[args.classId] ?? []).filter(
+              (row) => row.id !== args.structureId
+            );
+            return undefined;
+          }
           if (action === 'save' || action === useSaveStructureDraftMutation) {
             const revision = fixtureClassRecords.class.find(
               (item) => item.id === args.structureId && item.previousRevisionId

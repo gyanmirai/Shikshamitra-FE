@@ -4,12 +4,14 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '@mui/material/styles';
 import { Box, Button, CssBaseline, Stack, Typography } from '@mui/material';
+import { Toaster } from 'sonner';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { financePermissions } from 'src/constants/finance-menu';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import FinanceChargeCategory from 'src/screens/finance/settings/ChargeCategory/ChargeCategory';
 import ConcessionType from 'src/screens/finance/settings/ConcessionTypeSetting';
+import ExceptionWindowsDialog from 'src/screens/finance/policies/components/ExceptionWindowsDialog';
 import 'simplebar-react/dist/simplebar.min.css';
 const permissions = [
   ...Object.values(financePermissions.fees.settings.chargeCategoryActions),
@@ -25,6 +27,7 @@ const store = configureStore({
 });
 function Fixture() {
   const [view, setView] = React.useState('charge');
+  const [windowsOpen, setWindowsOpen] = React.useState(false);
   return (
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -36,11 +39,14 @@ function Fixture() {
           <Stack direction="row">
             <Button onClick={() => setView('charge')}>Charge Category workspace</Button>
             <Button onClick={() => setView('concession')}>Concession Type workspace</Button>
+            <Button onClick={() => setWindowsOpen(true)}>Exception Windows</Button>
           </Stack>
           <Box sx={{ flex: 1, minHeight: 0 }}>
             {view === 'charge' ? <FinanceChargeCategory /> : <ConcessionType />}
           </Box>
         </Box>
+        <ExceptionWindowsDialog open={windowsOpen} onClose={() => setWindowsOpen(false)} />
+        <Toaster />
       </ThemeProvider>
     </Provider>
   );

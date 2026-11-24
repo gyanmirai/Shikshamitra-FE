@@ -204,8 +204,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
                         icon: GlobalIcons.delete,
                         color: 'error.main',
                         disabled: !canDeleteConcessionType(concessionType),
-                        tooltip:
-                          'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                        tooltip: canDeleteConcessionType(concessionType)
+                          ? `Delete ${concessionType.name}`
+                          : 'This concession type is in use and cannot be deleted.',
                         onClick: () => onDelete?.(concessionType),
                       },
                     ]

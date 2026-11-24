@@ -41,12 +41,14 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
   const [addBankAccount, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePostBankAccountMutation,
+    popupConfig: { error: false },
   });
 
   // PUT mutation for updating
   const [updateBankAccount, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePutBankAccountMutation,
+    popupConfig: { error: false },
   });
 
   const formik = useFormik({
@@ -107,10 +109,11 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
       onClose(null, true);
     } catch (error) {
       const problem = getAccountSettingSaveError(error, 'bank');
-      setSaveError(problem.message);
       if (problem.field) {
         formik.setFieldTouched(problem.field, true, false);
         formik.setFieldError(problem.field, problem.message);
+      } else {
+        setSaveError(problem.message);
       }
     }
   };

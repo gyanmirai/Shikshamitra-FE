@@ -24,6 +24,7 @@ import { getStorage, setStorage } from 'src/hooks/use-local-storage';
 import { Box, Stack, Alert, Button, Typography, useMediaQuery } from '@mui/material';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { getFinanceSettingErrorMessage } from '../../components/finance-setting-error';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import { FeeStructureFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
@@ -632,6 +633,7 @@ export default function FeeStructureWorkspaceCard({
     }
     try {
       if (action === 'delete') {
+        if (locked || !settings?.permissions.delete) return;
         if (record) await remove({ structureId: record.id, classId: initialData.classId }).unwrap();
         onDeleted?.();
         setConfirmation(null);
@@ -672,7 +674,14 @@ export default function FeeStructureWorkspaceCard({
       }
       setConfirmation(null);
     } catch (cause) {
-      showSaveError(cause);
+      if (action === 'delete') {
+        setError(getFinanceSettingErrorMessage(
+          cause,
+          'Could not delete the fee structure draft. Refresh the list to check it before retrying.'
+        ));
+      } else {
+        showSaveError(cause);
+      }
     }
   };
   const reviewRef = useRef(review);
@@ -835,7 +844,7 @@ export default function FeeStructureWorkspaceCard({
           Class context could not be loaded.
         </Alert>
       )}
-      {error && (
+      {error && confirmation !== 'delete' && (
         <Alert severity="error" sx={{ mx: 2.5, mb: 2, whiteSpace: 'pre-line' }}>
           {error}
         </Alert>
@@ -1137,7 +1146,9 @@ export default function FeeStructureWorkspaceCard({
       <ConfirmDialog
         open={!!confirmation}
         onClose={() => {
-          if (!navigationBusy) setConfirmation(null);
+          if (navigationBusy) return;
+          if (confirmation === 'delete') setError('');
+          setConfirmation(null);
         }}
         disableCancel={navigationBusy}
         disableEscapeKeyDown={navigationBusy}

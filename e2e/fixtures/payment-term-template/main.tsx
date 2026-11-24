@@ -64,7 +64,9 @@ function Fixture() {
   const [savedName, setSavedName] = React.useState('');
   const [mode, setMode] = React.useState<'create' | 'edit' | 'duplicate'>('edit');
   const [detailsTab, setDetailsTab] = React.useState<'details' | 'versions' | null>(null);
-  const [showList, setShowList] = React.useState(false);
+  const [showList, setShowList] = React.useState(() =>
+    new URLSearchParams(window.location.search).has('delete-drafts')
+  );
   const editData = {
     id: 'monthly',
     paymentTermName: 'monthly',

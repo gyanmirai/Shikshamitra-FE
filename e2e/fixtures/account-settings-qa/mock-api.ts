@@ -3,6 +3,9 @@ import { useMemo, useSyncExternalStore } from 'react';
 // Local-only synthetic fixture. These hooks never call the live API.
 type Kind = 'Income' | 'Expense' | 'Bank';
 type Row = Record<string, any>;
+const canDeleteSetting = (row: Row) =>
+  !row.isSystemCategory && !row.isUsedInDownstream && !row.isActive;
+
 const seed: Record<Kind, Row[]> = {
   Income: [
     {
@@ -11,6 +14,18 @@ const seed: Record<Kind, Row[]> = {
       tags: ['qa', 'शुल्क'],
       description: 'QA income शुल्क <b>literal</b>',
       isActive: true,
+      concurrencyStamp: '1',
+      version: 1,
+      canDelete: false,
+      deletionBlockedReason: 'Deactivate this category before deleting it.',
+    },
+    {
+      id: 'income-used-qa',
+      name: 'Historical Donations',
+      tags: [],
+      isActive: false,
+      isUsedInDownstream: true,
+      deletionBlockedReason: 'Used by transactions.',
       concurrencyStamp: '1',
       version: 1,
       canDelete: false,
@@ -78,13 +93,14 @@ function useList(kind: Kind, params: Row = {}) {
   const data = useMemo(() => ({
       items: matches
         .slice(((params.page || 1) - 1) * pageSize, (params.page || 1) * pageSize)
-        .map((row) =>
-          kind === 'Bank'
-            ? { ...row, accountNumber: null, upiId: null, ifscCode: 'QAAA*******' }
-            : row
-        ),
+        .map((row) => {
+          const result = { ...row, canDelete: canDeleteSetting(row) };
+          return kind === 'Bank'
+            ? { ...result, accountNumber: null, upiId: null, ifscCode: 'QAAA*******' }
+            : result;
+        }),
       totalCount: matches.length,
-    }), [rows, term, pageSize, params.page]);
+    }), [kind, rows, term, pageSize, params.page]);
   return {
     data,
     currentData: data,
@@ -110,7 +126,13 @@ function useMutation(kind: Kind, action: 'create' | 'update' | 'status' | 'delet
               : row.name?.trim().toLowerCase() === body.name?.trim().toLowerCase())
         );
         if (duplicate && action !== 'status' && action !== 'delete')
-          throw { data: { error: { code: 'Finance:Accounts:Settings:DuplicateName' } } };
+          throw {
+            status: 409,
+            data: {
+              errorCode: 'Finance:Accounts:Settings:DuplicateName',
+              detail: 'A record with this name or account number already exists for this academic year.',
+            },
+          };
         let result: Row;
         if (action === 'create') {
           result = {
@@ -120,13 +142,27 @@ function useMutation(kind: Kind, action: 'create' | 'update' | 'status' | 'delet
             version: 1,
             concurrencyStamp: '1',
             canDelete: false,
+            ...(kind === 'Income' && {
+              deletionBlockedReason: 'Deactivate this category before deleting it.',
+            }),
           };
           publish({ ...state, [kind]: [...state[kind], result] });
         } else {
           result = { ...state[kind].find((row) => row.id === id), ...body };
           result.version = (result.version || 1) + 1;
           result.concurrencyStamp = String(result.version);
-          result.canDelete = !result.isActive;
+          result.canDelete = canDeleteSetting(result);
+          if (kind === 'Income') {
+            const dependencyReason = result.isUsedInDownstream
+              ? result.deletionBlockedReason || 'This income category is in use.'
+              : null;
+            result.deletionBlockedReason = dependencyReason ?? (
+              result.isActive ? 'Deactivate this category before deleting it.' : null
+            );
+            if (action === 'delete' && !result.canDelete) {
+              throw { status: 409, data: { detail: result.deletionBlockedReason } };
+            }
+          }
           if (kind === 'Bank') {
             result.maskedAccountNumber =
               '*'.repeat(Math.max(0, result.accountNumber.length - 4)) +
@@ -154,6 +190,28 @@ function useHistory(kind: Kind, input: HistoryQuery) {
   const take = typeof input === 'string' ? 50 : input.maxResultCount || 50;
   const rows = useRows(kind);
   const row = rows.find((item) => item.id === id);
+  const creationFields = [
+    { fieldName: 'Name', newValue: JSON.stringify(row?.name) },
+    { fieldName: 'IsActive', newValue: 'true' },
+    { fieldName: 'Description', newValue: 'null' },
+    { fieldName: 'EffectiveFrom', newValue: 'null' },
+    { fieldName: 'EffectiveTo', newValue: 'null' },
+    { fieldName: 'DeactivationReason', newValue: 'null' },
+    { fieldName: 'DefaultAccountHeadId', newValue: '"internal-account-id"' },
+    { fieldName: 'Code', newValue: '"3A251E846DEA63D42F401CE39C8F04E9"' },
+  ];
+  const updateFields = [
+    {
+      fieldName: 'Name',
+      originalValue: JSON.stringify(row?.name),
+      newValue: JSON.stringify(row?.name),
+    },
+    { fieldName: 'Description', originalValue: '"Previous description"', newValue: 'null' },
+  ];
+  const categoryFields: Record<number, typeof updateFields | typeof creationFields> = {
+    1: creationFields,
+    120: updateFields,
+  };
   return {
     currentData: {
       items: row
@@ -163,7 +221,7 @@ function useHistory(kind: Kind, input: HistoryQuery) {
               changeAction: index === 119 ? 'created' : 'updated',
               actorName: 'QA Fixture',
               changeTime: '2026-10-14T07:00:00Z',
-              changedFields: [],
+              changedFields: kind === 'Bank' ? [] : (categoryFields[120 - index] ?? []),
             })).slice(skip, skip + take)
         : [],
       totalCount: row ? 120 : 0,

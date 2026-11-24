@@ -38,6 +38,7 @@ interface VersionDiffTableProps {
   showSummary?: boolean;
   collapsibleChanges?: boolean;
   showSavedDetails?: boolean;
+  noChangesMessage?: string;
   renderFieldValue?: (fieldName: string, value: unknown) => React.ReactNode;
 }
 
@@ -120,6 +121,7 @@ function VersionDiffTable({
   showSummary = true,
   collapsibleChanges = false,
   showSavedDetails = false,
+  noChangesMessage = 'No changes recorded for this version.',
   renderFieldValue,
 }: VersionDiffTableProps) {
   const snapshotFields = Object.entries(selectedVersion.snapshotAfter ?? {}).filter(
@@ -208,7 +210,7 @@ function VersionDiffTable({
         {selectedVersion.changedFields.length === 0 ? (
           <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
-              No changes recorded for this version.
+              {noChangesMessage}
             </Typography>
           </Paper>
         ) : (

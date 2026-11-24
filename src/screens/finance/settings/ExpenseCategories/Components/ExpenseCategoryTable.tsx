@@ -180,11 +180,13 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
                     onDelete(row as IExpenseCategory);
                   },
                   disabled: !access.canDelete || !(row as IExpenseCategory).canDelete,
-                  tooltip: (row as IExpenseCategory).isSystemCategory
-                    ? 'None is a built-in category and cannot be deleted.'
-                    : (row as IExpenseCategory).isActive
-                    ? 'Deactivate this record before deleting it.'
-                    : 'This record is referenced by other Finance records and cannot be deleted.',
+                  tooltip: (row as IExpenseCategory).canDelete
+                    ? undefined
+                    : (row as IExpenseCategory).isSystemCategory
+                      ? 'None is a built-in category and cannot be deleted.'
+                      : (row as IExpenseCategory).isActive
+                        ? 'Deactivate this record before deleting it.'
+                        : 'This record is referenced by other Finance records and cannot be deleted.',
                   color: 'error.main',
                 },
               ]}
@@ -309,7 +311,6 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       />
       <AccountCategoryVersionDrawer
         key={historyItem?.id}
-        hiddenFields={['tags']}
         open={Boolean(historyItem)}
         title={historyItem?.name || 'Expense category'}
         recordType="Expense category"

@@ -56,6 +56,10 @@ additional draft was created by a retry.
 
 ## Common components and interaction rules
 
+The Refund and Proration policy pickers omit the Fee head coverage column and its mobile
+caption. Refund keeps the Fee Heads list; both retain policy names, versions, selection actions
+and their existing eligibility checks. Collection continues to show its coverage summary.
+
 Proration policy details opened from the Fee Structure policy picker reuse the shared Policy
 details drawer. This context shows saved configuration, fee-head rules, version and audit details
 only; it omits the editable Proration Preview calculator. The calculator remains available in the

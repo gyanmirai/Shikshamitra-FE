@@ -10,7 +10,6 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Alert, Stack, Button } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -26,6 +25,7 @@ import {
 
 import IncomeCategoryForm from './Components/IncomeCategoryForm';
 import IncomeCategoryTable from './Components/IncomeCategoryTable';
+import { getFinanceSettingErrorMessage } from '../components/finance-setting-error';
 
 import type { IIncomeCategory } from './Components/type';
 
@@ -74,6 +74,12 @@ const FinanceIncomeCategoriesScreen = () => {
     null
   );
   const [deleteError, setDeleteError] = useState('');
+  const canDeleteSelectedCategory =
+    access.canDelete &&
+    selectedIncomeCategory?.canDelete &&
+    !selectedIncomeCategory.isSystemCategory &&
+    !selectedIncomeCategory.isActive &&
+    !selectedIncomeCategory.isUsedInDownstream;
   const dispatch = useDispatch();
 
   /**
@@ -118,7 +124,15 @@ const FinanceIncomeCategoriesScreen = () => {
 
       <IncomeCategoryTable
         onDelete={(data) => {
-          if (!access.canDelete || !data.canDelete || data.isUsedInDownstream) return;
+          if (
+            !access.canDelete ||
+            !data.canDelete ||
+            data.isSystemCategory ||
+            data.isActive ||
+            data.isUsedInDownstream
+          ) {
+            return;
+          }
           setDeleteError('');
           setSelectedIncomeCategory(data);
           deleteIncomeCategoryDialog.onTrue();
@@ -194,33 +208,23 @@ const FinanceIncomeCategoriesScreen = () => {
             color="error"
             size="small"
             loading={isDeleting}
-            disabled={
-              isDeleting ||
-              !access.canDelete ||
-              !selectedIncomeCategory?.canDelete ||
-              selectedIncomeCategory.isUsedInDownstream
-            }
+            disabled={isDeleting || !canDeleteSelectedCategory}
             onClick={async () => {
-              if (
-                isDeleting ||
-                !access.canDelete ||
-                !selectedIncomeCategory?.canDelete ||
-                selectedIncomeCategory.isUsedInDownstream
-              )
-                return;
+              if (isDeleting || !canDeleteSelectedCategory) return;
               setDeleteError('');
               try {
                 await deleteIncomeCategory(selectedIncomeCategory.id).unwrap();
                 deleteIncomeCategoryDialog.onFalse();
                 setSelectedIncomeCategory(null);
-                shikshaMitraToast.success({ message: 'Income category deleted successfully' });
               } catch (error) {
                 const problem = parseApiProblemDetail(error);
-                setDeleteError(
+                const fallback =
                   problem.errorCode === 'Finance:Accounts:Settings:CategoryInUse'
                     ? 'This income category is now referenced by other Finance records and cannot be deleted.'
-                    : problem.detail
-                );
+                    : problem.errorCode === 'Finance:Accounts:Settings:ActiveRecordCannotBeDeleted'
+                      ? 'Deactivate this category before deleting it.'
+                      : 'Could not delete the income category. Refresh the list to check it before retrying.';
+                setDeleteError(getFinanceSettingErrorMessage(error, fallback, problem));
               }
             }}
           >

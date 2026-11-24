@@ -10,7 +10,7 @@ export default defineConfig({
     alias: [
       { find: /^@mui\/icons-material$/, replacement: `${here}/../payment-term-template/icon-barrel.ts` },
       {
-        find: /^src\/redux\/(customQueryAndMutation|feeCategory\/feeCategoryApi|feeHeadManage\/feeHeadManageApi|finance\/financeRoutingApi)$/,
+        find: /^src\/redux\/(customQueryAndMutation|feeCategory\/feeCategoryApi|feeHeadManage\/feeHeadManageApi|finance\/(financeRoutingApi|receiptBookApi))$/,
         replacement: `${here}/mock-api.ts`,
       },
       { find: 'src', replacement: `${repo}/src` },

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import dayjs from 'dayjs';
 
 export const useGetYearQuery = () => ({
@@ -131,6 +131,35 @@ const list = {
   ],
   totalCount: 1,
 };
+const deleteDrafts = new URLSearchParams(window.location.search).has('delete-drafts');
+const draftTerms = [
+  { id: 'unused-draft', name: 'Unused Payment Term Draft', code: 'PT-DELETE-DRAFT' },
+  {
+    id: 'referenced-draft',
+    name: 'Payment Term Draft With New Dependency',
+    code: 'PT-CONFLICT-DRAFT',
+  },
+].map((draft) => ({
+  ...list.items[0],
+  ...draft,
+  status: 'Draft',
+  currentVersionNumber: 1,
+  hasDraft: true,
+  hasPublishedVersion: false,
+  referencedStructureCount: 0,
+  canDirectEdit: true,
+  usage: undefined,
+}));
+let termList = deleteDrafts
+  ? { items: [...list.items, ...draftTerms], totalCount: list.totalCount + draftTerms.length }
+  : list;
+const listListeners = new Set<() => void>();
+const subscribeList = (listener: () => void) => {
+  listListeners.add(listener);
+  return () => { listListeners.delete(listener); };
+};
+const getTermList = () => termList;
+
 export const useGetPaymentTermByIdQuery = () => ({
   data: detail,
   currentData: detail,
@@ -153,23 +182,22 @@ export const useGetPaymentTermVersionHistoryQuery = () => ({
   isError: false,
   refetch: () => undefined,
 });
-export const useGetPaymentTermsQuery = (params: any) => ({
-  data:
-    params?.status === 'Archived'
-      ? {
-          items: list.items.map((item) => ({
-            ...item,
-            id: 'archived-monthly',
-            status: 'Archived',
-          })),
-          totalCount: list.items.length,
-        }
-      : list,
-  isLoading: false,
-  isFetching: false,
-  isError: false,
-  refetch: () => undefined,
-});
+export const useGetPaymentTermsQuery = (params: any) => {
+  const currentList = useSyncExternalStore(subscribeList, getTermList);
+  return {
+    data:
+      params?.status === 'Archived'
+        ? {
+            items: list.items.map((item) => ({ ...item, id: 'archived-monthly', status: 'Archived' })),
+            totalCount: list.items.length,
+          }
+        : currentList,
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: () => undefined,
+  };
+};
 export const useLazyGetPaymentTermsQuery = () => [
   useCallback(() => ({ unwrap: async () => list }), []),
 ];
@@ -240,7 +268,23 @@ export const useCreateRevisionMutation = mutation;
 export const useCreatePaymentTermMutation = mutation;
 export const useUpdatePaymentTermDraftMutation = mutation;
 export const usePublishVersionMutation = mutation;
-export const useDeletePaymentTermMutation = mutation;
+export const useDeletePaymentTermMutation = () => {
+  const existing = mutation();
+  if (!deleteDrafts) return existing;
+  return [
+    (id: string) => ({
+      unwrap: async () => {
+        if (id === 'referenced-draft') {
+          throw { status: 409, data: { detail: 'This payment term is now used by a fee structure.' } };
+        }
+        const items = termList.items.filter((item) => item.id !== id);
+        termList = { items, totalCount: items.length };
+        listListeners.forEach((listener) => listener());
+      },
+    }),
+    { isLoading: false },
+  ];
+};
 export const useClonePaymentTermsMutation = mutation;
 export const useArchivePaymentTermMutation = mutation;
 export const useRestorePaymentTermMutation = mutation;

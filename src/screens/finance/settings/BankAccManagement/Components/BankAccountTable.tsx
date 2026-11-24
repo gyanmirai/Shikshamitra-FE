@@ -284,9 +284,11 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
                       onDelete(row as IBankAccount);
                     },
                     disabled: !access.canDelete || !(row as IBankAccount).canDelete,
-                    tooltip: (row as IBankAccount).isActive
-                      ? 'Deactivate this record before deleting it.'
-                      : 'This record is referenced by other Finance records and cannot be deleted.',
+                    tooltip: (row as IBankAccount).canDelete
+                      ? undefined
+                      : (row as IBankAccount).isActive
+                        ? 'Deactivate this record before deleting it.'
+                        : 'This record is referenced by other Finance records and cannot be deleted.',
                     color: 'error.main',
                   },
                 ]}
