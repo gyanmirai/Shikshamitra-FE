@@ -123,7 +123,9 @@ export const academicNotificationTemplateApi = api.enhanceEndpoints({ addTagType
       }),
       invalidatesTags: invalidateOnSuccess,
     }),
-    testSendAcademicNotificationTemplate: builder.mutation<AcademicNotificationTemplateTest, RevisionCommand>({
+    testSendAcademicNotificationTemplate: builder.mutation<
+      AcademicNotificationTemplateTest, RevisionCommand & { command: { webPushSubscriptionId?: string } }
+    >({
       query: ({ templateId, command, ...identity }) => ({
         url: `${templateUrl(templateId)}/test-send`, method: 'POST', body: command,
         expectedSessionOwner: academicNotificationCacheOwner(identity),

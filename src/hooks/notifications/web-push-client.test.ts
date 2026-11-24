@@ -38,6 +38,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   Reflect.deleteProperty(navigator, 'serviceWorker');
 });
@@ -63,6 +64,21 @@ describe('browser notification registration', () => {
     await expect(client.enableWebPush(registration, key, owner, 'v1', register)).rejects.toThrow(/blocked/);
     expect(subscribe).not.toHaveBeenCalled();
     expect(register).not.toHaveBeenCalled();
+  });
+
+  it('recovers when the native enrollment prompt does not settle', async () => {
+    const { client, registration, subscribe, register } = await fixture();
+    subscribe.mockImplementationOnce(() => new Promise(() => {}));
+    vi.useFakeTimers();
+    const failed = vi.fn();
+
+    const timedOut = client.enableWebPush(registration, key, owner, 'v1', register).catch(failed);
+    await vi.advanceTimersByTimeAsync(15_000);
+
+    expect(failed).toHaveBeenCalledWith(expect.objectContaining({ name: 'WebPushEnrollmentTimeoutError' }));
+    await timedOut;
+    expect(register).not.toHaveBeenCalled();
+    await expect(client.enableWebPush(registration, key, owner, 'v1', register)).resolves.toBe('registration-id');
   });
 
   it('detaches a device on tenant or account change', async () => {
@@ -101,6 +117,22 @@ describe('browser notification registration', () => {
     await client.enableWebPush(registration, key, owner, 'v1', register);
 
     await device.removePushDevice(owner, async () => { throw new Error('Offline'); });
+    expect(unsubscribe).toHaveBeenCalledOnce();
+    expect(device.readPushDevice()).toBeNull();
+  });
+
+  it('keeps an explicit opt-out retryable until the server confirms it', async () => {
+    const { device, client, registration, unsubscribe, register } = await fixture();
+    await client.enableWebPush(registration, key, owner, 'v1', register);
+    const failed = new Error('Offline');
+    const disable = vi.fn().mockRejectedValueOnce(failed).mockResolvedValueOnce(undefined);
+
+    await expect(device.disableWebPushDevice(owner, disable)).rejects.toThrow(failed);
+    expect(unsubscribe).not.toHaveBeenCalled();
+    expect(device.readPushDevice()?.id).toBe('registration-id');
+
+    await device.disableWebPushDevice(owner, disable);
+    expect(disable).toHaveBeenCalledTimes(2);
     expect(unsubscribe).toHaveBeenCalledOnce();
     expect(device.readPushDevice()).toBeNull();
   });

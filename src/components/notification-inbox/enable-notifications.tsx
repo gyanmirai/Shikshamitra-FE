@@ -24,13 +24,13 @@ const toggleLabels = {
 } as const;
 
 export default function EnableNotifications() {
-  const { visible, state, busy, failed, toggle, retry } = useWebPush();
+  const { visible, state, busy, failure, toggle, retry } = useWebPush();
   if (!visible) return null;
 
   return (
     <Box sx={{ px: 2.5, py: 1.5, borderBottom: 1, borderColor: 'divider' }}>
       <Typography variant="body2" color="text.secondary" role="status">
-        {failed ? 'The setting could not be saved. Try again.' : messages[state]}
+        {failure ?? messages[state]}
       </Typography>
       {(state === 'enabled' || state === 'ready' || state === 'expired') && (
         <Button size="small" loading={busy} sx={{ mt: 0.5 }} onClick={toggle}>

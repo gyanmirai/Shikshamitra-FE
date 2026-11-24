@@ -90,16 +90,39 @@ export function withPushDevice<T>(action: () => Promise<T>): Promise<T> {
   return next;
 }
 
+async function detachBrowserSubscription(requireConfirmation = false) {
+  const registration = await navigator.serviceWorker.getRegistration('/');
+  if (!registration || !isNotificationWorker(registration)) return;
+  const subscription = await registration.pushManager.getSubscription();
+  if (subscription && !(await subscription.unsubscribe()) && requireConfirmation &&
+      await registration.pushManager.getSubscription()) {
+    throw new Error('The browser subscription could not be removed.');
+  }
+}
+
+export async function disableWebPushDevice(owner: string, disable: (id: string) => Promise<unknown>) {
+  const device = readPushDevice();
+  if (!device?.id || device.owner !== owner || !isCurrentPushOwner(owner)) {
+    throw new Error('The browser registration changed.');
+  }
+  // Make the server change outside the lock. Session recovery can detach the device.
+  await disable(device.id);
+  await withPushDevice(async () => {
+    const current = readPushDevice();
+    if (!current || !isCurrentPushOwner(owner) || current.owner !== owner ||
+        current.installationId !== device.installationId || current.id !== device.id ||
+        current.revision !== device.revision) return;
+    await detachBrowserSubscription(true);
+    window.localStorage.removeItem(deviceKey);
+  });
+}
+
 export async function removePushDevice(owner?: string, disable?: (device: BrowserPushDevice) => Promise<unknown>) {
   if (!isWebPushSupported()) return;
   const removed = await withPushDevice(async () => {
     const device = readPushDevice();
     if (owner !== undefined && device?.owner !== owner) return null;
-    const registration = await navigator.serviceWorker.getRegistration('/');
-    if (registration && isNotificationWorker(registration)) {
-      const subscription = await registration.pushManager.getSubscription();
-      if (subscription) await subscription.unsubscribe();
-    }
+    await detachBrowserSubscription();
     window.localStorage.removeItem(deviceKey);
     return device;
   });
@@ -116,11 +139,7 @@ export async function setWebPushOwner(owner: string | null) {
     if (activeOwner !== owner || window.localStorage.getItem(ownerKey) !== owner) return;
     const device = readPushDevice();
     if (device?.owner === owner) return;
-    const registration = await navigator.serviceWorker.getRegistration('/');
-    if (registration && isNotificationWorker(registration)) {
-      const subscription = await registration.pushManager.getSubscription();
-      if (subscription) await subscription.unsubscribe();
-    }
+    await detachBrowserSubscription();
     window.localStorage.removeItem(deviceKey);
   });
 }

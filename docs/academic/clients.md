@@ -32,7 +32,7 @@ Rules, Templates, and Delivery History share the workspace catalogue request. An
 
 Draft edits and publication send the saved revision stamp. Creating a subsequent draft or restoring default wording sends the template header stamp. Successful revisions refresh template lists, previews, history, and the published choices used by Rules for the same session.
 
-Test send submits just the saved revision ID and stamp. Its queued response provides the operation ID for the sender's Delivery History link.
+Test send submits the saved revision ID and stamp. For browser push it also submits the signed-in account's subscription ID from the browser confirmed in the dialog. Its queued response provides the operation ID for the sender's Delivery History link.
 
 ## Notification delivery and inbox clients
 

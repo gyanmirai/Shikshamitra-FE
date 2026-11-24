@@ -144,7 +144,7 @@ The draft preview updates with sample data as you edit. Save the draft and publi
 
 Browser push displays a generic alert on the device. The editor can preview the template with sample data. Edit the **In-app** template to change what recipients read in the website inbox.
 
-**Send test** queues the saved version for the configured test destination using sample data. WhatsApp delivery requires provider approval for the exact version and language.
+**Send test** queues the saved version with sample data. For browser push, enable browser notifications from the bell, then confirm delivery to this browser for your signed-in account. If the browser subscription changes, reopen the test to confirm it again. WhatsApp delivery requires provider approval for the exact version and language.
 
 Before linking a WhatsApp template, open Communication → Settings → Provider Settings and choose WhatsApp with the provider name `Meta WhatsApp Cloud API`. Enter the Meta business account ID, phone number ID, and the Azure access token's secret reference. Each ID uses digits. The backend still needs the matching token in its server configuration.
 

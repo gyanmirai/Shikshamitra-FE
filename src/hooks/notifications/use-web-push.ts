@@ -12,7 +12,7 @@ import {
   useLazyGetWebPushSubscriptionStatusQuery,
 } from 'src/redux/communication/notification/web-push-api';
 
-import { enableWebPush, decodeVapidKey } from './web-push-client';
+import { enableWebPush, decodeVapidKey, WebPushEnrollmentTimeoutError } from './web-push-client';
 import {
   webPushOwner,
   readPushDevice,
@@ -21,6 +21,7 @@ import {
   preparePushWorker,
   isCurrentPushOwner,
   isWebPushSupported,
+  disableWebPushDevice,
   needsPushHomeScreenInstallation,
 } from './web-push-device';
 
@@ -49,7 +50,7 @@ export function useWebPush() {
   const [state, setState] = useState<DeviceState>('loading');
   const [busy, setBusy] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -121,24 +122,28 @@ export function useWebPush() {
     const { current } = prepared;
     if (!current || current.owner !== owner || busy) return;
     setBusy(true);
-    setFailed(false);
+    setFailure(null);
     try {
       if (state === 'enabled') {
-        await removePushDevice(current.owner, (link) => disable({ owner: current.owner, id: link.id! }).unwrap());
-        setState('ready');
+        await disableWebPushDevice(current.owner, (id) => disable({ owner: current.owner, id }).unwrap());
+        if (isCurrentPushOwner(current.owner)) setAttempt((previous) => previous + 1);
       } else {
         await enableWebPush(current.worker, current.key, current.owner, current.version,
           (registration) => register({ owner: current.owner, registration }).unwrap());
-        setState('enabled');
+        if (isCurrentPushOwner(current.owner)) setState('enabled');
       }
-    } catch {
+    } catch (error) {
+      if (!isCurrentPushOwner(current.owner)) return;
       if (Notification.permission === 'denied') setState('blocked');
-      else setFailed(true);
+      else if (error instanceof WebPushEnrollmentTimeoutError) setFailure(error.message);
+      else setFailure(state === 'enabled'
+        ? 'Turning off browser notifications could not be confirmed. Try again.'
+        : 'The setting could not be saved. Try again.');
     } finally {
       setBusy(false);
     }
   }
 
   const retry = () => { if (isError) refetch(); else setAttempt((previous) => previous + 1); };
-  return { visible: Boolean(owner), state, busy, failed, toggle, retry };
+  return { visible: Boolean(owner), state, busy, failure, toggle, retry };
 }
