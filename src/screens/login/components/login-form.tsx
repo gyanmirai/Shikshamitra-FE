@@ -18,7 +18,7 @@ type Props = {
 };
 
 export function LoginForm({ form, onPasswordFocusChange }: Props) {
-  const { formik, tenantInactive, errorMessage } = form;
+  const { formik, tenantInactive, errorMessage, handleSchoolCodeChange } = form;
 
   return (
     <Box sx={{ width: 1, maxWidth: 440, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -54,7 +54,7 @@ export function LoginForm({ form, onPasswordFocusChange }: Props) {
               </Alert>
             )}
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-            <LoginCredentials formik={formik} />
+            <LoginCredentials formik={formik} handleSchoolCodeChange={handleSchoolCodeChange} />
             <Link
               component={RouterLink}
               href="/forgot-password"
