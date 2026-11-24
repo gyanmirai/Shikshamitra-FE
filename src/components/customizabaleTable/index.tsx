@@ -58,6 +58,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   summaryRow,
   tableTitle = 'Table View',
   headerContent,
+  footerActions,
   exportLabel = 'Export',
   exportContext: tableExportContext = [],
   exportScope = 'loaded',
@@ -794,7 +795,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 )}
               </Table>
             </TableContainer>
-            {(isShowedDense || isPagination) && (
+            {(isShowedDense || isPagination || footerActions) && (
               <Paper
                 elevation={0}
                 sx={{
@@ -826,6 +827,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                       '& .MuiTypography-root': { fontSize: '13px', fontWeight: 500 },
                     }}
                   />
+                )}
+                {footerActions && (
+                  <Box sx={{ ml: 'auto', minWidth: 0, maxWidth: 1 }}>{footerActions}</Box>
                 )}
                 {isPagination && (
                   <TablePagination
@@ -944,6 +948,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       handleChangeParams,
       tableTitle,
       headerContent,
+      footerActions,
       tableId,
       sortedData,
       data.length,

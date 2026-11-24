@@ -12,7 +12,7 @@ export function NotificationFilterRow({ children }: { children: ReactNode }) {
         display: 'flex',
         flexWrap: 'wrap',
         gap: 1,
-        '& > *': { flex: '0 1 240px', minWidth: 0, maxWidth: '100%' },
+        '& > *': { flex: { xs: '1 1 100%', sm: '0 1 240px' }, minWidth: 0, maxWidth: '100%' },
       }}
     >
       {children}

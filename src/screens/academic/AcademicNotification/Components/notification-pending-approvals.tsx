@@ -4,8 +4,8 @@ import type { AcademicNotificationCacheIdentity } from 'src/redux/academic-notif
 import { useState } from 'react';
 import { fDateTime } from 'src/utils/format-time';
 import { RouterLink } from 'src/routes/components';
-import { Stack, Button, Typography } from '@mui/material';
 import { academicPaths } from 'src/constants/academic-menu';
+import { Link, Stack, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { notificationEventKeyLabel } from 'src/redux/academic-notifications/response-adapters';
 import { useAcademicNotificationPendingApprovalsQuery } from 'src/redux/academic-notifications/delivery-api';
@@ -25,16 +25,17 @@ export function NotificationPendingApprovals({ identity }: { identity: AcademicN
   const next = current?.nextAfterId;
 
   return (
-    <Stack gap={1} sx={{ p: 1, flex: 1, minHeight: 0 }}>
-      <Typography variant="subtitle2" component="h2">Pending Approvals</Typography>
+    <>
+      <Typography variant="subtitle1" component="h2" sx={{ px: 1 }}>Pending Approvals</Typography>
       <CustomizableTable tableId="academic-notification-pending-approvals" tableTitle="Pending Academic notification approvals"
         columns={columns} data={(current?.items ?? []).map((item) => ({
           id: item.operationId,
           notification: (
-            <Button size="small" component={RouterLink}
-              href={`${academicPaths.notification}?view=history&operation=${encodeURIComponent(item.operationId)}`}>
+            <Link component={RouterLink} color="text.primary" variant="body2" underline="always"
+              sx={{ overflowWrap: 'anywhere', fontWeight: 'fontWeightMedium' }}
+              href={`${academicPaths.notification}?view=history&historyMode=approvals&operation=${encodeURIComponent(item.operationId)}`}>
               {notificationEventKeyLabel(item.eventKey)}
-            </Button>
+            </Link>
           ),
           requested: fDateTime(item.createdAt) ?? '—',
           recipients: item.eligibleRecipientCount,
@@ -43,15 +44,15 @@ export function NotificationPendingApprovals({ identity }: { identity: AcademicN
         isLoading={!current && requests.isFetching} isRefreshing={Boolean(current) && requests.isFetching}
         error={requests.error} onRetry={requests.refetch}
         noDataText={afterId ? 'There are no more pending approvals.' : 'No pending approvals are assigned to you.'}
+        footerActions={(afterId || next) && (
+          <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="flex-end">
+            <Button size="small" color="inherit" disabled={!afterId || requests.isFetching}
+              onClick={() => setCursors((previous) => previous.slice(0, -1))}>Previous</Button>
+            <Button size="small" color="inherit" disabled={!next || requests.isFetching}
+              onClick={() => { if (next) setCursors((previous) => [...previous, next]); }}>Next</Button>
+          </Stack>
+        )}
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }} tableContainerProps={{ sx: { height: 1, minHeight: 0 } }} />
-      {(afterId || next) && (
-        <Stack direction="row" gap={1} justifyContent="flex-end">
-          <Button size="small" disabled={!afterId || requests.isFetching}
-            onClick={() => setCursors((previous) => previous.slice(0, -1))}>Previous</Button>
-          <Button size="small" disabled={!next || requests.isFetching}
-            onClick={() => { if (next) setCursors((previous) => [...previous, next]); }}>Next</Button>
-        </Stack>
-      )}
-    </Stack>
+    </>
   );
 }

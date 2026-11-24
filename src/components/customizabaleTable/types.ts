@@ -92,6 +92,8 @@ export interface ICustomizableTableProps {
   tableTitle?: ReactNode;
   /** Content above the toolbar in the workspace card. */
   headerContent?: ReactNode;
+  /** Right-aligned footer controls for server paging that uses cursors instead of page numbers. */
+  footerActions?: ReactNode;
   exportLabel?: string;
   exportContext?: string[];
   exportScope?: 'all' | 'loaded';
