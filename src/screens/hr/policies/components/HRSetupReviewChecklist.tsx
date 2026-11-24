@@ -27,7 +27,9 @@ import {
   AccordionSummary,
 } from '@mui/material';
 
-const assignments = {
+type PolicyGuideItem = { title: string; href: string; description: string };
+
+const assignments: PolicyGuideItem = {
   title: 'Policy Assignments',
   href: hrPaths.policies.assignments,
   description: 'Use optional staff or group assignments when the default policies should differ.',
@@ -313,7 +315,7 @@ export function HRSetupReviewChecklist({ academicYearId }: { academicYearId?: st
   );
   if (!academicYearId || !visible.length) return null;
 
-  const guideItems = visible.flatMap(({ guide }) => (guide ? [guide] : []));
+  const guideItems: PolicyGuideItem[] = visible.flatMap(({ guide }) => (guide ? [guide] : []));
   if (canViewPolicies && hasNavigationPermission(permissions, hrPermissions.policies.assignments)) {
     guideItems.push(assignments);
   }
