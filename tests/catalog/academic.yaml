@@ -228,7 +228,7 @@ scenarios:
   - id: ACM-NOTIFICATIONS-QUEUE-STATUS-001
     module: Academic
     submodule: Notifications
-    title: The notification workspace shows paused processing across Rules, Templates and Delivery History
+    title: Rules, Templates and Delivery History stay usable without a workspace banner while notification processing is paused
     risk: medium
     priority: P1
     type: [functional, regression, responsive, accessibility]

@@ -98,7 +98,8 @@ describe('Academic notification rules workspace', () => {
   it('distinguishes filtered empty results from an empty rule list', () => {
     state.params = 'category=calendar';
     render();
-    expect(screen.getByText('No notification rules match these filters.')).toBeVisible();
+    expect(screen.getByText('No results found')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Clear filters' })).toBeVisible();
   });
 
   it('shows an empty rule list for an authorized scope with no rules', () => {
@@ -110,8 +111,28 @@ describe('Academic notification rules workspace', () => {
   it('keeps the table visible while the rules load without showing an empty list', () => {
     state.reads = { isFetching: true, currentData: undefined, error: undefined };
     render();
-    expect(screen.getByRole('table', { name: 'Academic notification rules table' })).toBeVisible();
+    expect(screen.getByRole('table', { name: 'Academic notification rules table' })).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByText('Loading…')).toBeVisible();
+    expect(screen.queryByText('0–0 of 0')).not.toBeInTheDocument();
     expect(screen.queryByText('No notification rules are available for this scope.')).not.toBeInTheDocument();
+  });
+
+  it('gives each workspace tab a unique panel and names the rules search', () => {
+    render();
+    const tabs = screen.getAllByRole('tab');
+    const panelIds = tabs.map((tab) => tab.getAttribute('aria-controls'));
+    expect(new Set(panelIds).size).toBe(3);
+    expect(screen.getByRole('tabpanel', { name: 'Rules' })).toHaveAttribute('id', panelIds[0]);
+    expect(screen.getByRole('textbox', { name: 'Search notification rules' })).toBeVisible();
+  });
+
+  it('shows a plain Actions heading when the user can configure rules', () => {
+    state.permissions.canManage = true;
+    render();
+    const heading = screen.getByRole('columnheader', { name: 'Actions' });
+    expect(heading).not.toHaveAttribute('aria-sort');
+    expect(within(heading).queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Configure Subject published' })).toBeVisible();
   });
 
   it('offers a retry when the rule read fails', () => {
@@ -121,10 +142,12 @@ describe('Academic notification rules workspace', () => {
     expect(screen.queryByText('No notification rules are available for this scope.')).not.toBeInTheDocument();
   });
 
-  it('identifies the paused channels while rules remain accessible', () => {
-    state.queue = { isQueueWorkerEnabled: true, pausedChannels: [2] };
+  it('shows rules without a pause banner or repeated academic context', () => {
+    state.queue = { isQueueWorkerEnabled: false };
     render();
-    expect(screen.getByRole('status')).toHaveTextContent('Delivery is paused for Email.');
+    expect(screen.queryByText(/Notification processing is paused/)).not.toBeInTheDocument();
+    expect(screen.queryByText('2026 / CBSE / English')).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Rule scope' })).toBeVisible();
     expect(screen.getByRole('table', { name: 'Academic notification rules table' })).toBeVisible();
   });
 
@@ -132,6 +155,6 @@ describe('Academic notification rules workspace', () => {
     state.permissions.canView = false;
     render();
     expect(screen.queryByText('Subject published')).not.toBeInTheDocument();
-    expect(screen.getByText('You do not have access to Academic notification rules.')).toBeVisible();
+    expect(screen.getByText('You do not have access to Academic notifications.')).toBeVisible();
   });
 });

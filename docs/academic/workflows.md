@@ -100,11 +100,11 @@ When the roster's server capability permits locked corrections, an edit action a
 
 ## Configure Academic notification rules
 
-Open **Academics → Notification** and select a category and rule scope. The table shows the effective saved rule, including rules inherited from a broader scope. Older category links open the matching category.
+Open **Academics → Notifications** and select a category and rule scope. The table shows the effective saved rule, including rules inherited from a broader scope. Older category links open the matching category.
 
-If this server's queue processing is paused, the workspace shows a notice across Rules, Templates, and Delivery History. You can prepare rules and templates and review confirmed sends in Delivery History while processing is paused.
-
-The same notice identifies a pause for the current school or individual delivery channels. A source-based send preview and its confirmation show the pause for the selected channels. Paused channels can keep queued work while other channels continue processing.
+You can prepare rules and templates and review confirmed sends in Delivery History while processing is paused.
+A source-based send preview and its confirmation show pauses that affect the selected channels.
+Paused channels can keep queued work while other channels continue processing.
 
 For an unavailable event, **Delivery readiness** and **Configure Rule** show which Academic workflow the event needs or which existing notice covers it. The rule stays unavailable until its source workflow supports sending.
 
@@ -136,7 +136,7 @@ In **Emergency Closure**, choose the scope and then the audiences under **Notify
 
 ## Create an Academic notification template
 
-Open **Academics → Notification → Templates** and choose the event. Staff with school-wide scope and template write access can select **Add starter drafts** to create English drafts for the event's recipient and channel combinations. The confirmation shows the event and scope. The result shows how many drafts were added. Existing templates keep their saved wording.
+Open **Academics → Notifications → Templates** and choose the event. Staff with school-wide scope and template write access can select **Add starter drafts** to create English drafts for the event's recipient and channel combinations. The confirmation shows the event and scope. The result shows how many drafts were added. Existing templates keep their saved wording.
 
 Choose the scope and select **New template** to write a template for one recipient, channel, and language. Use the variable pickers to insert fields from the event catalogue. Email supports rich text. In-app, browser push, and WhatsApp use plain text.
 

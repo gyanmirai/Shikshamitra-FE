@@ -11,9 +11,9 @@ import { notificationEventKeyLabel } from 'src/redux/academic-notifications/resp
 import { useAcademicNotificationPendingApprovalsQuery } from 'src/redux/academic-notifications/delivery-api';
 
 const columns: IColumn[] = [
-  { id: 'notification', label: 'Notification', minWidth: 160, rowHeader: true, isSort: false, render: (value) => value },
-  { id: 'requested', label: 'Requested', minWidth: 140, isSort: false },
-  { id: 'recipients', label: 'Eligible recipients', minWidth: 100, isSort: false },
+  { id: 'notification', label: 'Notification', minWidth: 160, rowHeader: true, isSort: false, isFilter: false, render: (value) => value },
+  { id: 'requested', label: 'Requested', minWidth: 140, isSort: false, isFilter: false },
+  { id: 'recipients', label: 'Eligible recipients', minWidth: 100, isSort: false, isFilter: false, cellSx: { textAlign: 'right' } },
 ];
 
 export function NotificationPendingApprovals({ identity }: { identity: AcademicNotificationCacheIdentity }) {
@@ -39,7 +39,7 @@ export function NotificationPendingApprovals({ identity }: { identity: AcademicN
           requested: fDateTime(item.createdAt) ?? '—',
           recipients: item.eligibleRecipientCount,
         }))}
-        isPagination={false} isFilter={false} isSearch={false} showToolbar={false} showExport={false}
+        isPagination={false} isSearch={false} showColumns showFullScreen showExport={false}
         isLoading={!current && requests.isFetching} isRefreshing={Boolean(current) && requests.isFetching}
         error={requests.error} onRetry={requests.refetch}
         noDataText={afterId ? 'There are no more pending approvals.' : 'No pending approvals are assigned to you.'}

@@ -17,6 +17,7 @@ import {
   useAcademicNotificationHistoryQuery, useAcademicNotificationOperationQuery, useRetryAcademicNotificationDispatchMutation,
 } from 'src/redux/academic-notifications/delivery-api';
 
+import { NotificationFilterRow } from './Components/notification-filter-row';
 import { NotificationHistoryTable } from './Components/notification-history-table';
 import { NotificationDeliveryDetails } from './Components/notification-delivery-details';
 import { NotificationPendingApprovals } from './Components/notification-pending-approvals';
@@ -143,22 +144,24 @@ function NotificationHistoryList({ identity, source, operationId, canManage }: {
     }
   }
 
+  function changeStatus(value: string) {
+    setStatus(value);
+    setPaging((current) => ({ ...current, index: 0 }));
+  }
+
   return (
     <>
-      <Box sx={{ p: 1 }}>
-        <CustomSelect label="Delivery status" size="small" value={status} options={options} sx={{ minWidth: 200 }}
-          onChange={(value) => {
-            setStatus(String(value));
-            setPaging({ index: 0, size: paging.size });
-          }} />
-      </Box>
+      <NotificationFilterRow>
+        <CustomSelect label="Delivery status" size="small" value={status} options={options}
+          onChange={(value) => changeStatus(String(value))} />
+      </NotificationFilterRow>
       {feedback && <Alert severity={feedback.severity} sx={{ mx: 1, mb: 1 }} onClose={() => setFeedback(undefined)}>
         {feedback.message}
       </Alert>}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <NotificationHistoryTable items={result?.items ?? []} total={result?.totalCount ?? 0}
           page={paging.index} pageSize={paging.size} loading={!result && query.isFetching}
-          refreshing={Boolean(result && query.isFetching)} error={query.error} filtered={status !== 'all'}
+          refreshing={Boolean(result && query.isFetching)} error={query.error} status={status} onStatusChange={(value) => changeStatus(value)}
           onDeliveryRetry={canManage ? setSelection : undefined} retryBusy={retryResult.isLoading}
           onRetry={query.refetch} onPage={(page, size) => setPaging({ index: page - 1, size })} />
       </Box>

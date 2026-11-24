@@ -61,7 +61,7 @@ Existing Calendar operations, operational Academic pages, and their own route gu
 
 ## Academic notifications
 
-`/academic/notification` opens the Rules workspace under **Academics → Notification**. It requires `Academics.Notification.View`, and the Configure action requires `Academics.Notification.Add`. The category filter accepts older links using `tab=curriculumManagement`, `tab=timetable`, `tab=homeworkAssignment`, or `tab=examination`.
+`/academic/notification` opens the Rules workspace under **Academics → Notifications**. It requires `Academics.Notification.View`, and the Configure action requires `Academics.Notification.Add`. The category filter accepts older links using `tab=curriculumManagement`, `tab=timetable`, `tab=homeworkAssignment`, or `tab=examination`.
 
 `/academic/notification?view=templates` opens Templates on the same route. The event and template list scope are stored as `templateEvent` and `templateScope`. The View permission allows inspection and sample preview. Draft creation, editing, publishing, restoration, and test send require Add. Deleting a draft requires `Academics.Notification.Delete`. Actions also require write access to the template's medium or the whole school.
 

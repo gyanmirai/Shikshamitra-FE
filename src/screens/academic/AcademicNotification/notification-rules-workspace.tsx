@@ -33,8 +33,7 @@ export function NotificationRulesWorkspace({ scope, filters, catalogue }: {
   const allRows = catalogue.currentData && rules.currentData
     ? notificationRuleRows(catalogue.currentData, rules.currentData) : [];
   const rows = allRows.filter((row) =>
-    (filters.category.value === 'all' || filters.category.families.includes(row.event.definition.category)) &&
-    (filters.status === 'all' || row.state === filters.status)
+    filters.category.value === 'all' || filters.category.families.includes(row.event.definition.category)
   );
   const loading = scope.isLoading ||
     Boolean(!catalogue.currentData && catalogue.isFetching) ||
@@ -54,7 +53,7 @@ export function NotificationRulesWorkspace({ scope, filters, catalogue }: {
         <>
           <NotificationScopeFilter
             category={filters.category.value} status={filters.status} scopeKey={selection?.value ?? ''}
-            scopes={scope.options} contextLabel={selection?.value === 'school' ? '' : scope.contextLabel}
+            scopes={scope.options}
             disabled={Boolean(openRule)}
             onChange={filters.setFilters}
           />
@@ -71,9 +70,12 @@ export function NotificationRulesWorkspace({ scope, filters, catalogue }: {
           {!scope.error && (selection || scope.isLoading) && (
             <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <NotificationRulesTable
-                rows={rows} search={filters.search} loading={loading} refreshing={refreshing} error={error}
-                filtered={filters.category.value !== 'all' || filters.status !== 'all'}
+                rows={rows} search={filters.search} status={filters.status}
+                criteriaKey={JSON.stringify([contextKey, filters.category.value, filters.status, filters.search])}
+                loading={loading} refreshing={refreshing} error={error}
+                filtered={filters.category.value !== 'all'}
                 onSearch={(search) => filters.setFilters({ search })}
+                onStatusChange={(status) => filters.setFilters({ status })}
                 onClear={() => filters.setFilters({ category: 'all', status: 'all', search: '' })}
                 onRetry={() => {
                   if (catalogue.error) catalogue.refetch();

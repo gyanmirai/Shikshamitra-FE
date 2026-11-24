@@ -857,7 +857,7 @@ const academicModule = () => ({
           icon: menuIconView('mdi:clipboard-clock-outline'),
         },
         {
-          title: 'Notification',
+          title: 'Notifications',
           path: academicPaths.notification,
           _action: 'notification',
           shortcutKey: 'Alt+N',
