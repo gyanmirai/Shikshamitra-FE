@@ -50,7 +50,11 @@ export function templateActionError(error: unknown, fallback: string) {
   if (error && typeof error === 'object' && 'status' in error && error.status === 409) {
     return 'This template changed in another session. Your edits are still here. Reopen the template to load the latest version.';
   }
-  return parseApiProblemDetail(error).detail || fallback;
+  const { detail, errorCode } = parseApiProblemDetail(error);
+  if (errorCode === 'WebPushSubscriptionUnavailable' || errorCode === 'WebPushTestDeviceSelectionRequired') {
+    return 'This test needs an active browser subscription for your account. Enable browser notifications from the bell in the browser you want to test, then reopen the test.';
+  }
+  return detail || fallback;
 }
 
 export function useNotificationTemplateForm({
