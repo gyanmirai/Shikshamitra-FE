@@ -1,10 +1,63 @@
 import { test, expect } from '@playwright/test';
 
 async function selectStaff(page: import('@playwright/test').Page, name = 'Synthetic Employee A') {
+  const lookup = page.getByRole('button', { name: 'Find by employee', exact: true });
+  if (await lookup.isVisible()) await lookup.click();
   const staff = page.getByRole('combobox', { name: 'Staff member' });
   await staff.fill('Synthetic');
   await page.getByRole('option', { name, exact: true }).click();
 }
+
+test('browse issued periods, search by staff code, and open a saved payslip', async ({ page }) => {
+  await page.goto('/?month=2026-09');
+  await expect(page.getByRole('link', { name: 'Settings' })).toHaveAttribute(
+    'href',
+    '/hr/payroll/setting/payslip-statement-settings'
+  );
+  const table = page.getByRole('table', { name: 'Issued payslips table' });
+  await expect(table.getByText('Synthetic Employee B')).toBeVisible();
+  await expect(table.getByText('Synthetic Employee A')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Show all periods' }).click();
+  await expect(table.getByText('Synthetic Employee A')).toBeVisible();
+  await page.getByRole('textbox', { name: 'Search table' }).fill('PAY-002');
+  await expect(table.getByText('Synthetic Employee A')).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'View payslip for Synthetic Employee B, Sep 2026' })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'Synthetic Employee B · Sep 2026' })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Payslip PDF viewer' }).locator('canvas')
+  ).toHaveCount(2);
+  await page.getByRole('button', { name: 'Back to payslips' }).click();
+  await expect(page.getByRole('textbox', { name: 'Search table' })).toHaveValue('PAY-002');
+});
+
+test('filter an employee statement from its shared table', async ({ page }) => {
+  await page.goto('/?view=statement&month=2026-10');
+  const workspace = page.getByTestId('hr-employee-statement');
+  await expect(workspace.getByRole('combobox', { name: 'Staff member' })).toBeVisible();
+  await expect(workspace.getByLabel('From month')).toBeVisible();
+  await expect(workspace.getByLabel('To month')).toBeVisible();
+  await expect(
+    page.getByText('Choose a staff member and a valid pay period to preview a statement.')
+  ).toBeVisible();
+  await selectStaff(page);
+  const preview = page.getByRole('table', { name: 'Employee salary statement Preview table' });
+  await expect(workspace.getByText('Period totals', { exact: true })).toBeVisible();
+  await expect(preview.getByText('May 2026', { exact: true })).toBeVisible();
+  await expect(preview.getByText(/₹\s*2,050\.00/).first()).toBeVisible();
+  await workspace.getByRole('button', { name: 'Last 3 months' }).click();
+  await expect(preview.getByText('Aug 2026', { exact: true })).toBeVisible();
+  await expect(preview.getByText('May 2026', { exact: true })).toHaveCount(0);
+  await workspace.getByRole('textbox', { name: 'Search table' }).fill('2026-09');
+  await expect(workspace.getByText('Displayed row totals', { exact: true })).toBeVisible();
+  await expect(preview.getByText('Sep 2026', { exact: true })).toBeVisible();
+  await expect(preview.getByText('Aug 2026', { exact: true })).toHaveCount(0);
+  await workspace.getByText('Document options', { exact: true }).click();
+  await expect(workspace.getByRole('button', { name: 'Use school column preset' })).toBeVisible();
+});
 
 [
   [390, 844],

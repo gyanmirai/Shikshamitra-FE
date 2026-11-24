@@ -733,12 +733,17 @@ Mark Reviewed acknowledges the displayed warning evidence before locking.
 ESIC eligibility and contributions use classified earnings automatically; salary components own the statutory treatment.
 
 Payroll Management > Payslips & Reports opens a sidebar group with separate pages for Monthly Payslips, Employee Statements and School Payroll Register.
-Monthly payslips keep staff and pay-period selectors above one wrapping, stationary document-action group.
+Monthly Payslips opens with a searchable history of issued payslips, newest pay period first.
+Filter by pay period, search by employee name or code, or open a row to view the issued document.
+Find by employee opens the staff and pay-period selectors to check availability, including for payslips that have yet to be issued.
+The Settings action opens the shared payslip and statement settings when permitted.
 The centered PDF starts at Fit width in a bounded keyboard-scrollable viewport, with zoom controls outside the PDF scroll area.
 The surrounding workspace scrolls independently to delivery history and document versions.
 Settings samples retain their Fit page default.
 Monthly issuance retains its existing immutable PDF workflow.
-Statements choose one staff member and an inclusive range.
+Employee Statements places staff, pay-period filters, range shortcuts, and document options in the shared table header.
+Table search and column filters apply to the statement results, while the shared Columns and Export controls manage the preview.
+The table header shows period totals or displayed row totals when table criteria are active.
 The register uses one month.
 Sidebar links carry the selected payroll month to the destination, and leaving a report page stops its preview requests and export polling.
 Previews debounce, cancel obsolete requests and reject stale responses.

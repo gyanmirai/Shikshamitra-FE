@@ -234,7 +234,7 @@ describe('salary document previews', () => {
       sorts: [{ column: 'netPay', direction: 'desc' }],
       filters: [{ column: 'netPay', type: 'greaterThan', value: 0 }],
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh Preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
     await settleDebounce();
     expect(state.tableRetry).toHaveBeenCalledTimes(2);
     expect(state.preview).toHaveBeenCalledTimes(baseCalls);

@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { View403 } from 'src/sections/error';
 import { Stack, Button } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
@@ -15,8 +16,8 @@ import {
   payslipViewPermission,
 } from 'src/constants/hr-menus';
 
+import MonthlyPayslipsWorkspace from './monthly-payslips-workspace';
 import { usePayrollMonth } from '../payroll-cycle/use-payroll-month';
-import MonthlyPayslips from '../salarySlip-generate/salarySlipGenerate';
 import SalaryDocumentsWorkspace from '../salarySlip-generate/salary-documents-workspace';
 
 export default function PayrollDocumentPage({ kind }: { kind: keyof typeof payrollDocumentPages }) {
@@ -36,16 +37,27 @@ export default function PayrollDocumentPage({ kind }: { kind: keyof typeof payro
   return (
     <Stack
       spacing={1}
-      sx={{ minWidth: 0, minHeight: 0, height: 1, overflowY: 'auto', '& > *': { flexShrink: 0 } }}
+      sx={{
+        minWidth: 0,
+        minHeight: 0,
+        height: 1,
+        overflowY:
+          kind === 'register'
+            ? 'auto'
+            : kind === 'statement'
+              ? { xs: 'auto', sm: 'hidden' }
+              : 'hidden',
+        ...(kind === 'register' && { '& > *': { flexShrink: 0 } }),
+      }}
     >
       <CustomBreadcrumbs
         heading={title}
         description={
           isMonthly
-            ? undefined
+            ? 'Browse issued payslips by staff member or pay period.'
             : 'Saved payroll records for the selected period. Missing months and historical fields appear as unavailable.'
         }
-        sx={{ minHeight: 40 }}
+        sx={{ minHeight: 40, flexShrink: 0 }}
         links={[
           {
             name: 'Payroll Management',
@@ -60,13 +72,15 @@ export default function PayrollDocumentPage({ kind }: { kind: keyof typeof payro
               component={RouterLink}
               href={hrPaths.payroll.settings.payrollDocuments}
               size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:cog-outline" />}
             >
-              Payslip &amp; statement settings
+              Settings
             </Button>
           )
         }
       />
-      {isMonthly ? <MonthlyPayslips hideHeading /> : <SalaryDocumentsWorkspace kind={kind} />}
+      {isMonthly ? <MonthlyPayslipsWorkspace /> : <SalaryDocumentsWorkspace kind={kind} />}
     </Stack>
   );
 }

@@ -1,9 +1,13 @@
 import { jsPDF } from 'jspdf';
 import { defineConfig } from 'vite';
+import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = fileURLToPath(new URL('../../../', import.meta.url));
+const pdfWorkerDir = realpathSync(
+  fileURLToPath(new URL('../../../node_modules/pdfjs-dist/build', import.meta.url))
+);
 const document = (id: string, revision = 2) => ({
   id: `${id}-r${revision}`,
   salarySlipId: `${id}-slip`,
@@ -36,7 +40,7 @@ export default defineConfig({
     'process.env': JSON.stringify({ NEXT_PUBLIC_API_URL: '', BUILD_STATIC_EXPORT: 'false' }),
   },
   esbuild: { jsx: 'automatic' },
-  server: { host: '127.0.0.1', port: 4614, strictPort: true, fs: { allow: [repo] } },
+  server: { host: '127.0.0.1', port: 4614, strictPort: true, fs: { allow: [repo, pdfWorkerDir] } },
   plugins: [
     {
       name: 'synthetic-salary-documents',
@@ -45,6 +49,78 @@ export default defineConfig({
           if (!req.url?.startsWith('/api/')) return next();
           const url = new URL(req.url, 'http://127.0.0.1');
           res.setHeader('Content-Type', 'application/json');
+          if (
+            url.pathname.endsWith('/reports/preview') ||
+            url.pathname.endsWith('/hr/table-query')
+          ) {
+            const chunks = [];
+            for await (const chunk of req) chunks.push(Buffer.from(chunk));
+            const body = JSON.parse(Buffer.concat(chunks).toString());
+            const request = body.query ?? body;
+            const search = body.criteria?.search?.trim().toLowerCase();
+            const filters = request.filters;
+            const columns = [
+              ['month', 'Month'],
+              ['employeeCode', 'Staff code'],
+              ['employeeName', 'Staff name'],
+              ['totalEarnings', 'Total earnings'],
+              ['totalDeduction', 'Total deductions'],
+              ['netPay', 'Net pay'],
+              ['pf', 'PF'],
+              ['pt', 'PT'],
+              ['status', 'Document status'],
+            ]
+              .filter(([id]) => request.columns.includes(id) || id === 'pf' || id === 'pt')
+              .map(([id, label]) => ({ id, label }));
+            const rows = ['2026-10', '2026-09', '2026-08', '2026-07', '2026-06', '2026-05']
+              .filter(
+                (month) =>
+                  month >= filters.fromDate.slice(0, 7) && month <= filters.toDate.slice(0, 7)
+              )
+              .map((month, index) => ({
+                month,
+                employeeCode: filters.employeeIds[0] === 'employee-a' ? 'PAY-001' : 'PAY-002',
+                employeeName:
+                  filters.employeeIds[0] === 'employee-a'
+                    ? 'Synthetic Employee A'
+                    : 'Synthetic Employee B',
+                totalEarnings: index === 0 ? '56750.00' : '55000.00',
+                totalDeduction: '2250.00',
+                netPay: index === 0 ? '54500.00' : '52750.00',
+                pf: '2050.00',
+                pt: '200.00',
+                status: 'Paid',
+              }))
+              .filter(
+                (row) =>
+                  !search ||
+                  Object.values(row).some((value) => value.toLowerCase().includes(search))
+              );
+            const sum = (key: 'totalEarnings' | 'totalDeduction' | 'netPay') =>
+              rows.reduce((total, row) => total + Number(row[key]), 0);
+            return res.end(
+              JSON.stringify({
+                columns,
+                rows,
+                totalCount: rows.length,
+                dataSource: request.dataSource,
+                reportType: request.reportType,
+                page: request.page,
+                pageSize: request.pageSize,
+                normalizedFilters: filters,
+                totalsLabel: 'Displayed Row Totals',
+                totals: {
+                  totalEarnings: sum('totalEarnings'),
+                  totalDeduction: sum('totalDeduction'),
+                  netPay: sum('netPay'),
+                },
+              })
+            );
+          }
+          if (url.pathname.endsWith('/payslip-settings'))
+            return res.end(
+              JSON.stringify({ presentation: { statementColumns: ['status', 'payableDays'] } })
+            );
           if (url.pathname.endsWith('/employees/options'))
             return res.end(
               JSON.stringify({
@@ -55,6 +131,32 @@ export default defineConfig({
                 hasMore: false,
               })
             );
+          if (url.pathname.endsWith('/payslip-documents/issued')) {
+            const period = url.searchParams.get('monthYear');
+            const search = url.searchParams.get('search')?.toLowerCase();
+            const skip = Number(url.searchParams.get('skipCount') ?? 0);
+            const size = Number(url.searchParams.get('maxResultCount') ?? 25);
+            const items = ['2026-10', '2026-09']
+              .map((monthYear, index) => ({
+                id: `employee-${index}-issued`,
+                employeeId: index === 0 ? 'employee-a' : 'employee-b',
+                employeeName: `Synthetic Employee ${index === 0 ? 'A' : 'B'}`,
+                employeeCode: `PAY-00${index + 1}`,
+                monthYear,
+                issuedAt: '2026-11-03T08:00:00Z',
+                revision: 2,
+                isPaid: index === 0,
+              }))
+              .filter(
+                (row) =>
+                  (!period || row.monthYear === period) &&
+                  (!search ||
+                    `${row.employeeName} ${row.employeeCode}`.toLowerCase().includes(search))
+              );
+            return res.end(
+              JSON.stringify({ items: items.slice(skip, skip + size), totalCount: items.length })
+            );
+          }
           if (url.pathname.endsWith('/payslip-documents')) {
             const id = url.searchParams.get('employeeId') ?? 'employee-a';
             return res.end(JSON.stringify([document(id), document(id, 1)]));

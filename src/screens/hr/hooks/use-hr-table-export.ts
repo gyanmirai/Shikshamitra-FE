@@ -45,7 +45,12 @@ export function useHrTableExport(table: string, query: Record<string, unknown>) 
         captured.criteria = reportTableCriteria(searchTerm, filters, sorts);
       else {
         const criteria = reportTableCriteria(
-          ['hr-shifts', 'hr-professional-tax', 'hr-attendance-import-rows'].includes(table)
+          [
+            'hr-shifts',
+            'hr-professional-tax',
+            'hr-attendance-import-rows',
+            'hr-salary-documents',
+          ].includes(table)
             ? searchTerm
             : '',
           filters,
