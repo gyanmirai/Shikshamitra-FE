@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
+import type { ReactNode, ChangeEventHandler } from 'react';
 
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -14,6 +14,7 @@ type Props<T extends Record<string, string>> = {
   autoComplete: string;
   endAdornment?: ReactNode;
   required?: boolean;
+  onChange?: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
 };
 
 export function LoginField<T extends Record<string, string>>({
@@ -22,6 +23,7 @@ export function LoginField<T extends Record<string, string>>({
   formik,
   endAdornment,
   required = false,
+  onChange = formik.handleChange,
   ...props
 }: Props<T>) {
   const error = formik.touched[name] ? formik.errors[name] : undefined;
@@ -49,7 +51,7 @@ export function LoginField<T extends Record<string, string>>({
         id={name}
         name={name}
         value={formik.values[name]}
-        onChange={formik.handleChange}
+        onChange={onChange}
         onBlur={formik.handleBlur}
         disabled={formik.isSubmitting}
         error={Boolean(error)}

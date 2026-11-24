@@ -1,13 +1,13 @@
-import type { FormikProps } from 'formik';
-
 import Box from '@mui/material/Box';
 
 import { LoginField } from './login-field';
 import { AuthPasswordField } from './auth-password-field';
 
-import type { LoginValues } from '../hooks/use-login-form';
+import type { useLoginForm } from '../hooks/use-login-form';
 
-export function LoginCredentials({ formik }: { formik: FormikProps<LoginValues> }) {
+type Props = Pick<ReturnType<typeof useLoginForm>, 'formik' | 'handleSchoolCodeChange'>;
+
+export function LoginCredentials({ formik, handleSchoolCodeChange }: Props) {
   return (
     <>
       <LoginField
@@ -16,6 +16,7 @@ export function LoginCredentials({ formik }: { formik: FormikProps<LoginValues> 
         placeholder="Enter your school code"
         autoComplete="organization"
         formik={formik}
+        onChange={handleSchoolCodeChange}
       />
       <LoginField
         name="email"
