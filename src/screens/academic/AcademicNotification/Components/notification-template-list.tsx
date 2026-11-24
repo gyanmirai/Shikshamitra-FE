@@ -1,6 +1,6 @@
 import type { IParams } from 'src/components/customizabaleTable/types';
 import type { AcademicNotificationTemplate } from 'src/redux/academic-notifications/template-types';
-import type { AcademicNotificationEvent, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
+import type { AcademicNotificationEvent, AcademicNotificationQueueStatus, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
 
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -22,7 +22,7 @@ import { NotificationTemplateEditor } from './notification-template-editor';
 import { notificationTemplateColumns } from './notification-template-columns';
 
 export function NotificationTemplateList({
-  identity, event, academicMediumId, schoolAccess, canManageMedium, canManage, canRemove, scopeLabel, actionTarget,
+  identity, event, academicMediumId, schoolAccess, canManageMedium, canManage, canRemove, scopeLabel, actionTarget, queueStatus,
 }: {
   identity: AcademicNotificationCacheIdentity;
   event: AcademicNotificationEvent;
@@ -33,6 +33,7 @@ export function NotificationTemplateList({
   canRemove: boolean;
   scopeLabel: string;
   actionTarget: HTMLElement | null;
+  queueStatus?: AcademicNotificationQueueStatus;
 }) {
   const [page, setPage] = useState({ offset: 0, size: 10 });
   const [search, setSearch] = useState('');
@@ -146,7 +147,7 @@ export function NotificationTemplateList({
       {editing && (
         <NotificationTemplateEditor event={event} identity={identity} initialTemplate={editing.template}
           academicMediumId={selectedScope} scopeLabel={selectedScope ? scopeLabel : 'Whole school'}
-          canManage={canManage && writeScope} canDelete={canRemove && writeScope}
+          canManage={canManage && writeScope} canDelete={canRemove && writeScope} queueStatus={queueStatus}
           onClose={() => {
             setEditing(undefined);
             query.refetch();

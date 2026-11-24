@@ -1,6 +1,6 @@
 import type { RootState } from 'src/redux/store';
 import type { AcademicNotificationTemplate } from 'src/redux/academic-notifications/template-types';
-import type { AcademicNotificationEvent, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
+import type { AcademicNotificationEvent, AcademicNotificationQueueStatus, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
 
 import { useId, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -29,7 +29,7 @@ import { templateActionError, useNotificationTemplateForm } from '../use-notific
 import { templateRevisionStatus, NotificationTemplateVersions } from './notification-template-versions';
 
 export function NotificationTemplateEditor({
-  event, initialTemplate, identity, academicMediumId, scopeLabel, canManage, canDelete, onClose,
+  event, initialTemplate, identity, academicMediumId, scopeLabel, canManage, canDelete, queueStatus, onClose,
 }: {
   event: AcademicNotificationEvent;
   initialTemplate?: AcademicNotificationTemplate;
@@ -38,6 +38,7 @@ export function NotificationTemplateEditor({
   scopeLabel: string;
   canManage: boolean;
   canDelete: boolean;
+  queueStatus?: AcademicNotificationQueueStatus;
   onClose: () => void;
 }) {
   const titleId = useId();
@@ -113,7 +114,8 @@ export function NotificationTemplateEditor({
                     {!form.dirty && <NotificationTemplatePreview key={template.concurrencyStamp} identity={identity}
                       templateId={template.templateId} revisionId={template.revisionId} channel={template.channel} />}
                     <NotificationTemplateActions identity={identity} template={template} canManage={canEdit} canDelete={canDelete}
-                      disabled={form.dirty} testDisabled={testDisabled} busy={busy} onBusy={setActionBusy} onSaved={applySavedTemplate}
+                      disabled={form.dirty} testDisabled={testDisabled} queueStatus={queueStatus} busy={busy}
+                      onBusy={setActionBusy} onSaved={applySavedTemplate}
                       onDeleted={onClose} onError={(error, fallback) => form.setStatus(templateActionError(error, fallback))} />
                     <Button size="small" variant="outlined" aria-expanded={showVersions} sx={{ alignSelf: 'flex-start' }}
                       disabled={busy} onClick={() => setShowVersions(!showVersions)}>

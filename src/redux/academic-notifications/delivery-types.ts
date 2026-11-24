@@ -38,6 +38,8 @@ export interface AcademicNotificationOperation extends AcademicNotificationQueue
 export interface AcademicNotificationOperationStatus extends AcademicNotificationSource, AcademicNotificationOperation {
   approvalRequired: boolean;
   isSynthetic?: boolean;
+  templateTestExpiresAt?: string | null;
+  templateTestExpiredBeforeDelivery?: boolean;
   canReviewApproval?: boolean;
   approvalRejected?: boolean;
   createdAt: string;

@@ -10,6 +10,7 @@ export function createNotificationTemplateTestFixture() {
   let template;
   let operationId;
   let recordedAt;
+  let expiresAt;
   let delivered = false;
   let itemId;
 
@@ -18,9 +19,11 @@ export function createNotificationTemplateTestFixture() {
       template = current;
       operationId = randomUUID();
       itemId = randomUUID();
-      recordedAt = new Date().toISOString();
+      const now = Date.now();
+      recordedAt = new Date(now).toISOString();
+      expiresAt = new Date(now + 10 * 60_000).toISOString();
       delivered = false;
-      return { operationId, status: 4, channel: template.channel, isSynthetic: true };
+      return { operationId, status: 4, channel: template.channel, isSynthetic: true, expiresAt };
     },
     deliver() {
       if (!operationId) return false;
@@ -39,7 +42,8 @@ export function createNotificationTemplateTestFixture() {
       } else if (operationId && url.pathname === `${root}/operations/${operationId}`) {
         send(200, {
           operationId, status: delivered ? 6 : 4, eventKey: template.eventKey, sourceType, sourceId: template.templateId,
-          isSynthetic: true, approvalRequired: false, createdAt: recordedAt, publishedAt: recordedAt,
+          isSynthetic: true, templateTestExpiresAt: expiresAt, templateTestExpiredBeforeDelivery: false,
+          approvalRequired: false, createdAt: recordedAt, publishedAt: recordedAt,
           scheduledAt: null, approvedAt: null, intents: [], excludedBeforeDispatch: 0,
           deliveries: [{ channel: template.channel, status: delivered ? 3 : 0, count: 1 }],
         });

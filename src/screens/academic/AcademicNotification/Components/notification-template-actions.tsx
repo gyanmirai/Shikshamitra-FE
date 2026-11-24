@@ -1,13 +1,15 @@
-import type { AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
 import type { AcademicNotificationTemplate } from 'src/redux/academic-notifications/template-types';
+import type { AcademicNotificationQueueStatus, AcademicNotificationCacheIdentity } from 'src/redux/academic-notifications/types';
 
 import { useState } from 'react';
+import { fDateTime } from 'src/utils/format-time';
 import { RouterLink } from 'src/routes/components';
 import { Alert, Stack, Button } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { academicPaths } from 'src/constants/academic-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
+import { notificationQueuePauseMessage } from 'src/redux/academic-notifications/response-adapters';
 import { webPushOwner, readPushDevice, isCurrentPushOwner } from 'src/hooks/notifications/web-push-device';
 import {
   usePublishAcademicNotificationTemplateMutation,
@@ -26,7 +28,7 @@ const actionLabels: Record<TemplateAction, string> = {
 };
 
 export function NotificationTemplateActions({
-  identity, template, canManage, canDelete, disabled, testDisabled, busy, onBusy, onSaved, onDeleted, onError,
+  identity, template, canManage, canDelete, disabled, testDisabled, queueStatus, busy, onBusy, onSaved, onDeleted, onError,
 }: {
   identity: AcademicNotificationCacheIdentity;
   template: AcademicNotificationTemplate;
@@ -34,6 +36,7 @@ export function NotificationTemplateActions({
   canDelete: boolean;
   disabled: boolean;
   testDisabled: boolean;
+  queueStatus?: AcademicNotificationQueueStatus;
   busy: boolean;
   onBusy: (value: boolean) => void;
   onSaved: (template: AcademicNotificationTemplate) => void;
@@ -50,13 +53,17 @@ export function NotificationTemplateActions({
   const currentDraft = template.isCurrent && !template.isPublished && !template.isRetired;
   const isWebPush = template.channel === CommunicationChannelType.WebPush;
   const testBlocked = testDisabled || (isWebPush && !testDeviceId);
+  const pauseMessage = notificationQueuePauseMessage(queueStatus, [template.channel]);
+  const testDeadline = fDateTime(latestTest?.expiresAt);
+  const testDestination = isWebPush ? 'this browser for your signed-in account' : 'the configured test destination for this channel';
+  const testWarning = pauseMessage ? ` ${pauseMessage} This test can expire before delivery.` : '';
   const descriptions: Record<TemplateAction, string> = {
     publish: `Publish version ${template.revision} of ${template.templateName}. It will replace the previous published version of this template.`,
     restore: `Create a new draft of ${template.templateName} using the default wording for this variant.`,
     delete: `Delete draft version ${template.revision} of ${template.templateName}?`,
     test: isWebPush && !testDeviceId
       ? 'Enable browser notifications from the bell in this browser, then reopen this test.'
-      : `Queue version ${template.revision} with sample data ${isWebPush ? 'to this browser for your signed-in account' : 'to the configured test destination for this channel'}.`,
+      : `Queue version ${template.revision} with sample data to ${testDestination}.${testWarning}`,
   };
 
   function readTestDeviceId() {
@@ -126,11 +133,12 @@ export function NotificationTemplateActions({
         )}
       </Stack>
       {latestTest?.isSynthetic && (
-        <Alert severity="info" role="status" action={<Button size="small" color="inherit" component={RouterLink}
+        <Alert severity={pauseMessage ? 'warning' : 'info'} role="status" action={<Button size="small" color="inherit" component={RouterLink}
           href={`${academicPaths.notification}?view=history&operation=${encodeURIComponent(latestTest.operationId)}`}>
           Delivery History
         </Button>}>
-          Template test queued.
+          Template test queued.{testDeadline && ` Delivery must start by ${testDeadline}.`}
+          {pauseMessage && ` ${pauseMessage}`}
         </Alert>
       )}
       {selected && (

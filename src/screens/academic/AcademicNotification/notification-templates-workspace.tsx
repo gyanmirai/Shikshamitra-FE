@@ -51,7 +51,7 @@ export function NotificationTemplatesWorkspace({ scope, filters, catalogue, acti
       </NotificationFilterRow>
       <NotificationTemplateList key={key} identity={scope.identity} event={event} academicMediumId={id}
         schoolAccess={schoolAccess} canManageMedium={canManageMedium} canManage={scope.canManage}
-        canRemove={scope.canRemove} scopeLabel={scopeLabel} actionTarget={actionTarget} />
+        canRemove={scope.canRemove} scopeLabel={scopeLabel} actionTarget={actionTarget} queueStatus={catalogue.currentData} />
     </>
   );
 }
