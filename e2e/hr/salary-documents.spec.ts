@@ -59,6 +59,34 @@ test('filter an employee statement from its shared table', async ({ page }) => {
   await expect(workspace.getByRole('button', { name: 'Use school column preset' })).toBeVisible();
 });
 
+test('school payroll register groups its controls and filters the issued rows in the shared table', async ({
+  page,
+}) => {
+  await page.goto('/?view=register&month=2026-10');
+  const workspace = page.getByTestId('hr-school-payroll-register');
+  const table = workspace.getByRole('table', { name: 'School payroll register Preview table' });
+  await expect(workspace.getByRole('group', { name: 'Payroll month' })).toBeVisible();
+  await expect(workspace.getByRole('combobox', { name: 'Document columns' })).toBeVisible();
+  await expect(workspace.getByRole('button', { name: 'Refresh preview' })).toBeEnabled();
+  await expect(workspace.getByRole('button', { name: 'Columns', exact: true })).toBeVisible();
+  await expect(workspace.getByText('Payroll totals', { exact: true })).toBeVisible();
+  await expect(table.getByText('Oct 2026', { exact: true })).toHaveCount(2);
+  await expect(table.getByText('Issued', { exact: true })).toHaveCount(2);
+  await expect(table.getByText(/₹\s*54,500\.00/)).toBeVisible();
+
+  await workspace.getByRole('button', { name: 'Report notes (1)' }).click();
+  await expect(page.getByRole('dialog', { name: 'Report notes' })).toContainText('2 of 2 staff finalized.');
+  await page.getByRole('button', { name: 'Close report notes' }).click();
+  await workspace.getByRole('textbox', { name: 'Search table' }).fill('PAY-002');
+  await expect(table.getByText('Synthetic Employee A')).toHaveCount(0);
+  await expect(table.getByText('Synthetic Employee B')).toBeVisible();
+  await expect(workspace.getByText('Displayed row totals', { exact: true })).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(workspace.getByRole('button', { name: 'Refresh preview' })).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
 [
   [390, 844],
   [768, 1024],

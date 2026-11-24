@@ -41,13 +41,7 @@ export default function PayrollDocumentPage({ kind }: { kind: keyof typeof payro
         minWidth: 0,
         minHeight: 0,
         height: 1,
-        overflowY:
-          kind === 'register'
-            ? 'auto'
-            : kind === 'statement'
-              ? { xs: 'auto', sm: 'hidden' }
-              : 'hidden',
-        ...(kind === 'register' && { '& > *': { flexShrink: 0 } }),
+        overflowY: isMonthly ? 'hidden' : { xs: 'auto', sm: 'hidden' },
       }}
     >
       <CustomBreadcrumbs
@@ -55,7 +49,9 @@ export default function PayrollDocumentPage({ kind }: { kind: keyof typeof payro
         description={
           isMonthly
             ? 'Browse issued payslips by staff member or pay period.'
-            : 'Saved payroll records for the selected period. Missing months and historical fields appear as unavailable.'
+            : kind === 'register'
+              ? 'View and export issued payroll for the selected month.'
+              : 'Saved payroll records for the selected period. Missing months and historical fields appear as unavailable.'
         }
         sx={{ minHeight: 40, flexShrink: 0 }}
         links={[

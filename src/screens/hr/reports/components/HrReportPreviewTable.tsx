@@ -7,6 +7,7 @@ import type {
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
+import { Label } from 'src/components/label';
 import { Box, Stack, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -44,13 +45,14 @@ export function HrReportPreviewTable({
   const previewColumns = useMemo(
     () =>
       (preview?.columns ?? []).map((column) => {
-        const statement = preview?.dataSource === 'payroll_statement';
-        const money = statement && columnTypes?.[column.id] === 'money';
+        const register = preview?.dataSource === 'payroll_register';
+        const salaryDocument = register || preview?.dataSource === 'payroll_statement';
+        const money = salaryDocument && columnTypes?.[column.id] === 'money';
         return {
           id: column.id,
           label: column.label,
           isSort: sortableFields ? sortableFields.includes(column.id) : undefined,
-          minWidth: statement ? (column.id === 'employeeName' ? 180 : 115) : '12vw',
+          minWidth: salaryDocument ? (column.id === 'employeeName' ? 180 : 115) : '12vw',
           align: money ? ('right' as const) : ('left' as const),
           filterType: 'string' as const,
           render: (value: unknown) =>
@@ -58,14 +60,18 @@ export function HrReportPreviewTable({
               ? preview?.dataSource.startsWith('payroll_')
                 ? 'Unavailable'
                 : '-'
-              : statement &&
+              : salaryDocument &&
                   column.id === 'month' &&
                   typeof value === 'string' &&
                   /^\d{4}-(0[1-9]|1[0-2])$/.test(value)
                 ? dayjs(`${value}-01`).format('MMM YYYY')
-                : money && value !== '' && Number.isFinite(Number(value))
-                  ? formatNumber(String(value), 'INR', { fractionDigits: 2 })
-                  : String(value),
+                : register && column.id === 'status' ? (
+                  <Label color={value === 'Issued' || value === 'Paid' ? 'success' : 'default'}>
+                    {String(value)}
+                  </Label>
+                ) : money && value !== '' && Number.isFinite(Number(value))
+                    ? formatNumber(String(value), 'INR', { fractionDigits: 2 })
+                    : String(value),
         };
       }),
     [preview?.columns, preview?.dataSource, sortableFields, columnTypes]
