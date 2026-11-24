@@ -31,7 +31,7 @@ const template: AcademicNotificationTemplate = {
   publishedAt: '2026-11-20T09:30:00Z', publishedByUserId: 'staff', isDeleted: false,
 };
 
-function openTest(channel = CommunicationChannelType.WebPush) {
+function openTest(channel: AcademicNotificationTemplate['channel'] = CommunicationChannelType.WebPush) {
   render(<NotificationTemplateActions identity={{ tenantCacheKey: 'school', userCacheKey: 'staff' }}
     template={{ ...template, channel }} canManage canDelete disabled={false} testDisabled={false} busy={false}
     onBusy={vi.fn()} onSaved={vi.fn()} onDeleted={vi.fn()} onError={mocks.onError} />);
