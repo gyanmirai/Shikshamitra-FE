@@ -34,7 +34,8 @@ const store = configureStore({
 });
 const params = new URLSearchParams(window.location.search);
 const dark = params.get('theme') === 'dark';
-const kind = params.get('view') === 'statement' ? 'statement' : 'monthly';
+const view = params.get('view');
+const kind = view === 'statement' || view === 'register' ? view : 'monthly';
 createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
     <ThemeProvider

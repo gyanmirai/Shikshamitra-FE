@@ -744,9 +744,12 @@ Monthly issuance retains its existing immutable PDF workflow.
 Employee Statements places staff, pay-period filters, range shortcuts, and document options in the shared table header.
 Table search and column filters apply to the statement results, while the shared Columns and Export controls manage the preview.
 The table header shows period totals or displayed row totals when table criteria are active.
-The register uses one month.
+School Payroll Register uses the shared full-height table with a single payroll month, document column options, and refresh in the header.
+Search staff or payroll details in the table toolbar, and use Columns and Export alongside the search.
+The header shows totals for the selected month or the displayed rows when table criteria are active.
 Sidebar links carry the selected payroll month to the destination, and leaving a report page stops its preview requests and export polling.
-Previews debounce, cancel obsolete requests and reject stale responses.
+Report previews start when the selection is valid, cancel obsolete requests and reject stale responses.
+Typed search keeps its debounce.
 PDF/Excel use existing export jobs, ownership checks, status, download and expiry.
 Salary documents use the shared soft status chips and download actions in the compact toolbar, with one standard success toast when an active export completes.
 The report-notes information control beside Preview exposes all coverage and truncation notes in the shared popover; failures retain an announced error and a relevant recovery action.
