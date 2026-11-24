@@ -1,5 +1,7 @@
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
+import { getFinanceSettingErrorMessage } from './finance-setting-error';
+
 export function getAccountSettingSaveError(error: unknown, kind: 'category' | 'bank') {
   const problem = parseApiProblemDetail(error);
   if (problem.errorCode === 'Finance:Accounts:Settings:DuplicateName') {
@@ -16,5 +18,13 @@ export function getAccountSettingSaveError(error: unknown, kind: 'category' | 'b
         'This bank account is in use. Its account number, IFSC and UPI ID cannot be changed.',
     };
   }
-  return { message: problem.detail };
+  return {
+    message: getFinanceSettingErrorMessage(
+      error,
+      kind === 'bank'
+        ? 'Could not save the bank account. Refresh the list to check it before retrying.'
+        : 'Could not save the category. Refresh the list to check it before retrying.',
+      problem
+    ),
+  };
 }

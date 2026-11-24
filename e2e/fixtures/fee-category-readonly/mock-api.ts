@@ -1,6 +1,4 @@
 import React from 'react';
-export const useGetFeeCategoriesQuery = () => {};
-export const useDeleteFeeCategoryMutation = () => {};
 export const usePatchFeeCategoryStatusMutation = () => {};
 export const usePatchFeeHeadMutation = () => {};
 export const useAddFeeCategoryMutation = () => {};
@@ -103,6 +101,112 @@ const listResult = {
 };
 const routingResult = { ...listResult, data: routingData, currentData: routingData };
 const detailResult = { ...listResult, data: category, currentData: category };
+const deleteSurface = new URLSearchParams(window.location.search).get('delete');
+
+function createDeleteFixture<Row extends { id: string }>(
+  rows: Row[],
+  conflictId: string,
+  conflictMessage: string
+) {
+  const listeners = new Set<() => void>();
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+  const makeResult = (items: Row[]) => {
+    const data = { items, totalCount: items.length };
+    return { ...listResult, data, currentData: data };
+  };
+  let result = makeResult(rows);
+  const getSnapshot = () => result;
+
+  return {
+    useQuery: () => React.useSyncExternalStore(subscribe, getSnapshot),
+    useDelete: () =>
+      [
+        ({ id }: { id: string }) => ({
+          unwrap: async () => {
+            if (id === conflictId) throw { status: 409, data: { detail: conflictMessage } };
+            if (!deleteSurface) return;
+            result = makeResult(result.data.items.filter((row) => row.id !== id));
+            listeners.forEach((listener) => listener());
+          },
+        }),
+        { isLoading: false },
+      ] as const,
+  };
+}
+
+const categoryRows = [
+  { id: 'disposable-category', name: 'Unused Fee Category' },
+  { id: 'linked-category', name: 'Fee Category With New Dependency' },
+].map((row) => ({
+  ...currentCategory,
+  ...row,
+  academicYearId: 'year',
+  isUsedInDownstream: false,
+  totalFeeHeads: 0,
+}));
+const headRows = [
+  { id: 'disposable-head', name: 'Unused Fee Head' },
+  { id: 'linked-head', name: 'Fee Head With New Dependency' },
+].map((row) => ({
+  ...row,
+  isActive: true,
+  isUsedInDownstream: false,
+  feeCategoryName: 'Fixture Tuition',
+  incomeCategoryName: 'Tuition',
+  description: 'Synthetic fee head',
+}));
+const receiptBookRows = [
+  { id: 'disposable-book', name: 'Unused Receipt Book' },
+  { id: 'linked-book', name: 'Receipt Book With New Dependency' },
+].map((row) => ({
+  ...row,
+  isActive: true,
+  description: 'Synthetic receipt book',
+  prefix: 'QA',
+  suffix: '2026',
+  boardName: 'CBSE',
+  mediumName: 'English',
+  mediumStageName: 'Primary',
+  startingNumber: 1,
+  endingNumber: 100,
+}));
+const categoryFixture = createDeleteFixture(
+  deleteSurface === 'fee-category' ? categoryRows : listData.items,
+  'linked-category',
+  'This fee category is now used by a fee structure.'
+);
+const headFixture = createDeleteFixture(
+  headRows,
+  'linked-head',
+  'This fee head is now used by a fee structure.'
+);
+const receiptBookFixture = createDeleteFixture(
+  receiptBookRows,
+  'linked-book',
+  'This receipt book has issued receipts and cannot be deleted.'
+);
+export const useGetFeeCategoriesQuery = categoryFixture.useQuery;
+export const useDeleteFeeCategoryMutation = categoryFixture.useDelete;
+export const useGetFeeCategoryOptionsQuery = categoryFixture.useQuery;
+export const useGetFeeHeadsQuery = headFixture.useQuery;
+export const useDeleteFeeHeadMutation = headFixture.useDelete;
+export const useGetFeeHeadByIdQuery = (id: string, options?: { skip?: boolean }) => {
+  const data = options?.skip ? undefined : headRows.find((row) => row.id === id);
+  return { ...listResult, data, currentData: data };
+};
+export const useAddFeeHeadMutation = () => {};
+export const useUpdateFeeHeadMutation = () => {};
+export const useGetReceiptBooksQuery = receiptBookFixture.useQuery;
+export const useDeleteReceiptBookMutation = receiptBookFixture.useDelete;
+export const useAddReceiptBookMutation = () => {};
+export const usePatchReceiptBookMutation = () => {};
+export const useUpdateReceiptBookMutation = () => {};
+
 export function useGetFeeCategoryByIdQuery(id: string, options?: any) {
   const [loading, setLoading] = React.useState(false);
   React.useEffect(() => {
@@ -127,7 +231,7 @@ export default function useQueryAndMutation({ type, currentQueryAndMutation, par
       ? routingResult
       : currentQueryAndMutation === useGetFeeCategoryByIdQuery
         ? detailResult
-        : listResult;
+        : currentQueryAndMutation(params);
   }
 
   return [

@@ -18,13 +18,13 @@ import {
   formatHistoryValue,
   formatHistoryAction,
   type AccountSettingHistoryItem,
+  hasCategoryHistoryValueChanged,
 } from './account-setting-history-formatters';
 
 interface Props {
   open: boolean;
   title: string;
-  recordType: string;
-  hiddenFields?: string[];
+  recordType: 'Income category' | 'Expense category' | 'Bank account';
   data?: { items?: AccountSettingHistoryItem[]; totalCount?: number };
   page?: number;
   pageSize?: number;
@@ -35,7 +35,16 @@ interface Props {
   onClose: () => void;
 }
 
-// Setting codes and names are literal audit values, not policy enums or reference lookups.
+const CATEGORY_HISTORY_FIELDS = new Set([
+  'Name',
+  'Description',
+  'IsActive',
+  'EffectiveFrom',
+  'EffectiveTo',
+  'DeactivationReason',
+]);
+
+// Setting values are rendered as literal audit values rather than policy reference lookups.
 const renderCategoryValue = (field: string, value: unknown) => {
   if (field === 'Status' && (value === 'Active' || value === 'Inactive')) {
     return <Label color={value === 'Active' ? 'success' : 'error'}>{value}</Label>;
@@ -51,7 +60,6 @@ export default function AccountCategoryVersionDrawer({
   open,
   title,
   recordType,
-  hiddenFields,
   data,
   page = 0,
   pageSize = 50,
@@ -68,6 +76,7 @@ export default function AccountCategoryVersionDrawer({
     setSelectedVersionId(null);
   }, [open, title]);
 
+  const isCategory = recordType !== 'Bank account';
   const versions = useMemo<PolicyVersion[]>(
     () =>
       [...(data?.items ?? [])]
@@ -90,9 +99,9 @@ export default function AccountCategoryVersionDrawer({
               : (item.changedFields ?? [])
                   .filter(
                     (field) =>
-                      !hiddenFields?.some(
-                        (hidden) => hidden.toLowerCase() === field.fieldName.toLowerCase()
-                      )
+                      !isCategory ||
+                      (CATEGORY_HISTORY_FIELDS.has(field.fieldName) &&
+                        hasCategoryHistoryValueChanged(field.originalValue, field.newValue))
                   )
                   .map((field) => ({
                     field: formatHistoryField(field.fieldName),
@@ -100,10 +109,13 @@ export default function AccountCategoryVersionDrawer({
                     newValue: formatHistoryValue(field.newValue, field.fieldName),
                   })),
         })),
-    [data, hiddenFields]
+    [data, isCategory]
   );
   const selectedVersion =
     versions.find((version) => version.eventId === selectedVersionId) ?? versions[0];
+  const hasRecordedFields = Boolean(
+    data?.items?.find((item) => item.id === selectedVersion?.eventId)?.changedFields?.length
+  );
   const drawerTitle = `${recordType.replace(/\b\w/g, (letter) => letter.toUpperCase())} Version History`;
   const totalCount = data?.totalCount ?? versions.length;
   const handlePageChange = (nextPage: number) => {
@@ -211,10 +223,16 @@ export default function AccountCategoryVersionDrawer({
                 <VersionDiffTable
                   selectedVersion={selectedVersion}
                   renderFieldValue={renderCategoryValue}
+                  noChangesMessage={
+                    isCategory && hasRecordedFields && selectedVersion.action !== 'unavailable'
+                      ? 'No changes to display for this version.'
+                      : undefined
+                  }
                   collapsibleChanges
                 />
                 {selectedVersion.changedFields.length === 0 &&
-                  ['unavailable', 'created'].includes(selectedVersion.action) && (
+                  (selectedVersion.action === 'unavailable' ||
+                    (selectedVersion.action === 'created' && !hasRecordedFields)) && (
                     <Alert severity="info">
                       {selectedVersion.action === 'unavailable'
                         ? 'Changes and editor were not recorded for this older version.'

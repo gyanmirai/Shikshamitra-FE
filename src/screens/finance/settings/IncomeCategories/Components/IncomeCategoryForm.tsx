@@ -53,12 +53,14 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
   const [addIncomeCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePostIncomeCategoryMutation,
+    popupConfig: { error: false },
   });
 
   // PUT mutation for updating
   const [updateIncomeCategory, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePutIncomeCategoryMutation,
+    popupConfig: { error: false },
   });
 
   const formik = useFormik({
@@ -104,10 +106,11 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
       onClose(null, true);
     } catch (error) {
       const problem = getAccountSettingSaveError(error, 'category');
-      setSaveError(problem.message);
       if (problem.field) {
         formik.setFieldTouched(problem.field, true, false);
         formik.setFieldError(problem.field, problem.message);
+      } else {
+        setSaveError(problem.message);
       }
     }
   };

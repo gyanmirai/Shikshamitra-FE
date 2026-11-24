@@ -47,9 +47,10 @@ function Fixture() {
   );
   const [pinned, setPinned] = React.useState(false);
   const [incomplete, setIncomplete] = React.useState(false);
-  const [workspace, setWorkspace] = React.useState(() =>
-    new URLSearchParams(window.location.search).has('revision-name')
-  );
+  const [workspace, setWorkspace] = React.useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.has('revision-name') || params.has('delete-drafts');
+  });
   return (
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>

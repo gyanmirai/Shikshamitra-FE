@@ -263,7 +263,6 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         }
         tableId="payment-term-table"
         tableTitle="Payment terms"
-        exportLabel="Export current page"
         columns={columns}
         data={data}
         isLoading={loading}

@@ -541,7 +541,7 @@ export default function FeeStructureAssignTable({
                     actions={[
                       {
                         id: hasAdmissionSelection ? 'edit-admission-selection' : 'assign',
-                        icon: hasAdmissionSelection ? GlobalIcons.edit : GlobalIcons.addIcon,
+                        icon: hasAdmissionSelection ? GlobalIcons.edit : 'andrsrxn:plus-circle',
                         label: hasAdmissionSelection
                           ? 'Edit admission fee selection'
                           : 'Assign fee structure',

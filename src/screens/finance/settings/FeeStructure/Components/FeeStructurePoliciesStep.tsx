@@ -454,25 +454,31 @@ export default function FeeStructurePoliciesStep({
                         Version {row.versionNumber}
                         {row.isDefault ? ' · Default' : ''}
                       </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ display: { xs: 'block', sm: 'none' } }}
-                      >
-                        {row.coverage}
-                      </Typography>
+                      {choosing === 'collection' && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: { xs: 'block', sm: 'none' } }}
+                        >
+                          {row.coverage}
+                        </Typography>
+                      )}
                     </Stack>
                   ),
                 },
-                {
-                  id: 'coverage',
-                  label: 'Fee head coverage',
-                  minWidth: 180,
-                  headerSx: { display: { xs: 'none', sm: 'table-cell' } },
-                  cellSx: { display: { xs: 'none', sm: 'table-cell' } },
-                  isFilter: false,
-                  isSort: false,
-                },
+                ...(choosing === 'collection'
+                  ? ([
+                      {
+                        id: 'coverage',
+                        label: 'Fee head coverage',
+                        minWidth: 180,
+                        headerSx: { display: { xs: 'none', sm: 'table-cell' } },
+                        cellSx: { display: { xs: 'none', sm: 'table-cell' } },
+                        isFilter: false,
+                        isSort: false,
+                      },
+                    ] satisfies IColumn[])
+                  : []),
                 ...(choosing === 'refund'
                   ? ([
                       {

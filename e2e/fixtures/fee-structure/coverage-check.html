@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Policy Picker Columns</title></head><body><div id="root"></div><script type="module">
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import {Provider} from 'react-redux';
+import {configureStore} from '@reduxjs/toolkit';
+import {ThemeProvider,useColorScheme} from '@mui/material/styles';
+import {CssBaseline,Box,Button,Typography} from '@mui/material';
+import {createTheme} from 'src/theme/create-theme';
+import {defaultSettings} from 'src/components/settings/config-settings';
+import FeeStructurePoliciesStep from 'src/screens/finance/settings/FeeStructure/Components/FeeStructurePoliciesStep';
+import {structureCandidate} from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
+const h=React.createElement;
+const store=configureStore({reducer:(state={confirmPopup:{isChanges:false},auth:{permissions:[]}})=>state});
+const catalog={items:[],loading:false,error:false,retry:()=>{}};
+const families=['collection','refund','proration'];
+const policies=families.map(family=>({id:family,versionId:`${family}-v1`,family,name:`School ${family} policy`,versionNumber:1,isCurrent:true,feeHeadScope:'SelectedFeeHeads',applicableFeeHeadIds:['tuition'],feeHeadNames:{tuition:'Tuition Fee'}}));
+function Fixture(){
+ const [candidate,setCandidate]=React.useState({...structureCandidate(),name:'School fees',feeHeads:[{feeHeadId:'tuition',feeHeadName:'Tuition Fee',amount:12000,isVariable:false,isOptional:false}]});
+ const {setMode}=useColorScheme();
+ return h(Box,{sx:{p:3}},h(CssBaseline),h(Typography,{variant:'h5'},'Fee Structure policy selection'),h(Typography,{sx:{my:2}},'Synthetic data · no backend requests'),h(Button,{onClick:()=>setMode('light')},'Light theme'),h(Button,{onClick:()=>setMode('dark')},'Dark theme'),
+ h(FeeStructurePoliciesStep,{candidate,settings:{academicYearId:'year',academicYearName:'2026–27',heads:[{id:'tuition',name:'Tuition Fee'}],terms:[],policies,permissions:{collection:true,collectionRead:true,refund:true,refundRead:true,proration:true,prorationRead:true}},
+ impacts:families.map(key=>({key,label:`${key[0].toUpperCase()+key.slice(1)} Policy`,description:'Saved policy choices',empty:'Choose a policy',policyLabel:''})),catalogs:{collection:catalog,refund:catalog,proration:catalog},writable:true,locked:false,busy:false,onView:()=>{},
+ onChange:(key,version)=>setCandidate(value=>({...value,[`${key}PolicyVersionId`]:version,[`${key}PolicyId`]:version?key:null}))}));
+}
+createRoot(document.getElementById('root')).render(h(Provider,{store},h(ThemeProvider,{theme:createTheme(defaultSettings)},h(Fixture))));
+</script></body></html>

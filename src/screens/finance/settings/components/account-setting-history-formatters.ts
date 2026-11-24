@@ -34,15 +34,28 @@ export function formatHistoryField(field: string) {
   return labels[field] || field.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
 }
 
-export function formatHistoryValue(value: string | null | undefined, field: string): string {
-  if (value == null || value === '') return 'Not set';
+function parseHistoryValue(value: string | null | undefined): unknown {
+  if (value == null) return null;
   let parsed: unknown = value;
   try {
     parsed = JSON.parse(value);
   } catch {
     // Older audit entries may already contain plain text.
   }
-  if (parsed == null || parsed === '') return 'Not set';
+  return typeof parsed === 'string' && parsed.trim() === '' ? null : parsed;
+}
+
+export function hasCategoryHistoryValueChanged(
+  originalValue: string | null | undefined,
+  newValue: string | null | undefined
+) {
+  return parseHistoryValue(originalValue) !== parseHistoryValue(newValue);
+}
+
+export function formatHistoryValue(value: string | null | undefined, field: string): string {
+  if (value == null) return 'Not set';
+  const parsed = parseHistoryValue(value);
+  if (parsed == null) return 'Not set';
   if (field.toLowerCase() === 'accountnumber') {
     const account = typeof parsed === 'string' ? parsed : value;
     return account.length > 4 ? `•••• ${account.slice(-4)}` : '••••';

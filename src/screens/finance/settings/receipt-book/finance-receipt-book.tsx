@@ -20,15 +20,16 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { useMemo, useState, useCallback } from 'react';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { financePermissions } from 'src/constants/finance-menu';
+import { useFinancePermissions } from 'src/screens/finance/hooks/useFinancePermissions';
+import { FinanceSettingDeleteDialog } from 'src/screens/finance/settings/components/FinanceSettingDeleteDialog';
 
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 // import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
 import {
-  receiptBookApi,
   useGetReceiptBooksQuery,
   usePatchReceiptBookMutation,
   useDeleteReceiptBookMutation,
@@ -40,6 +41,7 @@ import FinanceSettingReceiptbookDialog from './component/finance-setting-receipt
 import type { IReceiptBook } from './receipt-book-interface';
 
 const FinanceReceiptBookSetting = () => {
+  const { canDelete } = useFinancePermissions(financePermissions.fees.settings.receiptBook);
   // Dialog state for general purpose
   const theme = useTheme();
 
@@ -59,13 +61,7 @@ const FinanceReceiptBookSetting = () => {
 
   // Dialog state for delete confirmation
   const deleteDialog = useBoolean();
-  const { confirmWithUndo } = useConfirmWithUndo();
-
-  // DELETE mutation
-  const [deleteReceiptBook, { isLoading: isDeleting }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteReceiptBookMutation,
-  });
+  const [deleteReceiptBook] = useDeleteReceiptBookMutation();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -110,12 +106,6 @@ const FinanceReceiptBookSetting = () => {
       setIsEdit(false);
     }
   );
-
-  const { refetch } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetReceiptBooksQuery,
-    params: { academicYearId: currentYear?.id, ...queryParams },
-  });
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -283,6 +273,7 @@ const FinanceReceiptBookSetting = () => {
                 id: 'delete',
                 label: 'Delete',
                 icon: 'solar:trash-bin-trash-bold',
+                disabled: !canDelete,
                 onClick: () => {
                   setSelectedEntry(row);
                   deleteDialog.onTrue();
@@ -295,7 +286,7 @@ const FinanceReceiptBookSetting = () => {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [canDelete]
   );
 
   return (
@@ -467,61 +458,22 @@ const FinanceReceiptBookSetting = () => {
         }
       />
 
-      <ConfirmDialog
-        open={deleteDialog.value}
+      <FinanceSettingDeleteDialog
+        open={deleteDialog.value && canDelete}
+        title="Delete Receipt Book"
         onClose={() => {
-          setTimeout(() => {
-            setSelectedEntry(null);
-          }, 200);
           deleteDialog.onFalse();
+          setSelectedEntry(null);
         }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete receipt book <strong>{selectedEntry?.name}</strong>?
-          </>
+        onDelete={
+          canDelete && selectedEntry?.id
+            ? () => deleteReceiptBook({ id: selectedEntry.id }).unwrap()
+            : undefined
         }
-        action={
-          <LoadingButton
-            startIcon={<Iconify icon="mdi:delete-outline" />}
-            variant="contained"
-            color="error"
-            size="small"
-            loading={isDeleting}
-            disabled={isDeleting}
-            onClick={async () => {
-              confirmWithUndo({
-                item: selectedEntry,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    receiptBookApi.util.updateQueryData(
-                      'getReceiptBooks',
-                      { academicYearId: currentYear?.id, ...queryParams },
-                      (draft: any) => {
-                        const index = draft.items?.findIndex(
-                          (b: any) => b.id === (selectedEntry as any)?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          draft.items.splice(index, 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () =>
-                  deleteReceiptBook({
-                    id: (selectedEntry as any).id,
-                  }),
-              });
-              deleteDialog.onFalse();
-              setSelectedEntry(null);
-            }}
-          >
-            Yes
-          </LoadingButton>
-        }
-      />
+        successMessage="Receipt book deleted successfully."
+      >
+        Delete receipt book <strong>{selectedEntry?.name}</strong>?
+      </FinanceSettingDeleteDialog>
     </Box>
   );
 };

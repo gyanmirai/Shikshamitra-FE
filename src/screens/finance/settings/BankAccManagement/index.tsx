@@ -3,24 +3,19 @@
 import type { RootState } from 'src/redux/store';
 import type { IParams } from 'src/components/customizabaleTable/types';
 
-import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';
 import { Box, Alert, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { FinanceSettingDeleteDialog } from 'src/screens/finance/settings/components/FinanceSettingDeleteDialog';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import React, { lazy, Suspense, useRef, useState, useEffect, useCallback } from 'react';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 import {
-  bankAccountApi,
   useGetBankAccountQuery,
   useDeleteBankAccountMutation,
   useLazyGetBankAccountByIdQuery,
@@ -107,10 +102,7 @@ const BankAccountManagement: React.FC = () => {
   );
 
   // DELETE mutation
-  const [deleteBankAccount, { isLoading: isDeleting }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteBankAccountMutation,
-  });
+  const [deleteBankAccount] = useDeleteBankAccountMutation();
   const [getBankAccountDetail] = useLazyGetBankAccountByIdQuery();
   const selectedListBank = bankAccountData?.items?.find((item: IBankAccount) => item.id === activityId);
 
@@ -171,8 +163,6 @@ const BankAccountManagement: React.FC = () => {
 
   // State to store currently selected bank account for edit/delete operations
   const [selectedBankAccount, setSelectedBankAccount] = useState<IBankAccount | null>(null);
-  const { confirmWithUndo } = useConfirmWithUndo();
-  const dispatch = useDispatch();
 
   /**
    * Handles closing of add/edit bank account dialog
@@ -240,6 +230,7 @@ const BankAccountManagement: React.FC = () => {
         <BankAccountTable
           onView={openActivity}
           onDelete={(data) => {
+            if (!access.canDelete || !data.canDelete) return;
             setSelectedBankAccount(data);
             deleteBankAccountDialog.onTrue();
           }}
@@ -305,64 +296,23 @@ const BankAccountManagement: React.FC = () => {
         )}
       </CustomDialog>
 
-      <ConfirmDialog
+      <FinanceSettingDeleteDialog
         open={deleteBankAccountDialog.value}
+        title="Delete Bank Account"
         onClose={() => {
           setSelectedBankAccount(null);
           deleteBankAccountDialog.onFalse();
         }}
-        title="Delete Bank Account"
-        content={
-          <>
-            Delete <strong>{selectedBankAccount?.bankName}</strong> (
-            {selectedBankAccount?.branchName},{' '}
-            <strong>{selectedBankAccount?.maskedAccountNumber}</strong>)?
-          </>
+        onDelete={
+          access.canDelete && selectedBankAccount?.canDelete
+            ? () => deleteBankAccount(selectedBankAccount.id).unwrap()
+            : undefined
         }
-        action={
-          <LoadingButton
-            startIcon={<Iconify icon="mdi:delete-outline" />}
-            variant="contained"
-            color="error"
-            size="small"
-            loading={isDeleting}
-            disabled={isDeleting}
-            onClick={() => {
-              if (!selectedBankAccount?.id) return;
-
-              confirmWithUndo({
-                message: 'Deletion pending',
-                item: selectedBankAccount,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    bankAccountApi.util.updateQueryData(
-                      'getBankAccount',
-                      { academicYearId: currentYear?.id, ...queryParams },
-                      (draft: any) => {
-                        const list = Array.isArray(draft) ? draft : draft?.items || [];
-                        const index = list.findIndex(
-                          (c: any) => c.id === (selectedBankAccount as any)?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          list.splice(index, 1);
-                          if (typeof draft?.totalCount === 'number')
-                            draft.totalCount = Math.max(0, draft.totalCount - 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () => deleteBankAccount(selectedBankAccount.id),
-              });
-              deleteBankAccountDialog.onFalse();
-              setSelectedBankAccount(null);
-            }}
-          >
-            Delete
-          </LoadingButton>
-        }
-      />
+        successMessage="Bank account deleted successfully."
+      >
+        Delete <strong>{selectedBankAccount?.bankName}</strong> (
+        {selectedBankAccount?.branchName}, <strong>{selectedBankAccount?.maskedAccountNumber}</strong>)?
+      </FinanceSettingDeleteDialog>
     </Box>
   );
 };

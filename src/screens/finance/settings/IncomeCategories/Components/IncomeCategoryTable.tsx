@@ -1,4 +1,3 @@
-import { useAccountSettingHistoryPage } from 'src/screens/finance/settings/components/useAccountSettingHistoryPage';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
@@ -14,6 +13,7 @@ import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import { Box, Chip, Alert, Stack, Switch, TextField, Typography } from '@mui/material';
 import AccountCategoryVersionDrawer from 'src/screens/finance/settings/components/AccountCategoryVersionDrawer';
+import { useAccountSettingHistoryPage } from 'src/screens/finance/settings/components/useAccountSettingHistoryPage';
 import {
   useGetIncomeCategoryVersionsQuery,
   usePatchIncomeCategoryStatusMutation,
@@ -154,6 +154,18 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         stickyOnMobile: false,
         isFilter: false,
         render(value, row) {
+          const category = row as IIncomeCategory;
+          const canDelete =
+            category.canDelete && !category.isActive && !category.isUsedInDownstream;
+          const deletionTooltip =
+            category.deletionBlockedReason ||
+            (category.isUsedInDownstream
+              ? 'This income category is referenced by other Finance records and cannot be deleted.'
+              : category.isActive
+                ? 'Deactivate this category before deleting it.'
+                : canDelete
+                  ? `Delete ${category.name}`
+                  : 'Deletion is unavailable for this income category. Refresh and try again.');
           return (
             <AdaptiveThreeDotsActions
               directActionLimit={3}
@@ -162,17 +174,17 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                   id: 'history',
                   label: 'Version history',
                   icon: 'solar:history-bold',
-                  onClick: () => setHistoryItem(row as IIncomeCategory),
+                  onClick: () => setHistoryItem(category),
                 },
                 {
                   id: 'edit',
                   label: 'Edit',
                   icon: 'solar:pen-bold',
                   onClick: () => {
-                    onEdit(row as IIncomeCategory);
+                    onEdit(category);
                   },
-                  disabled: !access.canEdit || (row as IIncomeCategory).isSystemCategory,
-                  tooltip: (row as IIncomeCategory).isSystemCategory
+                  disabled: !access.canEdit || category.isSystemCategory,
+                  tooltip: category.isSystemCategory
                     ? 'None is a built-in category and cannot be changed.'
                     : undefined,
                 },
@@ -181,19 +193,14 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                   label: 'Delete',
                   icon: 'solar:trash-bin-trash-bold',
                   onClick: () => {
-                    onDelete(row as IIncomeCategory);
+                    onDelete(category);
                   },
-                  disabled: !access.canDelete || !(row as IIncomeCategory).canDelete,
-                  tooltip: (row as IIncomeCategory).isSystemCategory
+                  disabled: !access.canDelete || category.isSystemCategory || !canDelete,
+                  tooltip: category.isSystemCategory
                     ? 'None is a built-in category and cannot be deleted.'
                     : !access.canDelete
-                    ? 'You do not have permission to delete income categories.'
-                    : (row as IIncomeCategory).isUsedInDownstream
-                      ? (row as IIncomeCategory).deletionBlockedReason ||
-                        'This income category is referenced by other Finance records and cannot be deleted.'
-                      : (row as IIncomeCategory).canDelete
-                        ? `Delete ${(row as IIncomeCategory).name}`
-                        : 'Deletion is unavailable for this income category. Refresh and try again.',
+                      ? 'You do not have permission to delete income categories.'
+                      : deletionTooltip,
                   color: 'error.main',
                 },
               ]}
@@ -311,8 +318,8 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                 setStatusData(null);
                 setDeactivationReason('');
                 setStatusError('');
-              } catch (error) {
-                const problem = parseApiProblemDetail(error);
+              } catch (statusUpdateError) {
+                const problem = parseApiProblemDetail(statusUpdateError);
                 setStatusError(
                   problem.errorCode === 'Finance:Accounts:Settings:CategoryInUse' &&
                     problem.detail === 'One or more business rules were violated.'
@@ -328,7 +335,6 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
       />
       <AccountCategoryVersionDrawer
         key={historyItem?.id}
-        hiddenFields={['tags']}
         open={Boolean(historyItem)}
         title={historyItem?.name || 'Income category'}
         recordType="Income category"

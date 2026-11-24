@@ -341,8 +341,9 @@ Charge authoring keeps academic scope and selected students in the form. Search 
 
 Income Category, Expense Category and Bank Accounts use `AccountCategoryVersionDrawer`, matching
 Policy Version History: a searchable newest-first version sidebar, selected-version
-author/date/action and a Field/Before/After table. Category tags remain hidden;
-codes and other audit values retain their category formatting. The version list and changes
+author/date/action and a Field/Before/After table. Category history shows changes to name, status,
+description, effective dates and deactivation reason, including values that were cleared. It omits
+unchanged fields, tags, internal codes and account head IDs. The version list and changes
 scroll independently. Pagination appears inside the Versions sidebar when more than one page is available.
 Close the drawer with the header button or Escape. Changes uses the shared rounded accordion and history cards have
 8 px gaps. Bank account numbers remain masked in the comparison. All three drawers identify missing
@@ -358,7 +359,7 @@ Academic Subject forms.
 | Mobile tables        | Keep the identifying Name/Bank Name column on the left; disable right-side status/action pinning below the small breakpoint so it cannot cover names                                                  |
 | Status accessibility | Each switch names its action and selected record                                                                                                                                                      |
 | Bank deletion        | Confirmation identifies bank, branch and masked account number; the primary action reads Delete                                                                                                       |
-| Income deletion      | Unused active categories can be deleted after confirmation; dependency restrictions use the server's `canDelete`. Failed deletes keep the dialog and error visible; pending deletes lock its actions. |
+| Income deletion      | Only inactive, unused categories can be deleted. The Delete action explains status and dependency restrictions. A successful delete closes the confirmation and refreshes the list. Failed deletes show the reason in the dialog. |
 | Exports              | Feature-specific filenames; Hindi/Gujarati exports use shaped embedded-font text; Actions remain excluded                                                                                             |
 
 The [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#category-and-bank-settings-data) owns validation, masking and history persistence.
