@@ -64,10 +64,11 @@ beforeEach(() => {
 describe('advisory school HR review checklist', () => {
   it('keeps technical validity, legacy provenance and review evidence separate', () => {
     mount();
-    expect(screen.getAllByText('Defaults available')).toHaveLength(4);
+    expect(screen.getAllByText('Defaults available')).toHaveLength(3);
+    expect(screen.getByText('Active calendars available')).toBeInTheDocument();
     expect(screen.getAllByText('Review needed · no record')).toHaveLength(5);
     expect(screen.getAllByText(/Starter provenance not recorded/)).toHaveLength(5);
-    expect(screen.getByText(/This checklist is advisory/)).toBeTruthy();
+    expect(screen.getByText(/Optional guidance for the selected academic year/)).toBeTruthy();
     expect(screen.queryByText('Reviewed for this school')).toBeNull();
   });
   it('never guesses completed review from starter provenance or zero allocation', () => {
@@ -87,9 +88,8 @@ describe('advisory school HR review checklist', () => {
   });
   it('records only the exact displayed fingerprint and revision without actor or tenant input', async () => {
     mount();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Record calendar and workweek review', hidden: true })
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'Policy Setup Guide' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Record calendar and workweek review' }));
     await waitFor(() => expect(mocks.record).toHaveBeenCalledTimes(1));
     expect(mocks.record).toHaveBeenCalledWith({
       academicYearId: 'year-1',
@@ -130,17 +130,17 @@ describe('advisory school HR review checklist', () => {
   it('presents a retryable read error without claiming missing settings', () => {
     mocks.query.mockReturnValue({ currentData: undefined, isError: true, refetch: mocks.refetch });
     mount();
-    expect(screen.getAllByRole('alert', { hidden: true })).toHaveLength(5);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Retry', hidden: true })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Policy Setup Guide' }));
+    expect(screen.getAllByRole('alert')).toHaveLength(5);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Retry' })[0]);
     expect(mocks.refetch).toHaveBeenCalledOnce();
     expect(screen.queryByText('Defaults missing')).toBeNull();
   });
   it('keeps conflicts visible, refreshes for review, and never automatically acknowledges a replacement', async () => {
     mocks.record.mockReturnValue({ unwrap: () => Promise.reject(new Error('conflict')) });
     mount();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Record calendar and workweek review', hidden: true })
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'Policy Setup Guide' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Record calendar and workweek review' }));
     await waitFor(() => expect(screen.getByText(/Review was not recorded/)).toBeTruthy());
     expect(mocks.refetch).toHaveBeenCalledOnce();
     expect(mocks.record).toHaveBeenCalledOnce();
@@ -154,8 +154,9 @@ describe('advisory school HR review checklist', () => {
         refetch: mocks.refetch,
       }));
       mount();
+      fireEvent.click(screen.getByRole('button', { name: 'Policy Setup Guide' }));
       expect(screen.queryByText('Sample resolved')).toBeNull();
-      expect(screen.queryByRole('button', { name: /Record/, hidden: true })).toBeNull();
+      expect(screen.queryByRole('button', { name: /Record/ })).toBeNull();
     }
   );
   it('shows stale actor/time evidence separately and disables writes during a refresh', () => {
@@ -172,28 +173,57 @@ describe('advisory school HR review checklist', () => {
       refetch: mocks.refetch,
     }));
     mount();
+    fireEvent.click(screen.getByRole('button', { name: 'Policy Setup Guide' }));
     expect(screen.getAllByText('Review needed · settings changed')).toHaveLength(5);
     expect(screen.getAllByText(/Synthetic reviewer/)).toHaveLength(5);
     expect(
       (
         screen.getByRole('button', {
           name: 'Record calendar and workweek review',
-          hidden: true,
         }) as HTMLButtonElement
       ).disabled
     ).toBe(true);
   });
-  it('uses native keyboard-operable disclosure and precise settings links', () => {
-    const view = mount();
-    const summary = view.container.querySelector('summary')!;
-    expect(summary.parentElement?.tagName).toBe('DETAILS');
-    const links = screen.getAllByRole('link', { hidden: true });
-    expect(links.map((link) => link.getAttribute('href'))).toEqual([
-      '/hr/calendars',
-      '/hr/attendance',
-      '/hr/leave-policies',
-      '/hr/payrollPolicies',
-      '/hr/assignments',
+  it('shows the policy relationships and ordered settings links even when evidence fails to load', () => {
+    mocks.query.mockReturnValue({ currentData: undefined, isError: true, refetch: mocks.refetch });
+    mount();
+    const disclosure = screen.getByRole('button', { name: 'Policy Setup Guide' });
+    expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+    expect(disclosure).toHaveAttribute('aria-controls');
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+
+    fireEvent.click(disclosure);
+    expect(disclosure).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.getAllByRole('link').map((link) => [link.textContent, link.getAttribute('href')])
+    ).toEqual([
+      ['Work Calendars', '/hr/calendars'],
+      ['Attendance Policies', '/hr/attendance'],
+      ['Payroll Policies', '/hr/payrollPolicies'],
+      ['Leave Policies', '/hr/leave-policies'],
+      ['Policy Assignments', '/hr/assignments'],
     ]);
+    expect(screen.getByText(/payroll calendar and workday rules/)).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Review Evidence' })).toBeVisible();
+  });
+
+  it('explains leave day counting to a leave-only reader without exposing other links or evidence', () => {
+    mount(['HR.LeaveManagement.Setting.LeavePolicy.View', ...navigation]);
+    fireEvent.click(screen.getByRole('button', { name: 'Policy Setup Guide' }));
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['Leave Policies']);
+    expect(screen.getByText(/payroll calendar and workday rules/)).toBeVisible();
+    expect(mocks.query.mock.calls.map(([arg]) => arg.section)).toEqual(['leave']);
+  });
+
+  it('offers assignment navigation without using the sample as an assignment review', () => {
+    mount(['HR.Policies.View', ...navigation]);
+    fireEvent.click(screen.getByRole('button', { name: 'Policy Setup Guide' }));
+    expect(screen.getByRole('link', { name: 'Policy Assignments' })).toHaveAttribute(
+      'href',
+      '/hr/assignments'
+    );
+    expect(
+      screen.queryByRole('heading', { name: 'Sample staff and date check' })
+    ).not.toBeInTheDocument();
   });
 });

@@ -123,7 +123,8 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   } = ctx;
 
   // Get the current tab label for breadcrumbs
-  const currentTabLabel = HR_POLICY_TABS.find((t) => t.value === tab)?.label || 'Policies';
+  const currentTab = HR_POLICY_TABS.find((t) => t.value === tab);
+  const currentTabLabel = currentTab?.label ?? 'Policies';
 
   return (
     <Box
@@ -140,9 +141,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       <CustomBreadcrumbs
         heading={currentTabLabel}
         description={
-          tab === 'leave'
-            ? 'Manage entitlements, accrual, carry-forward, encashment, and approval rules. Each policy contains one Paid bucket and one Unpaid bucket.'
-            : 'Configure staff calendars, policies, and assignments.'
+          currentTab?.description ?? 'Configure staff calendars, policies, and assignments.'
         }
         sx={{ flexShrink: 0 }}
         links={[{ name: currentTabLabel }]}

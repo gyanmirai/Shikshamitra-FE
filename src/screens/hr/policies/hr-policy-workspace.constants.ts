@@ -15,11 +15,23 @@ export const HR_POLICY_TABS: Array<{
   value: WorkspaceTab;
   label: string;
   icon: string;
+  description?: string;
   disabled?: boolean;
 }> = [
-  { value: 'calendars', label: 'Work Calendars', icon: 'mdi:calendar-month-outline' },
+  {
+    value: 'calendars',
+    label: 'Work Calendars',
+    icon: 'mdi:calendar-month-outline',
+    description: 'Manage the workweeks and holidays used by attendance and payroll policies.',
+  },
   { value: 'attendance', label: 'Attendance Policies', icon: 'mdi:account-clock-outline' },
-  { value: 'leave', label: 'Leave Policies', icon: 'mdi:calendar-text-outline' },
+  {
+    value: 'leave',
+    label: 'Leave Policies',
+    icon: 'mdi:calendar-text-outline',
+    description:
+      'Manage entitlements, accrual, carry-forward, encashment, and approval rules. Each policy contains one Paid bucket and one Unpaid bucket.',
+  },
   { value: 'payroll', label: 'Payroll Policies', icon: 'mdi:cash-sync' },
   { value: 'assignments', label: 'Policy Assignments', icon: 'mdi:account-switch-outline' },
 ];

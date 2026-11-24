@@ -102,17 +102,17 @@ beforeEach(() => {
   };
 });
 
-it('mounts the real advisory checklist in the workspace with read-only, year-scoped sections', () => {
+it('mounts the advisory guide in the workspace with read-only, year-scoped sections', () => {
   setup();
-  fireEvent.click(screen.getByText('School HR setup review'));
-  expect(screen.getByRole('region', { name: 'School setup review sections' })).toBeVisible();
+  fireEvent.click(screen.getByText('Policy Setup Guide'));
+  expect(screen.getByRole('region', { name: 'Policy guidance and review evidence' })).toBeVisible();
   expect(mocks.query).toHaveBeenCalledWith(
     expect.objectContaining({ academicYearId: 'year-1', section: 'calendar' })
   );
   expect(mocks.query).toHaveBeenCalledWith(
     expect.objectContaining({ academicYearId: 'year-1', section: 'sample' })
   );
-  expect(screen.getByText(/This checklist is advisory/)).toBeInTheDocument();
+  expect(screen.getByText(/Optional guidance for the selected academic year/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /^Record / })).not.toBeInTheDocument();
   expect(mocks.record).not.toHaveBeenCalled();
 });
@@ -120,18 +120,18 @@ it('mounts the real advisory checklist in the workspace with read-only, year-sco
 it('makes no review API calls without an academic year or the owning read grants', () => {
   mocks.ctx.academicYearId = '';
   const result = setup(navigation);
-  expect(screen.queryByText('School HR setup review')).not.toBeInTheDocument();
+  expect(screen.queryByText('Policy Setup Guide')).not.toBeInTheDocument();
   expect(mocks.query).not.toHaveBeenCalled();
   mocks.ctx.academicYearId = 'year-1';
   result.rerenderWorkspace();
-  expect(screen.queryByText('School HR setup review')).not.toBeInTheDocument();
+  expect(screen.queryByText('Policy Setup Guide')).not.toBeInTheDocument();
   expect(mocks.query).not.toHaveBeenCalled();
 });
 
 it('keeps the policy workspace usable when advisory reads load or fail', () => {
   mocks.fetching = true;
   const result = setup();
-  fireEvent.click(screen.getByText('School HR setup review'));
+  fireEvent.click(screen.getByText('Policy Setup Guide'));
   expect(screen.getByText('Policy workspace remains available')).toBeVisible();
   expect(screen.queryByText('Defaults available')).not.toBeInTheDocument();
   mocks.fetching = false;
@@ -146,7 +146,7 @@ it('keeps the policy workspace usable when advisory reads load or fail', () => {
 it('records only explicit current-year evidence and hides review controls while a policy editor is open', async () => {
   mocks.canReview = true;
   const result = setup();
-  fireEvent.click(screen.getByText('School HR setup review'));
+  fireEvent.click(screen.getByText('Policy Setup Guide'));
   fireEvent.click(screen.getByRole('button', { name: 'Record calendar and workweek review' }));
   await waitFor(() =>
     expect(mocks.record).toHaveBeenCalledWith(
@@ -166,7 +166,7 @@ it('records only explicit current-year evidence and hides review controls while 
   expect(screen.queryByText('Synthetic year-1 calendar')).not.toBeInTheDocument();
   mocks.ctx.drawer = { kind: 'calendar', mode: 'create' };
   result.rerenderWorkspace();
-  expect(screen.queryByText('School HR setup review')).not.toBeInTheDocument();
+  expect(screen.queryByText('Policy Setup Guide')).not.toBeInTheDocument();
   expect(screen.getByText('Unsaved policy editor')).toBeVisible();
   expect(mocks.record).toHaveBeenCalledOnce();
 });
