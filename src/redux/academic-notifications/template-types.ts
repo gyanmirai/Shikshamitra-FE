@@ -50,4 +50,5 @@ export interface AcademicNotificationTemplateTest {
   status: number;
   channel: PublishedNotificationTemplateOption['channel'];
   isSynthetic: true;
+  expiresAt?: string | null;
 }

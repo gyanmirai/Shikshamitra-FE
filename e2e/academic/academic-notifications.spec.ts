@@ -21,11 +21,15 @@ test('follows a dynamic template test from preview to delivery and the personal 
   await editor.getByRole('button', { name: 'Load sample preview' }).click();
   await expect(editor.getByText('Homework for Sample Student')).toBeVisible();
   await editor.getByRole('button', { name: 'Send test' }).click();
-  await page.getByRole('dialog', { name: 'Queue test send' }).getByRole('button', { name: 'Queue test send' }).click();
+  const confirmation = page.getByRole('dialog', { name: 'Queue test send' });
+  await expect(confirmation).toContainText('Notification processing is paused on this server.');
+  await confirmation.getByRole('button', { name: 'Queue test send' }).click();
+  await expect(editor.getByText(/Delivery must start by/)).toBeVisible();
   await editor.getByRole('link', { name: 'Delivery History' }).click();
 
   const table = page.getByRole('table', { name: 'Academic notification delivery history table' });
   await expect(page.getByText('Template test', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Delivery must start by/)).toBeVisible();
   await expect(table.getByText('Queued', { exact: true })).toBeVisible();
   await expect(table.getByText('Delivered', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Cancel pending deliveries' })).toHaveCount(0);

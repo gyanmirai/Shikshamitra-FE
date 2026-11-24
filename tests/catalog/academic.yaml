@@ -102,7 +102,7 @@ scenarios:
   - id: ACM-NOTIFICATION-TEMPLATE-TEST-001
     module: Academic
     submodule: Notification
-    title: Staff preview a synthetic template test and follow its queued delivery to their own inbox
+    title: Staff review the pause and delivery deadline for a synthetic template test and follow it to their inbox
     risk: high
     priority: P1
     type: [functional, regression, responsive, accessibility]

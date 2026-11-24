@@ -7,7 +7,9 @@ import { CommunicationChannelType } from 'src/redux/communication/communicationT
 import { templateActionError } from './use-notification-template-form';
 import { NotificationTemplateActions } from './Components/notification-template-actions';
 
-const mocks = vi.hoisted(() => ({ testSend: vi.fn(), device: vi.fn(), active: vi.fn(), onError: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  testSend: vi.fn(), result: { data: undefined as unknown }, device: vi.fn(), active: vi.fn(), onError: vi.fn(),
+}));
 
 vi.mock('src/hooks/notifications/web-push-device', async (importOriginal) => ({
   ...await importOriginal<typeof import('src/hooks/notifications/web-push-device')>(),
@@ -19,7 +21,7 @@ vi.mock('src/redux/academic-notifications/template-api', () => ({
   usePublishAcademicNotificationTemplateMutation: () => [vi.fn()],
   useRestoreAcademicNotificationTemplateDefaultMutation: () => [vi.fn()],
   useDeleteAcademicNotificationTemplateDraftMutation: () => [vi.fn()],
-  useTestSendAcademicNotificationTemplateMutation: () => [mocks.testSend, {}],
+  useTestSendAcademicNotificationTemplateMutation: () => [mocks.testSend, mocks.result],
 }));
 
 const template: AcademicNotificationTemplate = {
@@ -31,9 +33,12 @@ const template: AcademicNotificationTemplate = {
   publishedAt: '2026-11-20T09:30:00Z', publishedByUserId: 'staff', isDeleted: false,
 };
 
-function openTest(channel: AcademicNotificationTemplate['channel'] = CommunicationChannelType.WebPush) {
+function openTest(
+  channel: AcademicNotificationTemplate['channel'] = CommunicationChannelType.WebPush,
+  queueStatus?: { isQueueWorkerEnabled: boolean }
+) {
   render(<NotificationTemplateActions identity={{ tenantCacheKey: 'school', userCacheKey: 'staff' }}
-    template={{ ...template, channel }} canManage canDelete disabled={false} testDisabled={false} busy={false}
+    template={{ ...template, channel }} queueStatus={queueStatus} canManage canDelete disabled={false} testDisabled={false} busy={false}
     onBusy={vi.fn()} onSaved={vi.fn()} onDeleted={vi.fn()} onError={mocks.onError} />);
   fireEvent.click(screen.getByRole('button', { name: 'Send test' }));
   return screen.getByRole('button', { name: 'Queue test send' });
@@ -41,9 +46,30 @@ function openTest(channel: AcademicNotificationTemplate['channel'] = Communicati
 
 beforeEach(() => {
   vi.resetAllMocks();
+  mocks.result.data = undefined;
   mocks.active.mockReturnValue(true);
   mocks.device.mockReturnValue({ owner: 'school:staff', id: 'browser-id' });
   mocks.testSend.mockReturnValue({ unwrap: () => Promise.resolve() });
+});
+
+it('warns before queueing an In-app test while delivery is paused', () => {
+  expect(openTest(CommunicationChannelType.InApp, { isQueueWorkerEnabled: false })).toBeEnabled();
+  expect(screen.getByRole('dialog')).toHaveTextContent('Notification processing is paused on this server.');
+  expect(screen.getByRole('dialog')).toHaveTextContent(/expire before delivery/i);
+});
+
+it('includes the deadline and history link after queueing a test', async () => {
+  mocks.result.data = {
+    isSynthetic: true, operationId: 'test-operation', expiresAt: '2026-11-24T09:40:00Z',
+  };
+  const confirm = openTest(CommunicationChannelType.InApp, { isQueueWorkerEnabled: false });
+  fireEvent.click(confirm);
+  await screen.findByRole('button', { name: 'Send test' });
+  expect(screen.getByRole('status')).toHaveTextContent(/delivery must start by/i);
+  expect(screen.getByRole('status')).toHaveTextContent('Notification processing is paused on this server.');
+  expect(screen.getByRole('link', { name: 'Delivery History' })).toHaveAttribute(
+    'href', expect.stringContaining('operation=test-operation')
+  );
 });
 
 it('confirms this browser and sends its selected subscription ID', async () => {

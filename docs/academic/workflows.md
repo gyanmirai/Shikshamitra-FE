@@ -178,7 +178,7 @@ Saving and submitting a diary leave notifications silent. The follow-up uses the
 
 ## Review delivery history
 
-In **Templates**, open a saved template, load the sample preview, and select **Send test**. Confirm the test destination and open **Delivery History** from the queued confirmation to follow that test. Once an in-app test is delivered, its sample appears in the test account's notification bell.
+In **Templates**, open a saved template, load the sample preview, and select **Send test**. The confirmation shows any delivery pause for the selected channel. After queueing, open **Delivery History** to check the deadline or see whether the test expired before delivery. Once an in-app test is delivered, its sample appears in the test account's notification bell.
 
 Assigned approvers open **Academics → Notifications → Delivery History** and select a request in **Pending Approvals**. Review the recipient counts, exclusions and sample messages, then confirm **Approve send** to queue it or **Reject send** to close the request. A changed request requires the sender to review and submit it again. The sender can follow the approval status from the Delivery History link on their send confirmation.
 

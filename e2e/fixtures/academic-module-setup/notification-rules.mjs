@@ -30,6 +30,7 @@ export function createNotificationRulesFixture(queueTemplateTest) {
     handle(url, method, body, send) {
       if (url.pathname === `${root}/catalogue` && method === 'GET') {
         send(200, {
+          isQueueWorkerEnabled: !queueTemplateTest,
           events: [{
             definition: {
               eventKey, category: 'Homework', sourceType: 'Academic.Homework',

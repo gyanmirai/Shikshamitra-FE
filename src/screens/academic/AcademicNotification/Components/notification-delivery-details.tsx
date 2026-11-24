@@ -27,6 +27,10 @@ export function NotificationDeliveryDetails({ operation, identity, canManage }: 
   const [confirm, setConfirm] = useState(false);
   const [cancel, result] = useCancelAcademicNotificationOperationMutation();
   const { operationId } = operation;
+  const testExpired = operation.isSynthetic && operation.templateTestExpiredBeforeDelivery;
+  const statusLabel = testExpired ? 'Expired' : operation.approvalRejected ? 'Rejected' : operationStatusLabels[operation.status];
+  const testDeadline = operation.isSynthetic && operation.status === CommunicationCampaignStatus.Queued
+    ? fDateTime(operation.templateTestExpiresAt) : '';
   const canReview = canManage && operation.canReviewApproval === true;
   const canCancel = canManage && !canReview && cancellable.includes(operation.status);
 
@@ -41,7 +45,7 @@ export function NotificationDeliveryDetails({ operation, identity, canManage }: 
       <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
         <Typography variant="subtitle2">{notificationEventKeyLabel(operation.eventKey)}</Typography>
         {operation.isSynthetic && <Label color="info">Template test</Label>}
-        <Label>{operation.approvalRejected ? 'Rejected' : (operationStatusLabels[operation.status] ?? 'Status unavailable')}</Label>
+        <Label>{statusLabel ?? 'Status unavailable'}</Label>
         <Typography variant="caption" color="text.secondary">{fDateTime(operation.createdAt)}</Typography>
         {canCancel && (
           <Button size="small" color="error" disabled={result.isLoading} onClick={() => setConfirm(true)}>
@@ -49,6 +53,11 @@ export function NotificationDeliveryDetails({ operation, identity, canManage }: 
           </Button>
         )}
       </Stack>
+      {testExpired ? (
+        <Alert severity="warning" role="status">The delivery window for this test has expired.</Alert>
+      ) : testDeadline && (
+        <Typography variant="body2" color="text.secondary">Delivery must start by {testDeadline}.</Typography>
+      )}
       {result.isError && <Alert severity="error">Pending deliveries could not be cancelled. Refresh the status and try again.</Alert>}
       {result.data && (
         <Alert severity="info">
