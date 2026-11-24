@@ -143,9 +143,16 @@ export function FormBuilderSections({
       !inheritance.sourceFailed &&
       inheritance.preview?.isValid
     );
+  const selectedStepId = selection.selectedSection
+    ? getSectionStepId(selection.selectedSection)
+    : undefined;
+  const authoredSection = formik.values.inheritance?.useRegistrationSteps
+    ? (formik.values.sections.find((section) => section.id === selection.selectedSectionId) ??
+      formik.values.sections.find((section) => getSectionStepId(section) === selectedStepId))
+    : undefined;
   const commands = useFormBuilderCommands(
     formik,
-    selection.selectedSectionId,
+    authoredSection?.id ?? selection.selectedSectionId,
     selection.select,
     inheritedFields,
     (field) => inheritance?.selectField(field)
@@ -358,7 +365,7 @@ export function FormBuilderSections({
                       .map((field) => field.bindingKey!)
                   ),
                 ]}
-                targetLabel={selectedSection?.name}
+                targetLabel={authoredSection?.name ?? selectedSection?.name}
                 loading={commands.systemFieldsQuery.isLoading}
                 error={commands.systemFieldsQuery.isError}
                 onAddField={commands.addField}

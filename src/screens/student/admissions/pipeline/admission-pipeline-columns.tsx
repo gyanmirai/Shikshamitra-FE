@@ -26,7 +26,7 @@ export function buildAdmissionPipelineColumns(
   applicationUrl: (id: string, assessmentAction?: 'book') => string,
   onOpen?: (id: string, assessmentAction?: 'book') => void,
   selection?: PipelineRowSelection,
-  onPrint?: (id: string, mode: 'blank' | 'filled') => void
+  onPrint?: (id: string) => void
 ): IColumn[] {
   const columns: IColumn[] = [
     {

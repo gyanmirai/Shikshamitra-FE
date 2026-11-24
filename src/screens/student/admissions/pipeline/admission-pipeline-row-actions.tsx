@@ -15,7 +15,7 @@ type Props = {
   row: AdmissionPipelineItem;
   applicationUrl: (id: string, assessmentAction?: 'book') => string;
   onOpen?: (id: string, assessmentAction?: 'book') => void;
-  onPrint?: (id: string, mode: 'blank' | 'filled') => void;
+  onPrint?: (id: string) => void;
 };
 
 export function AdmissionPipelineRowActions({ row, applicationUrl, onOpen, onPrint }: Props) {
@@ -84,13 +84,15 @@ export function AdmissionPipelineRowActions({ row, applicationUrl, onOpen, onPri
         <AdaptiveThreeDotsActions
           directActionLimit={0}
           mobileDirectActionLimit={0}
-          moreLabel={`Print options for ${reference}`}
-          actions={(['filled', 'blank'] as const).map((mode) => ({
-            id: `print-${mode}`,
-            label: mode === 'filled' ? 'Print filled form' : 'Print blank form',
-            icon: GlobalIcons.printer,
-            onClick: () => onPrint(row.id, mode),
-          }))}
+          moreLabel={`More actions for ${reference}`}
+          actions={[
+            {
+              id: 'print-form',
+              label: 'Print form',
+              icon: GlobalIcons.printer,
+              onClick: () => onPrint(row.id),
+            },
+          ]}
         />
       )}
     </Box>

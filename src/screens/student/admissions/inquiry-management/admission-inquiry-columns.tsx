@@ -6,10 +6,12 @@ import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-in
 
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { Stack, Typography, LinearProgress } from '@mui/material';
-import { TableOverflowText } from 'src/components/customizabaleTable/components/TableOverflowText';
+import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Stack, IconButton, Typography, LinearProgress } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { TableOverflowText } from 'src/components/customizabaleTable/components/TableOverflowText';
 
 import { inquiryHandoffBlocker } from './use-inquiry-handoff';
 import { formatAdmissionReference } from '../admission-reference';
@@ -34,6 +36,7 @@ type Options = {
   onManage: (inquiry: AdmissionInquiry) => void;
   onFollowUp?: (inquiry: AdmissionInquiry) => void;
   onHistory?: (inquiry: AdmissionInquiry) => void;
+  onCheckSiblings?: (inquiry: AdmissionInquiry) => void;
   onMove: (inquiry: AdmissionInquiry) => Promise<boolean>;
 };
 
@@ -207,7 +210,43 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       sticky: true,
       stickyPosition: 'left',
       stickyOnMobile: false,
-      render: (value, row) => String(value),
+      render: (value, row) => {
+        const inquiry = row as AdmissionInquiry;
+        const name = String(value);
+        const linked = inquiry.hasLinkedSiblings;
+        const checkSiblings = options.onCheckSiblings;
+        if (options.pipeline || !checkSiblings || (!linked && !inquiry.hasPossibleSiblingMatch))
+          return name;
+        const label = linked ? 'Siblings linked' : 'Check Parent Details';
+        return (
+          <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0 }}>
+            <TableOverflowText>{name}</TableOverflowText>
+            <CustomTooltip title={label} placement="right" describeChild>
+              <IconButton
+                size="small"
+                aria-label={`${label} for ${name}`}
+                aria-haspopup="dialog"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  checkSiblings(inquiry);
+                }}
+                sx={{
+                  flexShrink: 0,
+                  width: { xs: 44, sm: 30 },
+                  height: { xs: 44, sm: 30 },
+                  color: linked ? 'success.main' : 'text.secondary',
+                }}
+              >
+                <Iconify
+                  icon={linked ? 'mdi:account-group' : GlobalIcons.family}
+                  width={18}
+                  aria-hidden="true"
+                />
+              </IconButton>
+            </CustomTooltip>
+          </Stack>
+        );
+      },
     },
     {
       id: 'standardName',

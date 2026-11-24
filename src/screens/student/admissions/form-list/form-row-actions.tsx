@@ -9,7 +9,6 @@ type Props = {
   canPublish: boolean;
   canDelete: boolean;
   onEdit: () => void;
-  onClone: () => void;
   onValidate: () => void;
   onPublish: () => void;
   onHistory: () => void;
@@ -32,7 +31,6 @@ export function getFormRowActionVisibility(
 
   return {
     edit: canManage && isDraft,
-    clone: canManage,
     validate: canManage && isDraft,
     publish: canPublish && isDraft,
     delete: canDelete && isDraft,
@@ -49,7 +47,6 @@ export function FormRowActions({
   canPublish,
   canDelete,
   onEdit,
-  onClone,
   onValidate,
   onPublish,
   onHistory,
@@ -83,13 +80,6 @@ export function FormRowActions({
       icon: 'solar:trash-bin-trash-bold',
       color: 'error.main',
       onClick: onDelete,
-    });
-  if (visible.clone)
-    actions.push({
-      id: 'clone',
-      label: `Clone as Draft`,
-      icon: 'mdi:content-copy',
-      onClick: onClone,
     });
   if (visible.validate)
     actions.push({

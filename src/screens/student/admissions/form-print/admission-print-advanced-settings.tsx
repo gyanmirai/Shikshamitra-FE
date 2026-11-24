@@ -37,7 +37,11 @@ export function AdmissionPrintAdvancedSettings({
   onChange,
   form,
   branding,
-}: Pick<AdmissionPrintAdvancedTabProps, 'settings' | 'onChange' | 'form' | 'branding'>) {
+  onEditHeader,
+}: Pick<
+  AdmissionPrintAdvancedTabProps,
+  'settings' | 'onChange' | 'form' | 'branding' | 'onEditHeader'
+>) {
   const id = useId();
   const tabs = useTabs(TABS[0].value);
   const tab = TABS.find((item) => item.value === tabs.value)?.value ?? TABS[0].value;
@@ -49,8 +53,18 @@ export function AdmissionPrintAdvancedSettings({
     });
   const Panel = PANELS[tab];
   return (
-    <Stack spacing={2} sx={{ minWidth: 0 }}>
-      <Box sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', py: 0.5 }}>
+    <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          minWidth: 0,
+          bgcolor: 'background.paper',
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
         <CustomTabs
           density="compact"
           guardUnsavedChanges={false}
@@ -78,6 +92,7 @@ export function AdmissionPrintAdvancedSettings({
         <Panel
           settings={settings}
           onChange={onChange}
+          onEditHeader={onEditHeader}
           advanced={advanced}
           update={update}
           form={form}

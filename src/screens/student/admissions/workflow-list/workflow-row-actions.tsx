@@ -10,7 +10,6 @@ import { isAdmissionWorkflowPublishable } from '../workflow-access';
 export type WorkflowActionPermissions = {
   canEdit: boolean;
   canDelete: boolean;
-  canClone: boolean;
   canCreateVersion: boolean;
   canArchive: boolean;
   canReopen: boolean;
@@ -21,7 +20,6 @@ export type WorkflowActionPermissions = {
 type Props = WorkflowActionPermissions & {
   workflow: AdmissionWorkflow;
   onEdit: () => void;
-  onClone: () => void;
   onCreateVersion: () => void;
   onUsage: () => void;
   onArchive: () => void;
@@ -37,7 +35,6 @@ export function WorkflowRowActions({
   workflow,
   canEdit,
   canDelete,
-  canClone,
   canCreateVersion,
   canArchive,
   canReopen,
@@ -47,7 +44,6 @@ export function WorkflowRowActions({
   creatingVersion = false,
   busy = false,
   onEdit,
-  onClone,
   onCreateVersion,
   onUsage,
   onArchive,
@@ -94,13 +90,6 @@ export function WorkflowRowActions({
       onClick: onEdit,
     });
   if (canDelete && !showPublish) actions.push(deleteAction);
-  if (canClone)
-    actions.push({
-      id: 'clone',
-      label: 'Clone as Draft',
-      icon: 'mdi:content-copy',
-      onClick: onClone,
-    });
   if (canDelete && showPublish) actions.push(deleteAction);
   if (canCreateVersion && [1, 2, 7].includes(workflow.status))
     actions.push({

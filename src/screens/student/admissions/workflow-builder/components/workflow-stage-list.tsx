@@ -30,7 +30,6 @@ type Props = {
   transitions: AdmissionWorkflowTransition[];
   readOnly: boolean;
   loadingStageTypes: boolean;
-  issueCountByStage: Record<string, number>;
   issuesByStage?: Record<string, AdmissionWorkflowValidationIssue[]>;
   hasBlockingIssues?: boolean;
   onAdd: () => void;
@@ -53,7 +52,6 @@ export function WorkflowStageList({
   transitions,
   readOnly,
   loadingStageTypes,
-  issueCountByStage,
   issuesByStage = {},
   hasBlockingIssues = false,
   onAdd,
@@ -255,9 +253,6 @@ export function WorkflowStageList({
                   transitions={transitions.filter((item) => item.fromStageId === stage.id)}
                   stepNumber={index + 1}
                   readOnly={readOnly}
-                  issueCount={
-                    visibleIssuesByStage[stage.id]?.length ?? issueCountByStage[stage.id] ?? 0
-                  }
                   issues={visibleIssuesByStage[stage.id] ?? []}
                   incomingRoute={
                     !readOnly &&

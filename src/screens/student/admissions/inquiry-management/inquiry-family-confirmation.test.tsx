@@ -47,7 +47,7 @@ const inquiry = {
 } as AdmissionInquiry;
 const parent = {
   sourceApplicantId: 'source-child',
-  relationship: 'father',
+  relationship: 'father' as const,
   name: 'Amit',
   firstName: 'Amit',
 };
@@ -123,6 +123,90 @@ beforeEach(() => {
     'confirm',
     vi.fn(() => true)
   );
+});
+
+it('opens Check Parent Details from a list selection and confirms the saved family', async () => {
+  const onClose = vi.fn();
+  const load = vi.fn(async () => ({
+    inquiry: { ...inquiry, concurrencyStamp: 'current' },
+    matches: [match],
+  }));
+  open({ duplicateInput: undefined, listReview: { load, onClose } });
+  expect(await screen.findByRole('dialog', { name: 'Check Parent Details' })).toBeVisible();
+  expect(await screen.findByText('Riya')).toBeVisible();
+  expect(screen.getByText('Priya')).toBeVisible();
+  expect(screen.getByText('Amit')).toBeVisible();
+  expect(requests.lookup).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Add as Sibling' }));
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  expect(requests.confirm).toHaveBeenCalledWith({
+    id: 'target',
+    body: {
+      existingFamilyId: 'family',
+      existingParentApplicantId: 'source-child',
+      familyLinkOnly: true,
+      concurrencyStamp: 'current',
+    },
+  });
+});
+
+it('shows the same confirmed family from either inquiry without offering to add it again', async () => {
+  const linked = { ...inquiry, familyId: 'family', hasLinkedSiblings: true };
+  const first = open({
+    inquiry: linked,
+    listReview: { load: async () => ({ inquiry: linked, matches: [match] }), onClose: vi.fn() },
+  });
+  expect(await screen.findByText('Riya')).toBeVisible();
+  expect(screen.getByText('Priya')).toBeVisible();
+  expect(screen.getByText('Siblings linked')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Add as Sibling' })).not.toBeInTheDocument();
+  first.unmount();
+  const other = { ...linked, id: 'source', applicantId: 'source-child', applicantName: 'Riya' };
+  open({
+    inquiry: other,
+    listReview: {
+      load: async () => ({
+        inquiry: other,
+        matches: [
+          {
+            ...match,
+            applicantId: 'target-child',
+            applicantName: 'Priya',
+            existingInquiryId: 'target',
+          },
+        ],
+      }),
+      onClose: vi.fn(),
+    },
+  });
+  expect(await screen.findByText('Priya')).toBeVisible();
+  expect(screen.getByText('Riya')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Add as Sibling' })).not.toBeInTheDocument();
+  expect(requests.confirm).not.toHaveBeenCalled();
+});
+
+it('offers a read-only retry when the list review fails for an inquiry viewer', async () => {
+  const onClose = vi.fn();
+  const load = vi
+    .fn<NonNullable<Props['listReview']>['load']>()
+    .mockRejectedValueOnce({ data: { detail: 'The family review could not be loaded.' } })
+    .mockResolvedValueOnce({ inquiry, matches: [match, otherMatch] });
+  open({ readOnly: true, listReview: { load, onClose } });
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'The family review could not be loaded.'
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Reload Matches' }));
+  await screen.findByRole('combobox', { name: /^Family/ });
+  await selectFamily();
+  expect(await screen.findByText('Amit')).toBeVisible();
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'You do not have permission to confirm siblings.'
+  );
+  expect(screen.queryByRole('button', { name: 'Add as Sibling' })).not.toBeInTheDocument();
+  expect(load).toHaveBeenCalledTimes(2);
+  expect(requests.confirm).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: /^Close$/ }));
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
 });
 
 it('loads candidates only after explicit open and requires an explicit choice between distinct families', async () => {

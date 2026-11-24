@@ -22,6 +22,7 @@ import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { Box, Stack, Paper, Button, Drawer, Skeleton, Typography } from '@mui/material';
 import { useGetAdmissionOfferingQuery } from 'src/redux/student/admissions/admission-offerings-api';
+import { admissionParentRegistrationApi } from 'src/redux/student/admissions/admission-parent-registration-api';
 
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
@@ -121,8 +122,14 @@ export default function AdmissionApplicationDetailScreen({
   const [decisionFooter, setDecisionFooter] = useState<HTMLElement | null>(null);
   const [registrationToolbar, setRegistrationToolbar] = useState<HTMLDivElement | null>(null);
   const [registrationStatus, setRegistrationStatus] = useState<HTMLDivElement | null>(null);
+  const registrationAnswers = useRef<HTMLDivElement>(null);
+  const [reviewedHandIn, setReviewedHandIn] = useState<string | null>(null);
   const [decisionDraftDirty, setDecisionDraftDirty] = useState(false);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const staffId = useSelector((state: RootState) => state.auth.user?.sub as string | undefined);
+  const tenantId = useSelector(
+    (state: RootState) => state.auth.user?.tenantid as string | undefined
+  );
   const canViewApplicantNotes = hasGrantedPermission(
     permissions,
     'Students.Admissions.Applicants.View'
@@ -219,6 +226,25 @@ export default function AdmissionApplicationDetailScreen({
     stageReadiness?.stageId === selectedStage?.id && stageReadiness?.dirty
   );
   const requiresForm = workspace.view === 'journey' && isFormStage(selectedStage);
+  const parentRegistrationQuery =
+    admissionParentRegistrationApi.endpoints.getParentRegistration.useQueryState(
+      application?.id ?? '',
+      { skip: !application || !requiresForm || !selectedCurrentStage || historical }
+    );
+  const parentRequest = parentRegistrationQuery.isError
+    ? undefined
+    : parentRegistrationQuery.currentData?.request;
+  const parentHandIn =
+    requiresForm &&
+    selectedCurrentStage &&
+    !historical &&
+    application?.status === 0 &&
+    parentRequest?.purpose === 'initial' &&
+    parentRequest.status === 'ReadyForReview' &&
+    parentRequest.handedInAt
+      ? parentRequest
+      : null;
+  const parentReviewPending = Boolean(parentHandIn && reviewedHandIn !== parentHandIn.id);
   useEffect(() => {
     // Start the selected renderer alongside form data, not after that read completes.
     // The rendered dynamic panel retains the framework's chunk-error recovery.
@@ -360,8 +386,25 @@ export default function AdmissionApplicationDetailScreen({
     );
   const renderRuntimeForm = (historicalReview = false) => {
     if (!application || !form) return null;
-    const readOnly = historicalReview || !detail.canEdit;
-    return (
+    const readOnly = historicalReview || !detail.canEdit || parentReviewPending;
+    const resumeStepKey =
+      !historicalReview &&
+      requiresForm &&
+      selectedStage &&
+      selectedCurrentStage &&
+      tenantId &&
+      staffId &&
+      form.formInstanceId
+        ? `admission-registration-step:${JSON.stringify([
+            tenantId,
+            staffId,
+            application.id,
+            selectedStage.id,
+            form.formInstanceId,
+            form.formVersion,
+          ])}`
+        : undefined;
+    const runtime = (
       <>
         {workspace.view === 'journey' && formCorrectionAction && (
           <Stack direction="row" justifyContent="flex-end" sx={{ flexShrink: 0 }}>
@@ -372,6 +415,7 @@ export default function AdmissionApplicationDetailScreen({
           academicMediumId={academicOffering?.mediumId}
           compact
           readOnly={readOnly}
+          resumeStepKey={resumeStepKey}
           application={application}
           form={form}
           values={detail.currentValues}
@@ -396,6 +440,31 @@ export default function AdmissionApplicationDetailScreen({
                     <ParentRegistrationPanel
                       placement="header"
                       statusElement={registrationStatus}
+                      completionStatus={
+                        parentHandIn && (
+                          <Stack
+                            role="status"
+                            aria-label="Parent registration status"
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                            useFlexGap
+                            flexWrap="wrap"
+                          >
+                            <Iconify
+                              icon={GlobalIcons.info}
+                              width={18}
+                              aria-hidden="true"
+                              sx={{ color: 'info.main', flexShrink: 0 }}
+                            />
+                            <Typography variant="subtitle2">Completed by parent</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {fDateTime(parentHandIn.handedInAt, ADMISSION_DATE_TIME_FORMAT)}
+                            </Typography>
+                            <Label color="success">Ready for review</Label>
+                          </Stack>
+                        )
+                      }
                       applicationId={application.id}
                       canView={hasGrantedPermission(
                         permissions,
@@ -414,9 +483,33 @@ export default function AdmissionApplicationDetailScreen({
               : undefined
           }
           onSubmit={detail.submitApplication}
-          showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
+          submitLabel={parentHandIn ? 'Submit application' : undefined}
+          reviewAction={
+            parentHandIn &&
+            parentReviewPending && (
+              <Button
+                type="button"
+                size="small"
+                variant="contained"
+                color="inherit"
+                startIcon={<Iconify icon={GlobalIcons.eye} width={16} />}
+                disabled={navigationLocked || formQuery.isFetching}
+                onClick={() => {
+                  setReviewedHandIn(parentHandIn.id);
+                  registrationAnswers.current?.focus();
+                }}
+              >
+                Start review
+              </Button>
+            )
+          }
+          showSaveDraft={
+            (detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true) &&
+            (!parentReviewPending || detail.canEdit)
+          }
           canSubmitForm={
             selectedCurrentStage &&
+            !parentReviewPending &&
             (detail.formStageQuery.currentData?.canSubmit ?? application.status === 0)
           }
           managedFormStage={Boolean(selectedStage?.formStageEnabled)}
@@ -430,6 +523,17 @@ export default function AdmissionApplicationDetailScreen({
           onReopen={detail.reopenApplication}
         />
       </>
+    );
+    return (
+      <Stack
+        ref={registrationAnswers}
+        role={parentHandIn ? 'region' : undefined}
+        aria-label={parentHandIn ? 'Registration answers' : undefined}
+        tabIndex={parentHandIn ? -1 : undefined}
+        sx={parentHandIn ? { flex: 1, minWidth: 0, minHeight: 0 } : { display: 'contents' }}
+      >
+        {runtime}
+      </Stack>
     );
   };
   const canComplete =
@@ -1064,7 +1168,7 @@ export default function AdmissionApplicationDetailScreen({
                         Resume Admission
                       </Button>
                     )
-                  ) : (
+                  ) : !parentHandIn ? (
                     <LoadingButton
                       size="small"
                       variant="contained"
@@ -1089,7 +1193,7 @@ export default function AdmissionApplicationDetailScreen({
                           ? 'Submitting Application…'
                           : 'Continue Admission'}
                     </LoadingButton>
-                  )}
+                  ) : null}
                 </>
               ))}
           </Stack>

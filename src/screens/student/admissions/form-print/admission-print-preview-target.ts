@@ -196,7 +196,10 @@ export function getAdmissionPrintPreviewTarget(
   }
   if (previous.header.continuation !== next.header.continuation)
     return first('Header on later pages', 2);
-  if (before.showSchoolHeader !== after.showSchoolHeader || changed(previous.header, next.header))
+  if (
+    before.showSchoolHeader !== after.showSchoolHeader ||
+    changed({ ...previous.header, layout: undefined }, { ...next.header, layout: undefined })
+  )
     return first('School header');
   if (changed(previous.branding, next.branding)) {
     const { bannerPages, bannerPlacement } = next.branding;

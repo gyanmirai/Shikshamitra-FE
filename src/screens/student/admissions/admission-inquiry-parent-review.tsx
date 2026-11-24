@@ -41,12 +41,6 @@ export function AdmissionInquiryParentReview({
   const options = families.flatMap((family) => family.parents);
   const family = families.find((item) => item.familyId === selected?.match.familyId);
   const parent = selected?.parent;
-  const role =
-    parent?.relationship === 'father'
-      ? 'Father'
-      : parent?.relationship === 'mother'
-        ? 'Mother'
-        : 'Parent';
   const normalize = (value: string) => value.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
@@ -71,70 +65,7 @@ export function AdmissionInquiryParentReview({
           />
         </ShakingTextField>
       )}
-      {parent && (
-        <Stack
-          direction="row"
-          spacing={2}
-          alignItems="flex-start"
-          sx={{
-            p: 2,
-            bgcolor: 'background.neutral',
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 2,
-            minWidth: 0,
-          }}
-        >
-          <Avatar
-            variant="rounded"
-            aria-hidden="true"
-            sx={(theme) => ({
-              width: 48,
-              height: 48,
-              flexShrink: 0,
-              bgcolor: alpha(theme.palette.primary.main, 0.16),
-              color: 'primary.dark',
-              ...theme.applyStyles('dark', { color: 'primary.light' }),
-            })}
-          >
-            {parent.name
-              .trim()
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((part) => Array.from(part)[0])
-              .join('')
-              .toUpperCase()}
-          </Avatar>
-          <Stack spacing={1} sx={{ minWidth: 0, flex: 1 }}>
-            <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-              <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                {parent.name}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {role}
-              </Typography>
-            </Stack>
-            {[
-              { value: parent.mobile, icon: 'mdi:phone-outline' },
-              { value: parent.email, icon: GlobalIcons.email },
-            ]
-              .filter((contact) => contact.value)
-              .map((contact) => (
-                <Stack key={contact.icon} direction="row" spacing={1} alignItems="flex-start">
-                  <Iconify
-                    icon={contact.icon}
-                    width={18}
-                    aria-hidden="true"
-                    sx={{ color: 'text.secondary', flexShrink: 0, mt: 0.25 }}
-                  />
-                  <Typography variant="body2" sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-                    {contact.value}
-                  </Typography>
-                </Stack>
-              ))}
-          </Stack>
-        </Stack>
-      )}
+      {parent && <AdmissionInquirySavedParent parent={parent} />}
       {parent && !parent.relationship && (
         <ShakingTextField error={Boolean(relationshipError)}>
           <CustomSelect
@@ -210,6 +141,79 @@ export function AdmissionInquiryParentReview({
           No saved Father or Mother is available to link. Check and edit the parent contact details.
         </Typography>
       )}
+    </Stack>
+  );
+}
+
+export function AdmissionInquirySavedParent({ parent }: { parent: InquiryParentOption['parent'] }) {
+  const role =
+    parent?.relationship === 'father'
+      ? 'Father'
+      : parent?.relationship === 'mother'
+        ? 'Mother'
+        : 'Parent';
+  return (
+    <Stack
+      direction="row"
+      spacing={2}
+      alignItems="flex-start"
+      sx={{
+        p: 2,
+        bgcolor: 'background.neutral',
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 2,
+        minWidth: 0,
+      }}
+    >
+      <Avatar
+        variant="rounded"
+        aria-hidden="true"
+        sx={(theme) => ({
+          width: 48,
+          height: 48,
+          flexShrink: 0,
+          bgcolor: alpha(theme.palette.primary.main, 0.16),
+          color: 'primary.dark',
+          ...theme.applyStyles('dark', { color: 'primary.light' }),
+        })}
+      >
+        {parent.name
+          .trim()
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((part) => Array.from(part)[0])
+          .join('')
+          .toUpperCase()}
+      </Avatar>
+      <Stack spacing={1} sx={{ minWidth: 0, flex: 1 }}>
+        <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+          <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+            {parent.name}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {role}
+          </Typography>
+        </Stack>
+        {[
+          { value: parent.mobile, icon: 'mdi:phone-outline' },
+          { value: parent.email, icon: GlobalIcons.email },
+        ]
+          .filter((contact) => contact.value)
+          .map((contact) => (
+            <Stack key={contact.icon} direction="row" spacing={1} alignItems="flex-start">
+              <Iconify
+                icon={contact.icon}
+                width={18}
+                aria-hidden="true"
+                sx={{ color: 'text.secondary', flexShrink: 0, mt: 0.25 }}
+              />
+              <Typography variant="body2" sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+                {contact.value}
+              </Typography>
+            </Stack>
+          ))}
+      </Stack>
     </Stack>
   );
 }

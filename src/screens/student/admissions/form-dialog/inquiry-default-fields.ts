@@ -287,7 +287,10 @@ export function ensureNewInquiryDefaults(
 }
 export const lockNewInquiryStarter = ensureNewInquiryDefaults;
 export function changeNewFormInheritance(form: CreateUpdateAdmissionForm, enabled: boolean) {
-  const next = { ...form, inheritance: { enabled, sources: form.inheritance?.sources ?? [] } };
+  const next = {
+    ...form,
+    inheritance: { enabled, useRegistrationSteps: true, sources: form.inheritance?.sources ?? [] },
+  };
   if (form.coreFieldPolicyVersion !== ADMISSION_CORE_FIELD_POLICY_VERSION) return next;
   return ensureNewInquiryDefaults({
     ...next,

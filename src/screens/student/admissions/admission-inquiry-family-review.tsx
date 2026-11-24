@@ -1,9 +1,13 @@
+import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
+
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Box, Stack, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
+import { AdmissionInquirySavedParent } from './admission-inquiry-parent-review';
 import { inquiryContactMatches } from './admission-inquiry-parent-review-model';
 
 import type { InquiryFamilyReview } from './admission-inquiry-parent-review-model';
@@ -16,6 +20,8 @@ type Props = {
   error?: string;
   guardianPhone: string;
   guardianEmail?: string;
+  currentChild?: Pick<AdmissionInquiry, 'applicantId' | 'applicantName' | 'inquiryNumber'>;
+  linked?: boolean;
 };
 
 /** Family selection is explicit; children are read-only context for the link. */
@@ -27,6 +33,8 @@ export function AdmissionInquiryFamilyReview({
   error,
   guardianPhone,
   guardianEmail = '',
+  currentChild,
+  linked = false,
 }: Props) {
   const contactMatches = inquiryContactMatches(
     selectedFamily?.children ?? families.flatMap((family) => family.children),
@@ -76,9 +84,26 @@ export function AdmissionInquiryFamilyReview({
     const detail = reference && !repeatedReference ? reference : family.familyId;
     return { value: family.familyId, label: `${label} · ${detail}` };
   });
+  const children = selectedFamily?.children ?? [];
+  const reviewedChildren = currentChild
+    ? [
+        {
+          applicantId: currentChild.applicantId,
+          applicantName: currentChild.applicantName,
+          existingInquiryNumber: currentChild.inquiryNumber,
+        },
+        ...children.filter((child) => child.applicantId !== currentChild.applicantId),
+      ].sort((left, right) => left.applicantName.localeCompare(right.applicantName))
+    : children;
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
-      {families.length > 0 && <Typography variant="body2">{message}</Typography>}
+      {linked ? (
+        <Box>
+          <Label color="success">Siblings linked</Label>
+        </Box>
+      ) : (
+        families.length > 0 && <Typography variant="body2">{message}</Typography>
+      )}
       {families.length > 1 && (
         <ShakingTextField error={Boolean(error)}>
           <CustomSelect
@@ -96,13 +121,26 @@ export function AdmissionInquiryFamilyReview({
           />
         </ShakingTextField>
       )}
+      {currentChild && selectedFamily && (
+        <Stack spacing={1}>
+          <Typography variant="subtitle2">Saved parent details</Typography>
+          {selectedFamily.parents.map(({ key, parent }) => (
+            <AdmissionInquirySavedParent key={key} parent={parent} />
+          ))}
+          {!selectedFamily.parents.length && (
+            <Typography variant="body2" color="text.secondary">
+              Saved parent details are unavailable for this family.
+            </Typography>
+          )}
+        </Stack>
+      )}
       {selectedFamily && (
         <Box
           component="ul"
           aria-label="Children in this family"
           sx={{ m: 0, p: 0, listStyle: 'none' }}
         >
-          {selectedFamily.children.map((child) => (
+          {reviewedChildren.map((child) => (
             <Stack
               component="li"
               key={child.applicantId}

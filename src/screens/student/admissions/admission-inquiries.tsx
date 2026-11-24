@@ -21,6 +21,7 @@ import {
   type AdmissionInquiry,
   useGetAdmissionInquiryQuery,
   useGetAdmissionInquiriesQuery,
+  useLazyGetAdmissionInquirySiblingMatchesQuery,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { getAdmissionInquiryAccess } from './inquiry-access';
@@ -32,17 +33,18 @@ import { useInquiryHandoff } from './inquiry-management/use-inquiry-handoff';
 import { InquiryFollowUpDialog } from './inquiry-management/inquiry-follow-up-dialog';
 import { loadInquiryOverviewForm } from './inquiry-management/inquiry-overview-loader';
 import { preloadInquiryWorkspace } from './inquiry-management/preload-inquiry-workspace';
+import { InquiryFamilyConfirmation } from './inquiry-management/inquiry-family-confirmation';
 import { InquiryHandoffIssueDialog } from './inquiry-management/inquiry-handoff-issue-dialog';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
-import {
-  INQUIRY_STATUS_OPTIONS,
-  buildAdmissionInquiryRowOptions,
-} from './inquiry-management/admission-inquiry-list-options';
 import { AdmissionInquiryManagementPage } from './inquiry-management/admission-inquiry-management-page';
 import {
   AdmissionAcademicFilters,
   useAdmissionAcademicFilters,
 } from './admission-academic-filters';
+import {
+  INQUIRY_STATUS_OPTIONS,
+  buildAdmissionInquiryRowOptions,
+} from './inquiry-management/admission-inquiry-list-options';
 import {
   isAdmissionInquiryEnumFilter,
   buildAdmissionInquiryListFilters,
@@ -84,7 +86,9 @@ export default function AdmissionInquiriesScreen() {
   const [tableFilters, setTableFilters] = useState<IParams['filters']>(() =>
     createInitialAdmissionInquiryTableFilters(searchParams)
   );
-  const statusValue = String(tableFilters.find((filter) => filter.column === 'status')?.value ?? '');
+  const statusValue = String(
+    tableFilters.find((filter) => filter.column === 'status')?.value ?? ''
+  );
   const statusFilter = inquiryStatusFilters.find(({ value }) => value === statusValue);
   const [page, setPage] = useState(0);
   useEffect(() => {
@@ -94,6 +98,7 @@ export default function AdmissionInquiriesScreen() {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [selectedInquiry, setSelectedInquiry] = useState<AdmissionInquiry | null>(null);
   const [followUpInquiry, setFollowUpInquiry] = useState<AdmissionInquiry | null>(null);
+  const [siblingInquiry, setSiblingInquiry] = useState<AdmissionInquiry | null>(null);
   const [historyInquiry, setHistoryInquiry] = useState<AdmissionInquiry | null>(null);
   const [pendingInquiryOrigin, setPendingInquiryOrigin] = useState<string | null>(null);
   useEffect(() => {
@@ -211,6 +216,7 @@ export default function AdmissionInquiriesScreen() {
       onManage: openInquiry,
       onFollowUp: setFollowUpInquiry,
       onHistory: setHistoryInquiry,
+      onCheckSiblings: canView ? setSiblingInquiry : undefined,
       onMove: handoff.move,
     }).map((column) => ({
       ...column,
@@ -218,6 +224,7 @@ export default function AdmissionInquiriesScreen() {
     }));
   }, [
     canManage,
+    canView,
     rowOptions,
     handoff.canMove,
     handoff.moving,
@@ -425,7 +432,9 @@ export default function AdmissionInquiriesScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
           data={skipList || scopeLoading ? [] : (data?.items ?? [])}
-          isRefreshing={Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving}
+          isRefreshing={
+            Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving
+          }
           refreshIndicator="linear"
           errorContent={
             isError && !skipList && !scopeLoading && !data?.items.length ? (
@@ -505,6 +514,15 @@ export default function AdmissionInquiriesScreen() {
         />
       </Box>
       <InquiryFollowUpDialog inquiry={followUpInquiry} onClose={() => setFollowUpInquiry(null)} />
+      {siblingInquiry && canView && (
+        <InquiryListSiblingReview
+          key={siblingInquiry.id}
+          inquiry={siblingInquiry}
+          readOnly={!canManage}
+          busy={handoff.moving}
+          onClose={() => setSiblingInquiry(null)}
+        />
+      )}
       <InquiryHandoffIssueDialog
         issue={handoff.issue}
         access={handoff.formAccess}
@@ -538,5 +556,30 @@ export default function AdmissionInquiriesScreen() {
         </CustomDialog>
       )}
     </Box>
+  );
+}
+
+function InquiryListSiblingReview({
+  inquiry,
+  readOnly,
+  busy,
+  onClose,
+}: {
+  inquiry: AdmissionInquiry;
+  readOnly: boolean;
+  busy: boolean;
+  onClose: () => void;
+}) {
+  const [loadMatches] = useLazyGetAdmissionInquirySiblingMatchesQuery();
+  return (
+    <InquiryFamilyConfirmation
+      inquiry={inquiry}
+      readOnly={readOnly}
+      dirty={false}
+      busy={busy}
+      onConfirmed={() => {}}
+      onBusyChange={() => {}}
+      listReview={{ load: (id) => loadMatches(id).unwrap(), onClose }}
+    />
   );
 }

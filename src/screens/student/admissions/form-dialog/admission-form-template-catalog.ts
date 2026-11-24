@@ -1020,7 +1020,10 @@ export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdm
       defaultLanguage: source.defaultLanguage ?? 'en',
       supportedLanguages: source.supportedLanguages?.length ? source.supportedLanguages : ['en'],
       sections,
-      inheritance: source.inheritance,
+      inheritance:
+        purpose === 1 && source.inheritance
+          ? { ...source.inheritance, useRegistrationSteps: true }
+          : source.inheritance,
     })
   );
 }

@@ -106,7 +106,7 @@ function renderCombinedCanvas(
   effectiveLayout = layoutType,
   saved?: CreateUpdateAdmissionForm
 ) {
-  const base = saved ?? getBlankAdmissionFormInitialValues(1);
+  const base = saved ?? { ...getBlankAdmissionFormInitialValues(1), inheritance: undefined };
   const baseField = { ...newField(base.sections[0].id, 0), label: 'Registration question' };
   base.sections[0].fields = [baseField];
   base.layoutType = layoutType;
@@ -177,6 +177,34 @@ function renderCombinedCanvas(
 }
 
 describe('combined Inquiry and Registration canvas', () => {
+  it('keeps the first Registration step editable with locked Inquiry sections inside it', async () => {
+    const user = userEvent.setup({ delay: null });
+    const initial = {
+      ...getBlankAdmissionFormInitialValues(1),
+      inheritance: { enabled: true, useRegistrationSteps: true, sources: [] },
+    };
+    renderCombinedCanvas(1, 1, initial);
+
+    const steps = screen.getByRole('navigation', { name: 'Form Steps' });
+    expect(within(steps).queryByRole('button', { name: 'Inquiry step' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Student questions' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Student Details' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: /Reorder Inquiry question/ })).toBeNull();
+
+    await user.click(
+      within(steps).getByRole('button', { name: 'Actions For Student details step' })
+    );
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
+    const heading = screen.getByRole('textbox', { name: 'Step Heading' });
+    fireEvent.change(heading, { target: { value: 'All student details' } });
+    await user.click(screen.getByRole('button', { name: 'Finish Editing Step Heading' }));
+
+    expect(within(steps).getByRole('button', { name: 'All student details' })).toBeVisible();
+    expect(JSON.parse(screen.getByTestId('base-draft').textContent!)).toMatchObject({
+      inheritance: initial.inheritance,
+      sections: [{ stepName: 'All student details' }],
+    });
+  });
   it('renames a reused Inquiry step, keeps its fields locked and restores the title on reopen', async () => {
     const user = userEvent.setup({ delay: null });
     const initial = getBlankAdmissionFormInitialValues(1);

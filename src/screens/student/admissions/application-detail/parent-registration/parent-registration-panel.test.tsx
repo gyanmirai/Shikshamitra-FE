@@ -6,6 +6,7 @@ import { ParentRegistrationPanel } from './parent-registration-panel';
 
 const state = vi.hoisted(() => ({
   send: vi.fn(),
+  reactivate: vi.fn(),
   copyLink: vi.fn(),
   corrections: vi.fn(),
   apply: vi.fn(),
@@ -118,6 +119,7 @@ vi.mock('src/redux/student/admissions/admission-parent-registration-api', () => 
     };
   },
   useSendParentRegistrationMutation: () => [state.send, {}],
+  useReactivateParentRegistrationMutation: () => [state.reactivate, {}],
   useCopyParentRegistrationLinkMutation: () => [state.copyLink, {}],
   useChangeParentRegistrationEmailMutation: () => [state.changeEmail, {}],
   useRevokeParentRegistrationMutation: () => [state.revoke, {}],
@@ -154,6 +156,7 @@ beforeEach(() => {
     canSend: true,
     canCopyLink: false,
     canCreateLink: false,
+    canReactivate: false,
     canApply: false,
     canRevoke: false,
     canTakeover: false,
@@ -171,6 +174,7 @@ function installInvitation(deliveryStatus = 'Sent') {
     blockedReason: null,
     request: {
       id: 'request',
+      purpose: 'initial',
       status: 'Invited',
       recipient: contact,
       expiresAt: '2026-11-11T12:00:00Z',
@@ -195,6 +199,7 @@ it('copies the active registration link without sending another email', async ()
   );
   expect(screen.getByText('Email sent')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Copy link' }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   await waitFor(() =>
     expect(state.copyLink).toHaveBeenCalledExactlyOnceWith({
       applicationId: 'app',
@@ -256,18 +261,141 @@ it('creates a copy-only link with a saved recipient even when email delivery is 
     />
   );
   fireEvent.click(screen.getByRole('button', { name: 'Copy link' }));
+  const dialog = within(screen.getByRole('dialog'));
+  expect(dialog.queryByText(/parent completes the form/i)).not.toBeInTheDocument();
+  expect(dialog.queryByText(/enter a whole number of days/i)).not.toBeInTheDocument();
+  expect(dialog.queryByText(/estimated expiry/i)).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole('textbox', { name: /Link valid for/ }), {
+    target: { value: '45' },
+  });
   fireEvent.submit(screen.getByRole('dialog'));
   await waitFor(() =>
     expect(state.copyLink).toHaveBeenCalledExactlyOnceWith({
       applicationId: 'app',
       input: {
         recipientRelationship: 'mother',
+        validityDays: 45,
         concurrencyStamp: 'initial',
         idempotencyKey: expect.any(String),
       },
     })
   );
   expect(state.send).not.toHaveBeenCalled();
+});
+
+it('sends the selected duration without the link validity helper text', async () => {
+  state.send.mockReturnValue({ unwrap: async () => state.context });
+  render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Send email' }));
+  const dialog = within(screen.getByRole('dialog'));
+  expect(dialog.queryByText(/parent completes the form/i)).not.toBeInTheDocument();
+  expect(dialog.queryByText(/enter a whole number of days/i)).not.toBeInTheDocument();
+  expect(dialog.queryByText(/estimated expiry/i)).not.toBeInTheDocument();
+  const validity = dialog.getByRole('textbox', { name: 'Link valid for (days)' });
+  expect(validity).toHaveValue('7');
+  expect(dialog.getByText('days')).toBeVisible();
+
+  fireEvent.change(validity, { target: { value: '1' } });
+  fireEvent.click(dialog.getByRole('button', { name: 'Send link' }));
+  await waitFor(() =>
+    expect(state.send).toHaveBeenCalledExactlyOnceWith({
+      applicationId: 'app',
+      input: {
+        recipientRelationship: 'mother',
+        validityDays: 1,
+        concurrencyStamp: 'initial',
+        idempotencyKey: expect.any(String),
+      },
+    })
+  );
+});
+
+it.each(['', '0', '-1', '1.5', '3000000', '9007199254740992'])(
+  'rejects invalid Registration link validity %j',
+  async (value) => {
+    render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send email' }));
+    const validity = screen.getByRole('textbox', { name: /Link valid for/ });
+    fireEvent.change(validity, { target: { value } });
+    fireEvent.submit(screen.getByRole('dialog'));
+    expect(
+      await screen.findByText(
+        'Enter a positive whole number of days within the supported date range.'
+      )
+    ).toBeVisible();
+    expect(validity).toHaveFocus();
+    expect(state.send).not.toHaveBeenCalled();
+  }
+);
+
+it('reactivates the same expired link and retains the command key after an uncertain response', async () => {
+  installInvitation();
+  state.context.request.status = 'Expired';
+  state.context.canReactivate = true;
+  state.context.emailDeliveryBlockedReason = 'Email is unavailable.';
+  state.reactivate
+    .mockReturnValueOnce({
+      unwrap: async () => {
+        throw Object.assign(new Error('Network unavailable'), { status: 'FETCH_ERROR' });
+      },
+    })
+    .mockReturnValueOnce({ unwrap: async () => state.context });
+  render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Reactivate link' }));
+  const dialog = screen.getByRole('dialog');
+  expect(within(dialog).getByText('Link expired')).toBeVisible();
+  expect(
+    within(dialog).getByText(/same link.*saved answers.*share the link separately/i)
+  ).toBeVisible();
+  expect(within(dialog).getByText('days')).toBeVisible();
+  const validity = within(dialog).getByRole('textbox', { name: /Link valid for/ });
+  fireEvent.change(validity, { target: { value: '12' } });
+  const submit = within(dialog).getByRole('button', { name: 'Reactivate link' });
+  fireEvent.click(submit);
+  await waitFor(() => expect(state.toastError).toHaveBeenCalled());
+  expect(validity).toHaveValue('12');
+  fireEvent.click(submit);
+  await waitFor(() => expect(state.reactivate).toHaveBeenCalledTimes(2));
+  expect(state.reactivate.mock.calls[0][0]).toEqual({
+    applicationId: 'app',
+    input: {
+      requestId: 'request',
+      validityDays: 12,
+      concurrencyStamp: 'initial',
+      idempotencyKey: expect.any(String),
+    },
+  });
+  expect(state.reactivate.mock.calls[1][0]).toEqual(state.reactivate.mock.calls[0][0]);
+  expect(state.send).not.toHaveBeenCalled();
+  expect(state.copyLink).not.toHaveBeenCalled();
+});
+
+it('requires clean Registration edits and current link eligibility to reactivate', async () => {
+  installInvitation();
+  state.context.request.status = 'Expired';
+  const panel = (dirty = false) => (
+    <ParentRegistrationPanel
+      applicationId="app"
+      canView
+      canManage
+      dirty={dirty}
+      currentValues={{}}
+    />
+  );
+  const { rerender } = render(panel());
+  expect(screen.queryByRole('button', { name: 'Reactivate link' })).not.toBeInTheDocument();
+  state.context = { ...state.context, canReactivate: true };
+  rerender(panel(true));
+  expect(screen.getByRole('button', { name: 'Reactivate link' })).toBeDisabled();
+  rerender(panel());
+  fireEvent.click(screen.getByRole('button', { name: 'Reactivate link' }));
+  state.context = { ...state.context, canReactivate: false };
+  rerender(panel());
+  const dialog = screen.getByRole('dialog');
+  expect(within(dialog).getByRole('button', { name: 'Reactivate link' })).toBeDisabled();
+  await act(async () => fireEvent.submit(dialog));
+  expect(state.reactivate).not.toHaveBeenCalled();
 });
 
 it('groups the invited contact once and keeps provider acceptance in optional help', () => {
@@ -606,6 +734,24 @@ it('prioritizes retry and keeps resend and access maintenance in the shared over
   expect(screen.getByRole('menuitem', { name: 'Send a new link' })).toBeVisible();
   expect(screen.getByRole('menuitem', { name: 'Revoke link' })).toBeVisible();
   expect(screen.getByRole('menuitem', { name: 'Take over' })).toBeVisible();
+});
+
+it('retries delivery without editing or extending the existing link', async () => {
+  installInvitation('Failed');
+  state.context.canRetryDelivery = true;
+  state.retryDelivery.mockReturnValue({ unwrap: async () => state.context });
+  render(<ParentRegistrationPanel applicationId="app" canView canManage currentValues={{}} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Send email' }));
+  const dialog = screen.getByRole('dialog');
+  expect(within(dialog).queryByRole('textbox', { name: /Link valid for/ })).not.toBeInTheDocument();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Retry delivery' }));
+  await waitFor(() =>
+    expect(state.retryDelivery).toHaveBeenCalledExactlyOnceWith({
+      applicationId: 'app',
+      input: { concurrencyStamp: 'initial', idempotencyKey: expect.any(String) },
+    })
+  );
+  expect(state.send).not.toHaveBeenCalled();
 });
 it.each(['inline', 'header'] as const)(
   'sends only the saved recipient and retains the command key on uncertain retry (%s)',

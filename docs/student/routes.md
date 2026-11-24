@@ -159,10 +159,10 @@ Application reference and applicant-name links share that URL-backed drawer dest
 Applicant 360 uses icon-only Notes & Follow-ups, Application History, Admission journey and Close actions with shared custom tooltips. The drawer also has an in-place full-width Focus mode toggle. The shared vertical journey stepper and existing review/current-step/authorized override/skip commands open in the journey popover; there is no permanent journey sidebar, counsellor control or More menu. The horizontal form stepper and adjacent compact End journey/Continue admission actions remain. Future stages can be prepared through server-authorized actions; navigation never advances the workflow. Completed evidence stays read-only. Identity editing requires exact Applicants View/Add access and remains locked after finalization.
 
 The Admission Cycle screen uses exactly three assignable permissions.
-`View` enables the list, details, impact, and history; `Add` enables create, draft edit, publish, reopen, clone, window revision, and scheduling; `Delete` enables close, archive, and unused-Draft deletion.
+`View` enables the list, details, impact, and history; `Add` enables create, draft edit, publish, reopen, window revision, and scheduling; `Delete` enables close, archive, and unused-Draft deletion.
 
-The Offering screen checks `Create`, `Edit`, `Clone`, `Activate`, `Deactivate`, `Delete`, and `BulkCreate` permissions for visible controls.
-The Workflow screens check granular `View`, `Create`, `Edit`, `Delete`, `Clone`, `Validate`, `Publish`, `Archive`, and `ViewUsage` permissions.
+The Offering screen checks `Create`, `Edit`, `Activate`, `Deactivate`, `Delete`, and `BulkCreate` permissions for visible controls.
+The Workflow screens check granular `View`, `Create`, `Edit`, `Delete`, `Validate`, `Publish`, `Archive`, and `ViewUsage` permissions.
 These checks improve UX; matching backend authorization remains mandatory.
 
 `src/utils/permissions.ts` requires the exact action grant in every environment. Admissions menus and screens do not bypass permissions during local development. Academic UserScope independently limits the data available to staff.

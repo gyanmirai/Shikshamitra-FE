@@ -72,6 +72,7 @@ export type AdmissionInquiryWorkQueue = 1 | 2 | 3 | 4;
 export type AdmissionInquiry = {
   siblingFamilyConfirmed?: boolean;
   hasLinkedSiblings?: boolean;
+  hasPossibleSiblingMatch?: boolean;
   parentRelationship?: AdmissionParentRelationship | null;
   primaryContactRelationship?: 'father' | 'mother' | 'guardian' | null;
   guardianResponsibilityConfirmed?: boolean;
@@ -245,6 +246,10 @@ export type DuplicateMatch = {
   matchByEmail?: boolean;
   matchByMobile?: boolean;
 };
+export type AdmissionInquirySiblingReview = {
+  inquiry: AdmissionInquiry;
+  matches: DuplicateMatch[];
+};
 export type UpdateAdmissionInquiry = {
   guardianResponsibilityConfirmed?: boolean;
   applicantName: string;
@@ -358,6 +363,12 @@ export const admissionInquiriesApi = api.injectEndpoints({
           | { totalCount: number; items: AdmissionInquiry[] }
       ) => unwrap(response),
       providesTags: [{ type: studentAdmissionsCrmType.admissionInquiry, id: 'LIST' }],
+    }),
+    getAdmissionInquirySiblingMatches: builder.query<AdmissionInquirySiblingReview, string>({
+      query: (id) => `/student/enrollment/admissions/inquiries/${id}/sibling-matches`,
+      transformResponse: (
+        response: Result<AdmissionInquirySiblingReview> | AdmissionInquirySiblingReview
+      ) => unwrap(response),
     }),
     markAdmissionInquiryContacted: builder.mutation<AdmissionInquiry, string>({
       query: (id) => ({
@@ -532,6 +543,7 @@ export const {
   useLazyGetAdmissionInquiryCaptureCatalogueQuery,
   useGetAdmissionInquiryQuery,
   useLazyGetAdmissionInquiryQuery,
+  useLazyGetAdmissionInquirySiblingMatchesQuery,
   useGetAdmissionInquiriesQuery,
   useLazyExportAdmissionInquiriesQuery,
   useMarkAdmissionInquiryContactedMutation,

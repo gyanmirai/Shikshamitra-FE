@@ -41,21 +41,22 @@ function getExistingWorkflowDraftId(error: unknown) {
   const payload = (error as { data?: unknown }).data;
   if (!payload || typeof payload !== 'object') return null;
   const body = payload as Record<string, unknown>;
-  const errorInfo = body.error && typeof body.error === 'object'
-    ? (body.error as Record<string, unknown>)
-    : null;
-  const businessData = errorInfo?.data && typeof errorInfo.data === 'object'
-    ? (errorInfo.data as Record<string, unknown>)
-    : body.data && typeof body.data === 'object'
-      ? (body.data as Record<string, unknown>)
-      : null;
+  const errorInfo =
+    body.error && typeof body.error === 'object' ? (body.error as Record<string, unknown>) : null;
+  const businessData =
+    errorInfo?.data && typeof errorInfo.data === 'object'
+      ? (errorInfo.data as Record<string, unknown>)
+      : body.data && typeof body.data === 'object'
+        ? (body.data as Record<string, unknown>)
+        : null;
   const draftId = businessData?.DraftId ?? businessData?.draftId;
   return typeof draftId === 'string' && draftId.trim() ? draftId : null;
 }
 
 export function useWorkflowListActions(returnTo?: string) {
   const router = useRouter();
-  const withReturn = (href: string) => returnTo ? href + (href.includes('?') ? '&' : '?') + new URLSearchParams({ returnTo }) : href;
+  const withReturn = (href: string) =>
+    returnTo ? href + (href.includes('?') ? '&' : '?') + new URLSearchParams({ returnTo }) : href;
   const navigation = usePendingNavigation(router.push);
   const createDialog = useBoolean();
   const createCloseRef = useRef<(() => void) | null>(null);
@@ -73,7 +74,6 @@ export function useWorkflowListActions(returnTo?: string) {
     canCreate: workflowAccess.canManage,
     canEdit: workflowAccess.canManage,
     canDelete: workflowAccess.canDelete,
-    canClone: workflowAccess.canManage,
     canCreateVersion: workflowAccess.canManage,
     canArchive: workflowAccess.canManage,
     canReopen: workflowAccess.canManage,
@@ -92,7 +92,9 @@ export function useWorkflowListActions(returnTo?: string) {
   const navigate = (workflow: AdmissionWorkflow, panel?: 'preview' | 'usage') =>
     navigation.navigate(
       workflow.id,
-      withReturn(`${studentPaths.enrollment.settings.workflows}/${workflow.id}${panel ? `?panel=${panel}` : ''}`)
+      withReturn(
+        `${studentPaths.enrollment.settings.workflows}/${workflow.id}${panel ? `?panel=${panel}` : ''}`
+      )
     );
   const runAction = async (
     action: () => Promise<AdmissionWorkflow | void>,
@@ -136,7 +138,9 @@ export function useWorkflowListActions(returnTo?: string) {
       setOpeningCreatedWorkflow(false);
       const problem = parseApiProblemDetail(error);
       if (problem.errorCode !== DUPLICATE_WORKFLOW_NAME_CODE) {
-        shikshaMitraToast.error({ message: problem.detail || 'Unable to create the workflow draft.' });
+        shikshaMitraToast.error({
+          message: problem.detail || 'Unable to create the workflow draft.',
+        });
       }
       throw error;
     }

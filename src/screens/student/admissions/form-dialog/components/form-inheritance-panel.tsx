@@ -13,6 +13,7 @@ import { studentPaths } from 'src/constants/student-menu';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
   Box,
   Chip,
@@ -65,53 +66,81 @@ export function FormInheritancePanel() {
     !inheritance.loading &&
     !formik.isSubmitting
   );
+  const checkedPreview =
+    !inheritance.loading && !inheritance.failed ? inheritance.preview : undefined;
   return (
     <FormSectionCard
       title="Reuse Inquiry Questions"
       icon="mdi:link-variant"
-      descriptionTooltip="Questions Follow Each Applicant's Linked Inquiry Form. Offering and Workflow Setup Control the Connections."
       collapsible
       expanded={expanded}
       onExpandedChange={setExpanded}
       iconSize={16}
       iconContainerSize={28}
-      titleTypographyProps={{ variant: 'subtitle2', sx: { flex: '1 1 0', minWidth: 0 } }}
+      titleTypographyProps={{ variant: 'subtitle2' }}
       sx={{ m: 1, p: 1.5, flexShrink: 0, minWidth: 0 }}
       contentSpacing={1}
-      action={
-        enabled && (
-          <CustomTooltip title="More Options">
-            <IconButton
-              size="small"
-              aria-label="More Options"
-              aria-haspopup="menu"
-              aria-expanded={Boolean(menuAnchor)}
-              aria-controls={menuAnchor ? 'inquiry-question-options' : undefined}
-              disabled={formik.isSubmitting}
-              onClick={(event) => setMenuAnchor(event.currentTarget)}
-            >
-              <Iconify icon="mdi:dots-vertical" />
-            </IconButton>
-          </CustomTooltip>
-        )
-      }
     >
-      <FormControlLabel
-        sx={{ m: 0, justifyContent: 'space-between', gap: 1 }}
-        labelPlacement="start"
-        label="Include Inquiry Questions in Registration"
-        control={
-          <Switch
-            size="small"
-            checked={enabled}
-            disabled={formik.isSubmitting || Boolean(formik.values.inheritance?.sources.length)}
-            onChange={(_, checked) => setEnabled(checked)}
-          />
-        }
-      />
+      <Stack direction="row" alignItems="center">
+        <FormControlLabel
+          sx={{ m: 0, gap: 0.5, flex: 1, justifyContent: 'space-between' }}
+          labelPlacement="start"
+          label="Include in Registration"
+          control={
+            <Switch
+              size="small"
+              checked={enabled}
+              disabled={formik.isSubmitting}
+              onChange={(_, checked) => setEnabled(checked)}
+              sx={{
+                '&& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                  bgcolor: 'primary.main',
+                },
+              }}
+            />
+          }
+        />
+        <InfoTooltipIcon
+          label="Reuse Inquiry Questions information"
+          title="Applicants see questions from their linked Inquiry form. The offering and workflow determine which form is linked."
+        />
+      </Stack>
+      {!enabled && Boolean(formik.values.inheritance?.sources.length) && (
+        <Typography variant="caption" color="text.secondary">
+          Approved Inquiry versions are kept if you turn reuse back on.
+        </Typography>
+      )}
       {enabled && (
         <>
-          <InquirySourcePicker />
+          <Stack direction="row" gap={0.5} alignItems="center">
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <InquirySourcePicker />
+            </Box>
+            <CustomTooltip title="More Options">
+              <IconButton
+                size="small"
+                aria-label="More Options"
+                aria-haspopup="menu"
+                aria-expanded={Boolean(menuAnchor)}
+                aria-controls={menuAnchor ? 'inquiry-question-options' : undefined}
+                disabled={formik.isSubmitting}
+                onClick={(event) => setMenuAnchor(event.currentTarget)}
+                sx={{ flexShrink: 0 }}
+              >
+                <Iconify icon="mdi:dots-vertical" />
+              </IconButton>
+            </CustomTooltip>
+          </Stack>
+          {inheritance.approved && checkedPreview?.isValid && (
+            <Chip
+              size="small"
+              variant="outlined"
+              color="success"
+              role="status"
+              label="Allowed for Registration"
+              sx={{ alignSelf: 'flex-start' }}
+            />
+          )}
           {!inheritance.initializingSources && !inheritance.canViewSources && (
             <Typography variant="caption" color="text.secondary">
               Form view permission is required to browse Inquiry forms. Saved Inquiry choices remain
@@ -132,18 +161,14 @@ export function FormInheritancePanel() {
             </Button>
           )}
           {inheritance.loading && <LinearProgress aria-label="Checking Inquiry Questions" />}
-          {inheritance.preview && !inheritance.loading && !inheritance.failed && (
+          {checkedPreview && (
             <>
-              <Typography
-                variant="caption"
-                color={inheritance.preview.isValid ? 'success.main' : 'warning.main'}
-                role="status"
-              >
-                {inheritance.preview.isValid
-                  ? 'Questions Ready to Use'
-                  : 'Review the Question Issues Before Allowing These Questions.'}
-              </Typography>
-              {inheritance.preview.issues.map((issue, index) => (
+              {!checkedPreview.isValid && (
+                <Typography variant="caption" color="warning.main" role="status">
+                  Review these issues before allowing the questions.
+                </Typography>
+              )}
+              {checkedPreview.issues.map((issue, index) => (
                 <Typography key={`${issue.code}-${index}`} variant="caption" color="error.main">
                   {issue.message}
                 </Typography>
@@ -153,7 +178,7 @@ export function FormInheritancePanel() {
                   size="small"
                   variant="contained"
                   disabled={
-                    !inheritance.preview.isValid ||
+                    !checkedPreview.isValid ||
                     inheritance.loading ||
                     inheritance.failed ||
                     inheritance.sourceFailed ||
@@ -163,14 +188,6 @@ export function FormInheritancePanel() {
                 >
                   Allow These Questions
                 </Button>
-              )}
-              {inheritance.approved && inheritance.preview.isValid && (
-                <Chip
-                  size="small"
-                  variant="outlined"
-                  label="Allowed for Registration"
-                  sx={{ alignSelf: 'flex-start' }}
-                />
               )}
             </>
           )}

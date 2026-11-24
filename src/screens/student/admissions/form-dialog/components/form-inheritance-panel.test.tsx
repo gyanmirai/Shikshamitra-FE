@@ -7,6 +7,7 @@ import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
+import { changeNewFormInheritance } from '../inquiry-default-fields';
 import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
 import { FormInheritancePanel, InheritedFieldSettings } from './form-inheritance-panel';
 
@@ -37,15 +38,38 @@ const inherited = {
   },
 };
 
-function ReusePanel({ enabled = false, failed = false }: { enabled?: boolean; failed?: boolean }) {
+function ReusePanel({
+  enabled = false,
+  failed = false,
+  approved = false,
+}: {
+  enabled?: boolean;
+  failed?: boolean;
+  approved?: boolean;
+}) {
+  const initial = getBlankAdmissionFormInitialValues(1);
+  if (approved) {
+    initial.inheritance = {
+      enabled: true,
+      sources: [
+        {
+          inquiryFormDefinitionId: 'source-1',
+          requiredFieldIdentities: [],
+          fieldMappings: [],
+          layouts: [],
+        },
+      ],
+    };
+  }
   return (
     <ThemeProvider theme={createTheme(defaultSettings)}>
-      <Formik initialValues={getBlankAdmissionFormInitialValues(1)} onSubmit={() => undefined}>
+      <Formik initialValues={initial} onSubmit={() => undefined}>
         {(formik) => {
           inheritanceContext.value = {
             formik,
-            enabled,
-            setEnabled: vi.fn(),
+            enabled: formik.values.inheritance?.enabled ?? enabled,
+            setEnabled: (next: boolean) =>
+              formik.setValues(changeNewFormInheritance(formik.values, next)),
             sourceId: null,
             selectSource: vi.fn(),
             canViewSources: false,
@@ -70,17 +94,13 @@ function ReusePanel({ enabled = false, failed = false }: { enabled?: boolean; fa
 it('starts unused Inquiry reuse collapsed and toggles disclosure without changing the form', async () => {
   render(<ReusePanel />);
   const original = screen.getByTestId('reuse-draft').textContent;
-  expect(
-    screen.queryByRole('switch', { name: 'Include Inquiry Questions in Registration' })
-  ).not.toBeInTheDocument();
+  expect(screen.queryByRole('switch', { name: 'Include in Registration' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Expand Reuse Inquiry Questions' }));
-  expect(
-    screen.getByRole('switch', { name: 'Include Inquiry Questions in Registration' })
-  ).not.toBeChecked();
+  expect(screen.getByRole('switch', { name: 'Include in Registration' })).not.toBeChecked();
   fireEvent.click(screen.getByRole('button', { name: 'Collapse Reuse Inquiry Questions' }));
   await waitFor(() =>
     expect(
-      screen.queryByRole('switch', { name: 'Include Inquiry Questions in Registration' })
+      screen.queryByRole('switch', { name: 'Include in Registration' })
     ).not.toBeInTheDocument()
   );
   expect(screen.getByTestId('reuse-draft').textContent).toBe(original);
@@ -95,6 +115,25 @@ it('reopens reused Inquiry details when a new recovery error arrives', async () 
   view.rerender(<ReusePanel enabled failed />);
   expect(await screen.findByRole('button', { name: /^Check Again$/ })).toBeVisible();
   expect(screen.getByRole('alert')).toHaveTextContent('Inquiry versions could not be loaded.');
+});
+
+it('turns reuse off and back on in a draft while retaining its approved Inquiry version', () => {
+  render(<ReusePanel approved />);
+  const toggle = screen.getByRole('switch', { name: 'Include in Registration' });
+  expect(toggle).toBeEnabled();
+  fireEvent.click(toggle);
+  expect(toggle).not.toBeChecked();
+  expect(JSON.parse(screen.getByTestId('reuse-draft').textContent!).inheritance).toMatchObject({
+    enabled: false,
+    useRegistrationSteps: true,
+    sources: [{ inquiryFormDefinitionId: 'source-1' }],
+  });
+  expect(screen.queryByRole('combobox', { name: 'Preview Inquiry form' })).toBeNull();
+  fireEvent.click(toggle);
+  expect(toggle).toBeChecked();
+  expect(
+    JSON.parse(screen.getByTestId('reuse-draft').textContent!).inheritance.sources
+  ).toHaveLength(1);
 });
 
 function setup(
@@ -235,6 +274,7 @@ describe('Inherited Registration field settings', () => {
               loading: false,
               failed: false,
               approved: false,
+              preview: { isValid: true, issues: [] },
               fetchSources: async () => ({
                 data: [
                   { id: 'source-0', name: 'Inquiry A', version: 1 },
@@ -251,16 +291,22 @@ describe('Inherited Registration field settings', () => {
       </ThemeProvider>
     );
     expect(screen.getByText('Reuse Inquiry Questions')).toBeVisible();
-    expect(
-      screen.getByRole('switch', { name: 'Include Inquiry Questions in Registration' })
-    ).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Include in Registration' })).toBeChecked();
     expect(screen.getAllByRole('combobox')).toHaveLength(1);
+    expect(
+      screen.getByRole('region', { name: 'Collapse Reuse Inquiry Questions' })
+    ).toContainElement(screen.getByRole('button', { name: 'More Options' }));
+    expect(screen.getByRole('button', { name: 'More Options' }).parentElement).toContainElement(
+      screen.getByRole('combobox', { name: 'Preview Inquiry form' })
+    );
+    expect(screen.queryByText('Questions are ready to use.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Allow These Questions' })).toBeEnabled();
     expect(
       screen.queryByText('Each applicant sees the questions from their own Inquiry Form.')
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Choosing a form changes this Preview.')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Check Again' })).not.toBeInTheDocument();
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Using Inquiry Form' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Inquiry form' }));
     await screen.findByRole('option', { name: 'Archived Inquiry D · v1' });
     await waitFor(() =>
       expect(screen.getAllByRole('option', { name: 'Inquiry A · v1' })).toHaveLength(2)

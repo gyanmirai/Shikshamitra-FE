@@ -51,7 +51,8 @@ export default function AdmissionOfferingsScreen() {
       }}
     >
       <CustomBreadcrumbs
-        editorOpen={Boolean(screen.dialogMode) || screen.bulkOpen || Boolean(screen.pendingAction)} busy={screen.saving || screen.commanding || screen.bulkActivation.busy}
+        editorOpen={Boolean(screen.dialogMode) || screen.bulkOpen || Boolean(screen.pendingAction)}
+        busy={screen.saving || screen.commanding || screen.bulkActivation.busy}
         heading="Admission Offerings"
         description="Connect Classes, Admission Periods, Processes, and Forms Before Accepting Applications."
         links={[
@@ -162,7 +163,6 @@ export default function AdmissionOfferingsScreen() {
             rowsPerPage={screen.filters.rowsPerPage}
             search={screen.filters.search}
             canEdit={screen.permissions.edit && !screen.bulkActivation.busy}
-            canClone={screen.permissions.clone && !screen.bulkActivation.busy}
             canActivate={screen.permissions.activate && !screen.bulkActivation.busy}
             canDeactivate={screen.permissions.deactivate && !screen.bulkActivation.busy}
             canDelete={screen.permissions.delete && !screen.bulkActivation.busy}
@@ -170,7 +170,6 @@ export default function AdmissionOfferingsScreen() {
               if (!screen.bulkActivation.busy) screen.openDetailed('view', row);
             }}
             onEdit={(row) => screen.openDetailed('edit', row)}
-            onClone={(row) => screen.openDetailed('clone', row)}
             onToggleActive={screen.requestAction}
             onDelete={screen.requestDelete}
             onSearch={(search) => screen.update({ search })}

@@ -7,6 +7,7 @@ import { it, expect, describe } from 'vitest';
 
 import { getAdmissionWizardSchema } from './form-wizard-model';
 import { getSystemAdmissionFormTemplate } from './admission-form-template-catalog';
+import { getAdmissionFormStepGroups, getVisibleAdmissionFormSteps } from './form-step-groups';
 import {
   newField,
   admissionFormSchema,
@@ -213,6 +214,121 @@ describe('Registration source Inquiry inheritance model', () => {
     expect(values.inheritance).toBe(original.inheritance);
     expect(original.sections[0].fields).toEqual([]);
     expect(getInheritanceBuilderValues(original, effective).layoutType).toBe(1);
+  });
+  it('uses the first live Registration step for inherited and context sections while keeping their section rules', () => {
+    const original = approveInquirySource(
+      { ...draft(), inheritance: { enabled: true, useRegistrationSteps: true, sources: [] } },
+      'inquiry-b'
+    );
+    expect(original.inheritance?.useRegistrationSteps).toBe(true);
+    const originalSection = {
+      ...original.sections[0],
+      stepId: 'old-first-step',
+      stepCode: 'STEP_1',
+      stepName: 'Original first step',
+      stepDisplayOrder: 1,
+    };
+    const newFirst = {
+      ...originalSection,
+      id: 'family',
+      code: 'FAMILY',
+      name: 'Family',
+      displayOrder: 1,
+      stepId: 'family-step',
+      stepCode: 'FAMILY_STEP',
+      stepName: 'First Registration step',
+      stepDisplayOrder: 0,
+      stepVisibilityRuleJson: '{"field":"REGISTRATION","operator":"isnotempty"}',
+      visibilityRuleJson: '{"field":"FAMILY","operator":"isnotempty"}',
+    };
+    const source = {
+      ...originalSection,
+      id: 'source',
+      code: 'INQ_SOURCE',
+      name: 'Questions from Inquiry',
+      visibilityRuleJson: '{"field":"SOURCE","operator":"isnotempty"}',
+      fields: [field()],
+    };
+    const context = {
+      ...source,
+      id: 'context',
+      code: 'INQ_CONTACT',
+      displayOrder: 1,
+      fields: [{ ...field('Context'), id: 'source-context', code: 'CONTEXT' }],
+    };
+    const current = { ...original, layoutType: 1 as const, sections: [originalSection, newFirst] };
+    const effective = { layoutType: 1 as const, sections: [originalSection, newFirst, source] };
+    const builder = getInheritanceBuilderValues(current, effective, undefined, [context]);
+    const preview = getInheritancePreviewValues(current, effective, [context]);
+
+    [builder, preview].forEach((view) => {
+      const groups = getAdmissionFormStepGroups(view.sections);
+      expect(groups.map((step) => step.name)).toEqual([
+        'First Registration step',
+        'Original first step',
+      ]);
+      expect(groups[0].sections.map(({ section }) => section.id)).toEqual([
+        'source',
+        'context',
+        'family',
+      ]);
+      expect(groups[0].sections[0].section).toMatchObject({
+        visibilityRuleJson: source.visibilityRuleJson,
+        stepVisibilityRuleJson: null,
+        fields: [field()],
+      });
+      expect(groups[0].sections[1].section.fields[0].readOnly).toBe(true);
+      expect(
+        getVisibleAdmissionFormSteps(
+          view.sections,
+          { SOURCE: 'yes', FAMILY: 'yes' },
+          true
+        )[0].sections.map(({ section }) => section.id)
+      ).toEqual(['source', 'context']);
+      expect(
+        getVisibleAdmissionFormSteps(view.sections, { REGISTRATION: 'yes' }, true)[0].sections.some(
+          ({ section }) => section.id === 'family'
+        )
+      ).toBe(false);
+    });
+    expect(current.sections).toEqual([originalSection, newFirst]);
+  });
+  it('keeps a flagged Registration single-page when the Inquiry has steps', () => {
+    const original = {
+      ...draft(),
+      layoutType: 0 as const,
+      inheritance: { enabled: true, useRegistrationSteps: true, sources: [] },
+    };
+    const effective = {
+      layoutType: 1 as const,
+      sections: [
+        original.sections[0],
+        { ...original.sections[0], id: 'source', stepId: 'source-step', fields: [field()] },
+      ],
+    };
+    [
+      getInheritanceBuilderValues(original, effective),
+      getInheritancePreviewValues(original, effective),
+    ].forEach((view) => {
+      expect(view.layoutType).toBe(0);
+      expect(view.sections.map((section) => section.id)).toEqual(['source', 'section']);
+      expect(getAdmissionFormStepGroups(view.sections)).toMatchObject([
+        { name: original.name, code: 'REGISTRATION_PAGE' },
+      ]);
+    });
+  });
+  it('ignores the previous effective Inquiry questions after reuse is turned off', () => {
+    const original = {
+      ...draft(),
+      inheritance: { enabled: false, useRegistrationSteps: true, sources: [] },
+    };
+    const effective = {
+      layoutType: 1 as const,
+      sections: [{ ...original.sections[0], id: 'source', fields: [field()] }],
+    };
+    expect(getInheritanceBuilderValues(original, effective)).toBe(original);
+    expect(getInheritancePreviewValues(original, effective)).toBe(original);
+    expect(markInheritedRegistrationFields(original, effective)).toBe(original);
   });
   it('retains Inquiry languages without saving the composed presentation into the Registration', () => {
     const original = draft();

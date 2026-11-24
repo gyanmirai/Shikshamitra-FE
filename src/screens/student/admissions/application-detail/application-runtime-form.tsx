@@ -14,10 +14,11 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import CustomStepper from 'src/components/custom-stepper';
-import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { getStorage, setStorage } from 'src/hooks/use-local-storage';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Grid, Stack, Button, Tooltip, Typography } from '@mui/material';
 import { useLazyGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
 import {
@@ -83,12 +84,15 @@ type Props = {
   documents?: ReactNode;
   beforeActions?: ReactNode;
   footerActions?: ReactNode;
+  reviewAction?: ReactNode;
   correctionMode?: boolean;
   onPhotoReadingChange?: (reading: boolean) => void;
   onValidationBusyChange?: (busy: boolean) => void;
   sectionActions?: ReactNode;
   compact?: boolean;
   readOnly?: boolean;
+  hideStepNavigation?: boolean;
+  resumeStepKey?: string;
   academicMediumId?: string;
   publicMode?: boolean;
   allowPrint?: boolean;
@@ -140,12 +144,15 @@ export function ApplicationRuntimeFormCore({
   documents,
   beforeActions,
   footerActions,
+  reviewAction,
   correctionMode = false,
   onPhotoReadingChange,
   onValidationBusyChange,
   sectionActions,
   compact = false,
   readOnly = false,
+  hideStepNavigation = false,
+  resumeStepKey,
   academicMediumId,
   publicMode = false,
   allowPrint = false,
@@ -163,6 +170,23 @@ export function ApplicationRuntimeFormCore({
   const previousErrors = useRef<Record<string, string>>({});
   const pendingErrorFocus = useRef(false);
   const [activeStep, setActiveStep] = useState(0);
+  const [rememberedStep, setRememberedStep] = useState<{ key: string; id: string }>();
+  useEffect(() => {
+    if (!resumeStepKey) return;
+    const storedStep: unknown = getStorage(resumeStepKey);
+    if (typeof storedStep === 'string') setRememberedStep({ key: resumeStepKey, id: storedStep });
+  }, [resumeStepKey]);
+  const setStaffStep = useCallback(
+    (index: number, stepId: string) => {
+      if (resumeStepKey) {
+        setRememberedStep({ key: resumeStepKey, id: stepId });
+        setStorage(resumeStepKey, stepId);
+      } else {
+        setActiveStep(index);
+      }
+    },
+    [resumeStepKey]
+  );
   const [savedStepIds, setSavedStepIds] = useState<string[]>([]);
   const [savingStep, setSavingStep] = useState(false);
   const [validatingStep, setValidatingStep] = useState(false);
@@ -222,6 +246,7 @@ export function ApplicationRuntimeFormCore({
     [presentationSections, displayValues, correctionMode, correctionSectionIds]
   );
   const isStepper = Boolean(guidedNavigation) || form.definition.layoutType === 1;
+  const showStepNavigation = isStepper && !hideStepNavigation;
   const visibleSteps = guidedNavigation
     ? getVisibleAdmissionFormSteps(
         presentationSections,
@@ -237,20 +262,27 @@ export function ApplicationRuntimeFormCore({
           sections: step.sections.filter(({ section }) => visibleSections.includes(section)),
         }))
         .filter((step) => step.sections.length > 0);
-  const safeActiveStep = guidedNavigation
-    ? Math.max(
-        0,
-        visibleSteps.findIndex((step) => step.id === guidedNavigation.stepId)
-      )
-    : Math.min(activeStep, Math.max(0, visibleSteps.length - 1));
+  const selectedStepId = guidedNavigation
+    ? guidedNavigation.stepId
+    : rememberedStep?.key === resumeStepKey
+      ? rememberedStep?.id
+      : undefined;
+  const safeActiveStep =
+    guidedNavigation || resumeStepKey
+      ? Math.max(
+          0,
+          visibleSteps.findIndex((step) => step.id === selectedStepId)
+        )
+      : Math.min(activeStep, Math.max(0, visibleSteps.length - 1));
   const onGuidedStepChange = guidedNavigation?.onStepChange;
   const reviewSectionId = guidedNavigation?.reviewSectionId;
   const selectStep = (index: number) => {
+    const step = visibleSteps[index];
+    if (!step) return;
     if (onGuidedStepChange) {
-      const step = visibleSteps[index];
-      if (step) onGuidedStepChange(step.id);
+      onGuidedStepChange(step.id);
     } else {
-      setActiveStep(index);
+      setStaffStep(index, step.id);
     }
   };
   const invalidCodes = new Set(
@@ -305,9 +337,9 @@ export function ApplicationRuntimeFormCore({
         );
     }
     if (!pendingErrorFocus.current) return undefined;
-    if (isStepper && firstInvalidStep >= 0 && safeActiveStep !== firstInvalidStep) {
-      if (onGuidedStepChange && firstInvalidStepId) onGuidedStepChange(firstInvalidStepId);
-      else setActiveStep(firstInvalidStep);
+    if (isStepper && firstInvalidStepId && safeActiveStep !== firstInvalidStep) {
+      if (onGuidedStepChange) onGuidedStepChange(firstInvalidStepId);
+      else setStaffStep(firstInvalidStep, firstInvalidStepId);
       return undefined;
     }
     pendingErrorFocus.current = false;
@@ -332,6 +364,7 @@ export function ApplicationRuntimeFormCore({
     firstInvalidStepId,
     onGuidedStepChange,
     safeActiveStep,
+    setStaffStep,
     fieldErrors,
   ]);
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
@@ -871,7 +904,7 @@ export function ApplicationRuntimeFormCore({
               {form.definition.name} · v{form.formVersion}
             </Typography>
           )}
-          {compact && !guidedNavigation && isStepper && visibleSteps.length > 0 && (
+          {compact && !guidedNavigation && showStepNavigation && visibleSteps.length > 0 && (
             <Box
               component="nav"
               aria-label="Form Steps"
@@ -956,7 +989,7 @@ export function ApplicationRuntimeFormCore({
               spacing={compact ? 1.5 : 3}
               alignItems="stretch"
             >
-              {!compact && isStepper && visibleSteps.length > 0 && (
+              {!compact && showStepNavigation && visibleSteps.length > 0 && (
                 <Box sx={{ width: compact ? 1 : { xs: 1, md: 220 }, flexShrink: 0, minWidth: 0 }}>
                   <AdmissionFormStepNavigation
                     activeStep={safeActiveStep}
@@ -1038,7 +1071,7 @@ export function ApplicationRuntimeFormCore({
                   {error}
                 </StudentFeedback>
               ))}
-            {isStepper && visibleSteps.length > 1 && (
+            {showStepNavigation && visibleSteps.length > 1 && (
               <Button
                 size="small"
                 variant="outlined"
@@ -1058,20 +1091,20 @@ export function ApplicationRuntimeFormCore({
               justifyContent="flex-end"
             >
               {footerActions}
-              {showSaveDraft && canEditForm && (
+              {showSaveDraft && (canEditForm || reviewAction) && (
                 <LoadingButton
                   size="small"
                   variant="outlined"
                   startIcon={<Iconify icon="mdi:content-save-outline" width={16} />}
                   loading={saving && !savingStep && !submitting}
                   loadingPosition="start"
-                  disabled={interactionLocked}
+                  disabled={interactionLocked || !canEditForm}
                   onClick={onSave}
                 >
                   {saveLabel ?? 'Save'}
                 </LoadingButton>
               )}
-              {!isLastStep && (
+              {!hideStepNavigation && !isLastStep && (
                 <LoadingButton
                   size="small"
                   variant={canEditForm ? 'contained' : 'outlined'}
@@ -1088,24 +1121,25 @@ export function ApplicationRuntimeFormCore({
                   {canEditForm && showSaveDraft ? 'Save & Next' : 'Next'}
                 </LoadingButton>
               )}
-              {isLastStep && canEditForm && (
-                <LoadingButton
-                  size="small"
-                  variant="contained"
-                  startIcon={
-                    <Iconify
-                      icon={correctionMode ? GlobalIcons.submit : 'mdi:send-outline'}
-                      width={16}
-                    />
-                  }
-                  loading={submitting}
-                  loadingPosition="start"
-                  disabled={interactionLocked || !canSubmitForm}
-                  onClick={onSubmit}
-                >
-                  {submitLabel ?? (correctionMode ? 'Save Corrections' : 'Submit Application')}
-                </LoadingButton>
-              )}
+              {reviewAction ||
+                (isLastStep && canEditForm && (
+                  <LoadingButton
+                    size="small"
+                    variant="contained"
+                    startIcon={
+                      <Iconify
+                        icon={correctionMode ? GlobalIcons.submit : 'mdi:send-outline'}
+                        width={16}
+                      />
+                    }
+                    loading={submitting}
+                    loadingPosition="start"
+                    disabled={interactionLocked || !canSubmitForm}
+                    onClick={onSubmit}
+                  >
+                    {submitLabel ?? (correctionMode ? 'Save Corrections' : 'Submit Application')}
+                  </LoadingButton>
+                ))}
               {!correctionMode &&
                 !readOnly &&
                 application.status === 1 &&

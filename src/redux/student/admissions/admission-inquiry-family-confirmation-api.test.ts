@@ -12,6 +12,67 @@ vi.hoisted(() => {
 });
 vi.mock('next-auth/react', () => ({ getSession: vi.fn().mockResolvedValue(null) }));
 
+it('opens a fresh sibling review and refreshes both rows after confirmation', async () => {
+  const store = createDocumentTestStore();
+  let linked = false;
+  const rows = () =>
+    ['target', 'source'].map((id) => ({
+      id,
+      hasPossibleSiblingMatch: !linked,
+      hasLinkedSiblings: linked,
+    }));
+  mswServer.use(
+    http.get('*/api/student/enrollment/admissions/inquiries', () =>
+      HttpResponse.json({ data: { totalCount: 2, items: rows() } })
+    ),
+    http.get('*/api/student/enrollment/admissions/inquiries/:id/sibling-matches', ({ params }) =>
+      HttpResponse.json({
+        data: {
+          inquiry: rows().find((row) => row.id === params.id),
+          matches: [{ existingInquiryId: params.id === 'target' ? 'source' : 'target' }],
+        },
+      })
+    ),
+    http.post('*/api/student/enrollment/admissions/inquiries/target/confirm-family', () => {
+      linked = true;
+      return HttpResponse.json({ data: rows()[0] });
+    })
+  );
+  const list = admissionInquiriesApi.endpoints.getAdmissionInquiries;
+  const review = admissionInquiriesApi.endpoints.getAdmissionInquirySiblingMatches;
+  const subscription = store.dispatch(list.initiate({}));
+  const openReview = (id: string) =>
+    store.dispatch(review.initiate(id, { subscribe: false, forceRefetch: true })).unwrap();
+  try {
+    expect((await subscription.unwrap()).items).toEqual(rows());
+    expect(await openReview('target')).toMatchObject({
+      inquiry: { id: 'target', hasPossibleSiblingMatch: true },
+      matches: [{ existingInquiryId: 'source' }],
+    });
+    await store
+      .dispatch(
+        admissionInquiriesApi.endpoints.confirmAdmissionInquiryFamily.initiate({
+          id: 'target',
+          body: {
+            existingFamilyId: 'family',
+            existingParentApplicantId: 'source-child',
+            familyLinkOnly: true,
+            concurrencyStamp: 'fresh',
+          },
+        })
+      )
+      .unwrap();
+    await waitFor(() => expect(list.select({})(store.getState()).data?.items).toEqual(rows()));
+    expect(await openReview('source')).toMatchObject({
+      inquiry: { hasLinkedSiblings: true },
+      matches: [{ existingInquiryId: 'target' }],
+    });
+  } finally {
+    subscription.unsubscribe();
+    store.dispatch(api.util.resetApiState());
+  }
+});
+
 it('retains the old target cache on failed POST, then explicitly reads the new server stamp for a successful retry', async () => {
   const store = createDocumentTestStore();
   let serverStamp = 'A';

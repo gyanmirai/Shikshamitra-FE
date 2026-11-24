@@ -32,12 +32,11 @@ vi.mock('src/components/custom-popover', async () => {
 });
 
 describe('Admissions settings row actions', () => {
-  it('keeps two direct offering actions and invokes clone and deactivation from overflow', async () => {
+  it('keeps two direct offering actions and deactivation in overflow without Clone', async () => {
     const user = userEvent.setup();
     const handlers = {
       onView: vi.fn(),
       onEdit: vi.fn(),
-      onClone: vi.fn(),
       onToggleActive: vi.fn(),
       onDelete: vi.fn(),
     };
@@ -53,7 +52,6 @@ describe('Admissions settings row actions', () => {
       <AdmissionOfferingRowActions
         row={row}
         canEdit
-        canClone
         canActivate
         canDeactivate
         canDelete
@@ -69,9 +67,7 @@ describe('Admissions settings row actions', () => {
     expect(handlers.onDelete).toHaveBeenCalledWith(row);
     expect(screen.queryByRole('button', { name: 'Clone' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'More Actions' }));
-    await user.click(screen.getByRole('menuitem', { name: 'Clone' }));
-    expect(handlers.onClone).toHaveBeenCalledWith(row);
-    await user.click(screen.getByRole('button', { name: 'More Actions' }));
+    expect(screen.queryByRole('menuitem', { name: 'Clone' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Deactivate' })).toBeVisible();
     await user.click(screen.getByRole('menuitem', { name: 'Deactivate' }));
     expect(handlers.onToggleActive).toHaveBeenCalledWith(row);
@@ -82,7 +78,6 @@ describe('Admissions settings row actions', () => {
     const handlers = {
       onView: vi.fn(),
       onEdit: vi.fn(),
-      onClone: vi.fn(),
       onToggleActive: vi.fn(),
       onDelete: vi.fn(),
     };
@@ -100,7 +95,6 @@ describe('Admissions settings row actions', () => {
       <AdmissionOfferingRowActions
         row={row}
         canEdit
-        canClone={false}
         canActivate
         canDeactivate
         canDelete
@@ -121,7 +115,6 @@ describe('Admissions settings row actions', () => {
     const handlers = {
       onView: vi.fn(),
       onEdit: vi.fn(),
-      onClone: vi.fn(),
       onToggleActive: vi.fn(),
       onDelete: vi.fn(),
     };
@@ -139,7 +132,6 @@ describe('Admissions settings row actions', () => {
       <AdmissionOfferingRowActions
         row={row}
         canEdit
-        canClone={false}
         canActivate
         canDeactivate
         canDelete
@@ -158,7 +150,6 @@ describe('Admissions settings row actions', () => {
     const user = userEvent.setup();
     const handlers = {
       onEdit: vi.fn(),
-      onClone: vi.fn(),
       onValidate: vi.fn(),
       onPublish: vi.fn(),
       onHistory: vi.fn(),
@@ -173,7 +164,9 @@ describe('Admissions settings row actions', () => {
       status: 0,
     } as AdmissionForm;
 
-    render(<FormRowActions form={form} canManage canPublish canDelete {...handlers} />);
+    const { rerender } = render(
+      <FormRowActions form={form} canManage canPublish canDelete {...handlers} />
+    );
 
     expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
@@ -184,18 +177,24 @@ describe('Admissions settings row actions', () => {
 
     await user.click(screen.getByRole('button', { name: 'More Actions' }));
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
-    expect(screen.getByRole('menuitem', { name: 'Clone as Draft' })).toBeVisible();
+    expect(screen.queryByRole('menuitem', { name: 'Clone as Draft' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'History & Versions' })).toBeVisible();
     expect(
       screen.queryByRole('menuitem', { name: /approve|request changes/i })
     ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'More Actions' }));
+
+    rerender(
+      <FormRowActions form={{ ...form, status: 1 }} canManage canPublish canDelete {...handlers} />
+    );
+    await user.click(screen.getByRole('button', { name: 'New Version' }));
+    expect(handlers.onCreateVersion).toHaveBeenCalledOnce();
   });
 
   it('keeps workflow draft edit and delete available without a redundant preview icon', () => {
     const handlers = {
       onView: vi.fn(),
       onEdit: vi.fn(),
-      onClone: vi.fn(),
       onCreateVersion: vi.fn(),
       onUsage: vi.fn(),
       onArchive: vi.fn(),
@@ -213,7 +212,6 @@ describe('Admissions settings row actions', () => {
         workflow={workflow}
         canEdit
         canDelete
-        canClone
         canCreateVersion
         canArchive
         canReopen
@@ -237,14 +235,12 @@ describe('Admissions settings row actions', () => {
         workflow: { id: 'edit-workflow', name: 'Edit eligibility', status } as AdmissionWorkflow,
         canEdit: true,
         canDelete: false,
-        canClone: false,
         canCreateVersion: false,
         canArchive: false,
         canViewUsage: false,
         canReopen: false,
         onEdit,
         onReopen: vi.fn(),
-        onClone: vi.fn(),
         onCreateVersion: vi.fn(),
         onUsage: vi.fn(),
         onArchive: vi.fn(),
@@ -274,14 +270,12 @@ describe('Admissions settings row actions', () => {
       } as AdmissionWorkflow,
       canEdit: false,
       canDelete: false,
-      canClone: false,
       canCreateVersion: false,
       canArchive: false,
       canViewUsage: false,
       canReopen: true,
       onReopen,
       onEdit: vi.fn(),
-      onClone: vi.fn(),
       onCreateVersion: vi.fn(),
       onUsage: vi.fn(),
       onArchive: vi.fn(),
@@ -290,7 +284,6 @@ describe('Admissions settings row actions', () => {
     const { rerender } = render(<WorkflowRowActions {...props} />);
     await userEvent.setup().click(screen.getByRole('button', { name: 'Re-Open' }));
     expect(onReopen).toHaveBeenCalledOnce();
-    expect(props.onClone).not.toHaveBeenCalled();
     rerender(<WorkflowRowActions {...props} canReopen={false} />);
     expect(screen.queryByRole('button', { name: 'Re-Open' })).not.toBeInTheDocument();
     rerender(<WorkflowRowActions {...props} workflow={{ ...props.workflow, status: 1 }} />);
