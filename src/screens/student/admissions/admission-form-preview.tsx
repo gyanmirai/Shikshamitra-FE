@@ -47,14 +47,14 @@ export default function AdmissionFormPreviewScreen() {
   const inherited = savedForm?.purpose === 1 && savedForm.inheritance?.enabled === true;
   const approvedIds =
     savedForm?.inheritance?.sources.map((source) => source.inquiryFormDefinitionId) ?? [];
+  const canChooseSource = inherited && approvedIds.length > 1;
   const requestedSource = searchParams.get('inquiryFormDefinitionId');
   const [chosen, setChosen] = useState<{ formId: string; sourceId: string | null } | null>(null);
   useEffect(() => setChosen(null), [id, requestedSource]);
-  const candidate =
-    chosen?.formId === id
-      ? chosen.sourceId
-      : (requestedSource ?? (approvedIds.length === 1 ? approvedIds[0] : null));
-  const sourceId = candidate && approvedIds.includes(candidate) ? candidate : null;
+  const candidate = chosen?.formId === id ? chosen.sourceId : requestedSource;
+  // Match the builder's default and use only the exact versions approved on this form.
+  const sourceId =
+    candidate && approvedIds.includes(candidate) ? candidate : (approvedIds[0] ?? null);
   const preview = useGetSavedAdmissionFormInheritancePreviewQuery(
     { id, inquiryFormDefinitionId: sourceId ?? '' },
     { skip: !inherited || !sourceId, refetchOnMountOrArgChange: true }
@@ -67,7 +67,7 @@ export default function AdmissionFormPreviewScreen() {
   const canReadUsage = getAdmissionFormAccess(permissions).canView;
   const sources = useGetAdmissionFormInheritanceSourcesQuery(
     { id, skipCount: sourcePage * 25, maxResultCount: 25 },
-    { skip: !inherited || !canReadUsage }
+    { skip: !canChooseSource || !canReadUsage }
   );
   const sourceBatch = JSON.stringify(sources.currentData ?? null);
   useEffect(() => {
@@ -231,7 +231,7 @@ export default function AdmissionFormPreviewScreen() {
           { name: 'Preview' },
         ]}
       />
-      {inherited && (
+      {canChooseSource && (
         <Stack spacing={1}>
           <SavedInquirySourcePicker
             sources={sourceChoices}
@@ -280,11 +280,7 @@ export default function AdmissionFormPreviewScreen() {
           Unable to load form preview.
         </StudentFeedback>
       ) : inherited && !sourceId ? (
-        <Alert severity="info">
-          {approvedIds.length
-            ? 'Choose an Approved Inquiry Form to Preview This Registration.'
-            : 'This Registration Has No Approved Inquiry Form to Preview.'}
-        </Alert>
+        <Alert severity="info">This Registration has no approved Inquiry form to preview.</Alert>
       ) : compositionFailed ? (
         <Alert
           severity="error"

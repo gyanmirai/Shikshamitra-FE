@@ -42,6 +42,13 @@ const stage: AdmissionWorkflowStage = {
   isEntryStage: true,
   isTerminalStage: false,
 };
+const finalDecision: AdmissionWorkflowStage = {
+  ...stage,
+  code: 'DECISION',
+  name: 'Admission decision',
+  stageType: 7,
+  isTerminalStage: true,
+};
 const store = configureStore({ reducer: { confirmPopup } });
 function Wrapper({ children }: { children: ReactNode }) {
   return (
@@ -65,7 +72,6 @@ function Canvas({
       transitions={transitions}
       readOnly={readOnly}
       loadingStageTypes={false}
-      issueCountByStage={{}}
       canUndo
       canRedo={false}
       footerActions={<button type="button">Save draft</button>}
@@ -200,6 +206,7 @@ describe('WorkflowBuilderCanvas', () => {
     render(<Canvas stages={[stage]} />, { wrapper: Wrapper });
     const editButton = screen.getByRole('button', { name: `Edit ${stage.name}` });
     expect(editButton.textContent).toBe('');
+    expect(editButton.querySelector('[data-icon]')).toHaveAttribute('data-icon', 'solar:pen-bold');
     expect(screen.queryByText(stage.code)).not.toBeInTheDocument();
     fireEvent.click(editButton);
     expect(handlers.onEditStage).toHaveBeenCalledWith(stage);
@@ -208,12 +215,17 @@ describe('WorkflowBuilderCanvas', () => {
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: `Duplicate ${stage.name}` }));
     expect(handlers.onDuplicateStage).toHaveBeenCalledWith(stage);
-    fireEvent.click(screen.getByRole('button', { name: `Delete ${stage.name}` }));
+    const deleteButton = screen.getByRole('button', { name: `Delete ${stage.name}` });
+    expect(deleteButton.querySelector('[data-icon]')).toHaveAttribute(
+      'data-icon',
+      'solar:trash-bin-trash-bold'
+    );
+    fireEvent.click(deleteButton);
     expect(handlers.onDeleteStage).toHaveBeenCalledWith(stage);
   });
 
   it('describes connected stages without claiming full publishing validation', () => {
-    render(<Canvas stages={[{ ...stage, isTerminalStage: true }]} />, { wrapper: Wrapper });
+    render(<Canvas stages={[finalDecision]} />, { wrapper: Wrapper });
     expect(screen.getByText('Journey Connected')).toBeInTheDocument();
     expect(screen.queryByText('Journey valid')).not.toBeInTheDocument();
   });
@@ -222,11 +234,10 @@ describe('WorkflowBuilderCanvas', () => {
     render(
       <WorkflowStageList
         dirty
-        stages={[{ ...stage, isTerminalStage: true }]}
+        stages={[finalDecision]}
         transitions={[]}
         readOnly={false}
         loadingStageTypes={false}
-        issueCountByStage={{}}
         canUndo
         canRedo={false}
         footerActions={<button type="button">Save draft</button>}

@@ -13,25 +13,33 @@ vi.mock('src/components/customizabaleTable', () => ({
     tableProps.current = props;
     const { columns, data, handleRowClick, rowProps, noDataText } = props;
     return (
-    <table>
-      <thead>
-        <tr>
-          {columns.map((column) => (
-            <th key={column.id}>{column.renderColumn?.(column) ?? column.label}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {data.length === 0 && <tr><td colSpan={columns.length}>{noDataText}</td></tr>}
-        {data.map((row, index) => (
-          <tr key={row.id} {...rowProps?.(row, index)} onClick={() => handleRowClick?.(row, index)}>
+      <table>
+        <thead>
+          <tr>
             {columns.map((column) => (
-              <td key={column.id}>{column.render?.(row[column.id], row)}</td>
+              <th key={column.id}>{column.renderColumn?.(column) ?? column.label}</th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {data.length === 0 && (
+            <tr>
+              <td colSpan={columns.length}>{noDataText}</td>
+            </tr>
+          )}
+          {data.map((row, index) => (
+            <tr
+              key={row.id}
+              {...rowProps?.(row, index)}
+              onClick={() => handleRowClick?.(row, index)}
+            >
+              {columns.map((column) => (
+                <td key={column.id}>{column.render?.(row[column.id], row)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     );
   },
 }));
@@ -55,13 +63,11 @@ const props = () => ({
   rowsPerPage: 10,
   search: '',
   canEdit: true,
-  canClone: true,
   canActivate: true,
   canDeactivate: true,
   canDelete: true,
   onView: vi.fn(),
   onEdit: vi.fn(),
-  onClone: vi.fn(),
   onToggleActive: vi.fn(),
   onDelete: vi.fn(),
   onSearch: vi.fn(),
@@ -88,8 +94,9 @@ describe('Offering table selection', () => {
     >('./admission-offering-columns');
     const columns = buildAdmissionOfferingColumns(props());
     const leftAligned = ['effectiveOpenDate', 'applicationCount', 'actions'];
-    expect(columns.filter((column) => leftAligned.includes(column.id)).map((column) => column.align))
-      .toEqual(['left', 'left', 'left']);
+    expect(
+      columns.filter((column) => leftAligned.includes(column.id)).map((column) => column.align)
+    ).toEqual(['left', 'left', 'left']);
   });
 
   it('selects a ready offering without opening its details', () => {
@@ -155,9 +162,18 @@ describe('Offering table selection', () => {
 
   it('offers filter recovery inside the empty table instead of claiming no offerings exist', () => {
     const onClearFilters = vi.fn();
-    render(<AdmissionOfferingTable {...props()} rows={[]} filteredEmpty onClearFilters={onClearFilters} />);
+    render(
+      <AdmissionOfferingTable
+        {...props()}
+        rows={[]}
+        filteredEmpty
+        onClearFilters={onClearFilters}
+      />
+    );
     expect(screen.getByText('No Admission Offerings Match the Selected Filters.')).toBeVisible();
-    expect(screen.queryByText('No Admission Offering Has Been Configured.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('No Admission Offering Has Been Configured.')
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }));
     expect(onClearFilters).toHaveBeenCalledOnce();
   });
@@ -170,7 +186,9 @@ describe('Offering table selection', () => {
   it('wires shared server filters and refresh state while keeping current rows visible', () => {
     const onFilters = vi.fn();
     const filters = [{ column: 'applicationCount', type: 'equals', value: 0, valueType: 'number' }];
-    render(<AdmissionOfferingTable {...props()} filters={filters} onFilters={onFilters} refreshing />);
+    render(
+      <AdmissionOfferingTable {...props()} filters={filters} onFilters={onFilters} refreshing />
+    );
     expect(tableProps.current.isRefreshing).toBe(true);
     expect(tableProps.current.isLoading).toBe(false);
     expect(tableProps.current.serverSideFilter).toBe(true);
@@ -180,8 +198,18 @@ describe('Offering table selection', () => {
     expect(screen.getByText('Class 1 General')).toBeVisible();
   });
   it('shows the missing academic prerequisite instead of a successful empty list', () => {
-    render(<AdmissionOfferingTable {...props()} rows={[]} prerequisite="Select a board and medium to view admission offerings." />);
-    expect(screen.getByText('Select a board and medium to view admission offerings.')).toBeVisible();
-    expect(screen.queryByText('No Admission Offering Has Been Configured.')).not.toBeInTheDocument();
+    render(
+      <AdmissionOfferingTable
+        {...props()}
+        rows={[]}
+        prerequisite="Select a board and medium to view admission offerings."
+      />
+    );
+    expect(
+      screen.getByText('Select a board and medium to view admission offerings.')
+    ).toBeVisible();
+    expect(
+      screen.queryByText('No Admission Offering Has Been Configured.')
+    ).not.toBeInTheDocument();
   });
 });

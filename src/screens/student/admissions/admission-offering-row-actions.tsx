@@ -6,13 +6,11 @@ import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions
 
 export type AdmissionOfferingActionProps = {
   canEdit: boolean;
-  canClone: boolean;
   canActivate: boolean;
   canDeactivate: boolean;
   canDelete: boolean;
   onView: (row: AdmissionOfferingListItem) => void;
   onEdit: (row: AdmissionOfferingListItem) => void;
-  onClone: (row: AdmissionOfferingListItem) => void;
   onToggleActive: (row: AdmissionOfferingListItem) => void;
   onDelete: (row: AdmissionOfferingListItem) => void;
 };
@@ -37,13 +35,6 @@ export function AdmissionOfferingRowActions({ row, ...actions }: Props) {
       color: row.canDelete ? 'error.main' : 'text.disabled',
       disabled: !row.canDelete,
       onClick: () => actions.onDelete(row),
-    });
-  if (actions.canClone)
-    rowActions.push({
-      id: 'clone',
-      label: `Clone`,
-      icon: GlobalIcons.copy,
-      onClick: () => actions.onClone(row),
     });
   if (row.isActive && actions.canDeactivate)
     rowActions.push({

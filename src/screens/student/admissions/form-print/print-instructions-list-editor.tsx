@@ -16,9 +16,6 @@ export function PrintInstructionsListEditor({
   const items = value === undefined ? [''] : value.split(/\r?\n/);
   return (
     <Stack spacing={1}>
-      <Typography variant="caption" color="text.secondary">
-        Add each instruction separately. They print as a bulleted list.
-      </Typography>
       {items.map((item, index) => {
         const otherCharacters = items.reduce(
           (total, current, itemIndex) => total + (itemIndex === index ? 0 : current.length),

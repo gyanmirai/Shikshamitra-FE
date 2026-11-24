@@ -46,6 +46,9 @@ export function FormBuilderCanvas({
   const inheritance = useFormInheritance();
   const isStepper = effectiveForm.layoutType === 1;
   const steps = getAdmissionFormStepGroups(effectiveForm.sections);
+  const registrationSteps = formik.values.inheritance?.useRegistrationSteps
+    ? getAdmissionFormStepGroups(formik.values.sections)
+    : undefined;
   const activeStepIndex = Math.max(
     0,
     steps.findIndex((step) => step.sections.some(({ section }) => section.id === selectedSectionId))
@@ -120,15 +123,20 @@ export function FormBuilderCanvas({
                       );
                       return sectionIndex >= 0 ? [{ section, sectionIndex }] : [];
                     });
-                    const sourceOwned =
-                      editableSections.length !== effectiveStep.sections.length ||
-                      formik.values.layoutType === 0;
+                    const registrationStep = registrationSteps?.find(
+                      (step) => step.id === effectiveStep.id
+                    );
+                    const sourceOwned = registrationSteps
+                      ? !registrationStep
+                      : editableSections.length !== effectiveStep.sections.length ||
+                        formik.values.layoutType === 0;
                     const sourceId =
                       effectiveStep.sections
                         .flatMap(({ section }) => section.fields)
                         .find((field) => field.inheritedFrom)?.inheritedFrom
                         ?.inquiryFormDefinitionId ?? inheritance?.sourceId;
                     const renameCandidate =
+                      !registrationSteps &&
                       editableSections.length !== effectiveStep.sections.length &&
                       Boolean(sourceId) &&
                       Boolean(formik.values.inheritance?.enabled);
@@ -141,9 +149,10 @@ export function FormBuilderCanvas({
                       <FormBuilderStepHeader
                         formik={formik}
                         step={
-                          sourceOwned
+                          registrationStep ??
+                          (sourceOwned
                             ? effectiveStep
-                            : { ...effectiveStep, sections: editableSections }
+                            : { ...effectiveStep, sections: editableSections })
                         }
                         readOnly={sourceOwned && !canRenameInquiry}
                         namePath={

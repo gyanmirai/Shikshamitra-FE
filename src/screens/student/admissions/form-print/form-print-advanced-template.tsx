@@ -4,7 +4,8 @@ import { Page, Text, View, Image, Document } from '@react-pdf/renderer';
 import { splitPdfScriptRuns } from 'src/components/customizabaleTable/indic-pdf-export';
 import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 
-import { estimatePrintTextLines } from './form-print-text-layout';
+import { getAdmissionPrintHeaderElements } from './form-print-header-layout';
+import { estimatePrintTextLines, estimatePrintTextHeight } from './form-print-text-layout';
 import {
   PRINT_MM,
   advancedFieldRows,
@@ -168,14 +169,14 @@ export function AdmissionAdvancedPaperTemplate({
     );
   };
 
-  const writingLine = (label: string, value: string, fraction = 1) => (
+  const writingLine = (label: string, value: string, fraction = 1, positioned = false) => (
     <View
       key={label}
       style={{
         flexDirection: 'row',
         width: `${fraction * 100}%`,
         paddingRight: 10,
-        marginTop: 7,
+        marginTop: positioned ? 0 : 7,
         alignItems: 'flex-end',
       }}
     >
@@ -234,6 +235,62 @@ export function AdmissionAdvancedPaperTemplate({
     </View>
   );
 
+  const positionedHeader = (page: number) => {
+    if (!options.header.layout || !Object.keys(options.header.layout).length) return null;
+    const frame = getAdmissionPrintHeaderElements(model, branding, page);
+    if (!frame.elements.some((item) => options.header.layout?.[item.key])) return null;
+
+    return (
+      <View style={{ width: frame.width, height: frame.height, position: 'relative' }}>
+        {frame.elements.map(({ key, placement, src, field, text, value }) => {
+          const position = {
+            position: 'absolute' as const,
+            left: (placement.x * frame.width) / 100,
+            top: (placement.y * frame.height) / 100,
+            width: (placement.width * frame.width) / 100,
+          };
+          if (src) {
+            return (
+              <Image
+                key={key}
+                src={src}
+                style={{
+                  ...position,
+                  height: (placement.height * frame.height) / 100,
+                  objectFit: placement.lockAspectRatio === false ? 'fill' : 'contain',
+                }}
+              />
+            );
+          }
+          const heading = key === 'schoolName' || key === 'title';
+          return (
+            <View key={key} wrap={false} style={position}>
+              {field ? (
+                renderPhoto(field, (frame.width * placement.width) / 100, true)
+              ) : value !== undefined ? (
+                writingLine(text ?? '', value, 1, true)
+              ) : (
+                <Text
+                  style={{
+                    fontSize: heading
+                      ? options.style.titleSize
+                      : key === 'subtitle'
+                        ? fontSize
+                        : fontSize - 1,
+                    fontWeight: heading ? 700 : 400,
+                    textAlign: options.header.alignment,
+                  }}
+                >
+                  {runs(text ?? '')}
+                </Text>
+              )}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
   const fullHeader = (page: number) => (
     <View
       wrap={false}
@@ -246,36 +303,40 @@ export function AdmissionAdvancedPaperTemplate({
         borderBottomColor: borderColor,
       }}
     >
-      {renderBrandingBand(page, page === 1 ? firstBandHeight : laterBandHeight, true)}
-      {page === 1 && headerPhoto ? (
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: headerPhoto.gap }}>
-          <View style={{ width: contentWidth - headerPhoto.width - headerPhoto.gap }}>
-            {headerText()}
-          </View>
-          {renderPhoto(headerPhoto.field, headerPhoto.width, true)}
-        </View>
-      ) : (
-        headerText()
-      )}
-      <View style={{ flexDirection: 'row' }}>
-        {options.header.registrationNumber
-          ? writingLine(
-              model.labels.registrationNumber,
-              model.registrationNumber,
-              options.header.date ? 0.65 : 1
-            )
-          : null}
-        {options.header.date
-          ? writingLine(model.labels.date, '', options.header.registrationNumber ? 0.35 : 1)
-          : null}
-      </View>
-      {academicKeys.length ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-          {academicKeys.map((key) =>
-            writingLine(model.labels[key], model.academicDetails[key] ?? '', 0.5)
+      {positionedHeader(page) ?? (
+        <>
+          {renderBrandingBand(page, page === 1 ? firstBandHeight : laterBandHeight, true)}
+          {page === 1 && headerPhoto ? (
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: headerPhoto.gap }}>
+              <View style={{ width: contentWidth - headerPhoto.width - headerPhoto.gap }}>
+                {headerText()}
+              </View>
+              {renderPhoto(headerPhoto.field, headerPhoto.width, true)}
+            </View>
+          ) : (
+            headerText()
           )}
-        </View>
-      ) : null}
+          <View style={{ flexDirection: 'row' }}>
+            {options.header.registrationNumber
+              ? writingLine(
+                  model.labels.registrationNumber,
+                  model.registrationNumber,
+                  options.header.date ? 0.65 : 1
+                )
+              : null}
+            {options.header.date
+              ? writingLine(model.labels.date, '', options.header.registrationNumber ? 0.35 : 1)
+              : null}
+          </View>
+          {academicKeys.length ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+              {academicKeys.map((key) =>
+                writingLine(model.labels[key], model.academicDetails[key] ?? '', 0.5)
+              )}
+            </View>
+          ) : null}
+        </>
+      )}
     </View>
   );
 
@@ -295,7 +356,7 @@ export function AdmissionAdvancedPaperTemplate({
           if (options.header.continuation === 'full') return fullHeader(pageNumber);
           return (
             <View>
-              {renderBrandingBand(pageNumber, laterBandHeight, false)}
+              {positionedHeader(pageNumber) ?? renderBrandingBand(pageNumber, laterBandHeight, false)}
               {options.header.continuation === 'compact' && (
                 <View
                   style={{
@@ -654,6 +715,8 @@ export function AdmissionAdvancedPaperTemplate({
       </Text>
     </View>
   );
+  const continuationBodyHeight =
+    geometry.height - margins.top - margins.bottom - compactHeaderHeight - footerHeight - 14;
   const renderRegularSection = (
     section: AdmissionPrintSection,
     stepHeading: ReactNode,
@@ -675,14 +738,58 @@ export function AdmissionAdvancedPaperTemplate({
         {sectionHeading(section)}
       </>
     );
-    const rowCanWrap = (row: AdvancedPrintCell[]) =>
-      row.some(
-        ({ field }) => field.value.length + field.label.length + (field.helpText?.length ?? 0) > 700
-      );
-    const renderRow = (row: AdvancedPrintCell[], key: string, link: boolean, marginBottom = 0) => (
+    const rowCanWrap = (row: AdvancedPrintCell[], headingHeight = 0) =>
+      row.some(({ field, width }) => {
+        const fieldOptions = options.fields[field.code.toUpperCase()] ?? {};
+        const cellWidth = contentWidth * width - padding * 2 - 2;
+        const inline =
+          fieldOptions.labelPosition === 'inline' && field.kind !== 'photo' && field.kind !== 'static';
+        const answerWidth = cellWidth * (inline ? 0.65 : 1);
+        const labelHeight =
+          estimatePrintTextHeight(field.label, cellWidth * (inline ? 0.35 : 1), fontSize - 1) + 4;
+        const answer =
+          model.mode === 'blank' || options.copies.selectedChoices === 'mark'
+            ? (field.options?.map((option) => option.label).join('    ') ?? field.value)
+            : field.value;
+        const writingLines = fieldOptions.writingLines ?? (field.kind === 'multiline' ? 3 : 1);
+        let answerHeight = Math.max(
+          (model.mode === 'blank' ? writingLines : 1) * (fontSize + 10),
+          estimatePrintTextHeight(answer, answerWidth, fontSize) + 5
+        );
+        if (field.kind === 'static') answerHeight = 0;
+        if (field.kind === 'photo') {
+          const widthPoints = Math.min(options.photo.width * PRINT_MM, answerWidth);
+          answerHeight =
+            (options.photo.height * widthPoints) / options.photo.width +
+            estimatePrintTextHeight(options.photo.caption || field.label, widthPoints, fontSize - 2) +
+            13;
+        }
+        const helpHeight =
+          fieldOptions.showHelp && field.helpText
+            ? estimatePrintTextHeight(field.helpText, cellWidth, fontSize - 2) + 4
+            : 0;
+        const conditionalHeight =
+          model.mode === 'blank' && fieldOptions.showConditional !== false && field.conditional
+            ? estimatePrintTextHeight(model.labels.conditional, cellWidth, fontSize - 2) + 3
+            : 0;
+        const height =
+          (inline ? Math.max(labelHeight, answerHeight) : labelHeight + answerHeight) +
+          helpHeight +
+          conditionalHeight +
+          padding * 2 +
+          2;
+        return height + headingHeight > continuationBodyHeight;
+      });
+    const renderRow = (
+      row: AdvancedPrintCell[],
+      key: string,
+      link: boolean,
+      marginBottom = 0,
+      canWrap = rowCanWrap(row)
+    ) => (
       <View
         key={key}
-        wrap={rowCanWrap(row)}
+        wrap={canWrap}
         style={{
           flexDirection: 'row',
           alignItems: 'stretch',
@@ -711,10 +818,20 @@ export function AdmissionAdvancedPaperTemplate({
       const key = `${section.key}-${entry.key}`;
       const withHeading = keepHeading && index === 0;
       const lastEntry = index === entries.length - 1;
+      const headingHeight =
+        (withHeading
+          ? estimatePrintTextHeight(section.title, contentWidth - 30, fontSize) +
+            16 +
+            (stepHeading ? fontSize + 22 : 0)
+          : 0) +
+        (entry.label
+          ? estimatePrintTextHeight(entry.label, contentWidth - 2 * padding, fontSize) + 10
+          : 0);
+      const firstRowCanWrap = rowCanWrap(firstRow, headingHeight);
       nodes.push(
         <View
           key={`${key}-first`}
-          wrap={rowCanWrap(firstRow)}
+          wrap={firstRowCanWrap}
           break={withHeading && startNewPage}
           style={{ marginBottom: lastEntry && !remainingRows.length ? sectionSpacing : 0 }}
         >
@@ -727,7 +844,7 @@ export function AdmissionAdvancedPaperTemplate({
               {runs(entry.label)}
             </Text>
           )}
-          {renderRow(firstRow, `${key}-0`, index === 0)}
+          {renderRow(firstRow, `${key}-0`, index === 0, 0, firstRowCanWrap)}
         </View>
       );
       remainingRows.forEach((row, rowIndex) => {
@@ -773,9 +890,9 @@ export function AdmissionAdvancedPaperTemplate({
       )
     );
   };
-  const renderTableHeading = (section: AdmissionPrintSection, link = true) => (
+  const renderTableHeading = (section: AdmissionPrintSection, link = true, showStepTitle = true) => (
     <View wrap={false}>
-      {tableStepTitle(section) ? (
+      {showStepTitle && tableStepTitle(section) ? (
         <Text style={{ fontSize: fontSize + 1, fontWeight: 700, paddingBottom: 7 }}>
           {runs(tableStepTitle(section)!)}
         </Text>
@@ -808,17 +925,32 @@ export function AdmissionAdvancedPaperTemplate({
       </View>
     </View>
   );
-  const renderTableRows = (section: AdmissionPrintSection) =>
-    section.entries.map((entry) => {
+  const renderTableRows = (section: AdmissionPrintSection, repeating = false) => {
+    const headingHeight = tableHeadingHeight(section);
+    return section.entries.map((entry, index) => {
       const fields = visibleFields(entry.fields);
       const widths = 1 / Math.max(fields.length, 1);
-      const long = fields.some((field) => field.value.length > 1000);
-      return (
+      const availableHeight =
+        continuationBodyHeight - (repeating || index === 0 ? headingHeight : 0);
+      const canWrap = fields.some((field) => {
+        const answer =
+          model.mode === 'filled'
+            ? field.value
+            : (field.options?.map((option) => option.label).join('    ') ?? '');
+        const writingLines = options.fields[field.code.toUpperCase()]?.writingLines ?? 1;
+        const answerHeight = Math.max(
+          estimatePrintTextHeight(answer, contentWidth * widths - 12, fontSize) + 5,
+          (model.mode === 'blank' ? writingLines : 1) * (fontSize + 10)
+        );
+        return answerHeight + 13 > availableHeight;
+      });
+      const row = (
         <View
           key={entry.key}
-          wrap={long}
+          wrap={canWrap}
           style={{
             flexDirection: 'row',
+            marginBottom: !repeating && index === section.entries.length - 1 ? 10 : 0,
             borderLeftWidth: options.border.sectionBorders ? 0.5 : 0,
             borderBottomWidth: options.border.fieldBorders ? 0.5 : 0,
             borderColor,
@@ -839,7 +971,9 @@ export function AdmissionAdvancedPaperTemplate({
           ))}
         </View>
       );
+      return { row, canWrap };
     });
+  };
 
   const contentHeading = (label: string) => (
     <Text
@@ -1092,15 +1226,16 @@ export function AdmissionAdvancedPaperTemplate({
             config.startNewPage && (regular.nodes.length || parts.length)
           );
           if (table) {
+            const [first, ...rest] = renderTableRows(section);
+            const keepHeading = config.keepHeading !== false;
             push(
-              <View key={section.key} break={startNewPage}>
-                {stepHeading}
-                <View wrap={Boolean(tableIsLong)} style={{ marginBottom: 10 }}>
-                  {renderTableHeading(section)}
-                  {renderTableRows(section)}
-                </View>
+              <View key={section.key} break={startNewPage} wrap={keepHeading && first.canWrap}>
+                {renderTableHeading(section, true, Boolean(stepHeading))}
+                {keepHeading ? first.row : null}
               </View>
             );
+            if (!keepHeading) push(first.row);
+            regular.nodes.push(...rest.map(({ row }) => row));
           } else {
             regular.nodes.push(...renderRegularSection(section, stepHeading, startNewPage));
           }
@@ -1185,7 +1320,7 @@ export function AdmissionAdvancedPaperTemplate({
                     )
                   }
                 />
-                {renderTableRows(part.table)}
+                {renderTableRows(part.table, true).map(({ row }) => row)}
               </>
             ) : (
               part.nodes

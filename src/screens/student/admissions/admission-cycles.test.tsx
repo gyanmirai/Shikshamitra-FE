@@ -314,6 +314,15 @@ describe('Admission periods table states', () => {
     expect(screen.getByRole('button', { name: /full.?screen/i })).toBeInTheDocument();
   });
 
+  it('keeps Publish in the draft period menu without Clone as Draft', async () => {
+    mocks.result.currentData = { items: [cycle], totalCount: 1 };
+    renderScreen();
+
+    fireEvent.click(screen.getByRole('button', { name: 'More actions for Fresh Admission' }));
+    expect(await screen.findByRole('menuitem', { name: 'Publish' })).toBeVisible();
+    expect(screen.queryByRole('menuitem', { name: 'Clone as Draft' })).not.toBeInTheDocument();
+  });
+
   it('shows the shared refresh skeleton while retaining records and headings', () => {
     mocks.result.currentData = { items: [cycle], totalCount: 1 };
     mocks.result.isFetching = true;

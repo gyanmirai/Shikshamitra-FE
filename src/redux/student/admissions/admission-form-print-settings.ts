@@ -13,6 +13,24 @@ export type AdmissionPrintAssetPlacement = {
   lockAspectRatio?: boolean;
 };
 
+export type AdmissionPrintHeaderElement =
+  | 'logo'
+  | 'banner'
+  | 'schoolName'
+  | 'address'
+  | 'phone'
+  | 'email'
+  | 'website'
+  | 'title'
+  | 'subtitle'
+  | 'board'
+  | 'medium'
+  | 'class'
+  | 'academicYear'
+  | 'registrationNumber'
+  | 'date'
+  | 'photo';
+
 export type AdmissionPrintAcademicDetails = Partial<
   Record<'board' | 'medium' | 'class' | 'academicYear', string>
 >;
@@ -72,6 +90,7 @@ export type AdmissionPrintAdvancedSettings = {
     banner?: AdmissionPrintAssetPlacement;
   };
   header?: {
+    layout?: Partial<Record<AdmissionPrintHeaderElement, AdmissionPrintAssetPlacement>>;
     continuation?: 'compact' | 'full' | 'none';
     schoolName?: boolean;
     address?: boolean;

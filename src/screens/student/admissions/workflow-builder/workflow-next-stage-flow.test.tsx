@@ -196,13 +196,14 @@ async function setup(openNextStage = true, initialWorkflow = workflow, types = [
   return { saves };
 }
 
-it('keeps the server reason beside a disconnected document stage after Save Draft', async () => {
+it('keeps route guidance and independent setup errors after Save Draft', async () => {
   const journey = getAdmissionWorkflowTemplate('standard', 'registration-form');
   const documents = journey.stages.find((stage) => stage.stageType === 5)!;
   const form = journey.stages.find((stage) => stage.stageType === 1)!;
   const payment = journey.stages.find((stage) => stage.stageType === 4)!;
   const entry = journey.stages.find((stage) => stage.isEntryStage)!;
   const message = `Stage '${documents.name}' has no incoming transition.`;
+  const connectionHint = `Connect ${form.name} to ${documents.name} before publishing.`;
   const issue = {
     code: 'Admissions.WorkflowOrphanStage',
     stageId: documents.id,
@@ -275,8 +276,12 @@ it('keeps the server reason beside a disconnected document stage after Save Draf
   await setup(false, { ...workflow, ...journey });
   fireEvent.click(screen.getByRole('button', { name: 'Remove Route To Document verification' }));
   const card = () => within(document.getElementById(`workflow-stage-${documents.id}`)!);
-  expect(await card().findByText(message)).toBeVisible();
-  expect(card().getByText(/Connect Admission form to Document verification/)).toBeVisible();
+  expect(await card().findByText(connectionHint)).toBeVisible();
+  expect(card().queryByText(message)).not.toBeInTheDocument();
+  const formCard = within(document.getElementById(`workflow-stage-${form.id}`)!);
+  expect(formCard.getByText('Choose the Next Step Before Publishing')).toBeVisible();
+  expect(formCard.queryByText(/has no outgoing transition/)).not.toBeInTheDocument();
+  expect(formCard.queryByText(/\d+ Issues?/)).not.toBeInTheDocument();
   expect(
     screen.queryByText(`Stage '${payment.name}' cannot be reached from the entry stage.`)
   ).not.toBeInTheDocument();
@@ -287,7 +292,7 @@ it('keeps the server reason beside a disconnected document stage after Save Draf
   const save = screen.getByRole('button', { name: 'Save Draft' });
   fireEvent.click(save);
   await waitFor(() => expect(save).toBeDisabled());
-  expect(await card().findByText(message)).toBeVisible();
+  expect(await card().findByText(connectionHint)).toBeVisible();
   expect(screen.getByRole('status', { name: 'Journey Validation Summary' })).toHaveTextContent(
     'Journey Needs Attention'
   );
@@ -307,10 +312,54 @@ it('keeps the server reason beside a disconnected document stage after Save Draf
   fireEvent.click(screen.getByRole('button', { name: 'Save Path' }));
   await waitFor(() => expect(previewedConnection).toHaveBeenLastCalledWith(true));
   expect(await card().findByText(documentSetup.message)).toBeVisible();
-  expect(card().queryByText(message)).not.toBeInTheDocument();
+  expect(card().queryByText(connectionHint)).not.toBeInTheDocument();
   expect(screen.getByRole('status', { name: 'Journey Validation Summary' })).toHaveTextContent(
     'Journey Needs Attention'
   );
+});
+
+it('replaces duplicate route errors with compact guidance for a disconnected final stage', async () => {
+  const [source, decision] = workflow.stages;
+  const deadEnd = `Stage '${source.name}' has no outgoing transition.`;
+  const orphan = `Stage '${decision.name}' has no incoming transition.`;
+  mswServer.use(
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-next/validate-preview', () =>
+      HttpResponse.json({
+        data: {
+          isValid: false,
+          issues: [
+            {
+              code: 'Admissions.WorkflowDeadEndStage',
+              stageId: source.id,
+              severity: 0,
+              message: deadEnd,
+            },
+            {
+              code: 'Admissions.WorkflowOrphanStage',
+              stageId: decision.id,
+              severity: 0,
+              message: orphan,
+            },
+          ],
+        },
+      })
+    )
+  );
+
+  await setup(false);
+  const journey = within(screen.getByRole('list', { name: 'Journey Stage Sequence' }));
+  const [sourceCard, decisionCard] = journey.getAllByRole('listitem').map((card) => within(card));
+  expect(
+    await decisionCard.findByText(`Connect ${source.name} to ${decision.name} before publishing.`)
+  ).toBeVisible();
+  expect(
+    decisionCard.getByRole('button', { name: `Connect Route for ${decision.name}` })
+  ).toBeVisible();
+  expect(decisionCard.getByText('End of Journey')).toBeVisible();
+  expect(sourceCard.getByText('Choose the Next Step Before Publishing')).toBeVisible();
+  expect(sourceCard.getByRole('button', { name: 'Choose Next Step' })).toBeVisible();
+  expect(journey.queryByRole('alert')).not.toBeInTheDocument();
+  expect(journey.queryByText(/\d+ Issues?/)).not.toBeInTheDocument();
 });
 
 it('shows missing document requirements when opening a connected standard draft', async () => {

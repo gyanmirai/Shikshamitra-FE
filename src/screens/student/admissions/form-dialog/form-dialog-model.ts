@@ -95,8 +95,13 @@ export const admissionFormSchema = Yup.object({
     showSchoolHeader: Yup.boolean().required(),
     showPhoto: Yup.boolean().required(),
     showSignature: Yup.boolean().required(),
-    advanced: Yup.mixed<NonNullable<AdmissionFormPrintSettings['advanced']>>().nullable().optional(),
-  }).nullable().default(undefined).optional(),
+    advanced: Yup.mixed<NonNullable<AdmissionFormPrintSettings['advanced']>>()
+      .nullable()
+      .optional(),
+  })
+    .nullable()
+    .default(undefined)
+    .optional(),
   name: Yup.string().trim().max(128).required('Form name is required'),
   layoutType: Yup.number().oneOf([0, 1]).required('Choose a form layout'),
   purpose: Yup.number().oneOf([0, 1]).required('Choose a form type'),
@@ -276,7 +281,10 @@ export function getAdmissionFormInitialValues(
     code: editing?.code ?? '',
     description: editing?.description ?? '',
     concurrencyStamp: editing?.concurrencyStamp,
-    inheritance: editing?.inheritance,
+    inheritance:
+      formPurpose === 1 && editing?.status === 0 && editing.inheritance
+        ? { ...editing.inheritance, useRegistrationSteps: true }
+        : editing?.inheritance,
     layoutType: editing?.layoutType ?? 0,
     purpose: formPurpose,
     fieldsPerRow: editing?.fieldsPerRow ?? 1,

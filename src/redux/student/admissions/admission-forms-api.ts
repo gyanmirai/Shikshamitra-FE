@@ -38,6 +38,8 @@ export type AdmissionFormInheritanceSource = {
 };
 export type AdmissionFormInheritance = {
   enabled: boolean;
+  /** Reuse Inquiry questions within Registration's step layout. */
+  useRegistrationSteps?: boolean;
   sources: AdmissionFormInheritanceSource[];
 };
 export type AdmissionFormTranslation = {

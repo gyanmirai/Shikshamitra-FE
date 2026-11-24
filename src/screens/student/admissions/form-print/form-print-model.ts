@@ -246,6 +246,23 @@ function parseValue(value: unknown): unknown {
   }
 }
 
+function hasPrintAnswer(value: unknown): boolean {
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return value.some(hasPrintAnswer);
+  if (value && typeof value === 'object') return Object.values(value).some(hasPrintAnswer);
+  return value != null;
+}
+
+export function getSavedRegistrationPrintMode(values: { valueJson?: string | null }[]) {
+  const hasSavedAnswer = values.some(({ valueJson }) => {
+    const value = parseValue(valueJson);
+    // Runtime stores structured answers (such as repeating rows) inside a JSON string.
+    const structured = parseValue(value);
+    return hasPrintAnswer(structured && typeof structured === 'object' ? structured : value);
+  });
+  return hasSavedAnswer ? 'filled' : 'blank';
+}
+
 function runtimeValue(value: unknown): string {
   if (value === undefined || value === null) return '';
   return typeof value === 'object' ? JSON.stringify(value) : String(value);

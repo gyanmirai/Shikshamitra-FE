@@ -7,18 +7,20 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import {
   Box,
   Card,
   Stack,
+  Alert,
   Button,
   Avatar,
   ButtonBase,
   IconButton,
   Typography,
-  Alert,
 } from '@mui/material';
 
 import { getTransitionSummary } from '../../workflow-builder-utils';
@@ -29,7 +31,6 @@ type Props = {
   transitions: AdmissionWorkflowTransition[];
   stepNumber: number;
   readOnly: boolean;
-  issueCount: number;
   issues: AdmissionWorkflowValidationIssue[];
   incomingRoute?: AdmissionWorkflowTransition;
   onEdit: () => void;
@@ -54,7 +55,6 @@ export function WorkflowStageCard({
   transitions,
   stepNumber,
   readOnly,
-  issueCount,
   issues,
   incomingRoute,
   onEdit,
@@ -74,26 +74,28 @@ export function WorkflowStageCard({
     stages.find((item) => item.id === path.toStageId)?.name ?? 'Missing stage';
   const canChooseNextStep =
     !readOnly && !stage.isTerminalStage && !orderedTransitions.some((path) => path.isDefault);
+  const hasMissingNextStep = !stage.isTerminalStage && orderedTransitions.length === 0;
   const hasMissingIncomingRoute = issues.some(
     (issue) => issue.code === 'Admissions.WorkflowOrphanStage'
   );
+  const source = incomingRoute && stages.find((item) => item.id === incomingRoute.fromStageId);
+  const visibleIssues = issues.filter(({ code }) => {
+    if (
+      hasMissingNextStep &&
+      (code === 'Admissions.WorkflowDeadEndStage' ||
+        code === 'Admissions.WorkflowTerminalUnreachable')
+    )
+      return false;
+    if (hasMissingIncomingRoute && code === 'Admissions.WorkflowOrphanStage') return false;
+    if (hasMissingIncomingRoute && code === 'Admissions.WorkflowUnreachableStage') return false;
+    return true;
+  });
+  const issueCount = visibleIssues.length;
   const renderIssue = (issue: AdmissionWorkflowValidationIssue, index: number) => {
-    const deadEnd = issue.code === 'Admissions.WorkflowDeadEndStage';
-    const orphan = issue.code === 'Admissions.WorkflowOrphanStage';
-    const unreachable = issue.code === 'Admissions.WorkflowUnreachableStage';
-    const secondaryConnectionIssue = unreachable && hasMissingIncomingRoute;
     const issueTransition = transitions.find((item) => item.id === issue.transitionId);
-    const connection = !readOnly && orphan ? incomingRoute : undefined;
-    const source = connection && stages.find((item) => item.id === connection.fromStageId);
     let action = onEdit;
     let actionLabel = readOnly ? 'View Stage' : 'Edit Stage';
-    if (connection) {
-      action = () => onEditPath(connection);
-      actionLabel = 'Connect Route';
-    } else if (deadEnd && canChooseNextStep) {
-      action = onAddPath;
-      actionLabel = 'Choose Next Step';
-    } else if (issueTransition) {
+    if (issueTransition) {
       action = () => onEditPath(issueTransition);
       actionLabel = readOnly ? 'View Route' : 'Edit Route';
     } else if (stage.stageType === 5 && issue.code === 'Admissions:Documents:InvalidPolicy') {
@@ -105,11 +107,9 @@ export function WorkflowStageCard({
         severity={issue.severity === 0 ? 'error' : 'warning'}
         variant="outlined"
         action={
-          secondaryConnectionIssue ? undefined : (
-            <Button size="small" onClick={action} aria-label={`${actionLabel} for ${stage.name}`}>
-              {actionLabel}
-            </Button>
-          )
+          <Button size="small" onClick={action} aria-label={`${actionLabel} for ${stage.name}`}>
+            {actionLabel}
+          </Button>
         }
         sx={{
           mt: 1,
@@ -120,13 +120,6 @@ export function WorkflowStageCard({
         }}
       >
         {issue.message}
-        {orphan && !readOnly && (
-          <Typography variant="body2" sx={{ mt: 0.5 }}>
-            {source
-              ? `Connect ${source.name} to ${stage.name} so applicants can continue the journey.`
-              : 'Connect this stage to a stage the applicant can already reach, or remove it if it is no longer needed.'}
-          </Typography>
-        )}
       </Alert>
     );
   };
@@ -218,22 +211,55 @@ export function WorkflowStageCard({
               {stage.description}
             </Typography>
           )}
-          {issues.map(renderIssue)}
+          {visibleIssues.map(renderIssue)}
+          {hasMissingIncomingRoute && (
+            <Stack
+              direction="row"
+              alignItems="center"
+              gap={0.5}
+              useFlexGap
+              flexWrap="wrap"
+              sx={{ mt: 0.25 }}
+            >
+              <Stack direction="row" alignItems="center" gap={0.5} sx={{ minWidth: 0 }}>
+                <Iconify
+                  icon="mdi:arrow-right"
+                  width={16}
+                  color="warning.main"
+                  sx={{ flexShrink: 0 }}
+                />
+                <Typography
+                  variant="caption"
+                  color="warning.main"
+                  sx={{ overflowWrap: 'anywhere' }}
+                >
+                  {source
+                    ? `Connect ${source.name} to ${stage.name} before publishing.`
+                    : 'Connect this stage before publishing.'}
+                </Typography>
+              </Stack>
+              {!readOnly && incomingRoute && (
+                <Button
+                  size="small"
+                  onClick={() => onEditPath(incomingRoute)}
+                  aria-label={`Connect Route for ${stage.name}`}
+                >
+                  Connect Route
+                </Button>
+              )}
+            </Stack>
+          )}
           <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.25, minWidth: 0 }}>
             <Iconify
               icon={stage.isTerminalStage ? 'mdi:flag-checkered' : 'mdi:arrow-right'}
               width={16}
-              color={
-                !stage.isTerminalStage && orderedTransitions.length === 0
-                  ? 'warning.main'
-                  : 'text.disabled'
-              }
+              color={hasMissingNextStep ? 'warning.main' : 'text.disabled'}
             />
             {stage.isTerminalStage ? (
               <Typography variant="caption" color="text.secondary">
                 End of Journey
               </Typography>
-            ) : orderedTransitions.length === 0 ? (
+            ) : hasMissingNextStep ? (
               <Typography variant="caption" color="warning.main">
                 Choose the Next Step Before Publishing
               </Typography>
@@ -292,23 +318,34 @@ export function WorkflowStageCard({
         )}
 
         {!readOnly && (
-          <Stack direction="row" sx={{ gridColumn: 3, gridRow: 1, flexShrink: 0 }}>
-            <CustomTooltip title="Edit Stage">
-              <IconButton size="small" aria-label={`Edit ${stage.name}`} onClick={onEdit}>
-                <Iconify icon="mdi:pencil-outline" width={20} />
-              </IconButton>
-            </CustomTooltip>
-            <CustomTooltip title="Duplicate Stage">
-              <IconButton size="small" aria-label={`Duplicate ${stage.name}`} onClick={onDuplicate}>
-                <Iconify icon="mdi:content-copy" width={20} />
-              </IconButton>
-            </CustomTooltip>
-            <CustomTooltip title="Delete Stage">
-              <IconButton size="small" aria-label={`Delete ${stage.name}`} onClick={onDelete}>
-                <Iconify icon="mdi:delete-outline" width={20} />
-              </IconButton>
-            </CustomTooltip>
-          </Stack>
+          <ThreeDotsActions
+            showThreeDots={false}
+            sx={{ gridColumn: 3, gridRow: 1, flexShrink: 0, gap: 0 }}
+            directActions={[
+              {
+                id: 'edit',
+                label: 'Edit Stage',
+                ariaLabel: `Edit ${stage.name}`,
+                icon: GlobalIcons.edit,
+                onClick: onEdit,
+              },
+              {
+                id: 'duplicate',
+                label: 'Duplicate Stage',
+                ariaLabel: `Duplicate ${stage.name}`,
+                icon: 'mdi:content-copy',
+                onClick: onDuplicate,
+              },
+              {
+                id: 'delete',
+                label: 'Delete Stage',
+                ariaLabel: `Delete ${stage.name}`,
+                icon: GlobalIcons.delete,
+                color: 'error.main',
+                onClick: onDelete,
+              },
+            ]}
+          />
         )}
       </Stack>
     </Card>

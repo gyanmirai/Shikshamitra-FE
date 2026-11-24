@@ -96,6 +96,7 @@ export type StaffParentRegistrationContext = {
   canSend: boolean;
   canCopyLink?: boolean;
   canCreateLink?: boolean;
+  canReactivate?: boolean;
   canRequestCorrections: boolean;
   canRequestDocumentCorrections?: boolean;
   canRevoke: boolean;
@@ -131,18 +132,29 @@ export type ParentRegistrationEmailHistory = {
 export type ParentRegistrationCommand = { concurrencyStamp: string; idempotencyKey: string };
 export type ParentRegistrationCopyLinkInput = ParentRegistrationCommand &
   (
-    | { requestId: string; recipientRelationship?: never }
-    | { requestId?: never; recipientRelationship: ParentRecipientRelationship }
+    | { requestId: string; recipientRelationship?: never; validityDays?: never }
+    | {
+        requestId?: never;
+        recipientRelationship: ParentRecipientRelationship;
+        validityDays?: number;
+      }
   );
-export type ParentRegistrationSendInput = ParentRegistrationCommand & {
+type ParentRegistrationRecipientCommand = ParentRegistrationCommand & {
   recipientRelationship: ParentRecipientRelationship;
 };
-export type ParentRegistrationEmailInput = ParentRegistrationSendInput & {
+export type ParentRegistrationSendInput = ParentRegistrationRecipientCommand & {
+  validityDays?: number;
+};
+export type ParentRegistrationReactivateInput = ParentRegistrationCommand & {
+  requestId: string;
+  validityDays?: number;
+};
+export type ParentRegistrationEmailInput = ParentRegistrationRecipientCommand & {
   email: string;
   expectedEmail: string | null;
   reason?: string;
 };
-export type ParentRegistrationCorrectionInput = ParentRegistrationSendInput & {
+export type ParentRegistrationCorrectionInput = ParentRegistrationRecipientCommand & {
   notes: string;
   fieldCodes: string[];
   documents: { stageInstanceId: string; requirementCode: string }[];

@@ -40,7 +40,6 @@ const STATUS_COLORS: Record<
 
 type Handlers = {
   onEdit: (workflow: AdmissionWorkflow) => void;
-  onClone: (workflow: AdmissionWorkflow) => void;
   onCreateVersion: (workflow: AdmissionWorkflow) => void;
   onUsage: (workflow: AdmissionWorkflow) => void;
   onArchive: (workflow: AdmissionWorkflow) => void;
@@ -169,7 +168,6 @@ export function createWorkflowColumns(
             {...permissions}
             workflow={workflow}
             onEdit={() => handlers.onEdit(workflow)}
-            onClone={() => handlers.onClone(workflow)}
             onCreateVersion={() => handlers.onCreateVersion(workflow)}
             onUsage={() => handlers.onUsage(workflow)}
             onArchive={() => handlers.onArchive(workflow)}

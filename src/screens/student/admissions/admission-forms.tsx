@@ -123,7 +123,6 @@ export default function AdmissionFormsScreen() {
     canDelete: actions.canDelete,
     creatingVersionId: actions.creatingVersionId,
     onEdit: (form) => actions.edit(form.id, form.purpose),
-    onClone: actions.requestClone,
     onValidate: (form) => actions.validate(form.id),
     onPublish: actions.requestPublish,
     onHistory: actions.showHistory,

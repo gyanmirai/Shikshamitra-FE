@@ -41,11 +41,16 @@ function renderInheritedBuilder(
     valid?: boolean;
     sourceLayout?: 0 | 1;
     context?: boolean;
+    registrationSteps?: boolean;
   } = {}
 ) {
   const base = getBlankAdmissionFormInitialValues(1);
-  base.layoutType = 0;
-  base.inheritance = { enabled: true, sources: [] };
+  base.layoutType = overrides.registrationSteps ? 1 : 0;
+  base.inheritance = {
+    enabled: true,
+    useRegistrationSteps: overrides.registrationSteps,
+    sources: [],
+  };
   base.fieldsPerRow = 2;
   const sourceField = {
     ...newField('inquiry-section', 0),
@@ -142,6 +147,18 @@ function renderInheritedBuilder(
 }
 
 describe('Registration effective canvas integration', () => {
+  it('adds a section to the existing Registration step while an Inquiry section is selected', () => {
+    const { base } = renderInheritedBuilder({ registrationSteps: true, sourceLayout: 1 });
+    const original = base.sections[0];
+    expect(screen.queryByRole('button', { name: 'Inquiry step' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Published Inquiry section' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Add Section' }));
+    const draft = JSON.parse(screen.getByTestId('base-form').textContent!);
+    expect(draft.sections).toMatchObject([
+      { id: original.id, stepId: original.stepId, fields: original.fields },
+      { name: 'Section 2', stepId: original.stepId, fields: [] },
+    ]);
+  });
   it('shows source context in its original section and keeps it out of the editable draft', async () => {
     const { base } = renderInheritedBuilder({ context: true });
     expect(screen.getAllByRole('heading', { name: 'Published Inquiry section' })).toHaveLength(1);

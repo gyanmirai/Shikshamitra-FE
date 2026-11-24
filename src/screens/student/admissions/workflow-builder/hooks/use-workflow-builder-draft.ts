@@ -94,9 +94,6 @@ export function useWorkflowBuilderDraft(
     if (stageId) result[stageId] = [...(result[stageId] ?? []), issue];
     return result;
   }, {});
-  const issueCountByStage = Object.fromEntries(
-    Object.entries(issuesByStage).map(([stageId, issues]) => [stageId, issues.length])
-  );
   const markDirty = () => {
     setValidation(null);
     setDirty(true);
@@ -239,7 +236,6 @@ export function useWorkflowBuilderDraft(
     recordHistory,
     undo,
     redo,
-    issueCountByStage,
     issuesByStage,
     addStage,
     saveStage,

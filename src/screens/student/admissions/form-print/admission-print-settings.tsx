@@ -1,16 +1,30 @@
 import type { AdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { useId } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Stack, Radio, Switch, RadioGroup, Typography, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Stack,
+  Radio,
+  Button,
+  Switch,
+  RadioGroup,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
 import {
   resolveAdmissionPrintAdvancedSettings,
   resolveEditableRegistrationPrintTemplate,
 } from 'src/redux/student/admissions/admission-form-print-settings';
 
-import { PrintSettingSelect } from './admission-print-setting-controls';
 import { PrintInstructionsListEditor } from './print-instructions-list-editor';
+import {
+  PrintSettingsCard,
+  PrintSettingsCards,
+  PrintSettingSelect,
+} from './admission-print-setting-controls';
 
 import type { AdmissionPrintSettings, AdmissionPrintBranding } from './form-print-model';
 
@@ -20,19 +34,26 @@ export function AdmissionPrintSettingsPanel({
   branding,
   defaultLanguage = 'en',
   pageCount,
+  hasPhotoField = false,
+  onEditHeader,
 }: {
   settings: AdmissionPrintSettings;
   onChange: (settings: AdmissionPrintSettings) => void;
   branding: AdmissionPrintBranding;
   defaultLanguage?: string;
   pageCount?: number;
+  hasPhotoField?: boolean;
+  onEditHeader?: () => void;
 }) {
   const bannerPagesId = useId();
   const selectedTemplate = resolveEditableRegistrationPrintTemplate(settings.template);
   const advanced = resolveAdmissionPrintAdvancedSettings(settings.advanced);
   const { bannerPlacement, bannerPages, showBanner } = advanced.branding;
   const pageNumbers = [
-    ...new Set([...Array.from({ length: pageCount ?? 1 }, (_, index) => index + 1), ...bannerPages]),
+    ...new Set([
+      ...Array.from({ length: pageCount ?? 1 }, (_, index) => index + 1),
+      ...bannerPages,
+    ]),
   ].sort((left, right) => left - right);
   const update = <K extends keyof AdmissionPrintAdvancedSettings>(
     key: K,
@@ -47,10 +68,12 @@ export function AdmissionPrintSettingsPanel({
     });
 
   return (
-    <Stack spacing={2} sx={{ width: 1 }}>
-      <FormSectionCard
-        title="Print Template"
-        descriptionTooltip="Choose the paper form style. This is saved with the form and used when printing from Registration or Pipeline. Boxed Grid: Bordered cells and character boxes for handwriting. Structured Classic: Framed sections with ruled writing space."
+    <PrintSettingsCards>
+      <PrintSettingsCard
+        title="Template & Spacing"
+        icon={GlobalIcons.stationaryIcon}
+        descriptionTooltip="Choose the template, handwriting space, colours and page border for the printed form."
+        defaultExpanded
       >
         <RadioGroup
           aria-label="Print template"
@@ -89,11 +112,7 @@ export function AdmissionPrintSettingsPanel({
             />
           ))}
         </RadioGroup>
-      </FormSectionCard>
-      <FormSectionCard
-        title="Print Spacing"
-        descriptionTooltip="Compact uses less paper. Spacious leaves more room for handwriting in either template."
-      >
+        <Typography variant="subtitle2">Print spacing</Typography>
         <RadioGroup
           row
           aria-label="Print spacing"
@@ -133,10 +152,11 @@ export function AdmissionPrintSettingsPanel({
             />
           }
         />
-      </FormSectionCard>
-      <FormSectionCard
+      </PrintSettingsCard>
+      <PrintSettingsCard
         title="School Branding"
-        descriptionTooltip={`The logo and banner come from Institute Setup. Printing does not change them. Applies to the banner from Institute Setup.${!branding.bannerUrl && !branding.logoUrl ? ' No school logo or banner configured in Institute Setup.' : ''}`}
+        icon={GlobalIcons.building}
+        descriptionTooltip="Choose how the school logo and banner from Institute Setup appear on paper."
       >
         <FormControlLabel
           label="School header"
@@ -147,6 +167,11 @@ export function AdmissionPrintSettingsPanel({
             />
           }
         />
+        {settings.showSchoolHeader && !branding.bannerUrl && !branding.logoUrl && (
+          <Typography variant="caption" color="text.secondary">
+            No school logo or banner is configured in Institute Setup.
+          </Typography>
+        )}
         {settings.showSchoolHeader && (
           <>
             {(branding.bannerUrl || branding.logoUrl) && (
@@ -214,7 +239,9 @@ export function AdmissionPrintSettingsPanel({
                 options={pageNumbers.map((page) => ({ value: page, label: `Page ${page}` }))}
                 onChange={(pages) => {
                   if (pages.length) {
-                    update('branding', { bannerPages: pages.map(Number).sort((left, right) => left - right) });
+                    update('branding', {
+                      bannerPages: pages.map(Number).sort((left, right) => left - right),
+                    });
                   }
                 }}
                 helperText="Choose at least one page of the printed copy."
@@ -222,8 +249,53 @@ export function AdmissionPrintSettingsPanel({
             )}
           </>
         )}
-      </FormSectionCard>
-      <FormSectionCard title="Writing Instructions">
+        {onEditHeader && (
+          <Button
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.edit} />}
+            onClick={onEditHeader}
+          >
+            Edit header
+          </Button>
+        )}
+      </PrintSettingsCard>
+      <PrintSettingsCard
+        title="Photo & Signature"
+        icon={GlobalIcons.image}
+        descriptionTooltip="Choose whether the printed form includes a photo space and signature area."
+      >
+        <FormControlLabel
+          label="Photo space"
+          control={
+            <Switch
+              checked={hasPhotoField && settings.showPhoto}
+              disabled={!hasPhotoField}
+              onChange={(_, checked) => onChange({ ...settings, showPhoto: checked })}
+            />
+          }
+        />
+        {!hasPhotoField && (
+          <Typography variant="caption" color="text.secondary">
+            Add a photo question in Build form to print a photo space.
+          </Typography>
+        )}
+        <FormControlLabel
+          label="Signature area"
+          control={
+            <Switch
+              checked={settings.showSignature}
+              onChange={(_, checked) => onChange({ ...settings, showSignature: checked })}
+            />
+          }
+        />
+      </PrintSettingsCard>
+      <PrintSettingsCard
+        title="Writing Instructions"
+        icon={GlobalIcons.info}
+        descriptionTooltip="Add instructions for anyone filling in the paper form."
+      >
         <FormControlLabel
           label="Print writing instructions"
           control={
@@ -249,14 +321,8 @@ export function AdmissionPrintSettingsPanel({
             }
           />
         )}
-      </FormSectionCard>
-      <FormSectionCard
-        title="Print Settings"
-        descriptionTooltip="Change paper size and orientation under Advanced. Long forms continue onto additional pages automatically."
-      >
-        <Typography variant="body2">Paper size: {settings.paperSize}</Typography>
-      </FormSectionCard>
-    </Stack>
+      </PrintSettingsCard>
+    </PrintSettingsCards>
   );
 }
 

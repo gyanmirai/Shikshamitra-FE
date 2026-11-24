@@ -18,16 +18,21 @@ import {
 } from './use-inquiry-family-confirmation';
 
 export function InquiryFamilyConfirmation(props: InquiryFamilyConfirmationProps) {
-  const { inquiry, readOnly } = props;
-  if (inquiry.hasLinkedSiblings || inquiry.siblingFamilyConfirmed)
-    return <Label color="success">Siblings linked</Label>;
-  if (!inquiryFamilyConfirmationVisible(inquiry, readOnly)) return null;
+  const { inquiry, readOnly, listReview } = props;
+  if (!listReview) {
+    if (inquiry.hasLinkedSiblings || inquiry.siblingFamilyConfirmed)
+      return <Label color="success">Siblings linked</Label>;
+    if (!inquiryFamilyConfirmationVisible(inquiry, readOnly)) return null;
+  }
   return <InquiryFamilyConfirmationContent key={inquiry.id} {...props} />;
 }
 
 function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps) {
+  const { listReview, readOnly } = props;
   const state = useInquiryFamilyConfirmation(props);
   const { formik } = state;
+  const fromList = Boolean(listReview);
+  const canAddSibling = !fromList || (!state.linked && !readOnly);
   const locked =
     state.loading ||
     state.saving ||
@@ -49,26 +54,31 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
   );
   return (
     <>
-      {state.entryReason ? (
-        <CustomTooltip title={state.entryReason} describeChild>
-          <Box component="span" tabIndex={0} sx={{ display: 'inline-flex' }}>
-            {button}
-          </Box>
-        </CustomTooltip>
-      ) : (
-        button
-      )}
+      {!fromList &&
+        (state.entryReason ? (
+          <CustomTooltip title={state.entryReason} describeChild>
+            <Box component="span" tabIndex={0} sx={{ display: 'inline-flex' }}>
+              {button}
+            </Box>
+          </CustomTooltip>
+        ) : (
+          button
+        ))}
       {state.open && (
         <CustomDialog
           open
-          title="Confirm Siblings"
+          title={fromList ? 'Check Parent Details' : 'Confirm Siblings'}
           maxWidth="xs"
-          titleInfo="Review the family before linking."
+          titleInfo={
+            fromList
+              ? 'Review the parent and children in this family.'
+              : 'Review the family before linking.'
+          }
           titleInfoPlacement="right"
           handleClose={state.requestClose}
           guardUnsavedChanges={false}
           disableClose={state.saving}
-          hasUnsavedChanges={formik.dirty}
+          hasUnsavedChanges={state.hasUnsavedSelection}
           formProps={{
             noValidate: true,
             onSubmit: (event) => {
@@ -92,17 +102,20 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
                     selectedFamily={state.selectedFamily}
                     guardianPhone={state.reviewInput?.guardianPhone ?? ''}
                     guardianEmail={state.reviewInput?.guardianEmail ?? undefined}
-                    disabled={locked}
+                    disabled={fromList ? state.saving || state.needsTargetRefresh : locked}
                     error={
                       formik.touched.family || formik.submitCount ? formik.errors.family : undefined
                     }
                     onSelect={(familyId) => formik.setFieldValue('family', familyId)}
+                    currentChild={fromList ? state.target : undefined}
+                    linked={fromList && state.linked}
                   />
                 ) : (
                   !state.requestError && (
                     <Typography variant="body2" color="text.secondary">
-                      No available family matches were found. Edit the parent contact details or
-                      reload matches.
+                      {fromList
+                        ? 'No other children are available to review for this inquiry.'
+                        : 'No available family matches were found. Edit the parent contact details or reload matches.'}
                     </Typography>
                   )
                 )}
@@ -111,7 +124,9 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
                     This inquiry changed. Reload matches and select the family again.
                   </Alert>
                 )}
-                {state.entryReason && <Alert severity="warning">{state.entryReason}</Alert>}
+                {!state.loading && state.entryReason && (
+                  <Alert severity="warning">{state.entryReason}</Alert>
+                )}
                 {state.requestError && state.requestError !== state.entryReason && (
                   <Alert severity="error">{state.requestError}</Alert>
                 )}
@@ -122,7 +137,7 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
                       size="small"
                       variant="text"
                       startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
-                      disabled={state.saving || Boolean(state.entryReason)}
+                      disabled={state.saving || (!fromList && Boolean(state.entryReason))}
                       onClick={state.reload}
                       sx={{ alignSelf: 'flex-start' }}
                     >
@@ -141,19 +156,21 @@ function InquiryFamilyConfirmationContent(props: InquiryFamilyConfirmationProps)
               disabled={state.saving}
               onClick={state.requestClose}
             >
-              Cancel
+              {canAddSibling ? 'Cancel' : 'Close'}
             </Button>
-            <LoadingButton
-              type="submit"
-              size="small"
-              variant="contained"
-              color="inherit"
-              startIcon={<Iconify icon={GlobalIcons.assigned} width={18} />}
-              loading={state.saving}
-              disabled={locked || !state.selectedFamily?.children.length}
-            >
-              Confirm siblings
-            </LoadingButton>
+            {canAddSibling && (
+              <LoadingButton
+                type="submit"
+                size="small"
+                variant="contained"
+                color="inherit"
+                startIcon={<Iconify icon={GlobalIcons.assigned} width={18} />}
+                loading={state.saving}
+                disabled={locked || !state.selectedFamily?.children.length}
+              >
+                {fromList ? 'Add as Sibling' : 'Confirm siblings'}
+              </LoadingButton>
+            )}
           </DialogActions>
         </CustomDialog>
       )}

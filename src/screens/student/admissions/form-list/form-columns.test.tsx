@@ -8,7 +8,6 @@ const handlers = {
   canPublish: true,
   canDelete: true,
   onEdit: vi.fn(),
-  onClone: vi.fn(),
   onValidate: vi.fn(),
   onPublish: vi.fn(),
   onHistory: vi.fn(),

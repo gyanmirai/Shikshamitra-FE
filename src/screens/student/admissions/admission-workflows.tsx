@@ -64,7 +64,6 @@ export default function AdmissionWorkflowsScreen() {
   const hasActiveFilters = Boolean(filters.search || tableFilters.length);
   const columns = createWorkflowColumns(actions.allowed, {
     onEdit: (workflow) => actions.navigate(workflow),
-    onClone: actions.openClone,
     onCreateVersion: actions.createVersion,
     onUsage: setUsageWorkflow,
     onArchive: (workflow) => actions.requestConfirmation(workflow, 'archive'),

@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import COLORS from 'src/theme/core/colors.json';
 import { Page, Text, View, Image, Document } from '@react-pdf/renderer';
 
-import { estimatePrintTextLines } from './form-print-text-layout';
-import { formatAdmissionPrintPhotoSize } from './form-print-advanced-layout';
+import { PRINT_PAPER_POINTS, formatAdmissionPrintPhotoSize } from './form-print-advanced-layout';
+import { estimatePrintTextLines, estimateStandardPrintFieldHeight } from './form-print-text-layout';
 
 import type {
   AdmissionPrintField,
@@ -17,7 +17,6 @@ type PaperTemplateProps = {
   branding: AdmissionPrintBranding;
   textRuns: (value: string) => ReactNode;
   fieldRows: (fields: AdmissionPrintField[], columns: number) => AdmissionPrintField[][];
-  needsPageFlow: (field: AdmissionPrintField) => boolean;
   baseFamily: string;
   devanagariFamily: string;
 };
@@ -28,7 +27,6 @@ export function AdmissionPaperTemplate({
   branding,
   textRuns,
   fieldRows,
-  needsPageFlow,
   baseFamily,
   devanagariFamily,
 }: PaperTemplateProps) {
@@ -37,12 +35,14 @@ export function AdmissionPaperTemplate({
   const margin = spacious ? 36 : 28;
   const padding = spacious ? 10 : 7;
   const fontSize = spacious ? 10 : 9;
+  const [pageWidth, pageHeight] = PRINT_PAPER_POINTS.A4;
+  const footerReserve = 44;
   const border = COLORS.grey[500];
   const schoolHeader = model.settings.showSchoolHeader;
   const addressLines = schoolHeader
     ? (branding.addressLines ?? []).filter((line) => line.trim())
     : [];
-  const brandingWidth = 595.28 - margin * 2 - (schoolHeader && branding.logoUrl ? 57 : 0);
+  const brandingWidth = pageWidth - margin * 2 - (schoolHeader && branding.logoUrl ? 57 : 0);
   // Reserve wrapped content before placing the fixed header so long Institute Setup addresses
   // remain complete and can never overlap the first question or registration-number line.
   const estimatedLines = (value: string, characterWidth: number) =>
@@ -56,6 +56,15 @@ export function AdmissionPaperTemplate({
   );
   const bannerHeight = schoolHeader && branding.bannerUrl ? 51 : 0;
   const headerHeight = mastheadHeight + bannerHeight + 37;
+  const bodyCapacity = pageHeight - margin - headerHeight - footerReserve;
+  const estimateRowHeight = (row: AdmissionPrintField[]) => {
+    const fieldWidth = (pageWidth - margin * 2) / row.length - padding * 2;
+    return Math.max(
+      ...row.map((field) =>
+        estimateStandardPrintFieldHeight(field, fieldWidth, fontSize, model.mode === 'blank')
+      )
+    );
+  };
   let sectionNumber = 0;
   const paperRows = (fields: AdmissionPrintField[], columns: number) =>
     fieldRows(fields, columns).flatMap((row) =>
@@ -128,7 +137,7 @@ export function AdmissionPaperTemplate({
   const renderWritingSpace = (field: AdmissionPrintField, rowCount: number) => {
     const format = field.writingFormat;
     if (boxed && model.mode === 'blank' && format && format !== 'line' && field.kind === 'text') {
-      const availableWidth = (595.28 - margin * 2) / rowCount - padding * 2 - 2;
+      const availableWidth = (pageWidth - margin * 2) / rowCount - padding * 2 - 2;
       const count =
         format === 'date'
           ? 8
@@ -231,7 +240,7 @@ export function AdmissionPaperTemplate({
         wrap
         style={{
           paddingTop: margin + headerHeight,
-          paddingBottom: 44,
+          paddingBottom: footerReserve,
           paddingHorizontal: margin,
           fontFamily: baseFamily,
           fontSize,
@@ -303,111 +312,118 @@ export function AdmissionPaperTemplate({
             </View>
           </View>
         </View>
-        {model.steps.map((step) => (
-          <View key={step.key}>
-            {model.steps.length > 1 &&
-            !step.sections.every((section) => section.title === step.title) ? (
-              <Text
-                minPresenceAhead={70}
-                style={{ fontWeight: 700, fontSize: 11, marginTop: 7, marginBottom: 6 }}
-              >
-                {textRuns(step.title)}
-              </Text>
-            ) : null}
-            {step.sections.map((section) => {
-              sectionNumber += 1;
-              const sectionFields = section.entries.flatMap((entry) => entry.fields);
-              const keepTogether =
-                headerHeight < 300 &&
-                !section.repeatable &&
-                section.entries.reduce(
-                  (count, entry) => count + paperRows(entry.fields, section.columns).length,
-                  0
-                ) <= 3 &&
-                sectionFields.every((field) => field.kind !== 'photo' && !needsPageFlow(field)) &&
-                sectionFields.reduce(
-                  (count, field) =>
-                    count +
-                    field.label.length +
-                    field.value.length +
-                    (field.options?.reduce((length, option) => length + option.label.length, 0) ??
-                      0),
-                  0
-                ) < 500;
+        {model.steps.flatMap((step) =>
+          step.sections.flatMap((section, sectionIndex) => {
+            sectionNumber += 1;
+            const rows = section.entries.flatMap((entry) =>
+              paperRows(
+                entry.fields.filter((field) => model.settings.showPhoto || field.kind !== 'photo'),
+                section.columns
+              ).map((row, rowIndex, entryRows) => ({
+                row,
+                rowIndex,
+                entry,
+                lastEntryRow: rowIndex === entryRows.length - 1,
+              }))
+            );
+            const sectionFields = rows.flatMap(({ row }) => row);
+            const keepTogether =
+              headerHeight < 300 &&
+              !section.repeatable &&
+              rows.length <= 3 &&
+              rows.reduce((height, { row }) => height + estimateRowHeight(row), 55) <=
+                bodyCapacity &&
+              sectionFields.every((field) => field.kind !== 'photo') &&
+              sectionFields.reduce(
+                (count, field) =>
+                  count +
+                  field.label.length +
+                  field.value.length +
+                  (field.options?.reduce((length, option) => length + option.label.length, 0) ?? 0),
+                0
+              ) < 500;
+            const sectionRows = rows.map(({ row, rowIndex, entry, lastEntryRow }, index) => {
+              const firstRow = index === 0;
+              const canFlow = estimateRowHeight(row) > bodyCapacity - (firstRow ? 55 : 0);
               return (
                 <View
-                  key={section.key}
-                  wrap={!keepTogether}
-                  style={{ marginBottom: spacious ? 13 : 10 }}
+                  key={`${section.key}:${entry.key}:${rowIndex}`}
+                  wrap={canFlow}
+                  style={{ marginBottom: index === rows.length - 1 ? (spacious ? 13 : 10) : 0 }}
                 >
+                  {firstRow &&
+                    sectionIndex === 0 &&
+                    model.steps.length > 1 &&
+                    !step.sections.every((part) => part.title === step.title) && (
+                      <Text
+                        minPresenceAhead={canFlow ? 70 : 0}
+                        style={{ fontWeight: 700, fontSize: 11, marginTop: 7, marginBottom: 6 }}
+                      >
+                        {textRuns(step.title)}
+                      </Text>
+                    )}
+                  {firstRow && (
+                    <View
+                      minPresenceAhead={canFlow ? 65 : 0}
+                      wrap={false}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: COLORS.grey[100],
+                        borderWidth: 0.7,
+                        borderColor: border,
+                        paddingVertical: 6,
+                        paddingHorizontal: 8,
+                      }}
+                    >
+                      <Text style={{ fontWeight: 700, fontSize: 10, width: 23 }}>
+                        {String(sectionNumber).padStart(2, '0')}
+                      </Text>
+                      <Text style={{ fontWeight: 700, fontSize: 10, flex: 1 }}>
+                        {textRuns(section.title)}
+                      </Text>
+                    </View>
+                  )}
+                  {rowIndex === 0 && entry.label && (
+                    <Text
+                      minPresenceAhead={canFlow ? 55 : 0}
+                      style={{
+                        fontWeight: 700,
+                        paddingVertical: 6,
+                        paddingHorizontal: 8,
+                        borderLeftWidth: 0.5,
+                        borderRightWidth: 0.5,
+                        borderColor: border,
+                      }}
+                    >
+                      {textRuns(entry.label)}
+                    </Text>
+                  )}
                   <View
-                    minPresenceAhead={65}
-                    wrap={false}
                     style={{
                       flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: COLORS.grey[100],
-                      borderWidth: 0.7,
+                      alignItems: 'stretch',
+                      borderLeftWidth: 0.5,
+                      borderRightWidth: boxed ? 0 : 0.5,
+                      borderBottomWidth: boxed || lastEntryRow ? 0.5 : 0,
                       borderColor: border,
-                      paddingVertical: 6,
-                      paddingHorizontal: 8,
                     }}
                   >
-                    <Text style={{ fontWeight: 700, fontSize: 10, width: 23 }}>
-                      {String(sectionNumber).padStart(2, '0')}
-                    </Text>
-                    <Text style={{ fontWeight: 700, fontSize: 10, flex: 1 }}>
-                      {textRuns(section.title)}
-                    </Text>
+                    {row.map((field) => renderField(field, row.length))}
                   </View>
-                  {section.entries.map((entry) => (
-                    <View key={entry.key}>
-                      {entry.label ? (
-                        <Text
-                          minPresenceAhead={
-                            entry.fields.some((field) => field.kind === 'photo') ? 120 : 55
-                          }
-                          style={{
-                            fontWeight: 700,
-                            paddingVertical: 6,
-                            paddingHorizontal: 8,
-                            borderLeftWidth: 0.5,
-                            borderRightWidth: 0.5,
-                            borderColor: border,
-                          }}
-                        >
-                          {textRuns(entry.label)}
-                        </Text>
-                      ) : null}
-                      {paperRows(
-                        entry.fields.filter(
-                          (field) => model.settings.showPhoto || field.kind !== 'photo'
-                        ),
-                        section.columns
-                      ).map((row, index, rows) => (
-                        <View
-                          key={index}
-                          wrap={row.some(needsPageFlow)}
-                          minPresenceAhead={50}
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'stretch',
-                            borderLeftWidth: 0.5,
-                            borderRightWidth: boxed ? 0 : 0.5,
-                            borderBottomWidth: boxed || index === rows.length - 1 ? 0.5 : 0,
-                            borderColor: border,
-                          }}
-                        >
-                          {row.map((field) => renderField(field, row.length))}
-                        </View>
-                      ))}
-                    </View>
-                  ))}
                 </View>
               );
-            })}
-          </View>
-        ))}
+            });
+            // Large sections expose row groups directly to the page paginator.
+            return keepTogether
+              ? [
+                  <View key={section.key} wrap={false}>
+                    {sectionRows}
+                  </View>,
+                ]
+              : sectionRows;
+          })
+        )}
         {model.settings.showSignature ? (
           <View wrap={false} style={{ marginTop: spacious ? 25 : 18, paddingHorizontal: 4 }}>
             <Text style={{ fontSize: 9, fontWeight: 700, marginBottom: 32 }}>

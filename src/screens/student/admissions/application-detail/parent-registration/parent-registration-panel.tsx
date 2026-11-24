@@ -24,6 +24,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { readableRegistrationValue } from 'src/screens/public/admission-registration/parent-registration-model';
@@ -38,6 +39,7 @@ import {
   Typography,
   IconButton,
   DialogActions,
+  InputAdornment,
 } from '@mui/material';
 import {
   useGetParentRegistrationQuery,
@@ -46,6 +48,7 @@ import {
   useRevokeParentRegistrationMutation,
   useCopyParentRegistrationLinkMutation,
   useTakeoverParentRegistrationMutation,
+  useReactivateParentRegistrationMutation,
   useChangeParentRegistrationEmailMutation,
   useGetParentRegistrationEmailHistoryQuery,
   useRetryParentRegistrationDeliveryMutation,
@@ -53,14 +56,24 @@ import {
 } from 'src/redux/student/admissions/admission-parent-registration-api';
 
 import { readAdmissionFormValue } from '../../admission-visibility-rules';
+import { formatAssessmentSchedule } from '../../assessments/assessment-date-time';
 import { ParentRegistrationEmailHistoryDrawer } from './parent-registration-email-history-drawer';
 
 type Action =
-  'copy' | 'email' | 'send' | 'corrections' | 'apply' | 'revoke' | 'takeover' | 'retry-delivery';
+  | 'copy'
+  | 'email'
+  | 'send'
+  | 'reactivate'
+  | 'corrections'
+  | 'apply'
+  | 'revoke'
+  | 'takeover'
+  | 'retry-delivery';
 const labels: Record<Action, string> = {
   copy: 'Copy Registration Link',
   email: 'Update Link',
   send: 'Send Registration Link',
+  reactivate: 'Reactivate Registration Link',
   corrections: 'Request Parent Documents',
   apply: 'Review Parent Corrections',
   revoke: 'Revoke Parent Link',
@@ -71,11 +84,26 @@ const actionLabels: Record<Action, string> = {
   copy: 'Copy link',
   email: 'Submit',
   send: 'Send link',
+  reactivate: 'Reactivate link',
   corrections: 'Request corrections',
   apply: 'Apply corrections',
   revoke: 'Revoke link',
   takeover: 'Take over',
   'retry-delivery': 'Retry delivery',
+};
+const defaultLinkValidityDays = '7';
+const millisecondsPerDay = 24 * 60 * 60 * 1000;
+const latestLinkExpiry = Date.UTC(9999, 11, 31, 23, 59, 59, 999);
+const readLinkValidityDays = (value: string | undefined) => {
+  if (!value || !/^\d+$/.test(value)) return null;
+  const days = Number(value);
+  if (
+    !Number.isSafeInteger(days) ||
+    days <= 0 ||
+    Date.now() + days * millisecondsPerDay > latestLinkExpiry
+  )
+    return null;
+  return days;
 };
 const hasParentEmailChange = (email: string, savedEmail?: string | null) =>
   email.trim().toLowerCase() !== (savedEmail || '').trim().toLowerCase();
@@ -93,6 +121,7 @@ export function ParentRegistrationPanel({
   placement = 'inline',
   formActions,
   statusElement,
+  completionStatus,
 }: {
   applicationId: string;
   canView: boolean;
@@ -108,6 +137,7 @@ export function ParentRegistrationPanel({
   placement?: 'inline' | 'header';
   formActions?: { print: ReactNode; refresh: ReactNode };
   statusElement?: HTMLElement | null;
+  completionStatus?: ReactNode;
 }) {
   const [pollingInterval, setPollingInterval] = useState(0);
   const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
@@ -157,6 +187,7 @@ export function ParentRegistrationPanel({
   const [snapshot, setSnapshot] = useState<StaffParentRegistrationContext | null>(null);
   const [send] = useSendParentRegistrationMutation();
   const [copyRegistrationLink] = useCopyParentRegistrationLinkMutation();
+  const [reactivate] = useReactivateParentRegistrationMutation();
   const [changeEmail] = useChangeParentRegistrationEmailMutation();
   const [revoke] = useRevokeParentRegistrationMutation();
   const [takeover] = useTakeoverParentRegistrationMutation();
@@ -168,6 +199,23 @@ export function ParentRegistrationPanel({
   const [error, setError] = useState('');
   const [conflict, setConflict] = useState(false);
   const retry = useRef<{ fingerprint: string; key: string } | null>(null);
+  const validityInput = useRef<HTMLInputElement>(null);
+  const showLinkValidity = action === 'copy' || action === 'send' || action === 'reactivate';
+  const canReactivate = Boolean(context?.canReactivate && context.request);
+  const reactivationUnavailable =
+    action === 'reactivate' && (!canReactivate || context?.request?.id !== snapshot?.request?.id);
+  const commandDisabled =
+    disabled ||
+    dirty ||
+    !canManage ||
+    !context ||
+    snapshot?.applicationId !== applicationId ||
+    reactivationUnavailable ||
+    (action === 'copy' && !context.canCreateLink) ||
+    (action === 'send' && !context.canSend) ||
+    (action === 'retry-delivery' && !context.canRetryDelivery) ||
+    (['send', 'retry-delivery', 'corrections'].includes(action ?? '') &&
+      Boolean(context.emailDeliveryBlockedReason));
   useEffect(() => {
     onBusyChange?.(busy);
     return () => onBusyChange?.(false);
@@ -188,8 +236,14 @@ export function ParentRegistrationPanel({
       notes: '',
       email: '',
       documents: [] as string[],
+      validityDays: defaultLinkValidityDays,
     },
     validationSchema: Yup.object({
+      validityDays: Yup.string().test(
+        'link-validity',
+        'Enter a positive whole number of days within the supported date range.',
+        (value) => !showLinkValidity || readLinkValidityDays(value) !== null
+      ),
       email: Yup.string()
         .trim()
         .test(
@@ -224,8 +278,7 @@ export function ParentRegistrationPanel({
       ),
     }),
     onSubmit: async (values) => {
-      if (!snapshot || !action || busyRef.current || conflict || !canManage) return;
-      if (action === 'copy' && (disabled || dirty || !context?.canCreateLink)) return;
+      if (!snapshot || !action || busyRef.current || conflict || commandDisabled) return;
       if (
         action === 'email' &&
         !hasParentEmailChange(
@@ -241,13 +294,11 @@ export function ParentRegistrationPanel({
         )
       )
         return;
-      if (
-        ['send', 'retry-delivery', 'corrections'].includes(action) &&
-        context?.emailDeliveryBlockedReason
-      )
-        return;
+      const validityDays = showLinkValidity ? readLinkValidityDays(values.validityDays) : null;
       const payload = {
         concurrencyStamp: snapshot.concurrencyStamp,
+        ...(validityDays !== null ? { validityDays } : {}),
+        ...(action === 'reactivate' ? { requestId: snapshot.request?.id } : {}),
         ...(['copy', 'send', 'corrections', 'email'].includes(action)
           ? { recipientRelationship: values.recipient as ParentRecipientRelationship }
           : {}),
@@ -284,6 +335,8 @@ export function ParentRegistrationPanel({
         else if (action === 'email')
           await changeEmail(command as Parameters<typeof changeEmail>[0]).unwrap();
         else if (action === 'send') await send(command as Parameters<typeof send>[0]).unwrap();
+        else if (action === 'reactivate')
+          await reactivate(command as Parameters<typeof reactivate>[0]).unwrap();
         else if (action === 'corrections')
           await corrections(command as Parameters<typeof corrections>[0]).unwrap();
         else if (action === 'apply') await apply(command as Parameters<typeof apply>[0]).unwrap();
@@ -301,7 +354,9 @@ export function ParentRegistrationPanel({
                 ? 'Parent email saved. Send a registration link when ready.'
                 : action === 'apply'
                   ? 'Parent corrections applied. Review the application before continuing.'
-                  : 'Parent registration updated. Check email history for the latest status.',
+                  : action === 'reactivate'
+                    ? 'Registration link reactivated.'
+                    : 'Parent registration updated. Check email history for the latest status.',
           });
         }
       } catch (failure) {
@@ -327,6 +382,10 @@ export function ParentRegistrationPanel({
       }
     },
   });
+  useEffect(() => {
+    if (formik.submitCount && !formik.isSubmitting && formik.errors.validityDays)
+      validityInput.current?.focus();
+  }, [formik.submitCount, formik.isSubmitting, formik.errors.validityDays]);
   const router = useRouter();
   const guard = useUnsavedNavigation(Boolean(action && formik.dirty), {
     guardContextChanges: Boolean(action),
@@ -342,7 +401,7 @@ export function ParentRegistrationPanel({
       setConflict(false);
     });
   const open = (next: Action, relationship?: ParentRecipientRelationship) => {
-    if (!context || disabled || dirty || busy || !canManage) return;
+    if (!context || disabled || dirty || busyRef.current || !canManage) return;
     setSnapshot(context);
     setAction(next);
     setError('');
@@ -362,16 +421,16 @@ export function ParentRegistrationPanel({
         notes: '',
         email: recipient?.email || '',
         documents: [],
+        validityDays: defaultLinkValidityDays,
       },
     });
   };
   const handleCopyLink = async () => {
     if (!context || disabled || dirty || busyRef.current || !canManage) return;
-    if (context.canCreateLink) {
-      open('copy');
+    if (!context.canCopyLink || !context.request) {
+      if (context.canCreateLink) open('copy');
       return;
     }
-    if (!context.canCopyLink || !context.request) return;
     busyRef.current = true;
     setBusy(true);
     try {
@@ -393,6 +452,20 @@ export function ParentRegistrationPanel({
   if (!context && !loadingContext && !formActions) return null;
   const request = context?.request;
   const inHeader = placement === 'header';
+  const validityDays =
+    action === 'reactivate' ? readLinkValidityDays(formik.values.validityDays) : null;
+  const estimatedExpiry =
+    validityDays === null
+      ? null
+      : formatAssessmentSchedule(
+          new Date(Date.now() + validityDays * millisecondsPerDay).toISOString()
+        );
+  const validityError = formik.touched.validityDays ? formik.errors.validityDays : undefined;
+  const dialogError =
+    error ||
+    (!busy && reactivationUnavailable
+      ? 'This link is no longer available to reactivate. Close this dialog to review the latest state.'
+      : '');
   const copyAvailable = Boolean(context?.canCopyLink || context?.canCreateLink);
   const showCopyLink = inHeader && canManage && Boolean(context?.canSend || copyAvailable);
   const emailSent = Boolean(inHeader && request?.deliveryStatus === 'Sent');
@@ -442,6 +515,7 @@ export function ParentRegistrationPanel({
             alignItems="center"
             justifyContent={formActions ? 'space-between' : 'flex-end'}
             useFlexGap
+            flexWrap={completionStatus ? 'wrap' : undefined}
             sx={{ width: 1, minWidth: 0 }}
           >
             {formActions && (
@@ -453,6 +527,11 @@ export function ParentRegistrationPanel({
                 Registration
               </Typography>
             )}
+            {completionStatus && (
+              <Box sx={{ flexBasis: { xs: '100%', lg: 'auto' }, minWidth: 0, textAlign: 'start' }}>
+                {completionStatus}
+              </Box>
+            )}
             <Stack
               direction="row"
               spacing={1}
@@ -460,7 +539,7 @@ export function ParentRegistrationPanel({
               justifyContent="flex-end"
               useFlexGap
               flexWrap="wrap"
-              sx={{ minWidth: 0 }}
+              sx={{ minWidth: 0, maxWidth: 1, ml: completionStatus ? 'auto' : undefined }}
             >
               <Stack
                 role={formActions ? 'group' : undefined}
@@ -479,6 +558,19 @@ export function ParentRegistrationPanel({
                     height={30}
                     aria-label="Loading parent registration actions"
                   />
+                )}
+                {canManage && canReactivate && (
+                  <Button
+                    type="button"
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    startIcon={<Iconify icon="mdi:link-variant" width={18} />}
+                    disabled={disabled || dirty || busy}
+                    onClick={() => open('reactivate')}
+                  >
+                    Reactivate link
+                  </Button>
                 )}
                 {showCopyLink && (
                   <CustomTooltip
@@ -719,7 +811,11 @@ export function ParentRegistrationPanel({
             noValidate: true,
           }}
           title={labels[action]}
-          titleInfo="The private link is valid for seven days. The school retains admission decisions and formal submission."
+          titleInfo={
+            showLinkValidity
+              ? 'Validity starts when the school confirms this action.'
+              : 'The school retains admission decisions and formal submission.'
+          }
           titleInfoPlacement={action === 'email' ? 'right' : undefined}
           handleClose={close}
           disableClose={busy}
@@ -776,14 +872,69 @@ export function ParentRegistrationPanel({
                           : undefined
                       }
                     />
-                    <Typography variant="body2" color="text.secondary">
-                      {action !== 'copy' && snapshot.request
-                        ? 'Sending a new link closes the previous link. '
-                        : ''}
-                      Parent completes the form. Staff review and submit the application.
-                    </Typography>
+                    {(action === 'corrections' || (action === 'send' && snapshot.request)) && (
+                      <Typography variant="body2" color="text.secondary">
+                        {snapshot.request ? 'Sending a new link closes the previous link. ' : ''}
+                        {action === 'corrections' &&
+                          'Parent completes the form. Staff review and submit the application.'}
+                      </Typography>
+                    )}
                   </Stack>
                 </FormSectionCard>
+              )}
+              {action === 'reactivate' && (
+                <Stack spacing={1} alignItems="flex-start">
+                  <Label color="warning">Link expired</Label>
+                  <Typography variant="body2">
+                    The parent can reopen the same link and continue with their saved answers. Share
+                    the link separately if needed.
+                  </Typography>
+                </Stack>
+              )}
+              {showLinkValidity && (
+                <ShakingTextField error={Boolean(validityError)}>
+                  <NumericFormatCustom
+                    required
+                    fullWidth
+                    size="small"
+                    name="validityDays"
+                    label="Link valid for"
+                    value={formik.values.validityDays}
+                    inputRef={validityInput}
+                    prefix=""
+                    allowNegative
+                    valueIsNumericString
+                    roundToWholeRupees={false}
+                    thousandSeparator={false}
+                    isAllowed={undefined}
+                    slotProps={{
+                      htmlInput: { 'aria-label': 'Link valid for (days)' },
+                      input: {
+                        endAdornment: <InputAdornment position="end">days</InputAdornment>,
+                      },
+                    }}
+                    disabled={busy}
+                    onBlur={formik.handleBlur}
+                    onValueChange={({ value }, { source }) => {
+                      if (source === 'event') formik.setFieldValue('validityDays', value);
+                    }}
+                    error={Boolean(validityError)}
+                    helperText={
+                      validityError ||
+                      (action === 'reactivate' && (
+                        <>
+                          Enter a whole number of days greater than zero.
+                          {estimatedExpiry && (
+                            <>
+                              <br />
+                              Estimated expiry is {estimatedExpiry.date}, {estimatedExpiry.time}.
+                            </>
+                          )}
+                        </>
+                      ))
+                    }
+                  />
+                </ShakingTextField>
               )}
               {action === 'email' && (
                 <FormSectionCard
@@ -955,9 +1106,9 @@ export function ParentRegistrationPanel({
                   delivery or approval status.
                 </Typography>
               )}
-              {error && (
+              {dialogError && (
                 <Typography role="alert" color="error" variant="body2">
-                  {error}
+                  {dialogError}
                 </Typography>
               )}
             </Stack>
@@ -980,7 +1131,7 @@ export function ParentRegistrationPanel({
               loading={busy}
               disabled={
                 conflict ||
-                !canManage ||
+                commandDisabled ||
                 (action === 'email' && !hasParentEmailChange(formik.values.email, recipient?.email))
               }
               startIcon={<Iconify icon={GlobalIcons.submit} />}

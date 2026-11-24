@@ -14,16 +14,6 @@ const cycle = {
   status: 1,
 };
 
-const targetCycle = {
-  ...cycle,
-  id: '12121212-1212-1212-1212-121212121212',
-  name: 'Admissions 2028-29',
-  code: 'ADM-2829',
-  academicYearId: '23232323-2323-2323-2323-232323232323',
-  startDate: '2028-10-01T00:00:00Z',
-  endDate: '2029-03-31T00:00:00Z',
-};
-
 const hierarchyIds = {
   board: '33333333-3333-3333-3333-333333333333',
   medium: '44444444-4444-4444-4444-444444444444',
@@ -98,7 +88,6 @@ test.describe('Admission Offering setup', { tag: ['@student', '@critical'] }, ()
     page,
   }) => {
     let createPayload: Record<string, unknown> | null = null;
-    let clonePayload: Record<string, unknown> | null = null;
     let createAttempts = 0;
     let validationAttempts = 0;
     const optionRequestUrls: string[] = [];
@@ -107,7 +96,7 @@ test.describe('Admission Offering setup', { tag: ['@student', '@critical'] }, ()
       return route.fulfill({ json: { data: { totalCount: 1, items: [campus] } } });
     });
     await page.route('**/api/student/enrollment/admissions/cycles*', (route) =>
-      route.fulfill({ json: { data: { totalCount: 2, items: [cycle, targetCycle] } } })
+      route.fulfill({ json: { data: { totalCount: 1, items: [cycle] } } })
     );
     await page.route('**/api/app/academic-organization-options*', (route) => {
       const academicYearId = new URL(route.request().url()).searchParams.get('academicYearId');
@@ -241,21 +230,6 @@ test.describe('Admission Offering setup', { tag: ['@student', '@critical'] }, ()
               data: {
                 totalCount: createAttempts > 0 ? 1 : 0,
                 items: createAttempts > 0 ? [offeringDetail] : [],
-              },
-            },
-          });
-          return;
-        }
-        if (request.method() === 'POST' && pathname.endsWith(`/${offeringDetail.id}/clone`)) {
-          clonePayload = request.postDataJSON() as Record<string, unknown>;
-          await route.fulfill({
-            json: {
-              data: {
-                ...offeringDetail,
-                id: 'cloned-offering-grade-5',
-                admissionCycleId: targetCycle.id,
-                admissionCycleName: targetCycle.name,
-                isActive: clonePayload.isActive,
               },
             },
           });
@@ -510,39 +484,10 @@ test.describe('Admission Offering setup', { tag: ['@student', '@critical'] }, ()
     await duplicateDialog.getByRole('button', { name: 'Cancel' }).click();
     await expect(duplicateDialog).toBeHidden();
     await expect(page.getByText('GRADE-5', { exact: true })).toBeVisible();
-    const rowActions = page.getByRole('button', { name: 'Actions for GRADE-5' });
-    const cloneAction = page.getByRole('menuitem', { name: 'Clone' });
-    await expect(async () => {
-      await rowActions.click();
-      await expect(cloneAction).toBeVisible({ timeout: 2_000 });
-    }).toPass({ timeout: 10_000 });
-    await cloneAction.click();
-
-    const cloneDialog = page.getByRole('dialog', { name: 'Clone Admission Offering' });
-    await cloneDialog.getByLabel('Target admission cycle *').click();
-    await page.getByRole('option', { name: targetCycle.name }).click();
-    await cloneDialog.getByLabel('Campus (optional)').click();
-    await page.getByRole('option', { name: 'North Campus · NC' }).click();
-    await cloneDialog.getByLabel('Board *').click();
-    await page.getByRole('option', { name: 'CBSE' }).click();
-    await cloneDialog.getByLabel('Medium *').click();
-    await page.getByRole('option', { name: 'English' }).click();
-    await cloneDialog.getByLabel('School level *').click();
-    await page.getByRole('option', { name: 'Primary' }).click();
-    await cloneDialog.getByLabel('Standard *').click();
-    await page.getByRole('option', { name: 'Grade 5' }).click();
-    await cloneDialog.getByRole('button', { name: 'Clone as inactive' }).click();
-
-    await expect.poll(() => clonePayload).not.toBeNull();
-    expect(clonePayload).toMatchObject({
-      admissionCycleId: targetCycle.id,
-      campusId: campus.id,
-      boardId: hierarchyIds.board,
-      mediumId: hierarchyIds.medium,
-      stageId: hierarchyIds.stage,
-      standardId: hierarchyIds.standard,
-      isActive: false,
-    });
+    const offeringRow = page.getByRole('row').filter({ hasText: 'GRADE-5' });
+    await offeringRow.getByRole('button', { name: 'More Actions' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Deactivate' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Clone', exact: true })).toHaveCount(0);
   });
 
   test('previews and commits five standards atomically through bulk creation', async ({ page }) => {

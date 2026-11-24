@@ -80,7 +80,7 @@ export function InquirySourcePicker() {
   if (inheritance.initializingSources) {
     return (
       <TextField
-        label="Preview Using Inquiry Form"
+        label="Preview Inquiry form"
         fullWidth
         size="small"
         disabled
@@ -95,7 +95,7 @@ export function InquirySourcePicker() {
 
   return (
     <PaginatedSearchSelect<SourceOption>
-      label="Preview Using Inquiry Form"
+      label="Preview Inquiry form"
       name="inquiryPreviewSource"
       fullWidth
       size="small"
