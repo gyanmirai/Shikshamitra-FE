@@ -17,13 +17,20 @@ test('opens saved and empty months without generating payroll', async ({ page })
   expect(starts).toHaveLength(0);
 });
 
-test('opening a saved workbench reads the register once without calculating', async ({ page }) => {
-  const registerReads: string[] = [];
+test('direct entry shows saved staff before detailed reads complete without calculating', async ({ page }) => {
+  const registerReads: boolean[] = [];
   const calculations: string[] = [];
+  let releaseDetails!: () => void;
+  const detailsGate = new Promise<void>((resolve) => { releaseDetails = resolve; });
+  await page.route('**/api/payroll/run/register?*', async (route) => {
+    if (new URL(route.request().url()).searchParams.get('rowsOnly') !== 'true')
+      await detailsGate;
+    await route.continue();
+  });
   page.on('request', (request) => {
-    const { pathname } = new URL(request.url());
+    const { pathname, searchParams } = new URL(request.url());
     if (request.method() === 'GET' && pathname === '/api/payroll/run/register')
-      registerReads.push(request.url());
+      registerReads.push(searchParams.get('rowsOnly') === 'true');
     if (request.method() === 'POST' && pathname === '/api/payroll/run/previews')
       calculations.push(request.url());
   });
@@ -31,11 +38,19 @@ test('opening a saved workbench reads the register once without calculating', as
     new URL(response.url()).pathname === '/api/payroll/run/previews/run-1'
   );
   await page.goto('/hr/payroll/run-payroll?month=2026-09');
-  await discovered;
   const register = page.getByRole('region', { name: 'Payroll Register' });
-  await expect(register.getByText('Asha Rao')).toBeVisible();
+  try {
+    await expect(register.getByText('Asha Rao')).toBeVisible();
+    await expect(register.getByText('Showing saved staff rows. Loading payroll details…')).toBeVisible();
+    await expect(register.getByRole('button', { name: 'View', exact: true })).toHaveCount(0);
+    await expect(register.getByRole('checkbox', { name: 'Select payroll for Asha Rao' })).toHaveCount(0);
+  } finally {
+    releaseDetails();
+  }
+  await discovered;
+  await expect(register.getByRole('button', { name: 'View', exact: true }).first()).toBeVisible();
   await expect(register).toHaveAttribute('aria-busy', 'false');
-  expect(registerReads).toHaveLength(1);
+  expect(registerReads).toEqual([true, false]);
   expect(calculations).toHaveLength(0);
 });
 
@@ -268,6 +283,10 @@ test('approval settings are separate and recovery returns to the selected month'
 test('missing attendance blocks payroll review and is skipped by select all', async ({ page }) => {
   let allAttendanceMissing = false;
   await page.route('**/api/payroll/run/register?*', async (route) => {
+    if (new URL(route.request().url()).searchParams.get('rowsOnly') === 'true') {
+      await route.continue();
+      return;
+    }
     const response = await route.fetch();
     const result = await response.json();
     result.items = result.items.map((row: { employeeName: string; issueCodes: string[] }) => ({
@@ -426,6 +445,10 @@ test('routes section payroll for review and requires an HR override after return
   // A replacement preview still has the old section claim, but needs a fresh HR review.
   const registerUrl = '**/api/payroll/run/register?*';
   await page.route(registerUrl, async (route) => {
+    if (new URL(route.request().url()).searchParams.get('rowsOnly') === 'true') {
+      await route.continue();
+      return;
+    }
     const response = await route.fetch();
     const result = await response.json();
     result.items = result.items.map((item: { employeeId: string }) =>

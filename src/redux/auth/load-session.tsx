@@ -1,12 +1,16 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
+import { hrPaths } from 'src/constants/hr-menus';
 import { signOut, useSession } from 'next-auth/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import { webPushOwner, setWebPushOwner } from 'src/hooks/notifications/web-push-device';
 
 import { api } from '../service';
+import { yearApi } from '../year/yearApi';
+import { boardApi } from '../board/boardApi';
+import { userScopeApi } from '../userScope/userScopeApi';
 import { clearCachedAuthSession } from '../session-cache';
 import { openLibraryApi } from '../library/LibraryDataSearch';
 import { loadUser, clearUser, getEmployee } from './authSlice';
@@ -31,7 +35,10 @@ export default function LoadSession() {
   const { data, status } = useSession();
   const session = data as ApplicationSession | null;
   const sessionRef = useRef(session);
-  const isPublicRoute = useSelectedLayoutSegments().includes('(public-route)');
+  const segments = useSelectedLayoutSegments();
+  const isPublicRoute = segments.includes('(public-route)');
+  const isPayrollEntry =
+    `/${segments.filter((segment) => !segment.startsWith('(')).join('/')}` === hrPaths.payroll.runPayroll;
   const initializationVersion = useSelector((state: RootState) => state.auth.initializationVersion);
   const loadedIdentity = useRef<string | null>(null);
   const loadedVersion = useRef<number | null>(null);
@@ -146,6 +153,33 @@ export default function LoadSession() {
     needsEmployee,
     isPublicRoute,
     initializationVersion,
+  ]);
+
+  useEffect(() => {
+    if (
+      !isPayrollEntry ||
+      isPublicRoute ||
+      status !== 'authenticated' ||
+      !userId ||
+      !tenantId ||
+      !accessToken ||
+      sessionError
+    ) return undefined;
+
+    // Begin the same academic context reads as the header while session permissions initialize.
+    const years = dispatch(yearApi.endpoints.getYear.initiate(undefined));
+    const boards = dispatch(boardApi.endpoints.getBoards.initiate(undefined));
+    const scope = dispatch(
+      userScopeApi.endpoints.getUserScopeHierarchy.initiate({ userId, cacheTenantId: tenantId })
+    );
+    return () => {
+      years.unsubscribe();
+      boards.unsubscribe();
+      scope.unsubscribe();
+    };
+  }, [
+    dispatch, isPayrollEntry, isPublicRoute, status, userId, tenantId, accessToken,
+    sessionError, initializationVersion,
   ]);
   return null;
 }

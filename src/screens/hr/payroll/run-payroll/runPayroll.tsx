@@ -285,8 +285,9 @@ const RunPayroll = () => {
 
   const selectedMonthKey = month?.format('YYYY-MM') ?? '';
   const academicYearId = currentYear?.id || '';
+  const preview = usePayrollPreviewRun(selectedMonthKey, academicYearId, true);
   const approval = usePayrollApprovalSettingsQuery(undefined, {
-    skip: !academicYearId,
+    skip: !academicYearId || preview.waitingForOpeningRows,
     refetchOnFocus: true,
     refetchOnMountOrArgChange: true,
   });
@@ -300,7 +301,18 @@ const RunPayroll = () => {
   const isDesktop = useResponsive('up', 'md');
   const academicYearStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
   const academicYearEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
-  const preview = usePayrollPreviewRun(selectedMonthKey, academicYearId, true);
+  const openingTableRows = useMemo(
+    () => preview.openingRows?.map((row) => ({
+      id: row.employeeId,
+      employeeName: row.employeeName,
+      employeeIdentifier: row.employeeIdentifier,
+      payableDays: row.payableDays,
+      netSalary: row.netPay,
+      status: row.isLocked ? 'LOCKED' : undefined,
+    })) ?? [],
+    [preview.openingRows]
+  );
+  const showingOpeningRows = openingTableRows.length > 0;
   const exportTable = useHrTableExport('payroll-monthly-workbench-table', {
     month: selectedMonthKey,
     academicYearId,
@@ -1006,7 +1018,7 @@ const RunPayroll = () => {
                   {value}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {row.employeeIdentifier} • {row.employeeGroup}
+                  {[row.employeeIdentifier, row.employeeGroup].filter(Boolean).join(' • ')}
                 </Typography>
               </Box>
             </Stack>
@@ -1217,6 +1229,22 @@ const RunPayroll = () => {
       })),
     [columns, isDesktop]
   );
+  const openingColumns = useMemo(
+    () => pagedColumns.map((column): IColumn => {
+      if (column.id === 'employeeName') return column;
+      return {
+        ...column,
+        render(value) {
+          if (column.id === 'checkBox' || column.id === 'actions') return null;
+          if (column.id === 'netSalary' && typeof value === 'number') return formatPayrollCurrency(value);
+          if (column.id === 'payableDays' && typeof value === 'number') return value;
+          if (column.id === 'status' && value === 'LOCKED') return <Label color="success">Locked</Label>;
+          return <Skeleton width={44} sx={{ mx: 'auto' }} aria-hidden />;
+        },
+      };
+    }),
+    [pagedColumns]
+  );
   const registerSort = preview.registerCriteria?.sort;
   const sortedColumn = Object.keys(payrollRegisterSortFields).find(
     (column) => payrollRegisterSortFields[column] === registerSort
@@ -1338,6 +1366,7 @@ const RunPayroll = () => {
       ? 'Retry lookup'
       : 'Reconnect';
   const registerGuidance = (() => {
+    if (showingOpeningRows) return 'Showing saved staff rows. Loading payroll details…';
     if (preview.isLookingUp) return 'Loading saved payroll for this month…';
     if (preview.isCalculating) return 'Calculating payroll for this month…';
     if (previewError || !isDataForSelectedMonth) return null;
@@ -1553,10 +1582,11 @@ const RunPayroll = () => {
             component="section"
             aria-labelledby="payroll-register-title"
             aria-busy={
-              Boolean(reviewAction) ||
-              preview.refreshingStatus ||
-              preview.isPreparing ||
-              preview.fetching
+              !showingOpeningRows &&
+              (Boolean(reviewAction) ||
+                preview.refreshingStatus ||
+                preview.isPreparing ||
+                preview.fetching)
             }
             sx={{
               display: 'flex',
@@ -1725,7 +1755,7 @@ const RunPayroll = () => {
               </HrNotice>
             )}
             <Box sx={{ height: 2, flexShrink: 0 }}>
-              {preview.data &&
+              {(preview.data || showingOpeningRows) &&
               (reviewAction ||
                 preview.refreshingStatus ||
                 preview.isPreparing ||
@@ -1740,7 +1770,7 @@ const RunPayroll = () => {
             </Box>
             <CustomizableTable
               showColumns
-              showExport
+              showExport={!showingOpeningRows}
               showFullScreen
               exportScope="all"
               noDataText={
@@ -1762,7 +1792,12 @@ const RunPayroll = () => {
               tableId="payroll-monthly-workbench-table"
               tableTitle="Monthly payroll workbench"
               onExport={exportTable}
-              isLoading={(preview.isLookingUp || previewBusy || preview.fetching) && !preview.data}
+              isLoading={
+                (preview.isLookingUp || previewBusy || preview.fetching) &&
+                !preview.data &&
+                !showingOpeningRows
+              }
+              isPagination={!showingOpeningRows}
               serverSidePagination
               serverSideSearch
               totalCount={preview.data?.totalCount || 0}
@@ -1776,8 +1811,8 @@ const RunPayroll = () => {
                 setSelectedEmployeeIds([]);
                 preview.updateQuery({ page: page - 1, pageSize });
               }}
-              columns={pagedColumns}
-              data={tableData}
+              columns={showingOpeningRows ? openingColumns : pagedColumns}
+              data={showingOpeningRows ? openingTableRows : tableData}
               wrapperProps={{
                 sx: {
                   flex: 1,

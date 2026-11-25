@@ -136,6 +136,10 @@ Download retains the original stored bytes.
 The durable payroll preview client is a pending coordinated release and requires the additive backend schema.
 `src/screens/hr/payroll/run-payroll/use-payroll-preview-run.ts` owns month/run URL state, bounded polling, debounced search, and late-response protection.
 The Run Payroll register reads the selected month through `/payroll/run/register` and passes the same criteria to the generic export.
+On direct entry, the academic year, boards, and signed-in user's scope requests start alongside session initialization.
+When the first register page is missing from the session cache, the client requests `rowsOnly=true` before loading the full register and preview status.
+The first response shows saved staff names and available values while the full register loads.
+Review, export, and locking continue to use the full register and their existing permission and freshness checks.
 The register cache key uses the actual request criteria, not the discovered preview ID. When a current preview completes and the loaded page belongs to a different generation, the screen refreshes that page once before allowing generation-bound actions.
 `src/redux/runPayroll/payroll-approval-api.ts` reads workflow settings and submissions, reads section, role and eligible reviewer options, sends versioned commands and invalidates the payroll register after a successful mutation.
 Section review handoff reuses the selected generation and staff IDs.

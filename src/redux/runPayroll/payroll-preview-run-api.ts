@@ -54,6 +54,23 @@ export type PayrollRegisterCriteria = {
   issueCode?: string;
 };
 
+export type PayrollRegisterRow = {
+  employeeId: string;
+  employeeName: string;
+  employeeIdentifier: string;
+  payableDays: number | null;
+  netPay: number | null;
+  isLocked: boolean;
+};
+
+type PayrollRegisterArgs = PayrollRegisterCriteria & {
+  month: string;
+  academicYearId: string;
+  page: number;
+  pageSize: number;
+  search: string;
+};
+
 export const payrollPreviewRunApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     payrollPreviewLookup: builder.query<
@@ -75,12 +92,17 @@ export const payrollPreviewRunApi = employeeApi.injectEndpoints({
       query: ({ id, ...params }) => ({ url: `/payroll/run/previews/${id}/employees`, params }),
       providesTags: [employeeType.runPayroll],
     }),
-    payrollRegister: builder.query<
-      PayrollPreviewPage,
-      PayrollRegisterCriteria & { month: string; academicYearId: string; page: number; pageSize: number; search: string }
-    >({
+    payrollRegister: builder.query<PayrollPreviewPage, PayrollRegisterArgs>({
       query: (params) => ({ url: '/payroll/run/register', params }),
       providesTags: [employeeType.runPayroll],
+    }),
+    payrollRegisterRows: builder.query<{ registerRows?: PayrollRegisterRow[] }, PayrollRegisterArgs>({
+      query: (params) => ({
+        url: '/payroll/run/register',
+        params: { ...params, rowsOnly: true },
+        timeout: 6000,
+      }),
+      keepUnusedDataFor: 0,
     }),
   }),
 });
@@ -91,4 +113,7 @@ export const {
   usePayrollPreviewStatusQuery,
   usePayrollPreviewEmployeesQuery,
   usePayrollRegisterQuery,
+  usePayrollRegisterRowsQuery,
 } = payrollPreviewRunApi;
+
+export const usePayrollRegisterQueryState = payrollPreviewRunApi.endpoints.payrollRegister.useQueryState;

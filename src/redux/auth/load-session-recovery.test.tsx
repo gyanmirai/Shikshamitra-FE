@@ -78,6 +78,38 @@ const renderSession = (store = createStore()) => {
   const view = render(tree());
   return { ...view, store, redraw: () => view.rerender(tree()) };
 };
+
+it('starts the direct Run Payroll academic context while account verification is pending', async () => {
+  auth.session = staffSession();
+  auth.status = 'authenticated';
+  auth.segments = ['(auth-route)', 'hr', '(Payroll-Management)', 'payroll', 'run-payroll'];
+  let finishContext!: (response: Response) => void;
+  const context = new Promise<Response>((resolve) => { finishContext = resolve; });
+  const contextReads: string[] = [];
+  vi.stubGlobal('fetch', vi.fn(async (input: Request | string, init?: RequestInit) => {
+    const request = input instanceof Request ? input : new Request(input, init);
+    const { pathname } = new URL(request.url);
+    if (pathname.endsWith('/host/session-context')) return context;
+    if (pathname.endsWith('/permission-management/permissions')) return jsonResponse(effectivePermissions);
+
+    expect(request.headers.get('Authorization')).toBe('Bearer current-token');
+    contextReads.push(pathname);
+    return jsonResponse({ items: [], userId: 'user-1' });
+  }));
+
+  const { store } = renderSession();
+  try {
+    await waitFor(() => expect(contextReads).toEqual(expect.arrayContaining([
+      expect.stringMatching(/\/api\/app\/academic-year$/),
+      expect.stringMatching(/\/api\/app\/education-board$/),
+      expect.stringMatching(/\/api\/app\/user-scope\/user-scope-hierarchy$/),
+    ])));
+    expect(store.getState().auth.permissionsInitialized).toBe(false);
+  } finally {
+    finishContext(jsonResponse(schoolContext));
+  }
+  await waitFor(() => expect(store.getState().auth.permissionsInitialized).toBe(true));
+});
 const requestStage = (input: RequestInfo | URL) => {
   const url = input instanceof Request ? input.url : String(input);
   if (url.includes('/host/session-context')) return 'context';

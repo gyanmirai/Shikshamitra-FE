@@ -11,8 +11,10 @@ import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   usePayrollRegisterQuery,
+  usePayrollRegisterRowsQuery,
   usePayrollPreviewLookupQuery,
   usePayrollPreviewStatusQuery,
+  usePayrollRegisterQueryState,
   useStartPayrollPreviewMutation,
   usePayrollPreviewEmployeesQuery,
 } from 'src/redux/runPayroll/payroll-preview-run-api';
@@ -52,6 +54,15 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
     issueClass: params.get('registerIssue') || undefined,
     issueCode: params.get('registerIssueCode') || undefined,
   };
+  const registerArgs = { month, academicYearId, page, pageSize, search, ...registerCriteria };
+  const canReadRegister = Boolean(useRegister && month && academicYearId);
+  const cachedRegister = usePayrollRegisterQueryState(registerArgs, { skip: !canReadRegister });
+  const openWithRows = canReadRegister && page === 0 && !cachedRegister.currentData;
+  const openingRows = usePayrollRegisterRowsQuery(
+    { ...registerArgs, pageSize: Math.min(pageSize, 25) },
+    { skip: !openWithRows }
+  );
+  const waitingForOpeningRows = openWithRows && !openingRows.currentData && !openingRows.isError;
   const [searchInput, setSearchInput] = useState(search);
   const [display, setDisplay] = useState<{ key: string; data: PayrollPreviewPage } | null>(null);
   const [failure, setFailure] = useState<(PreviewFailure & { key: string }) | null>(null);
@@ -99,7 +110,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
   const lookupQuery = usePayrollPreviewLookupQuery(
     { month, academicYearId },
     {
-      skip: !month || !academicYearId || Boolean(urlRunId),
+      skip: !month || !academicYearId || Boolean(urlRunId) || waitingForOpeningRows,
       refetchOnFocus: true,
       refetchOnMountOrArgChange: true,
     }
@@ -112,7 +123,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
     month && academicYearId && !requestedRunId && lookupQuery.isFetching && !lookupFailed
   );
   const statusQuery = usePayrollPreviewStatusQuery(requestedRunId, {
-    skip: !requestedRunId || !academicYearId,
+    skip: !requestedRunId || !academicYearId || waitingForOpeningRows,
     pollingInterval,
     skipPollingIfUnfocused: true,
     refetchOnFocus: true,
@@ -148,11 +159,10 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
     : display?.key === key
           ? display.data.previewRunId || ''
           : '';
-  const registerArgs = { month, academicYearId, page, pageSize, search, ...registerCriteria };
   const registerKey = JSON.stringify(registerArgs);
   const registerQuery = usePayrollRegisterQuery(
     registerArgs,
-    { skip: !useRegister || !month || !academicYearId, refetchOnFocus: true, refetchOnMountOrArgChange: true }
+    { skip: !canReadRegister || waitingForOpeningRows, refetchOnFocus: true, refetchOnMountOrArgChange: true }
   );
   const employeesQuery = usePayrollPreviewEmployeesQuery(
     { id: completedId, page, pageSize, search },
@@ -198,7 +208,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
     if (reconciledRegister.current?.context === renderedContext &&
         reconciledRegister.current.signature === signature) return;
     reconciledRegister.current = { context: renderedContext, signature };
-    void refetchRegister();
+    refetchRegister();
   }, [needsReconciliation, refetchRegister, registerKey, renderedContext, requestedRunId]);
   const previousPage = display?.key === key ? display.data : undefined;
   const data = (useRegister ? pageQuery.isError : lookupFailed) ? undefined : currentPage || previousPage;
@@ -260,6 +270,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
     currentPage.isCurrent;
   const hasError = Boolean(error);
   const canRequestPreview =
+    !waitingForOpeningRows &&
     !lookupFailed &&
     !statusQuery.isError &&
     (matches || (!requestedRunId && !isLookingUp && lookupQuery.currentData?.currentRun === null));
@@ -406,6 +417,8 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
 
   return {
     data,
+    openingRows: !data && !queryError && openWithRows ? openingRows.currentData?.registerRows : undefined,
+    waitingForOpeningRows,
     tableProps: useRegister ? { isFilter: false, serverSideSort: true } : pageQuery.tableProps,
     registerCriteria,
     runId: completedId,
@@ -416,7 +429,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
     lookupFailed,
     readFailed: Boolean(queryError) && !isStarting,
     canRequestPreview,
-    fetching: pageQuery.isFetching,
+    fetching: waitingForOpeningRows || pageQuery.isFetching,
     error,
     status,
     isPreparing,
