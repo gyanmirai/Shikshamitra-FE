@@ -217,14 +217,17 @@ describe('PaymentTermTable', () => {
     expect(getPaymentTermDisplayStatus({ ...archived, status: 'Draft' })).toBe('Draft');
   });
 
-  it('only permits deletion of an unused first Draft version', () => {
+  it('permits deleting an unused Draft even when it is a revision', () => {
     const draft = createTerm();
-    const revisionDraft = createTerm({ currentVersionNumber: 2 });
+    const revisionDraft = createTerm({ currentVersionNumber: 2, hasPublishedVersion: true });
     const published = createTerm({ status: 'Active', hasDraft: false, hasPublishedVersion: true });
 
     expect(canDeletePaymentTerm(draft)).toBe(true);
-    expect(canDeletePaymentTerm(revisionDraft)).toBe(false);
+    expect(canDeletePaymentTerm(revisionDraft)).toBe(true);
+    expect(canDeletePaymentTerm({ ...revisionDraft, referencedStructureCount: 1 })).toBe(false);
+    expect(canDeletePaymentTerm({ ...revisionDraft, isDefault: true })).toBe(false);
     expect(canDeletePaymentTerm(published)).toBe(false);
+    expect(canDeletePaymentTerm({ ...draft, status: 'Archived' })).toBe(false);
     expect(getPaymentTermDisplayStatus(draft)).toBe('Draft');
     expect(getPaymentTermDisplayStatus(published)).toBe('Active');
     expect(getPaymentTermDisplayStatus(createTerm({ status: 'Archived' }))).toBe('Archived');

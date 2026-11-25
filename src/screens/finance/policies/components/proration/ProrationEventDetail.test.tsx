@@ -1,6 +1,7 @@
 import { it, expect, describe } from 'vitest';
+import { render, screen } from '@testing-library/react';
 
-import { hasActiveProration } from './ProrationEventDetail';
+import { ProrationEventDetail } from './ProrationEventDetail';
 
 import type { IProrationPolicyRule } from '../../types/finance-policy.types';
 
@@ -14,23 +15,26 @@ const rule = (overrides: Partial<IProrationPolicyRule> = {}): IProrationPolicyRu
   ...overrides,
 });
 
-describe('saved-policy proration counts', () => {
-  it('counts full-month proration for either enabled event', () => {
-    expect(hasActiveProration(rule({ applyOnAdmission: true }))).toBe(true);
-    expect(hasActiveProration(rule({ applyOnEarlyWithdrawal: true }))).toBe(true);
-  });
+describe('saved proration event settings', () => {
+  it.each([false, true])(
+    'shows the full-month choice for an enabled event (withdrawal: %s)',
+    (withdrawal) => {
+      render(
+        <ProrationEventDetail
+          rule={rule({ applyOnAdmission: true, applyOnEarlyWithdrawal: true })}
+          withdrawal={withdrawal}
+        />
+      );
 
-  it('excludes disabled and no-proration events', () => {
-    expect(hasActiveProration(rule())).toBe(false);
-    expect(
-      hasActiveProration(
-        rule({
-          applyOnAdmission: true,
-          applyOnEarlyWithdrawal: true,
-          ruleType: 'FullCharge',
-          earlyWithdrawalRuleType: 'FullCharge',
-        })
-      )
-    ).toBe(false);
+      expect(screen.getByText('Monthly proration')).toBeVisible();
+      expect(screen.getByText('Full month charge')).toBeVisible();
+    }
+  );
+
+  it('hides a disabled event’s calculation settings', () => {
+    render(<ProrationEventDetail rule={rule()} />);
+
+    expect(screen.getByText('Disabled')).toBeVisible();
+    expect(screen.queryByText('Full month charge')).not.toBeInTheDocument();
   });
 });

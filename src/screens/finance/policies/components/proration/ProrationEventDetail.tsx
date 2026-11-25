@@ -1,5 +1,5 @@
 import { Label } from 'src/components/label';
-import { Stack } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 
 import type { IProrationPolicyRule } from '../../types/finance-policy.types';
 
@@ -8,12 +8,6 @@ const eventModel = (rule: IProrationPolicyRule, withdrawal = false) =>
     ? (rule.earlyWithdrawalRuleType ??
       (rule.ruleType === 'MonthlyCutoff' ? 'FullMonthCharge' : rule.ruleType))
     : rule.ruleType;
-
-export const hasActiveProration = (rule: IProrationPolicyRule) =>
-  ((rule.applyOnAdmission ?? true) &&
-    ['Daily', 'MonthlyCutoff', 'FullMonthCharge'].includes(eventModel(rule))) ||
-  ((rule.applyOnEarlyWithdrawal ?? true) &&
-    ['Daily', 'MonthlyCutoff', 'FullMonthCharge'].includes(eventModel(rule, true)));
 
 export function ProrationEventDetail({
   rule,
@@ -27,16 +21,24 @@ export function ProrationEventDetail({
   const daily = model === 'Daily';
   const monthly = model === 'MonthlyCutoff';
   const fullMonth = model === 'FullMonthCharge';
+  const day = withdrawal ? rule.earlyWithdrawalCutoffDay : rule.cutoffDay;
+  const action = withdrawal ? rule.earlyWithdrawalBeforeCutoffAction : rule.afterCutoffAction;
+  const cutoffBehavior =
+    action === 'HalfCharge'
+      ? 'Half month charge'
+      : action === 'NoCharge'
+        ? withdrawal
+          ? 'Waive exit month'
+          : 'Charge from next month'
+        : undefined;
 
   const label = !enabled
     ? 'Disabled'
     : daily
-      ? 'Daily Proration'
-      : monthly
-        ? 'Monthly Proration'
-        : fullMonth
-          ? 'Full Month Charge'
-          : 'No Proration';
+      ? 'Daily proration'
+      : monthly || fullMonth
+        ? 'Monthly proration'
+        : 'No proration';
 
   return (
     <Stack spacing={0.5} alignItems="flex-start">
@@ -55,6 +57,14 @@ export function ProrationEventDetail({
       >
         {label}
       </Label>
+      {enabled && daily && <Typography variant="caption">Calendar days</Typography>}
+      {enabled && fullMonth && <Typography variant="caption">Full month charge</Typography>}
+      {enabled && monthly && cutoffBehavior && (
+        <Typography variant="caption">{cutoffBehavior}</Typography>
+      )}
+      {enabled && monthly && day != null && (
+        <Typography variant="caption">Monthly cut-off day {day}</Typography>
+      )}
     </Stack>
   );
 }

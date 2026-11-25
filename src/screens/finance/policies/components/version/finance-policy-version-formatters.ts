@@ -1,14 +1,23 @@
 import { fDate, fDateTime } from 'src/utils/format-time';
 import { fNumber, fPercent, fCurrency } from 'src/utils/format-number';
 
-import { CONCESSION_SCOPES } from '../concession/concessionPresentation';
+import {
+  CONCESSION_SCOPES,
+  CONCESSION_METHODS,
+  CONCESSION_VALUE_SOURCES,
+} from '../concession/concessionPresentation';
 
 export type VersionValueKind = 'boolean' | 'empty' | 'status' | 'text';
 
-export type FormattedVersionValue = {
-  kind: VersionValueKind;
-  text: string;
+type ProrationRuleSummary = {
+  name: string;
+  admission?: string;
+  earlyWithdrawal?: string;
 };
+
+export type FormattedVersionValue =
+  | { kind: VersionValueKind; text: string }
+  | { kind: 'proration-rules'; text: string; rules: ProrationRuleSummary[] };
 
 export type VersionValueContext = {
   labelsById?: Record<string, string>;
@@ -64,6 +73,51 @@ const FIELD_LABELS: Record<string, string> = {
   aftercutoffaction: 'After Cut-off Action',
   calculationbasis: 'Calculation Basis',
   monthlyrule: 'Monthly Rule',
+};
+
+const POLICY_FORM_LABELS: Record<string, Record<string, string>> = {
+  concession: {
+    percentagevalue: 'Concession percentage',
+    fixedamount: 'Concession amount',
+    maximumfixedamount: 'Maximum amount',
+    applyon: 'Apply concession on',
+    autocreaterefund: 'Automatically create refund requests on concession approval',
+  },
+  refund: {
+    feeheadscope: 'Refundable fee heads',
+    includepaidlatefee: 'Include paid late fees',
+    allowedpayoutmethods: 'Payment methods',
+  },
+  collection: {
+    allocationbasis: 'Prioritize automatic payments by',
+    receiptgrouping: 'Receipts for fees and charges',
+    enablelatefee: 'Enable late fee charges',
+    graceperioddays: 'Grace period',
+    latefeetype: 'Calculation method',
+    flatamount: 'Flat late fee amount',
+    latefeeincomecategoryid: 'Late fee income category',
+    escalationrules: 'Escalation slabs',
+  },
+  proration: { rules: 'Fee head configuration' },
+};
+
+const COLLECTION_OPTION_LABELS: Record<string, Record<string, string>> = {
+  allocationbasis: {
+    legacy: 'Existing selection order',
+    installment: 'Installment first (earliest due)',
+    feehead: 'Fee structure order',
+  },
+  receiptgrouping: {
+    combined: 'Single combined receipt',
+    separate: 'Separate fee and charge receipts',
+  },
+  latefeetype: {
+    flat: 'Flat fixed amount (₹)',
+    perday: 'Daily fixed amount (₹/day)',
+    perweek: 'Weekly fixed amount (₹/week)',
+    permonth: 'Monthly fixed amount (₹/month)',
+    slab: 'Escalation slab based',
+  },
 };
 
 const ENUM_LABELS: Record<string, Record<string, string>> = {
@@ -154,7 +208,7 @@ const ENUM_LABELS: Record<string, Record<string, string>> = {
   },
 };
 
-const normalizeFieldKey = (fieldName: string) =>
+export const normalizeFieldKey = (fieldName: string) =>
   fieldName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 
 const humanizeToken = (value: string) => {
@@ -196,11 +250,21 @@ export const deserializeVersionValue = (value: unknown): unknown => {
   return result;
 };
 
-export const formatFinancePolicyVersionField = (fieldName: string) => {
+export const formatFinancePolicyVersionField = (
+  fieldName: string,
+  context?: VersionValueContext
+) => {
   if (!fieldName) return '';
 
   const fieldKey = normalizeFieldKey(fieldName);
-  return FIELD_LABELS[fieldKey] || humanizeToken(fieldName);
+  const label = FIELD_LABELS[fieldKey] || humanizeToken(fieldName);
+  const formLabels = context?.policyType && POLICY_FORM_LABELS[context.policyType];
+  if (!formLabels) return label;
+  if (fieldKey === 'isdefault') return 'Set as default';
+  return (
+    formLabels[fieldKey] ||
+    label.replace(/\b[A-Z][a-z]+/g, (word, index) => (index === 0 ? word : word.toLowerCase()))
+  );
 };
 
 const findReferenceLabel = (value: unknown, context?: VersionValueContext) => {
@@ -215,6 +279,7 @@ const unavailableReferenceLabel = (fieldKey: string) => {
   if (fieldKey === 'applicablefeeheadids' || fieldKey === 'latefeeapplyonfeeheads')
     return 'Fee head name not recorded';
   if (fieldKey === 'expensecategoryid') return 'Expense category name not recorded';
+  if (fieldKey === 'latefeeincomecategoryid') return 'Income category name not recorded';
   if (fieldKey === 'defaultpayingbankaccountid') return 'Bank account name not recorded';
   return 'Name not recorded';
 };
@@ -226,6 +291,58 @@ const formatObject = (value: Record<string, unknown>, context?: VersionValueCont
       return `${formatFinancePolicyVersionField(key)}: ${formatted.text}`;
     })
     .join('; ');
+
+function formatProrationRules(
+  rules: Record<string, unknown>[],
+  context?: VersionValueContext
+): FormattedVersionValue {
+  const summaries = rules.map((rule) => ({
+    name:
+      (typeof rule.feeHeadName === 'string' && rule.feeHeadName.trim()) ||
+      findReferenceLabel(rule.feeHeadId, context) ||
+      'Fee head name not recorded',
+    admission: typeof rule.admission === 'string' ? rule.admission : undefined,
+    earlyWithdrawal: typeof rule.earlyWithdrawal === 'string' ? rule.earlyWithdrawal : undefined,
+  }));
+
+  return {
+    kind: 'proration-rules',
+    rules: summaries,
+    text: summaries
+      .map(({ name, admission, earlyWithdrawal }) =>
+        [
+          name,
+          admission && `Admission ${admission}`,
+          earlyWithdrawal && `Early withdrawal ${earlyWithdrawal}`,
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      )
+      .join('\n'),
+  };
+}
+
+function formatEscalationSlabs(slabs: Record<string, unknown>[]) {
+  return slabs
+    .map((slab) => {
+      const type = String(slab.type ?? '');
+      const number = Number(slab.value);
+      const amount =
+        slab.value == null || !Number.isFinite(number)
+          ? undefined
+          : type.toLowerCase() === 'percentage'
+            ? fPercent(number)
+            : fCurrency(number);
+      const days =
+        slab.fromDay == null
+          ? undefined
+          : slab.toDay == null
+            ? `Day ${slab.fromDay} onward`
+            : `Days ${slab.fromDay}–${slab.toDay}`;
+      return [days, humanizeToken(type), amount].filter(Boolean).join(' · ');
+    })
+    .join('\n');
+}
 
 export const formatFinancePolicyVersionValue = (
   fieldName: string,
@@ -241,6 +358,24 @@ export const formatFinancePolicyVersionValue = (
 
   if (typeof value === 'boolean') {
     return { kind: 'boolean', text: value ? 'Yes' : 'No' };
+  }
+
+  if (context?.policyType === 'concession') {
+    const options =
+      fieldKey === 'valuesource'
+        ? CONCESSION_VALUE_SOURCES
+        : fieldKey === 'calculationmethod'
+          ? CONCESSION_METHODS
+          : [];
+    const option = options.find(
+      ({ value: key }, index) =>
+        String(value).toLowerCase() === key.toLowerCase() || String(value) === String(index)
+    );
+    if (option) return { kind: 'text', text: option.label };
+  }
+  if (context?.policyType === 'collection') {
+    const label = COLLECTION_OPTION_LABELS[fieldKey]?.[String(value).toLowerCase()];
+    if (label) return { kind: 'text', text: label };
   }
 
   if ((fieldKey === 'effectivefrom' || fieldKey === 'effectiveto') && typeof value === 'string') {
@@ -264,6 +399,10 @@ export const formatFinancePolicyVersionValue = (
 
   if (Array.isArray(value)) {
     if (value.length === 0) return { kind: 'empty', text: 'None' };
+    if (context?.policyType === 'proration' && fieldKey === 'rules')
+      return formatProrationRules(value, context);
+    if (context?.policyType === 'collection' && fieldKey === 'escalationrules')
+      return { kind: 'text', text: formatEscalationSlabs(value) };
 
     const text = value
       .map((item) => {

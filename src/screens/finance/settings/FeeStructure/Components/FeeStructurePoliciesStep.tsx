@@ -1,21 +1,13 @@
-import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   StructureSettings,
   StructureCandidate,
 } from 'src/redux/finance/feeStructureWorkspace';
 
 import { useState } from 'react';
-import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
-import { alpha, useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionHeader } from 'src/components/form-section-card';
-import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
-import CheckCircleOutlineRounded from '@mui/icons-material/CheckCircleOutlineRounded';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Card,
@@ -28,12 +20,12 @@ import {
   FormHelperText,
 } from '@mui/material';
 
-import StructurePolicyPreview from './StructurePolicyPreview';
+import StructurePolicyPicker from './StructurePolicyPicker';
 import { structurePolicyError } from '../feeStructureModel';
-import { policyImpactRows, refundPolicyMatchesHeads } from '../policyImpactModel';
 
 import type { StructurePolicyFamily } from '../feeStructureModel';
-import type { PolicyImpactRow, ImpactPolicyData } from '../policyImpactModel';
+import type { PolicyImpactRow } from '../policyImpactModel';
+import type { StructurePolicyCatalog } from './StructurePolicyPicker';
 
 export interface StructurePolicyImpact {
   key: StructurePolicyFamily;
@@ -51,9 +43,9 @@ interface Props {
   impacts: StructurePolicyImpact[];
   catalogs: Record<
     Exclude<StructurePolicyFamily, 'proration'>,
-    { items: ImpactPolicyData[]; loading: boolean; error: boolean; retry: () => void }
+    StructurePolicyCatalog
   > & {
-    proration?: { items: ImpactPolicyData[]; loading: boolean; error: boolean; retry: () => void };
+    proration?: StructurePolicyCatalog;
   };
   writable: boolean;
   locked: boolean;
@@ -73,86 +65,10 @@ export default function FeeStructurePoliciesStep({
   onChange,
   onView,
 }: Props) {
-  const theme = useTheme();
-  const selectionTint = theme.vars
-    ? varAlpha(theme.vars.palette.success.mainChannel, 0.08)
-    : alpha(theme.palette.success.main, 0.08);
   const [choosing, setChoosing] = useState<StructurePolicyFamily>();
-  const [previewOption, setPreviewOption] = useState<StructureSettings['policies'][number]>();
-  const [choiceError, setChoiceError] = useState('');
   const selectedFamily = impacts.find((impact) => impact.key === choosing);
   const catalogFor = (family: StructurePolicyFamily) => catalogs[family] ?? {
     items: [], loading: false, error: false, retry: () => {},
-  };
-  const options = choosing
-    ? settings.policies
-        .filter((policy) => policy.family === choosing)
-        .map((policy) => {
-          const detail = catalogFor(choosing).items?.find(
-            (item) => item.id === policy.id && item.currentVersionId === policy.versionId
-          );
-          const refund =
-            choosing === 'refund' ? (policy.feeHeadScope ? policy : detail) : undefined;
-          const eligible = refundPolicyMatchesHeads(refund, candidate.feeHeads);
-          const refundHeadNames = refund?.applicableFeeHeadIds?.map(
-            (id) =>
-              policy.feeHeadNames?.[id] ??
-              settings.heads.find((head) => head.id === id)?.name ??
-              'Fee head name unavailable'
-          );
-          const rows = policyImpactRows(
-            choosing,
-            {
-              ...candidate,
-              [`${choosing}PolicyId`]: policy.id,
-              [`${choosing}PolicyVersionId`]: policy.versionId,
-            },
-            settings,
-            refund
-              ? {
-                  id: policy.id,
-                  currentVersionId: policy.versionId,
-                  feeHeadScope: refund.feeHeadScope ?? undefined,
-                  applicableFeeHeadIds: refund.applicableFeeHeadIds ?? [],
-                }
-              : detail
-          );
-          const matches = rows?.filter((row) =>
-            choosing === 'collection'
-              ? row.treatment === 'Late fee applies'
-              : row.treatment !== 'Excluded'
-          ).length;
-          const attachedVersionId = candidate[`${choosing}PolicyVersionId`];
-          const attachedPolicyId = candidate[`${choosing}PolicyId`];
-          const isSelected = Boolean(
-            (attachedVersionId &&
-              String(attachedVersionId).trim().toLowerCase() ===
-                String(policy.versionId).trim().toLowerCase()) ||
-            (!attachedVersionId &&
-              attachedPolicyId &&
-              String(attachedPolicyId).trim().toLowerCase() ===
-                String(policy.id).trim().toLowerCase())
-          );
-          return {
-            ...policy,
-            _id: policy.versionId,
-            selected: isSelected,
-            eligible,
-            policyFeeHeads:
-              refund?.feeHeadScope === 'AllFeeHeads'
-                ? ['All fee heads']
-                : refundHeadNames ?? [],
-            coverage: rows
-              ? choosing === 'collection'
-                ? `Late fees on ${matches} of ${rows.length} fee heads`
-                : `${matches} of ${rows.length} fee heads`
-              : 'Unavailable',
-          };
-        })
-    : [];
-  const closePicker = () => {
-    setChoiceError('');
-    setChoosing(undefined);
   };
   return (
     <>
@@ -242,17 +158,12 @@ export default function FeeStructurePoliciesStep({
                                   type="button"
                                   size="small"
                                   disabled={!allowed || busy}
-                                  sx={
-                                    version
-                                      ? undefined
-                                      : { border: 1, borderColor: 'divider', borderRadius: 1 }
-                                  }
                                   aria-label={`${version ? 'Change' : 'Select'} ${impact.label}`}
                                   onClick={() => setChoosing(key)}
                                 >
                                   <Iconify
                                     icon={version ? GlobalIcons.edit : GlobalIcons.addIcon}
-                                    width={version ? 16 : undefined}
+                                    width={16}
                                   />
                                 </IconButton>
                               </span>
@@ -584,8 +495,11 @@ export default function FeeStructurePoliciesStep({
         <StructurePolicyPreview
           option={previewOption}
           settings={settings}
-          onClose={() => setPreviewOption(undefined)}
-          onRefreshOptions={catalogFor(previewOption.family as StructurePolicyFamily).retry}
+          catalog={catalogFor(selectedFamily.key)}
+          canSelect={writable && !!settings.permissions[selectedFamily.key] && !busy}
+          busy={busy}
+          onChange={onChange}
+          onClose={() => setChoosing(undefined)}
         />
       )}
     </>

@@ -15,22 +15,20 @@ import FeeStructurePoliciesStep from './FeeStructurePoliciesStep';
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
 vi.mock('./StructurePolicyPreview', () => ({
-  default: ({ option, onClose }: any) => (
-    <button type="button" onClick={onClose}>
-      Close preview of {option.versionId}
-    </button>
+  default: ({ option }: { option: StructureSettings['policies'][number] }) => (
+    <h3>Configuration for {option.versionId}</h3>
   ),
 }));
 
 it.each(['collection', 'refund', 'proration'] as const)(
-  'identifies the attached %s version, blocks re-selection and updates the selected row after changing',
+  'previews the attached %s version in the picker and applies a replacement directly',
   async (family) => {
     const onChange = vi.fn();
     const policies = [1, 2].map((version) => ({
       id: `school-policy-${version}`,
       family,
       versionId: `version-${version}`,
-      name: 'School policy',
+      name: version === 1 ? 'School policy' : 'Revised policy',
       versionNumber: version,
       isCurrent: version === 2,
       ...(family === 'refund' && { feeHeadScope: 'AllFeeHeads' }),
@@ -83,32 +81,27 @@ it.each(['collection', 'refund', 'proration'] as const)(
       </Provider>
     );
     fireEvent.click(screen.getByRole('button', { name: `Change ${family} Policy` }));
-    expect(screen.queryByRole('button', { name: /^Close$/ })).not.toBeInTheDocument();
-    const selected = await screen.findByRole('row', { selected: true });
-    expect(within(selected).getByText('Version 1')).toBeVisible();
-    expect(within(selected).getByRole('img', { name: 'Selected' })).toBeVisible();
-    expect(within(selected).queryByRole('button')).not.toBeInTheDocument();
-    const search = screen.getByRole('textbox', { name: `Search ${family} policy choices` });
-    fireEvent.change(search, { target: { value: 'School' } });
-    if (family === 'collection') fireEvent.click(selected);
-    else fireEvent.keyDown(selected, { key: 'Enter' });
-    fireEvent.click(screen.getByText('Close preview of version-1'));
-    expect(search).toHaveValue('School');
-    expect(screen.getByRole('row', { selected: true })).toHaveTextContent('Version 1');
-    expect(onChange).not.toHaveBeenCalled();
-    const other = screen.getByRole('button', { name: 'Select School policy version 2' });
-    expect(other).toBeEnabled();
-    expect(other.closest('tr')).toHaveAttribute('aria-selected', 'false');
-    fireEvent.click(other);
-    expect(onChange).toHaveBeenCalledExactlyOnceWith(family, 'version-2');
-    fireEvent.click(screen.getByRole('button', { name: `Change ${family} Policy` }));
     const dialog = await screen.findByRole('dialog');
-    const nextSelected = within(dialog).getByRole('row', { selected: true });
-    expect(within(nextSelected).getByText('Version 2')).toBeVisible();
-    expect(within(nextSelected).getByRole('img', { name: 'Selected' })).toBeVisible();
-    expect(
-      within(dialog).getByRole('button', { name: 'Select School policy version 1' })
-    ).toBeEnabled();
+    const picker = within(dialog);
+    expect(picker.getByRole('heading', { name: 'Configuration for version-1' })).toBeVisible();
+    expect(picker.getByText('Selected')).toBeVisible();
+    expect(picker.queryByRole('button', { name: 'Select School policy version 1' })).toBeNull();
+
+    const search = picker.getByRole('textbox', { name: 'Search ' + family + ' policy choices' });
+    fireEvent.change(search, { target: { value: 'Revised' } });
+    expect(picker.getByRole('heading', { name: 'Configuration for version-2' })).toBeVisible();
+    fireEvent.change(search, { target: { value: '' } });
+    fireEvent.click(picker.getByRole('button', { name: 'Preview Revised policy version 2' }));
+    expect(picker.getByRole('heading', { name: 'Configuration for version-2' })).toBeVisible();
+    expect(picker.getByText('Selected')).toBeVisible();
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(onChange).not.toHaveBeenCalled();
+
+    fireEvent.click(picker.getByRole('button', { name: 'Select Revised policy version 2' }));
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(family, 'version-2');
+    fireEvent.click(screen.getByRole('button', { name: 'Change ' + family + ' Policy' }));
+    expect(await screen.findByRole('heading', { name: 'Configuration for version-2' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Select School policy version 1' })).toBeEnabled();
   }
 );
 
@@ -158,10 +151,9 @@ it('lists the policy fee heads and rejects a refund policy without a matching fe
     </Provider>
   );
   fireEvent.click(screen.getByRole('button', { name: 'Select Refund Policy' }));
-  expect(screen.getByRole('columnheader', { name: 'Fee Heads' })).toBeVisible();
   expect(screen.getByText('Transport Fee')).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Select Transport refund version 1' }));
-  expect(screen.getByRole('alert')).toHaveTextContent('Choose another refund policy');
+  expect(screen.getByRole('button', { name: 'Select Transport refund version 1' })).toBeDisabled();
+  expect(screen.getByText('No matching fee heads')).toBeVisible();
   expect(onChange).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Select Tuition refund version 1' }));
   expect(onChange).toHaveBeenCalledWith('refund', 'Tuition refund-v1');

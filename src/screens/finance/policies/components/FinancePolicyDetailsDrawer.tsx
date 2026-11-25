@@ -3,13 +3,13 @@
 import type { ReactNode } from 'react';
 
 import dayjs from 'dayjs';
+import { useId } from 'react';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
-import { DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
+import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import {
   Box,
   Grid,
@@ -30,12 +30,11 @@ import {
 
 import FinancePolicySkeleton from './FinancePolicySkeleton';
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
-import ProrationSimulationSection from './proration/ProrationSimulationSection';
-import { hasActiveProration, ProrationEventDetail } from './proration/ProrationEventDetail';
+import { ProrationEventDetail } from './proration/ProrationEventDetail';
+import CollectionPolicyDetails from './collection/CollectionPolicyDetails';
 import {
   CONCESSION_SCOPES,
   CONCESSION_METHODS,
-  policyDateTimeLabel,
   concessionValueLabel,
   concessionOptionLabel,
   CONCESSION_VALUE_SOURCES,
@@ -43,18 +42,20 @@ import {
 
 import type { IFinancePolicyRow, IProrationPolicyRule } from '../types/finance-policy.types';
 
-type FinancePolicyDetailsDrawerProps = {
-  open: boolean;
-  onClose: () => void;
+type FinancePolicyDetailsProps = {
   policy: IFinancePolicyRow | null;
   policyDetails: any; // Full policy object from API
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
-  aboveDialog?: boolean;
   errorMessage?: string;
   savedVersionDetails?: ReactNode;
-  showProrationSimulation?: boolean;
+  showVersionBadge?: boolean;
+};
+
+type FinancePolicyDetailsDrawerProps = FinancePolicyDetailsProps & {
+  open: boolean;
+  onClose: () => void;
 };
 
 const BooleanChip = ({ label, value }: { label: string; value?: boolean }) => (
@@ -76,26 +77,16 @@ const formatEnumValue = (val: string) => {
 export default function FinancePolicyDetailsDrawer({
   open,
   onClose,
-  policy,
-  policyDetails,
-  isLoading = false,
-  isError = false,
-  onRetry,
-  aboveDialog = false,
-  errorMessage = 'Unable to load this policy. Retry to view its saved configuration.',
-  savedVersionDetails,
-  showProrationSimulation = true,
+  ...details
 }: FinancePolicyDetailsDrawerProps) {
-  if (!policy) return null;
-
-  const type = policy.policyType;
+  const titleId = useId();
+  if (!details.policy) return null;
 
   return (
     <Drawer
       anchor="right"
       open={open}
       onClose={onClose}
-      sx={aboveDialog ? { zIndex: (theme) => theme.zIndex.modal + 1 } : undefined}
       slotProps={{
         backdrop: {
           sx: {
@@ -106,7 +97,7 @@ export default function FinancePolicyDetailsDrawer({
       PaperProps={{
         role: 'dialog',
         'aria-modal': true,
-        'aria-labelledby': 'policy-details-title',
+        'aria-labelledby': titleId,
         sx: {
           width: { xs: '100%', sm: 'min(760px, 92vw)' },
           maxWidth: '100%',
@@ -116,21 +107,60 @@ export default function FinancePolicyDetailsDrawer({
         },
       }}
     >
+      <FinancePolicyDetails {...details} onClose={onClose} drawerTitleId={titleId} />
+    </Drawer>
+  );
+}
+
+export function FinancePolicyDetails({
+  policy,
+  policyDetails,
+  isLoading = false,
+  isError = false,
+  onRetry,
+  errorMessage = 'Unable to load this policy. Retry to view its saved configuration.',
+  savedVersionDetails,
+  showVersionBadge,
+  onClose,
+  drawerTitleId,
+}: FinancePolicyDetailsProps & { onClose?: () => void; drawerTitleId?: string }) {
+  const titleId = useId();
+  if (!policy) return null;
+
+  const type = policy.policyType;
+  const useFormLayout = type === 'collection' || type === 'proration';
+  const displayVersion = showVersionBadge ?? type === 'payment';
+  const version =
+    type === 'concession'
+      ? policy.version || policyDetails?.version || 1
+      : (policyDetails?.version ?? policy.version);
+  const showVersionInGeneral =
+    !displayVersion && (type === 'concession' || useFormLayout) && policyDetails && version != null;
+  const descriptionField = (
+    <DetailField
+      fullWidth={type !== 'refund'}
+      label="Description"
+      value={policyDetails?.description || 'No description provided.'}
+    />
+  );
+
+  const Content = onClose ? Scrollbar : Box;
+  return (
       <Box
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          height: '100%',
+          height: onClose ? '100%' : undefined,
           bgcolor: 'background.paper',
         }}
       >
         <FinancePolicyDrawerHeader
-          helpText="Review this policy's saved settings, status, and version. This view is read-only."
+          helpText="Review this policy's saved settings."
           description={`${formatEnumValue(policy.policyType)} policy · ${
             policy.academicYearName || 'Current academic year'
           }`}
           title={policy.policyName}
-          titleId="policy-details-title"
+          titleId={drawerTitleId ?? titleId}
 
           onClose={onClose}
           badges={
@@ -146,13 +176,15 @@ export default function FinancePolicyDetailsDrawer({
               >
                 {policy.status}
               </Label>
-              {policy.version && <Label color="default">v{policy.version}</Label>}
+              {displayVersion && policy.version && (
+                <Label color="default">v{policy.version}</Label>
+              )}
             </>
           }
         />
 
         {/* Scrollable Content Body */}
-        <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+        <Content sx={{ flex: 1, minHeight: 0 }}>
           <Box sx={{ p: 2, pb: 2 }}>
             {isLoading ? (
               <FinancePolicySkeleton label="Loading policy configuration" />
@@ -175,62 +207,61 @@ export default function FinancePolicyDetailsDrawer({
               <>
                 {/* ── 1. General Information ── */}
                 <DetailSection
-                  helpText="Policy identity, academic year, default selection, effective dates, and description."
+                  helpText="The policy name, academic year, and general settings."
                   sx={{ mb: 2 }}
                   title="General Information"
 
                   icon={GlobalIcons.notebook}
                 >
-                  <Grid container spacing={1.5}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <DetailField label="Policy name" value={policy.policyName} />
-                    </Grid>
+                  <DetailGrid>
+                    <DetailField label="Policy name" value={policy.policyName} />
+                    {type === 'payment' && (
+                      <DetailField label="Policy code" value={policy.policyCode || '—'} />
+                    )}
+                    <DetailField label="Academic year" value={policy.academicYearName || '—'} />
+                    {type === 'refund' && descriptionField}
                     {type !== 'refund' && (
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailField label="Policy code" value={policy.policyCode || '—'} />
-                      </Grid>
-                    )}
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <DetailField label="Academic year" value={policy.academicYearName || '—'} />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Box sx={{ mb: 0.5 }}>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          display="block"
-                          sx={{ mb: 0.25 }}
-                        >
-                          Default selection
-                        </Typography>
-                        <Label color={policy.isDefault ? 'primary' : 'default'} sx={{ height: 22 }}>
-                          {policy.isDefault ? 'Default Policy' : 'Standard Policy'}
-                        </Label>
-                      </Box>
-                    </Grid>
-                    {policy.effectiveFrom && (
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailField
-                          label="Effective from"
-                          value={dayjs(policy.effectiveFrom).format('DD-MM-YYYY')}
-                        />
-                      </Grid>
-                    )}
-                    {policy.effectiveTo && (
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailField
-                          label="Effective to"
-                          value={dayjs(policy.effectiveTo).format('DD-MM-YYYY')}
-                        />
-                      </Grid>
-                    )}
-                    <Grid size={{ xs: 12 }}>
                       <DetailField
-                        label="Description"
-                        value={policyDetails?.description || 'No description provided.'}
+                        label="Default selection"
+                        value={
+                          <Label color={policy.isDefault ? 'primary' : 'default'} sx={{ height: 22 }}>
+                            {policy.isDefault ? 'Default Policy' : 'Standard Policy'}
+                          </Label>
+                        }
                       />
-                    </Grid>
-                  </Grid>
+                    )}
+                    {!useFormLayout && policy.effectiveFrom && (
+                      <DetailField
+                        label="Effective from"
+                        value={dayjs(policy.effectiveFrom).format('DD-MM-YYYY')}
+                      />
+                    )}
+                    {!useFormLayout && policy.effectiveTo && (
+                      <DetailField
+                        label="Effective to"
+                        value={dayjs(policy.effectiveTo).format('DD-MM-YYYY')}
+                      />
+                    )}
+                    {showVersionInGeneral ? (
+                      <Box sx={{ gridColumn: '1 / -1' }}>
+                        <DetailGrid>
+                          <DetailField
+                            label={
+                              type === 'concession' || policy.status === 'Active'
+                                ? 'Active version'
+                                : 'Version'
+                            }
+                            value={`Version ${version}`}
+                          />
+                          <Box sx={{ '@container (min-width: 440px)': { gridColumn: '2 / -1' } }}>
+                            {descriptionField}
+                          </Box>
+                        </DetailGrid>
+                      </Box>
+                    ) : (
+                      type !== 'refund' && descriptionField
+                    )}
+                  </DetailGrid>
                 </DetailSection>
 
                 {/* Loading Indicator */}
@@ -245,276 +276,7 @@ export default function FinancePolicyDetailsDrawer({
                 ) : (
                   <>
                     {/* ── Collection Policy Specific Details ── */}
-                    {type === 'collection' && (
-                      <>
-                        <DetailSection
-                          title="Automatic Payment Priority"
-                          icon={GlobalIcons.receiptIcon}
-                          sx={{ mb: 2 }}
-                          helpText="Applies when an amount is entered without selecting fees or charges. Selecting items limits the payment to those items. Ledger grouping does not change payment priority."
-                        >
-                          <DetailField
-                            label="Prioritize automatic payments by"
-                            value={
-                              policyDetails.allocationBasis === 'FeeHead'
-                                ? 'Fee structure order'
-                                : policyDetails.allocationBasis === 'Installment'
-                                  ? 'Installment first (earliest due)'
-                                  : 'Existing selection order'
-                            }
-                          />
-                        </DetailSection>
-                        <DetailSection
-                          title="Receipt Generation"
-                          icon={GlobalIcons.receiptIcon}
-                          sx={{ mb: 2 }}
-                          helpText="Applies when fees and charges are collected together. Late fees are included with fees. A fees-only or charges-only payment produces one receipt. Separate receipts for the same payment are verified together."
-                        >
-                          <DetailField
-                            label="Receipts for fees and charges"
-                            value={
-                              policyDetails.receiptGrouping === 'Combined'
-                                ? 'Single combined receipt'
-                                : 'Separate fee and charge receipts'
-                            }
-                          />
-                          <DetailField
-                            label="Reconciliation entries when verification is required"
-                            value={
-                              policyDetails.receiptGrouping === 'Combined'
-                                ? 'One entry'
-                                : 'Two entries'
-                            }
-                          />
-                        </DetailSection>
-                        <DetailSection
-                          helpText="Online collection settings and how collected payments are treated as income."
-                          sx={{ mb: 2 }}
-                          title="Collection & Gateway Settings"
-
-                          icon="solar:card-bold"
-                        >
-                          <Grid container spacing={1.5}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Grace period"
-                                value={`${policyDetails.gracePeriodDays ?? 0} calendar days`}
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <BooleanChip
-                                label="Online gateway collection"
-                                value={policyDetails.allowOnlineCollection}
-                              />
-                            </Grid>
-
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <BooleanChip
-                                label="Consider as operational income"
-                                value={policyDetails.considerAsIncome}
-                              />
-                            </Grid>
-                            {policyDetails.considerAsIncome &&
-                              policyDetails.lateFeeIncomeCategoryName && (
-                                <Grid size={{ xs: 12, sm: 6 }}>
-                                  <DetailField
-                                    label="Late fee income category"
-                                    value={policyDetails.lateFeeIncomeCategoryName}
-                                  />
-                                </Grid>
-                              )}
-                          </Grid>
-                        </DetailSection>
-
-                        <DetailSection
-                          helpText="When late fees start, how they accrue, and the limits or escalation slabs that apply."
-                          sx={{ mb: 2 }}
-                          title="Late Fee Accrual Rules"
-
-                          icon={GlobalIcons.receiptIcon}
-                        >
-                          <Grid container spacing={1.5}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <BooleanChip
-                                label="Late fee accrual"
-                                value={policyDetails.enableLateFee}
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Late fee formula type"
-                                value={formatEnumValue(policyDetails.lateFeeType || '—')}
-                              />
-                            </Grid>
-
-                            {policyDetails.lateFeeType === 'Flat' && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Flat late fee amount"
-                                  value={
-                                    policyDetails.flatAmount != null
-                                      ? `₹${policyDetails.flatAmount}`
-                                      : '—'
-                                  }
-                                />
-                              </Grid>
-                            )}
-
-                            {(policyDetails.lateFeeType === 'Percentage' ||
-                              policyDetails.lateFeeType === 'Compound') && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Interest rate"
-                                  value={
-                                    policyDetails.percentage != null
-                                      ? `${policyDetails.percentage}%`
-                                      : '—'
-                                  }
-                                  secondary={
-                                    policyDetails.percentageBase
-                                      ? `Base: ${formatEnumValue(policyDetails.percentageBase)}`
-                                      : undefined
-                                  }
-                                />
-                              </Grid>
-                            )}
-
-                            {policyDetails.lateFeeType === 'PerDay' && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Daily amount"
-                                  value={
-                                    policyDetails.amountPerDay != null
-                                      ? `₹${policyDetails.amountPerDay} / day`
-                                      : '—'
-                                  }
-                                />
-                              </Grid>
-                            )}
-                            {policyDetails.lateFeeType === 'PerWeek' && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Weekly amount"
-                                  value={
-                                    policyDetails.amountPerWeek != null
-                                      ? `₹${policyDetails.amountPerWeek} / week`
-                                      : '—'
-                                  }
-                                />
-                              </Grid>
-                            )}
-                            {policyDetails.lateFeeType === 'PerMonth' && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Monthly amount"
-                                  value={
-                                    policyDetails.amountPerMonth != null
-                                      ? `₹${policyDetails.amountPerMonth} / month`
-                                      : '—'
-                                  }
-                                />
-                              </Grid>
-                            )}
-
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Maximum late fee ceiling"
-                                value={
-                                  policyDetails.maximumLateFeeAmount != null
-                                    ? `₹${policyDetails.maximumLateFeeAmount}`
-                                    : 'No ceiling (Uncapped)'
-                                }
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Maximum charging days"
-                                value={
-                                  policyDetails.maximumChargingDays != null
-                                    ? `${policyDetails.maximumChargingDays} days cutoff`
-                                    : 'No cutoff days'
-                                }
-                              />
-                            </Grid>
-                          </Grid>
-
-                          {policyDetails.lateFeeType === 'Slab' && (
-                            <Box sx={{ mt: 2.5 }}>
-                              <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                                Configured Escalation Slabs
-                              </Typography>
-                              {(policyDetails.escalationRules ?? []).length === 0 ? (
-                                <Typography variant="caption" color="text.secondary">
-                                  No escalation slabs configured.
-                                </Typography>
-                              ) : (
-                                <TableContainer
-                                  component={Paper}
-                                  variant="outlined"
-                                  sx={{ borderRadius: 1.5, overflow: 'hidden' }}
-                                >
-                                  <Table size="small">
-                                    <TableHead>
-                                      <TableRow
-                                        sx={{
-                                          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
-                                        }}
-                                      >
-                                        <TableCell
-                                          sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
-                                        >
-                                          From Day
-                                        </TableCell>
-                                        <TableCell
-                                          sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
-                                        >
-                                          To Day
-                                        </TableCell>
-                                        <TableCell
-                                          sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
-                                        >
-                                          Calculation
-                                        </TableCell>
-                                        <TableCell
-                                          sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
-                                        >
-                                          Charge Value
-                                        </TableCell>
-                                      </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                      {(policyDetails.escalationRules as any[]).map((slab, i) => (
-                                        <TableRow key={i}>
-                                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                                            Day {slab.startDay}
-                                          </TableCell>
-                                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                                            {slab.endDay != null
-                                              ? `Day ${slab.endDay}`
-                                              : 'Open (∞)'}
-                                          </TableCell>
-                                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                                            {slab.calculationType}
-                                          </TableCell>
-                                          <TableCell
-                                            align="right"
-                                            sx={{ fontSize: '12px', fontWeight: 600, py: 0.75 }}
-                                          >
-                                            {slab.calculationType === 'Flat'
-                                              ? `₹${slab.value}`
-                                              : `${slab.value}%`}
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </TableContainer>
-                              )}
-                            </Box>
-                          )}
-                        </DetailSection>
-                      </>
-                    )}
+                    {type === 'collection' && <CollectionPolicyDetails policy={policyDetails} />}
 
                     {/* ── Payment Policy Details ── */}
                     {type === 'payment' && (
@@ -603,7 +365,7 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Application Behaviour & Recalculation Scope */}
                         <DetailSection
-                          helpText="Which fees and balances this concession can affect."
+                          helpText="The installments covered by this policy and how refunds are initiated for paid concessions."
                           sx={{ mb: 2 }}
                           title="Application Scope"
 
@@ -619,102 +381,17 @@ export default function FinancePolicyDetailsDrawer({
                                 )}
                               />
                             </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Fee head eligibility"
-                                value="Configured per Fee Structure"
-                                secondary="Attached when fee structure is assigned to students"
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12 }}>
-                              <Paper
-                                variant="outlined"
-                                sx={{
-                                  p: 1.5,
-                                  bgcolor: (theme) => alpha(theme.palette.success.main, 0.04),
-                                  borderColor: (theme) => alpha(theme.palette.success.main, 0.2),
-                                  borderRadius: 1,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 1.25,
-                                }}
-                              >
-                                <Iconify
-                                  icon="solar:shield-check-bold"
-                                  width={18}
-                                  height={18}
-                                  sx={{ color: 'success.main', flexShrink: 0 }}
-                                />
-                                <Typography variant="caption" color="text.secondary">
-                                  {policyDetails.applyOn === 'AllFees'
-                                    ? policyDetails.autoCreateRefund === false
-                                      ? 'Paid collections remain in history. Create linked refund requests manually for the paid concession after approval.'
-                                      : 'Paid collections remain in history. Paid concessions automatically create linked refund requests after approval.'
-                                    : 'Only eligible unpaid balances are recalculated. Paid collections remain in history.'}
-                                </Typography>
-                              </Paper>
-                            </Grid>
-                          </Grid>
-                        </DetailSection>
-
-                        {/* Downstream Utilization & Audit Metadata */}
-                        <DetailSection
-                          helpText="Where this policy is attached, its active version, and when it was created or changed."
-                          sx={{ mb: 2 }}
-                          title="Usage And History"
-
-                          icon="solar:history-bold-duotone"
-                        >
-                          <Grid container spacing={1.5}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Downstream attachment"
-                                value={
-                                  policy.isUsedInDownstream ? (
-                                    <Label color="info">Attached to Structures</Label>
-                                  ) : (
-                                    <Label color="default">Not Attached</Label>
-                                  )
-                                }
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Active version"
-                                value={`Version ${policy.version || policyDetails.version || 1}`}
-                              />
-                            </Grid>
-                            {(policy.updatedAt || policy.lastModificationTime) && (
+                            {policyDetails.applyOn === 'AllFees' && (
                               <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Last modified"
-                                  value={policyDateTimeLabel(
-                                    policy.updatedAt || policy.lastModificationTime
-                                  )}
-                                  secondary={
-                                    policy.updatedBy ? `By: ${policy.updatedBy}` : undefined
-                                  }
-                                />
-                              </Grid>
-                            )}
-                            {(policy.creationTime || (policyDetails as any)?.creationTime) && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Created date"
-                                  value={policyDateTimeLabel(
-                                    policy.creationTime || (policyDetails as any)?.creationTime
-                                  )}
-                                  secondary={
-                                    (policyDetails as any)?.creatorName ||
-                                    (policyDetails as any)?.createdBy
-                                      ? `By: ${(policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy}`
-                                      : undefined
-                                  }
+                                <BooleanChip
+                                  label="Automatically create refund requests on concession approval"
+                                  value={policyDetails.autoCreateRefund ?? true}
                                 />
                               </Grid>
                             )}
                           </Grid>
                         </DetailSection>
+
                       </>
                     )}
 
@@ -798,7 +475,7 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Calculation & Ceilings */}
                         <DetailSection
-                          helpText="How the refund amount is calculated before deductions and settlement caps are applied."
+                          helpText="The saved method for calculating the eligible refund amount."
                           sx={{ mb: 2 }}
                           title="Refund Calculation"
 
@@ -819,87 +496,45 @@ export default function FinancePolicyDetailsDrawer({
                                 }
                               />
                             </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Configured value / rate"
-                                value={
-                                  policyDetails.amountMode === 'Percentage'
-                                    ? `${policyDetails.percentageValue ?? 0}%`
-                                    : policyDetails.amountMode === 'FixedAmount'
-                                      ? `₹${policyDetails.fixedAmount ?? 0}`
-                                      : '100% Eligible Balance'
-                                }
-                              />
-                            </Grid>
+                            {policyDetails.amountMode === 'Percentage' && (
+                              <Grid size={{ xs: 12, sm: 6 }}>
+                                <DetailField
+                                  label="Configured refund percentage"
+                                  value={
+                                    policyDetails.percentageValue != null
+                                      ? `${policyDetails.percentageValue}%`
+                                      : '—'
+                                  }
+                                />
+                              </Grid>
+                            )}
+                            {policyDetails.amountMode === 'FixedAmount' && (
+                              <Grid size={{ xs: 12, sm: 6 }}>
+                                <DetailField
+                                  label="Configured refund amount"
+                                  value={
+                                    policyDetails.fixedAmount != null
+                                      ? formatNumber(policyDetails.fixedAmount, 'INR')
+                                      : '—'
+                                  }
+                                />
+                              </Grid>
+                            )}
                           </Grid>
                         </DetailSection>
 
-                        {/* Deductions & Payout Methods */}
+                        {/* Payout Methods */}
                         <DetailSection
-                          helpText="Administrative deductions, processing target, and permitted payout channels."
+                          helpText="The permitted payout channels, expense category, and default paying bank account."
                           sx={{ mb: 2 }}
                           title="Deductions & Allowed Disbursement"
 
                           icon="solar:tag-price-bold-duotone"
                         >
-                          <Grid container spacing={1.5}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Administrative deduction rule"
-                                value={
-                                  policyDetails.deductionType === 'None' ||
-                                  !policyDetails.deductionType
-                                    ? 'No Deductions (0%)'
-                                    : policyDetails.deductionType === 'Percentage'
-                                      ? `${policyDetails.deductionValue}% Deduction`
-                                      : `₹${policyDetails.deductionValue} Fixed Deduction`
-                                }
-                              />
-                            </Grid>
-                            {policyDetails.deductionType &&
-                              policyDetails.deductionType !== 'None' && (
-                                <>
-                                  <Grid size={{ xs: 12, sm: 6 }}>
-                                    <DetailField
-                                      label="Maximum deduction ceiling"
-                                      value={
-                                        policyDetails.maximumDeduction != null
-                                          ? `₹${policyDetails.maximumDeduction.toLocaleString('en-IN')}`
-                                          : 'No deduction ceiling'
-                                      }
-                                    />
-                                  </Grid>
-                                  <Grid size={{ xs: 12 }}>
-                                    <DetailField
-                                      label="Deduction justification"
-                                      value={
-                                        policyDetails.deductionExplanation ||
-                                        'Standard administrative fee'
-                                      }
-                                    />
-                                  </Grid>
-                                </>
-                              )}
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Operational processing SLA"
-                                value={
-                                  policyDetails.processingTargetDays != null
-                                    ? `${policyDetails.processingTargetDays} days turnaround`
-                                    : '—'
-                                }
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12 }}>
-                              <Box sx={{ mb: 0.5 }}>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  display="block"
-                                  sx={{ mb: 0.5 }}
-                                >
-                                  Permitted payout channels
-                                </Typography>
+                          <DetailGrid desktopColumns={2} desktopMinWidth={680}>
+                            <DetailField
+                              label="Permitted payout channels"
+                              value={
                                 <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                                   {(policyDetails.allowedPayoutMethods ?? ['Cash']).map(
                                     (method: string, i: number) => (
@@ -914,146 +549,23 @@ export default function FinancePolicyDetailsDrawer({
                                     )
                                   )}
                                 </Stack>
-                              </Box>
-                            </Grid>
-                            {(policyDetails.expenseCategoryId ||
-                              policyDetails.defaultPayingBankAccountId) && (
-                              <Grid size={{ xs: 12 }}>
-                                <Grid container spacing={1.5}>
-                                  {policyDetails.expenseCategoryId && (
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                      <DetailField
-                                        label="Expense category"
-                                        value={
-                                          policyDetails.expenseCategoryName || 'Name unavailable'
-                                        }
-                                      />
-                                    </Grid>
-                                  )}
-                                  {policyDetails.defaultPayingBankAccountId && (
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                      <DetailField
-                                        label="Default paying bank account"
-                                        value={
-                                          policyDetails.defaultPayingBankAccountName ||
-                                          'Name unavailable'
-                                        }
-                                      />
-                                    </Grid>
-                                  )}
-                                </Grid>
-                              </Grid>
-                            )}
-                          </Grid>
-                        </DetailSection>
-
-                        {/* Guarantees & Settlement Callout */}
-                        <DetailSection
-                          helpText="Saved refund limits per request and student academic year. The eligible settled balance, after prior refunds and reservations, is always the upper limit."
-                          sx={{ mb: 2 }}
-                          title="Settlement Guarantees & Constraints"
-
-                          icon="solar:shield-check-bold"
-                        >
-                          {policyDetails.maximumPerRequest != null ||
-                          policyDetails.maximumPerStudentYear != null ? (
-                            <Grid container spacing={1.5}>
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Maximum cap per single request"
-                                  value={
-                                    policyDetails.maximumPerRequest != null
-                                      ? formatNumber(policyDetails.maximumPerRequest, 'INR')
-                                      : 'No per-request cap'
-                                  }
-                                />
-                              </Grid>
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Maximum cap per student / year"
-                                  value={
-                                    policyDetails.maximumPerStudentYear != null
-                                      ? formatNumber(policyDetails.maximumPerStudentYear, 'INR')
-                                      : 'No cumulative student cap'
-                                  }
-                                  secondary="Enforced across all processed and reserved refunds"
-                                />
-                              </Grid>
-                            </Grid>
-                          ) : (
-                            <Typography variant="body2" color="text.secondary">
-                              No settlement guarantees or constraints configured.
-                            </Typography>
-                          )}
-                        </DetailSection>
-
-                        {/* Audit Metadata */}
-                        <DetailSection
-                          helpText="The current policy version, downstream attachment, and recorded changes."
-                          sx={{ mb: 2 }}
-                          title="Version & Audit Trail"
-
-                          icon="solar:history-bold-duotone"
-                        >
-                          <Grid container spacing={1.5}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                              }
+                            />
+                            {policyDetails.expenseCategoryId && (
                               <DetailField
-                                label="Active policy version"
-                                value={`Version ${policy.version || policyDetails.version || 1}`}
+                                label="Expense category"
+                                value={policyDetails.expenseCategoryName || 'Name unavailable'}
                               />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            )}
+                            {policyDetails.defaultPayingBankAccountId && (
                               <DetailField
-                                label="Downstream fee structure attachment"
+                                label="Default paying bank account"
                                 value={
-                                  policy.isUsedInDownstream || policyDetails.isUsedInDownstream ? (
-                                    <Label color="info" sx={{ height: 22 }}>
-                                      Attached to Fee Structures
-                                    </Label>
-                                  ) : (
-                                    <Label color="default" sx={{ height: 22 }}>
-                                      Not Attached
-                                    </Label>
-                                  )
+                                  policyDetails.defaultPayingBankAccountName || 'Name unavailable'
                                 }
                               />
-                            </Grid>
-                            {(policy.updatedAt ||
-                              policy.lastModificationTime ||
-                              (policyDetails as any)?.lastModificationTime) && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Last modified"
-                                  value={dayjs(
-                                    policy.updatedAt ||
-                                      policy.lastModificationTime ||
-                                      (policyDetails as any)?.lastModificationTime
-                                  ).format('DD-MM-YYYY hh:mm A')}
-                                  secondary={
-                                    policy.updatedBy || (policyDetails as any)?.lastModifierName
-                                      ? `By: ${policy.updatedBy || (policyDetails as any)?.lastModifierName}`
-                                      : undefined
-                                  }
-                                />
-                              </Grid>
                             )}
-                            {(policy.creationTime || (policyDetails as any)?.creationTime) && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Created date"
-                                  value={dayjs(
-                                    policy.creationTime || (policyDetails as any)?.creationTime
-                                  ).format('DD-MM-YYYY hh:mm A')}
-                                  secondary={
-                                    (policyDetails as any)?.creatorName ||
-                                    (policyDetails as any)?.createdBy
-                                      ? `By: ${(policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy}`
-                                      : undefined
-                                  }
-                                />
-                              </Grid>
-                            )}
-                          </Grid>
+                          </DetailGrid>
                         </DetailSection>
                       </>
                     )}
@@ -1061,85 +573,10 @@ export default function FinancePolicyDetailsDrawer({
                     {/* ── Proration Policy Details (Enhanced) ── */}
                     {type === 'proration' && (
                       <>
-                        {/* Strategy & Overview */}
-                        <DetailSection
-                          helpText="The default and attachment settings, plus the number of fee heads with proration rules."
-                          sx={{ mb: 2 }}
-                          title="Proration Strategy & Scope"
-
-                          icon="solar:calculator-bold-duotone"
-                        >
-                          <Grid container spacing={1.5}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Default academic policy"
-                                value={
-                                  <Label
-                                    color={
-                                      policyDetails.isDefault || policy.isDefault
-                                        ? 'primary'
-                                        : 'default'
-                                    }
-                                    sx={{ height: 22 }}
-                                  >
-                                    {policyDetails.isDefault || policy.isDefault
-                                      ? 'Default Policy'
-                                      : 'Standard Policy'}
-                                  </Label>
-                                }
-                                secondary="Assigned to new fee structures by default"
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Downstream attachment"
-                                value={
-                                  policy.isUsedInDownstream || policyDetails.isUsedInDownstream ? (
-                                    <Label color="info" sx={{ height: 22 }}>
-                                      Attached to Fee Structures
-                                    </Label>
-                                  ) : (
-                                    <Label color="default" sx={{ height: 22 }}>
-                                      Not Attached
-                                    </Label>
-                                  )
-                                }
-                                secondary={
-                                  policy.isUsedInDownstream
-                                    ? 'Active in student demand calculations'
-                                    : undefined
-                                }
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Total fee heads"
-                                value={`${(policyDetails.feeHeadRules ?? []).length} fee heads`}
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Active proration rules"
-                                value={
-                                  <Label color="primary" sx={{ height: 22 }}>
-                                    {
-                                      (
-                                        (policyDetails.feeHeadRules ?? []) as IProrationPolicyRule[]
-                                      ).filter(hasActiveProration).length
-                                    }{' '}
-                                    Prorated Fee Head(s)
-                                  </Label>
-                                }
-                              />
-                            </Grid>
-                          </Grid>
-                        </DetailSection>
-
                         {/* Fee Head Rules Table */}
                         <DetailSection
                           helpText="Admission and early withdrawal proration rules for each fee head."
-                          sx={{ mb: 2 }}
-                          title="Fee Head Proration Rules"
+                          title="Fee Head Configuration"
 
                           icon="solar:widget-bold-duotone"
                         >
@@ -1163,7 +600,11 @@ export default function FinancePolicyDetailsDrawer({
                               variant="outlined"
                               sx={{ borderRadius: 1.5 }}
                             >
-                              <Table size="small" sx={{ minWidth: 620 }}>
+                              <Table
+                                size="small"
+                                aria-label="Fee head configuration"
+                                sx={{ minWidth: 440 }}
+                              >
                                 <TableHead>
                                   <TableRow>
                                     {['Fee Head', 'Admission', 'Early Withdrawal'].map((label) => (
@@ -1177,8 +618,8 @@ export default function FinancePolicyDetailsDrawer({
                                   {(policyDetails.feeHeadRules as IProrationPolicyRule[]).map(
                                     (rule) => (
                                       <TableRow key={rule.feeHeadId}>
-                                        <TableCell sx={{ fontWeight: 600 }}>
-                                          {rule.feeHeadName || rule.feeHeadId}
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 600 }}>
+                                          {rule.feeHeadName || 'Fee head name unavailable'}
                                         </TableCell>
                                         <TableCell>
                                           <ProrationEventDetail rule={rule} />
@@ -1194,67 +635,6 @@ export default function FinancePolicyDetailsDrawer({
                             </TableContainer>
                           )}
                         </DetailSection>
-
-                        {showProrationSimulation && policyDetails.feeHeadRules?.length > 0 && (
-                          <ProrationSimulationSection
-                            key={JSON.stringify([policy.id, policyDetails.version])}
-                            policyId={policy.id}
-                            rules={policyDetails.feeHeadRules}
-                          />
-                        )}
-
-                        {/* Audit Metadata */}
-                        <DetailSection
-                          helpText="The current policy version and recorded creation or modification details."
-                          sx={{ mb: 2 }}
-                          title="Version & Audit Trail"
-
-                          icon="solar:history-bold-duotone"
-                        >
-                          <Grid container spacing={1.5}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Active policy version"
-                                value={`Version ${policy.version || policyDetails.version || 1}`}
-                              />
-                            </Grid>
-                            {(policy.updatedAt ||
-                              policy.lastModificationTime ||
-                              (policyDetails as any)?.lastModificationTime) && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Last modified"
-                                  value={dayjs(
-                                    policy.updatedAt ||
-                                      policy.lastModificationTime ||
-                                      (policyDetails as any)?.lastModificationTime
-                                  ).format('DD-MM-YYYY hh:mm A')}
-                                  secondary={
-                                    policy.updatedBy || (policyDetails as any)?.lastModifierName
-                                      ? `By: ${policy.updatedBy || (policyDetails as any)?.lastModifierName}`
-                                      : undefined
-                                  }
-                                />
-                              </Grid>
-                            )}
-                            {(policy.creationTime || (policyDetails as any)?.creationTime) && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Created date"
-                                  value={dayjs(
-                                    policy.creationTime || (policyDetails as any)?.creationTime
-                                  ).format('DD-MM-YYYY hh:mm A')}
-                                  secondary={
-                                    (policyDetails as any)?.creatorName ||
-                                    (policyDetails as any)?.createdBy
-                                      ? `By: ${(policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy}`
-                                      : undefined
-                                  }
-                                />
-                              </Grid>
-                            )}
-                          </Grid>
-                        </DetailSection>
                       </>
                     )}
                   </>
@@ -1262,8 +642,7 @@ export default function FinancePolicyDetailsDrawer({
               </>
             )}
           </Box>
-        </Scrollbar>
+        </Content>
       </Box>
-    </Drawer>
   );
 }

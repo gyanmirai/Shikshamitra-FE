@@ -137,9 +137,8 @@ version error; **Refresh and select current versions** reloads the selection wit
 the target name. Retries retain the existing idempotency behavior.
 
 Refund Policy details anchor header/section help to the visible info icon while retaining
-the keyboard/touch target and panel collision handling. Settlement Guarantees & Constraints
-shows saved per-request and student/year caps, or **No settlement guarantees or constraints
-configured.** when both are absent.
+the keyboard/touch target and panel collision handling. The drawer shows saved eligibility,
+refund calculation, payout channels, expense category, and default paying bank account.
 
 Demand Draft reconciliation displays **DD Issue Date** and **Payment Date** independently.
 Missing issue dates remain unavailable. See the [backend date contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#demand-draft-collection-dates)
@@ -712,6 +711,7 @@ The form labels the demand date as **Invoice Date** and the coverage range as **
 7. The list separates current and archived records and presents one user-facing status: `Draft`, `Active`, or `Archived`. Internal version lifecycle states remain available in version history and assignment checks.
 8. Activation is a one-way Draft-to-Published version action in the current API and is exposed through row actions, not a Status-column toggle. Archive and restore are separate master-record transitions; archiving requires a reason and is blocked while fee structures reference the term. Restoring preserves the version state and returns the term to Current as Draft or Active.
 9. Version History opens in the details drawer as a simple audit table showing version/status, action, creation date and user, and change reason. Its paged data is loaded only when the history tab opens.
+10. A user with Delete permission can confirm removal of an unused Draft, including a draft revision. The list refreshes after the API confirms deletion. Fee structure usage and the board default disable the action, and the confirmation displays any server validation that blocks deletion.
 10. Collection shows an installment only when its server-calculated bill generation date has arrived. If a structure is assigned late, all dates already reached are available immediately.
 
 The four bill-generation rules are: installment start date, X days before due date, due date, and a specific per-installment date. The frontend previews calculated dates, but the backend remains authoritative.
@@ -748,6 +748,9 @@ status still determines whether submission saves a draft or activates the policy
 Saving locks the form, close, and footer actions with a visible progress overlay;
 unsaved changes retain the discard confirmation. The configuration form omits the
 auxiliary live summary, illustrative payment simulation, and validation checklist.
+The Collection Policy View groups name, year, default selection, version, and description in
+General Information. It shows the saved payment priority and receipt choice, and displays
+late-fee settings and their income category when late fee charges are enabled.
 
 ### Proration Policy form
 
@@ -756,9 +759,11 @@ tooltips and fixed Cancel/Submit footer as Concession Policy. Name/status and
 description/default controls share rows on desktop and stack on mobile. The form
 body owns scrolling, with no summary or validation-checklist sidebar and no submit
 shortcut. Fee-head admission and early-withdrawal settings remain independent;
-presets and inline validation are retained. The permission-gated simulator remains
-available for saved policies and uses the last saved version. Loading and saving
-lock the form and close actions; unsaved changes retain the discard confirmation.
+presets and inline validation are retained. Loading and saving lock the form and
+close actions; unsaved changes retain the discard confirmation. The separate View
+drawer shows the version in General Information and lists the saved admission and early
+withdrawal settings for each fee head in Fee Head Configuration. Use the row's Edit action to
+change them.
 
 Fee Head Configuration bounds its fee-head rows in a dedicated internal scroll area. Its title, search, admission presets, and section errors stay outside that list, while Cancel/Submit remain in the drawer footer. Scrolling does not change expanded rows or entered rules. The drawer body still provides access to General Information on short screens; list scrolling does not move that body or the document.
 
@@ -791,6 +796,9 @@ unchanged settings. Selecting another version closes the saved-details card. Bot
 their info controls independent of expansion. Concession Type history uses the same Changes
 card; its field-change-only audit response does not provide a complete saved snapshot.
 
+Concession, Refund, Collection and Proration policy histories show the settings available in
+their forms. Conditional fields follow the settings recorded on each side of a comparison.
+
 ### Combined Finance configuration tables
 
 Fee Category, Charge Category, Concession Type, Payment Terms, Collection Policy, Concession Policy, Refund Policy and Proration Policy show all lifecycle statuses in one table without Current/Archived tabs.
@@ -805,7 +813,7 @@ missing or invalid dates display `—`, and amounts use the shared Indian curren
 Create/edit, details, audit and version drawers share a header and stable footer. The form body
 owns scrolling, stacks fields on narrow screens and locks interaction while saving. Section
 guidance uses accessible info tooltips. The form presents status once in the Status field;
-read-only drawer status, version and Read Only metadata sit in a separate right-aligned header group.
+the read-only drawer shows status in the header and the active version in General Information.
 Policy name and Status share a row; Description and the concise Set as default toggle
 share the next row on wider screens. The create/edit form has a neutral Submit action, no
 submit shortcut, and no policy-summary, balance-preview or completion-checklist sidebar.

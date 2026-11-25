@@ -42,6 +42,37 @@ const displayFieldValue = (fieldName: string, value?: string | null) => {
   return value;
 };
 
+function readHistoryText(value?: string | null) {
+  const text = value?.trim();
+  if (!text || text.toLowerCase() === 'null') return null;
+  if (text.startsWith('"') && text.endsWith('"')) {
+    try {
+      return (JSON.parse(text) as string).trim() || null;
+    } catch {
+      return text;
+    }
+  }
+  return text;
+}
+
+function readChangeReason(value?: string | null) {
+  const text = readHistoryText(value);
+  return text?.toLowerCase() === 'no reason recorded' ? null : text;
+}
+
+function renderConcessionHistoryValue(field: string, value: unknown) {
+  if (!/^Document \d+$/.test(field) || typeof value !== 'string') return undefined;
+
+  const name = readHistoryText(value)?.split(' · Max file size:', 1)[0].trim();
+  if (!name) return undefined;
+
+  return (
+    <Typography variant="body2" sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
+      {name}
+    </Typography>
+  );
+}
+
 export default function ConcessionTypeVersionHistoryDrawer({
   open,
   concessionTypeId,
@@ -75,6 +106,12 @@ export default function ConcessionTypeVersionHistoryDrawer({
           date: version.changeTime,
           createdAt: version.changeTime,
           action: version.changeAction,
+          changeReason:
+            readChangeReason(version.changeReason) ??
+            readChangeReason(
+              version.changedFields.find((field) => field.fieldName === 'DeactivationReason')
+                ?.newValue
+            ),
           status: formatAction(version.changeAction),
           summary: formatAction(version.changeAction),
           changedFields: version.changedFields.map((field) => ({
@@ -167,7 +204,12 @@ export default function ConcessionTypeVersionHistoryDrawer({
             </Box>
             <Scrollbar sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
               <Stack spacing={1} sx={{ pr: { xs: 0.5, sm: 1 }, pb: 1, minWidth: 0 }}>
-                <VersionDiffTable selectedVersion={selectedVersion} collapsibleChanges />
+                <VersionDiffTable
+                  selectedVersion={selectedVersion}
+                  collapsibleChanges
+                  showChangeReason={Boolean(selectedVersion.changeReason)}
+                  renderFieldValue={renderConcessionHistoryValue}
+                />
                 {selectedVersion.changedFields.length === 0 && (
                   <Alert severity="info">
                     {selectedVersion.action === 'created'

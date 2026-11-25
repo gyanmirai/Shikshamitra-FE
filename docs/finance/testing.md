@@ -255,9 +255,10 @@ Copy, refund details and DD dates: run `copyFeeStructure.test.ts`,
 fixtures are `e2e/fixtures/fee-structure/copy.html?copyPolicy=current|stale|unavailable|race`,
 `e2e/fixtures/refund-policy-details` (`?empty=1`, `?dark=1`), and
 `e2e/fixtures/dd-reconciliation`. Check current/stale selection, named version-race recovery,
-zero copies on failure, one copy on retry, unchanged source snapshots, populated/empty
-settlement limits, keyboard/Escape/touch help, panel bounds, distinct DD dates and missing
-values. Fixtures use synthetic data; persisted backend tests separately establish integrity.
+zero copies on failure, one copy on retry, unchanged source snapshots, saved refund
+calculation and payout settings with legacy header and settlement metadata omitted,
+keyboard/Escape/touch help, panel bounds, distinct DD dates and missing values.
+Fixtures use synthetic data; persisted backend tests separately establish integrity.
 
 Concession view decisions: run `ConcessionItemCard.test.tsx`, `StucentConcessionCard.test.tsx` and
 `concessionDecisionEligibility.test.ts`. Cover icon-only actions, read-only request details and
@@ -512,8 +513,10 @@ Proration form validation and event interactions are covered by
 They check independent event controls, admission preset scope, disabled-event validation,
 numeric boundaries, shared rounding, payload compatibility, checklist consistency,
 collapsed error rows, and invalid-submit focus.
-Use `e2e/fixtures/proration-policy` in the in-app browser for desktop/mobile create and edit
-checks. Its create/update API is an in-memory fixture; it never writes financial records.
+Use `e2e/fixtures/proration-policy` in the in-app browser for desktop/mobile create, edit,
+and read-only View checks. Confirm the View drawer shows the fee-head rules and header
+dismissal without editing, simulation, or version/audit controls. Its create/update API
+is an in-memory fixture that leaves financial records untouched.
 
 Run `node node_modules/@playwright/test/cli.js test --config e2e/finance/configuration-section-scroll.config.ts` for Fee Head Configuration and Payment Term Installment Schedule scrolling regressions. Verify short and long lists, first/last-item access, stable section controls and footer positions during internal scrolling, retained expansion, and new-installment focus. The fixtures render production drawers with synthetic responses; these checks do not establish backend persistence or authorization.
 

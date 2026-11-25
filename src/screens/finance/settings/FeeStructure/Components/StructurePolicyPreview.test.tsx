@@ -69,14 +69,14 @@ it('opens saved proration details from Fee Structure without editable preview co
           permissions: { prorationRead: true },
         } as unknown as StructureSettings
       }
-      onClose={vi.fn()}
-      onRefreshOptions={vi.fn()}
+      onVersionChanged={vi.fn()}
     />
   );
-  expect(screen.getByRole('heading', { name: 'Fee Head Proration Rules' })).toBeVisible();
-  expect(screen.getByRole('cell', { name: 'Tuition Fee' })).toBeVisible();
-  expect(screen.getByText('Monthly Proration')).toBeVisible();
-  expect(screen.getByRole('heading', { name: 'Version & Audit Trail' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Fee Head Configuration' })).toBeVisible();
+  expect(screen.getByRole('rowheader', { name: 'Tuition Fee' })).toBeVisible();
+  expect(screen.getByText('Monthly proration')).toBeVisible();
+  expect(screen.getByText('v1')).toBeVisible();
+  expect(screen.queryByRole('heading', { name: 'Version & Audit Trail' })).toBeNull();
   expect(screen.queryByRole('heading', { name: 'Proration Preview' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Calculate proration preview' })).toBeNull();
   expect(screen.queryByRole('textbox')).toBeNull();

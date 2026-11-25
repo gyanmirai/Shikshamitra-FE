@@ -213,7 +213,7 @@ function AssignmentHistoryTimeline({
           <Typography variant="subtitle2" component="span">
             {fDate(date)}
           </Typography>
-          <Label color="primary">
+          <Label>
             {entries.length} {entries.length === 1 ? 'event' : 'events'}
           </Label>
         </Stack>
@@ -228,7 +228,7 @@ function AssignmentHistoryTimeline({
                 expandIcon={<Iconify icon="mdi:chevron-down" width={18} />}
               >
                 <Stack spacing={0.5} alignItems="flex-start">
-                  <Label color="primary">{item.action}</Label>
+                  <Label>{item.action}</Label>
                   <Typography variant="caption" color="text.secondary" component="span">
                     {dayjs(item.occurredAt).format('h:mm:ss A')} · {item.actor || 'System'}
                   </Typography>

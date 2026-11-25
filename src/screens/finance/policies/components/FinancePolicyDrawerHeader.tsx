@@ -21,7 +21,7 @@ export default function FinancePolicyDrawerHeader({
   descriptionDisplay?: 'inline' | 'tooltip';
   helpText?: ReactNode;
   badges?: ReactNode;
-  onClose: () => void;
+  onClose?: () => void;
   disabled?: boolean;
   titleId: string;
 }) {
@@ -58,9 +58,11 @@ export default function FinancePolicyDrawerHeader({
           {badges}
         </Stack>
       )}
-      <IconButton size="small" aria-label={`Close ${title}`} disabled={disabled} onClick={onClose}>
-        <Iconify icon="mingcute:close-line" width={20} />
-      </IconButton>
+      {onClose && (
+        <IconButton size="small" aria-label={`Close ${title}`} disabled={disabled} onClick={onClose}>
+          <Iconify icon="mingcute:close-line" width={20} />
+        </IconButton>
+      )}
     </Stack>
   );
 }

@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { alpha, useTheme } from '@mui/material/styles';
 import {
   Box,
   Stack,
@@ -62,7 +61,6 @@ export default function PolicyAuditTimeline({
   versions: PolicyVersion[];
   valueContext: VersionValueContext;
 }) {
-  const theme = useTheme();
   const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
   const grouped = useMemo(
@@ -99,6 +97,7 @@ export default function PolicyAuditTimeline({
           >
             <Button
               fullWidth
+              color="inherit"
               id={headingId}
               aria-expanded={expanded}
               aria-controls={contentId}
@@ -110,34 +109,22 @@ export default function PolicyAuditTimeline({
                 justifyContent: 'flex-start',
                 textAlign: 'left',
                 color: 'text.primary',
-                bgcolor: alpha(theme.palette.primary.main, 0.035),
+                bgcolor: 'background.neutral',
                 borderRadius: 0,
+                '&:hover': { bgcolor: 'action.hover' },
               }}
             >
               <Iconify
                 icon="mdi:calendar-blank-outline"
                 width={18}
-                sx={{ color: 'primary.main', mr: 1 }}
+                sx={{ color: 'text.secondary', mr: 1 }}
               />
-              <Typography variant="subtitle2" component="span" fontWeight={800}>
+              <Typography variant="subtitle2" component="span">
                 {date === 'unknown' ? 'Date unavailable' : dayjs(date).format('DD-MM-YYYY')}
               </Typography>
-              <Box
-                component="span"
-                sx={{
-                  ml: 1,
-                  px: 0.85,
-                  py: 0.25,
-                  borderRadius: 1,
-                  bgcolor: alpha(theme.palette.primary.main, 0.08),
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-                  color: 'primary.main',
-                  typography: 'caption',
-                  fontWeight: 700,
-                }}
-              >
+              <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
                 {entries.length} event{entries.length === 1 ? '' : 's'}
-              </Box>
+              </Typography>
               <Iconify
                 icon="eva:arrow-ios-downward-fill"
                 width={18}
@@ -199,7 +186,7 @@ export default function PolicyAuditTimeline({
                         }}
                       >
                         <Label
-                          color="primary"
+                          color="default"
                           startIcon={
                             <Iconify icon={ACTION_ICONS[action] || 'mdi:history'} width={14} />
                           }
@@ -223,7 +210,7 @@ export default function PolicyAuditTimeline({
                         <Typography
                           component="span"
                           variant="caption"
-                          color="primary.main"
+                          color="text.secondary"
                           sx={{ ml: 'auto', whiteSpace: 'nowrap' }}
                         >
                           {eventExpanded ? `Hide ${detailLabel}` : `View ${detailLabel}`}

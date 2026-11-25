@@ -28,6 +28,7 @@ type CustomDialogProps = Omit<DialogProps, 'title'> & {
   hasForm?: boolean;
   formProps?: { noValidate?: boolean; onSubmit?: (event: React.FormEvent) => void };
   disableClose?: boolean;
+  closeOnBackdropClick?: boolean;
   /** Local form state, when supplied, must not consume or clear a parent form's dirty state. */
   hasUnsavedChanges?: boolean;
   /** Use a local close handler without clearing the parent form's dirty state. */
@@ -46,6 +47,7 @@ const CustomDialog = ({
   hasForm = true,
   formProps,
   disableClose = false,
+  closeOnBackdropClick = false,
   hasUnsavedChanges,
   guardUnsavedChanges = true,
   maxWidth = 'xs',
@@ -69,7 +71,7 @@ const CustomDialog = ({
 
   const handleCloseDialog = (e: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
     if (shouldBlockCustomDialogClose(disableClose)) return;
-    if (reason === 'backdropClick') return;
+    if (reason === 'backdropClick' && !closeOnBackdropClick) return;
     if (!guardUnsavedChanges) {
       handleClose(e, reason);
       return;

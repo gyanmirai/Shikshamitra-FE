@@ -105,7 +105,7 @@ export default function AssignmentReview({
             <DetailField label="Proration reduction" value={money(data.reductionTotal)} />
           </>
         )}
-        <Box sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+        <Box sx={{ gridColumn: 1, fontVariantNumeric: 'tabular-nums' }}>
           <DetailField
             label={committed ? 'Assigned amount' : 'Total to assign'}
             value={money(data.proratedTotal)}

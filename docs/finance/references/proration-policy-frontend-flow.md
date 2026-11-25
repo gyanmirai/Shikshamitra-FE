@@ -17,7 +17,7 @@ Product rules, calculations, backend architecture, API, persistence, permissions
 ## Operational flow
 
 1. In **Finance → Policies → Proration Policy**, create or edit a policy for the academic year. Set joining and early-withdrawal rules for each applicable recurring fee head. The selected active default is available to fee preparation for that year.
-2. Save a draft, then open **View → Proration Preview** to try a fee head, scheduled amount, billing-period dates, and actual service dates. Joining, withdrawal, and full-month presets are available. The server returns the saved policy version, scheduled charge, prorated charge, reduction, and explanation. Editing an input clears the displayed result. The preview creates no dues.
+2. Save a draft, then open **View** to review the saved admission and early-withdrawal rules by fee head. Use the row's **Edit** action to change the rules.
 3. Activate the policy for use. In Admission or Finance Fee Structure Assignment, use the verified joining or service dates to preview student fees. The academic-year default applies automatically where eligible. Authorized Admission staff can select another eligible active proration version in the fee preparation flow.
 4. Confirm fee preparation or assignment. Finance saves the policy version and calculation with the affected dues. Later policy edits apply to new preparations, and an existing fee preparation reuses its saved calculation.
 5. For an early withdrawal, preview the effect using the approved last billable date and the saved policy. For an eligible optional service restart, preview the new service period before confirmation.
@@ -83,7 +83,7 @@ Completed on 2026-09-08:
 - typed policy list/detail/clone/archive/restore/version integration in the shared policy table;
 - Active policy selection and default preselection in Fee Structure, with policy ID persisted by create/update requests and version rehydrated from the server;
 - day-level start/end inputs for single and bulk assignment, constrained to the selected academic year;
-- server calculation preview for saved policies and read-only proration evidence tooltips in the collection ledger;
+- server calculation preview for fee preparation and read-only proration evidence tooltips in the collection ledger;
 - focused mapping tests for Daily/MonthlyCutoff and rounding payloads.
 
 Operational boundary: existing paid or posted dues are deliberately not recalculated from the browser. Withdrawal, hostel, and transport event automation and any post-demand correction UI belong to a future auditable reversal/adjustment workflow.
@@ -145,7 +145,7 @@ Student assignment
 Policy list for selected academic year
   -> Create Draft
   -> choose recurring Fee Heads and unambiguous rules
-  -> run server simulation
+  -> review saved fee-head rules
   -> Activate
   -> attach to Fee Structure and review impact
   -> assign structure to student
@@ -185,7 +185,7 @@ Conditional validation mirrors the backend for usability, but the server remains
 
 ### Fee Structure removal
 
-The full-screen Fee Structure workspace offers Collection and Refund policy selectors. It sends no proration ID/version, queries no proration catalog, and shows no proration coverage column or setup warning. Existing historical assignment/charge evidence is retained by the backend; the independent policy form and simulation remain available.
+The full-screen Fee Structure workspace offers Collection and Refund policy selectors. It sends no proration ID/version, queries no proration catalog, and shows no proration coverage column or setup warning. The independent policy form remains available, and the backend retains historical assignment and charge evidence.
 
 ### Student assignment
 
@@ -317,7 +317,7 @@ Unchecked items are explicit UX/test hardening follow-ups; they do not change th
 
 ### Browser
 
-- create Draft, simulate, activate, attach, assign, preview, commit, and inspect demand;
+- create Draft, review the saved rules, activate, attach, assign, preview, commit, and inspect demand;
 - day-on-cutoff versus day-after-cutoff;
 - one-time head remains full charge;
 - service-specific dates affect only that fee detail;

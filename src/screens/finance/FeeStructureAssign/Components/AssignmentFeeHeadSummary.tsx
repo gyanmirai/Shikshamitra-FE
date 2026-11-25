@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { AssignmentHead } from 'src/redux/finance/studentFeeAssignment';
 
+import { Label } from 'src/components/label';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Stack, Checkbox, Typography } from '@mui/material';
 import { DetailField } from 'src/screens/finance/components/detail-view';
@@ -77,13 +78,16 @@ export default function AssignmentFeeHeadSummary({
             />
           )}
           <Stack spacing={0.5} sx={{ minWidth: 0, alignItems: 'flex-start' }}>
-            <Typography component="h3" variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-              {selection ? (
-                <label htmlFor={selection.id}>{head.feeHeadName}</label>
-              ) : (
-                head.feeHeadName
-              )}
-            </Typography>
+            <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" alignItems="center">
+              <Typography component="h3" variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                {selection ? (
+                  <label htmlFor={selection.id}>{head.feeHeadName}</label>
+                ) : (
+                  head.feeHeadName
+                )}
+              </Typography>
+              {head.isVariable && <Label>Variable</Label>}
+            </Stack>
             {status}
           </Stack>
         </Stack>
@@ -93,7 +97,7 @@ export default function AssignmentFeeHeadSummary({
               gridArea: 'amount',
               minWidth: 0,
               mt: amountInput ? 1.5 : 0,
-              textAlign: amountInput ? 'left' : 'right',
+              textAlign: 'left',
               fontVariantNumeric: 'tabular-nums',
               '@container (min-width: 520px)': { mt: 0 },
             }}

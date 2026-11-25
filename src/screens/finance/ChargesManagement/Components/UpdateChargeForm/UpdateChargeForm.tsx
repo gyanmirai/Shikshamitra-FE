@@ -1174,15 +1174,34 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                         </Alert>
                       )}
                       <Box>
-                        <Button
-                          size="small"
-                          onClick={() => setShowStudentFilters((visible) => !visible)}
-                          aria-expanded={showStudentFilters}
-                          aria-controls="charge-student-filters"
-                          startIcon={<Iconify icon="solar:filter-bold-duotone" />}
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          gap={1}
                         >
-                          Filters{activeStudentFilterCount ? ` (${activeStudentFilterCount})` : ''}
-                        </Button>
+                          <Button
+                            size="small"
+                            onClick={() => setShowStudentFilters((visible) => !visible)}
+                            aria-expanded={showStudentFilters}
+                            aria-controls="charge-student-filters"
+                            startIcon={<Iconify icon="solar:filter-bold-duotone" />}
+                          >
+                            Filters{activeStudentFilterCount ? ` (${activeStudentFilterCount})` : ''}
+                          </Button>
+                          {showStudentFilters && (
+                            <Button
+                              size="small"
+                              disabled={activeStudentFilterCount === 0 && !studentSearch}
+                              onClick={() => {
+                                setStudentFilters(emptyStudentFilters);
+                                setStudentSearch('');
+                              }}
+                            >
+                              Reset filters
+                            </Button>
+                          )}
+                        </Stack>
                         <Collapse in={showStudentFilters}>
                           <Box
                             id="charge-student-filters"
@@ -1294,16 +1313,6 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                               }
                               formControlProps={{ fullWidth: true }}
                             />
-                            <Button
-                              size="small"
-                              disabled={activeStudentFilterCount === 0 && !studentSearch}
-                              onClick={() => {
-                                setStudentFilters(emptyStudentFilters);
-                                setStudentSearch('');
-                              }}
-                            >
-                              Reset filters
-                            </Button>
                           </Box>
                         </Collapse>
                       </Box>
