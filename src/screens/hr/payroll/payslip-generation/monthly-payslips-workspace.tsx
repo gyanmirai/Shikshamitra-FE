@@ -30,16 +30,17 @@ export default function MonthlyPayslipsWorkspace() {
   const [searchTerm, setSearchTerm] = useState('');
   const [search, setSearch] = useState('');
   const [paging, setPaging] = useState({ scope: '', page: 0, size: 25 });
-  const scope = JSON.stringify([monthYear, search]);
+  const querySearch = search.trim();
+  const scope = JSON.stringify([monthYear, querySearch]);
   const page = paging.scope === scope ? paging.page : 0;
   const issued = useGetIssuedPayslipsQuery(
     {
       monthYear: monthYear ?? undefined,
-      search: search.trim() || undefined,
+      search: querySearch || undefined,
       skipCount: page * paging.size,
       maxResultCount: paging.size,
     },
-    { refetchOnMountOrArgChange: true, refetchOnFocus: true }
+    { refetchOnMountOrArgChange: 15, refetchOnFocus: true }
   );
   const changePeriod = (value: Dayjs | null) => {
     if (value && !value.isValid()) return;

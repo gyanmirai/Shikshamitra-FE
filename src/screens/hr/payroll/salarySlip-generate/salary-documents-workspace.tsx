@@ -109,32 +109,6 @@ export default function SalaryDocumentsWorkspace({
   const [baseError, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
   const sequence = useRef(0);
-  useEffect(() => {
-    sequence.current += 1;
-    const { current } = sequence;
-    closeNotes();
-    setPreview(undefined);
-    setError(null);
-    setLoading(active && ready);
-    if (!active || !ready) return undefined;
-    const pendingRequest = loadPreview(JSON.parse(signature));
-    pendingRequest
-      .unwrap()
-      .then((data) => {
-        if (current === sequence.current) setPreview({ signature, data });
-      })
-      .catch((failure) => {
-        if (current === sequence.current)
-          setError(payslipActionError(failure, 'The document preview could not be loaded.'));
-      })
-      .finally(() => {
-        if (current === sequence.current) setLoading(false);
-      });
-    return () => {
-      sequence.current += 1;
-      pendingRequest.abort();
-    };
-  }, [signature, ready, active, refresh, loadPreview, closeNotes]);
   const previewView = useHrTableQuery(
     {
       table: 'hr-salary-documents',
@@ -181,6 +155,32 @@ export default function SalaryDocumentsWorkspace({
     previewView.tableProps.filters?.length ||
     previewView.tableProps.sorts?.length
   );
+  useEffect(() => {
+    sequence.current += 1;
+    const { current } = sequence;
+    closeNotes();
+    setPreview(undefined);
+    setError(null);
+    setLoading(active && ready && !hasTableCriteria);
+    if (!active || !ready || hasTableCriteria) return undefined;
+    const pendingRequest = loadPreview(JSON.parse(signature));
+    pendingRequest
+      .unwrap()
+      .then((data) => {
+        if (current === sequence.current) setPreview({ signature, data });
+      })
+      .catch((failure) => {
+        if (current === sequence.current)
+          setError(payslipActionError(failure, 'The document preview could not be loaded.'));
+      })
+      .finally(() => {
+        if (current === sequence.current) setLoading(false);
+      });
+    return () => {
+      sequence.current += 1;
+      pendingRequest.abort();
+    };
+  }, [signature, ready, active, hasTableCriteria, refresh, loadPreview, closeNotes]);
   const error =
     typeof previewView.error === 'string'
       ? previewView.error

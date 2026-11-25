@@ -77,9 +77,9 @@ export const payrollPreviewRunApi = employeeApi.injectEndpoints({
     }),
     payrollRegister: builder.query<
       PayrollPreviewPage,
-      PayrollRegisterCriteria & { month: string; academicYearId: string; completedId: string; page: number; pageSize: number; search: string }
+      PayrollRegisterCriteria & { month: string; academicYearId: string; page: number; pageSize: number; search: string }
     >({
-      query: ({ completedId, ...params }) => ({ url: '/payroll/run/register', params }),
+      query: (params) => ({ url: '/payroll/run/register', params }),
       providesTags: [employeeType.runPayroll],
     }),
   }),
