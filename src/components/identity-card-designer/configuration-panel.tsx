@@ -1,6 +1,6 @@
 import { useId, useRef, useEffect } from 'react';
-import { Box, Tab, Stack, Alert } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { Box, Tab, Stack, Alert, Button } from '@mui/material';
 
 import { ElementLayers } from './layers';
 import { PrintSettings } from './print-settings';
@@ -11,13 +11,16 @@ import { ImageLayerAction } from './editor/image-layer-action';
 
 import type { IdentityCardConfigurationProps } from './types';
 
-export function DesignerConfigurationPanel(props: IdentityCardConfigurationProps) {
+export function DesignerConfigurationPanel(
+  props: IdentityCardConfigurationProps & { printPreviewOpen: boolean; onPrintPreviewToggle: () => void }
+) {
   const id = useId();
   const scrollArea = useRef<HTMLElement>(null);
   const {
     tab,
     onTabChange,
     brandingContent,
+    canPlaceSignature,
     disabled,
     elements,
     selectedId,
@@ -107,7 +110,16 @@ export function DesignerConfigurationPanel(props: IdentityCardConfigurationProps
               {errors.length > 6 && <Box>And {errors.length - 6} more layout errors.</Box>}
             </Alert>
           )}
-          {tab === 'school' && brandingContent}
+          {tab === 'school' && (
+            <>
+              {brandingContent}
+              {canPlaceSignature && !elements.some((element) => element.type === 'signature') && (
+                <Button variant="outlined" disabled={disabled} onClick={() => onAdd('signature')}>
+                  Add signature to {side}
+                </Button>
+              )}
+            </>
+          )}
           {tab === 'layout' && <LayoutSettings {...props} />}
           {tab === 'elements' && (
             <>

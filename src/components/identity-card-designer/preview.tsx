@@ -11,14 +11,16 @@ export function IdentityCardPreview({
   qrCodeEnabled = true,
   barcodeEnabled = true,
   logoHidden = false,
+  flat = false,
   ...props
-}: IdentityCardPreviewProps) {
+}: IdentityCardPreviewProps & { flat?: boolean }) {
   const { layout } = props;
   const elements = [...(layout[side]?.elements ?? [])]
     .filter(
       (element) =>
         element.visible &&
         (element.type !== 'logo' || !logoHidden) &&
+        (element.type !== 'signature' || props.signatureUrl || props.signaturePlaceholder) &&
         (element.type !== 'qr' || qrCodeEnabled) &&
         (element.type !== 'barcode' || barcodeEnabled)
     )
@@ -29,10 +31,10 @@ export function IdentityCardPreview({
         width: 1,
         minWidth: 0,
         aspectRatio: `${layout.widthMm} / ${layout.heightMm}`,
-        borderRadius: 1.5,
+        borderRadius: flat ? 0 : 1.5,
         overflow: 'hidden',
         bgcolor: layout.backgroundColor,
-        boxShadow: 2,
+        boxShadow: flat ? 'none' : 2,
       }}
     >
       <svg

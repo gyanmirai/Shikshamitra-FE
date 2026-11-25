@@ -10,18 +10,20 @@ export function StudentICardBranding({
   template,
   onChange,
   disabled,
+  canConfigureSignature,
   onBusyChange,
 }: {
   template: IdCardTemplate;
   onChange: (patch: Partial<IdCardTemplate>) => void;
   disabled?: boolean;
+  canConfigureSignature: boolean;
   onBusyChange?: (busy: boolean) => void;
 }) {
   return (
     <FormSectionCard
       title="School Identity"
       icon={GlobalIcons.admissionInterest}
-      descriptionTooltip="School text and the approved logo are bound to both sides of this card. Inherited logos resolve for each student's board and medium."
+      descriptionTooltip="Inherited logos and signatures follow each student’s board and medium."
     >
       <Grid container spacing={2}>
         {(
@@ -56,6 +58,18 @@ export function StudentICardBranding({
             onChange={(logo) => onChange({ logo })}
           />
         </Grid>
+        {canConfigureSignature && (
+          <Grid size={{ xs: 12 }}>
+            <TemplateIdentityAsset
+              kind="signature"
+              value={template.signature}
+              showInheritanceHelp={false}
+              disabled={disabled}
+              onBusy={onBusyChange}
+              onChange={(signature) => onChange({ signature })}
+            />
+          </Grid>
+        )}
       </Grid>
     </FormSectionCard>
   );

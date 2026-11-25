@@ -277,7 +277,7 @@ export default function StudentICardTemplates() {
       >
         {selected && (
           <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-            <StudentCardPreview template={selected} />
+            <StudentCardPreview template={selected} showTrim />
           </Box>
         )}
       </CustomDialog>

@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Box } from '@mui/material';
 
 import { StudioLayers } from './studio/studio-layers';
 import { StudioCanvas } from './editor/studio-canvas';
+import { IdentityCardSheetPreview } from './sheet-preview';
 import { StudioToolRail } from './editor/studio-tool-rail';
 import { DesignerConfigurationPanel } from './configuration-panel';
 
@@ -61,6 +63,8 @@ export function DesignerWorkspace({
   selected?: IdentityCardElement;
   updateElement: (element: IdentityCardElement) => void;
 }) {
+  const [printPreviewOpen, setPrintPreviewOpen] = useState(false);
+  const showPrintPreview = configuration && tab === 'print' && printPreviewOpen;
   const layersArea = layers ? ' layers' : '';
   const configurationArea = configuration ? ' configuration' : '';
   const panelCount = Number(layers) + Number(configuration);
@@ -99,7 +103,20 @@ export function DesignerWorkspace({
         )}
       </Box>
       <Box sx={{ gridArea: 'canvas', display: 'flex', minHeight: 0, minWidth: 0 }}>
-        <StudioCanvas
+        {showPrintPreview ? (
+          <Box
+            role="region"
+            aria-label="Print Preview"
+            tabIndex={0}
+            sx={{ width: 1, overflow: 'auto', p: 1.5, bgcolor: 'background.neutral' }}
+          >
+            <IdentityCardSheetPreview
+              {...previewProps}
+              settings={props.printSettings}
+              backSideEnabled={props.backSideEnabled}
+            />
+          </Box>
+        ) : <StudioCanvas
           {...previewProps}
           controller={studio}
           zoom={zoom}
@@ -109,7 +126,7 @@ export function DesignerWorkspace({
           snap={snap}
           safeInsetMm={props.printSettings.safeInsetMm}
           disabled={disabled}
-        />
+        />}
       </Box>
       <Box
         id={configurationId}
@@ -136,6 +153,8 @@ export function DesignerWorkspace({
           onAdd={add}
           onElementChange={updateElement}
           onDelete={studio.deleteSelection}
+          printPreviewOpen={showPrintPreview}
+          onPrintPreviewToggle={() => setPrintPreviewOpen((open) => !open)}
         />
       </Box>
     </Box>

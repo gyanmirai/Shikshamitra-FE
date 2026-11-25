@@ -60,6 +60,16 @@ describe('fixed physical identity card geometry', () => {
     expect(result.errors.join(' ')).toContain('No card fits');
     expect(layout.widthMm).toBe(200);
   });
+  it('keeps all slots when a decimal gap fits the sheet exactly', () => {
+    const layout = createIdentityCardPreset('classic-identity', { widthMm: 34, heightMm: 150 });
+    const sheet = getIdentityCardSheetLayout(layout, {
+      ...DEFAULT_IDENTITY_CARD_PRINT_SETTINGS,
+      margin: 0,
+      gap: 1.2,
+    });
+    expect(sheet).toMatchObject({ columns: 6, rows: 1, effectiveCardsPerPage: 6, errors: [] });
+    expect(sheet.position(0, false).x).toBe(0);
+  });
   it('uses one exact sized card for card media and rejects invalid numeric settings', () => {
     const layout = createIdentityCardPreset('classic-identity');
     expect(
