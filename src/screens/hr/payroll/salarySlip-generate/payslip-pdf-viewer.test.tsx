@@ -5,7 +5,10 @@ import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-libra
 import PayslipPdfViewer from './payslip-pdf-viewer';
 
 const pdf = vi.hoisted(() => ({ getDocument: vi.fn(), destroy: vi.fn(), terminate: vi.fn(), cancel: vi.fn() }));
-vi.mock('pdfjs-dist', () => ({ getDocument: pdf.getDocument, PDFWorker: { create: () => ({}) } }));
+vi.mock('src/components/preview-document/pdf-preview/pdfjs', () => ({
+  getDocument: pdf.getDocument,
+  PDFWorker: { create: () => ({}) },
+}));
 
 function documentWithText(text: string, count = 1) {
   return { numPages: count, getPage: vi.fn().mockResolvedValue({

@@ -84,9 +84,9 @@ export default function PayslipPdfViewer({
     onReady(null);
 
     const load = async () => {
-      const pdfjs = await import('pdfjs-dist');
+      const pdfjs = await import('src/components/preview-document/pdf-preview/pdfjs');
       if (cancelled) return;
-      worker = new Worker(new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url), {
+      worker = new Worker(new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url), {
         type: 'module',
       });
       const pdfWorker = pdfjs.PDFWorker.create({ port: worker });
