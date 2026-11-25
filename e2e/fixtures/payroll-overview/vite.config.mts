@@ -204,6 +204,20 @@ export default defineConfig({
                 return direction * (left[sort] - right[sort]);
               return direction * left.employeeName.localeCompare(right.employeeName);
             });
+            if (criteria.get('rowsOnly') === 'true') {
+              const pageSize = Number(criteria.get('pageSize') ?? 25);
+              const start = Number(criteria.get('page') ?? 0) * pageSize;
+              return res.end(JSON.stringify({
+                registerRows: matchingRows.slice(start, start + pageSize).map((row) => ({
+                  employeeId: row.employeeId,
+                  employeeName: row.employeeName,
+                  employeeIdentifier: row.employeeIdentifier,
+                  payableDays: row.payableDays,
+                  netPay: row.netPay,
+                  isLocked: Boolean(row.isLocked),
+                })),
+              }));
+            }
             return res.end(
               JSON.stringify({
                 previewRunId: id ?? null,

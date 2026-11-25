@@ -3,6 +3,7 @@ import type { Board, Medium, AcademicYear } from 'src/types/school';
 import { useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { studentPaths } from 'src/constants/student-menu';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
@@ -27,6 +28,8 @@ export function useAcademicOptions(refreshOnMount = true) {
   const { data } = useSession();
   const session = data as AcademicSession | null;
   const pathname = usePathname();
+  const isPayrollEntry = pathname.replace(/\/+$/, '') === hrPaths.payroll.runPayroll;
+  const refetchContext = refreshOnMount && (isPayrollEntry ? 30 : true);
   const isStudentModule = pathname === '/student' || pathname.startsWith('/student/');
   const isStudentSetupGuide = pathname.replace(/\/+$/, '') === studentPaths.setupGuide;
   const isYearOnly =
@@ -37,12 +40,12 @@ export function useAcademicOptions(refreshOnMount = true) {
   const { data: years, isLoading: isYearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
-    options: { skip: !session?.accessToken, refetchOnMountOrArgChange: refreshOnMount },
+    options: { skip: !session?.accessToken, refetchOnMountOrArgChange: refetchContext },
   }) as { data?: { items: AcademicYear[] }; isLoading: boolean };
   const { data: boardData, isLoading: isBoardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
-    options: { skip: !session?.accessToken, refetchOnMountOrArgChange: refreshOnMount },
+    options: { skip: !session?.accessToken, refetchOnMountOrArgChange: refetchContext },
   }) as { data?: { items: Board[] }; isLoading: boolean };
   const {
     currentData: scopeData,
@@ -56,7 +59,7 @@ export function useAcademicOptions(refreshOnMount = true) {
     },
     {
       skip: !session?.profile?.sub || !session?.accessToken,
-      refetchOnMountOrArgChange: refreshOnMount,
+      refetchOnMountOrArgChange: refetchContext,
       refetchOnFocus: true,
       refetchOnReconnect: true,
     }

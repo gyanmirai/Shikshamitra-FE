@@ -10,9 +10,11 @@ const mocks = vi.hoisted(() => ({
   lookup: {} as any,
   status: {} as any,
   page: {} as any,
+  opening: {} as any,
   statusHook: vi.fn(),
   pageHook: vi.fn(),
   registerHook: vi.fn(),
+  openingHook: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
@@ -24,6 +26,11 @@ vi.mock('src/redux/runPayroll/payroll-preview-run-api', () => ({
   usePayrollRegisterQuery: (input: unknown, options: unknown) => {
     mocks.registerHook(input, options);
     return mocks.page;
+  },
+  usePayrollRegisterQueryState: () => mocks.page,
+  usePayrollRegisterRowsQuery: (input: unknown, options: unknown) => {
+    mocks.openingHook(input, options);
+    return mocks.opening;
   },
   useStartPayrollPreviewMutation: () => [mocks.start, { isLoading: false }],
   usePayrollPreviewStatusQuery: (id: string, options: unknown) => {
@@ -42,6 +49,7 @@ beforeEach(() => {
   mocks.lookup = { currentData: { currentRun: null }, refetch: vi.fn() };
   mocks.status = { refetch: vi.fn() };
   mocks.page = { refetch: vi.fn() };
+  mocks.opening = { currentData: {} };
   mocks.start.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'run-1' }) });
 });
 afterEach(() => {
@@ -67,6 +75,39 @@ function completedPreview(id = 'run-1') {
 }
 
 describe('background payroll preview', () => {
+  it('opens the first register page with saved rows before fetching review details', () => {
+    mocks.opening = {};
+    const { result, rerender } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1', true));
+    expect(mocks.openingHook).toHaveBeenLastCalledWith(
+      expect.objectContaining({ month: '2026-08', academicYearId: 'year-1', page: 0, pageSize: 25 }),
+      { skip: false }
+    );
+    expect(mocks.registerHook.mock.lastCall?.[1]).toMatchObject({ skip: true });
+    expect(result.current.fetching).toBe(true);
+
+    const registerRows = [{ employeeId: '1', employeeName: 'Asha Rao' }];
+    mocks.opening = { currentData: { registerRows } };
+    rerender();
+    expect(result.current.openingRows).toEqual(registerRows);
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.isCurrent).toBe(false);
+    expect(mocks.registerHook.mock.lastCall?.[1]).toMatchObject({ skip: false });
+
+    completedPreview();
+    rerender();
+    expect(result.current.openingRows).toBeUndefined();
+    expect(result.current.isCurrent).toBe(true);
+    expect(mocks.openingHook.mock.lastCall?.[1]).toEqual({ skip: true });
+  });
+
+  it('falls back to the full register when the opening read fails', () => {
+    mocks.opening = { isError: true, error: { status: 503 } };
+    const { result } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1', true));
+    expect(mocks.registerHook.mock.lastCall?.[1]).toMatchObject({ skip: false });
+    expect(result.current.openingRows).toBeUndefined();
+    expect(result.current.error).toBeNull();
+  });
+
   it('does not fetch the same register again when lookup finds its already loaded preview', () => {
     completedPreview();
     mocks.params.delete('previewRunId');
