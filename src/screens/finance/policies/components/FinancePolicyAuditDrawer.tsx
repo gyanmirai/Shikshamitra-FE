@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { DetailField } from 'src/screens/finance/components/detail-view';
 import { Box, Alert, Paper, Stack, Drawer, Button, Typography } from '@mui/material';
 
 import FinancePolicySkeleton from './FinancePolicySkeleton';
@@ -12,6 +12,7 @@ import PolicyAuditTimeline from './version/PolicyAuditTimeline';
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 import PolicyHistoryPagination from './version/PolicyHistoryPagination';
 import { useFinancePolicyVersion } from '../hooks/useFinancePolicyVersion';
+import { usePolicyHistoryValueContext } from '../hooks/usePolicyHistoryValueContext';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -33,14 +34,7 @@ export default function FinancePolicyAuditDrawer({
       policyType: policy?.policyType,
     });
 
-  const valueContext = useMemo(() => {
-    const labelsById: Record<string, string> = {};
-    if (policy?.id) labelsById[policy.id.toLowerCase()] = policy.policyName;
-    if (policy?.academicYearId && policy.academicYearName) {
-      labelsById[policy.academicYearId.toLowerCase()] = policy.academicYearName;
-    }
-    return { labelsById, policyType: policy?.policyType };
-  }, [policy]);
+  const valueContext = usePolicyHistoryValueContext(policy, open);
 
   if (!policy) return null;
 
@@ -87,23 +81,41 @@ export default function FinancePolicyAuditDrawer({
           onClose={onClose}
         />
 
-        <Box
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          gap={{ xs: 1, sm: 2 }}
           sx={{
-            px: 1,
-            py: 1,
+            px: 2,
+            py: 1.5,
             bgcolor: 'background.paper',
             borderBottom: 1,
             borderColor: 'divider',
             flexShrink: 0,
           }}
         >
-          <Typography variant="subtitle1" sx={{ mt: 0.25, overflowWrap: 'anywhere' }}>
+          <Typography
+            component="h3"
+            variant="subtitle1"
+            sx={{ flex: '1 1 auto', minWidth: 0, overflowWrap: 'anywhere' }}
+          >
             {policy.policyName}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-            Academic Year: {policy.academicYearName || 'Current academic year'}
-          </Typography>
-        </Box>
+          <Box
+            sx={{
+              flexShrink: 0,
+              maxWidth: { sm: '40%' },
+              pl: { sm: 2 },
+              borderLeft: { sm: 1 },
+              borderLeftColor: { sm: 'divider' },
+            }}
+          >
+            <DetailField
+              label="Academic year"
+              value={policy.academicYearName || 'Current academic year'}
+            />
+          </Box>
+        </Stack>
 
         <Box
           sx={{

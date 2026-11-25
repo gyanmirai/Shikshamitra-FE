@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 
 import VersionHistorySection from './VersionHistorySection';
+import { getPolicyFormHistory } from './policy-form-history';
 import {
   formatVersionTimestamp,
   contextFromRefundSnapshot,
@@ -36,6 +37,7 @@ interface VersionDiffTableProps {
   selectedVersion: PolicyVersion;
   valueContext?: VersionValueContext;
   showSummary?: boolean;
+  showChangeReason?: boolean;
   collapsibleChanges?: boolean;
   showSavedDetails?: boolean;
   renderFieldValue?: (fieldName: string, value: unknown) => React.ReactNode;
@@ -103,6 +105,39 @@ const renderValueCell = (fieldName: string, value: unknown, valueContext?: Versi
       </Label>
     );
   }
+  if (formatted.kind === 'proration-rules') {
+    return (
+      <Stack
+        component="ul"
+        role="list"
+        spacing={1.25}
+        sx={{
+          m: 0,
+          p: 0,
+          listStyle: 'none',
+          overflowWrap: 'anywhere',
+          '& > li + li': { pt: 1.25, borderTop: 1, borderColor: 'divider' },
+        }}
+      >
+        {formatted.rules.map(({ name, admission, earlyWithdrawal }, index) => (
+          <Stack component="li" key={`${name}-${index}`} spacing={0.75}>
+            <Typography component="div" variant="body2" fontWeight={600}>
+              {name}
+            </Typography>
+            {admission && (
+              <DetailField label="Admission" value={admission.replaceAll(' · ', '\n')} />
+            )}
+            {earlyWithdrawal && (
+              <DetailField
+                label="Early withdrawal"
+                value={earlyWithdrawal.replaceAll(' · ', '\n')}
+              />
+            )}
+          </Stack>
+        ))}
+      </Stack>
+    );
+  }
   return (
     <Typography
       variant="body2"
@@ -118,20 +153,29 @@ function VersionDiffTable({
   selectedVersion,
   valueContext,
   showSummary = true,
+  showChangeReason = true,
   collapsibleChanges = false,
   showSavedDetails = false,
   renderFieldValue,
 }: VersionDiffTableProps) {
-  const snapshotFields = Object.entries(selectedVersion.snapshotAfter ?? {}).filter(
-    ([field]) =>
-      !SNAPSHOT_METADATA_FIELDS.has(field.toLowerCase()) &&
-      !(
-        field.toLowerCase() === 'academicyearname' &&
-        (selectedVersion.snapshotAfter?.AcademicYearId ||
-          selectedVersion.snapshotAfter?.academicYearId)
-      )
-  );
+  const policyHistory = getPolicyFormHistory(selectedVersion, valueContext?.policyType);
+  const changedFields = policyHistory?.changedFields ?? selectedVersion.changedFields;
+  const snapshotFields =
+    policyHistory?.snapshotFields ??
+    Object.entries(selectedVersion.snapshotAfter ?? {}).filter(
+      ([field]) =>
+        !SNAPSHOT_METADATA_FIELDS.has(field.toLowerCase()) &&
+        !(
+          field.toLowerCase() === 'academicyearname' &&
+          (selectedVersion.snapshotAfter?.AcademicYearId ||
+            selectedVersion.snapshotAfter?.academicYearId)
+        )
+    );
   const snapshotContext = contextFromRefundSnapshot(selectedVersion.snapshotAfter, valueContext);
+  const renderField = (fieldName: string, value: unknown, context?: VersionValueContext) => {
+    const customValue = renderFieldValue?.(fieldName, value);
+    return customValue === undefined ? renderValueCell(fieldName, value, context) : customValue;
+  };
 
   return (
     <Stack spacing={collapsibleChanges ? 1 : 2}>
@@ -156,31 +200,35 @@ function VersionDiffTable({
               {formatVersionTimestamp(selectedVersion.date)}
             </Typography>
           </Stack>
-          <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 1.5, bgcolor: 'background.neutral' }}>
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <Typography variant="caption" color="text.secondary">
-                Change reason
+          {showChangeReason && (
+            <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 1.5, bgcolor: 'background.neutral' }}>
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <Typography variant="caption" color="text.secondary">
+                  Change reason
+                </Typography>
+                <CustomTooltip
+                  placement="right"
+                  arrow
+                  title="The reason recorded when this version was created. Older snapshots may have no recorded reason."
+                >
+                  <IconButton size="small" aria-label="Change reason information">
+                    <Iconify
+                      icon="lucide:info"
+                      width={16}
+                      sx={{ color: 'info.main' }}
+                      aria-hidden
+                    />
+                  </IconButton>
+                </CustomTooltip>
+              </Stack>
+              <Typography variant="body2" sx={{ mt: 0.5, overflowWrap: 'anywhere' }}>
+                {selectedVersion.changeReason || 'No reason recorded'}
               </Typography>
-              <CustomTooltip
-                placement="right"
-                arrow
-                title="The reason recorded when this version was created. Older snapshots may have no recorded reason."
-              >
-                <IconButton size="small" aria-label="Change reason information">
-                  <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
-                </IconButton>
-              </CustomTooltip>
-            </Stack>
-            <Typography variant="body2" sx={{ mt: 0.5, overflowWrap: 'anywhere' }}>
-              {selectedVersion.changeReason || 'No reason recorded'}
-            </Typography>
-          </Box>
+            </Box>
+          )}
         </Paper>
       )}
-      <ChangesSection
-        key={selectedVersion.eventId}
-        collapsible={collapsibleChanges}
-      >
+      <ChangesSection key={selectedVersion.eventId} collapsible={collapsibleChanges}>
         {!collapsibleChanges && (
           <Stack
             direction="row"
@@ -205,10 +253,10 @@ function VersionDiffTable({
             </Stack>
           </Stack>
         )}
-        {selectedVersion.changedFields.length === 0 ? (
+        {changedFields.length === 0 ? (
           <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
-              No changes recorded for this version.
+              {policyHistory ? 'No policy form field changes to display.' : noChangesMessage}
             </Typography>
           </Paper>
         ) : (
@@ -228,28 +276,37 @@ function VersionDiffTable({
             >
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ width: '30%' }}>Field</TableCell>
-                  <TableCell sx={{ width: '35%' }}>Before</TableCell>
-                  <TableCell sx={{ width: '35%' }}>After</TableCell>
+                  <TableCell
+                    sx={{
+                      width: {
+                        xs: valueContext?.policyType === 'proration' ? '34%' : '30%',
+                        sm: '30%',
+                      },
+                    }}
+                  >
+                    Field
+                  </TableCell>
+                  <TableCell>Before</TableCell>
+                  <TableCell>After</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {selectedVersion.changedFields.map((field) => (
+                {changedFields.map((field) => (
                   <TableRow key={field.field} hover>
                     <TableCell component="th" scope="row">
                       <Typography variant="body2" fontWeight={600}>
-                        {formatFinancePolicyVersionField(field.field)}
+                        {formatFinancePolicyVersionField(field.field, valueContext)}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {(renderFieldValue ?? renderValueCell)(
+                      {renderField(
                         field.field,
                         field.oldValue,
                         contextFromRefundSnapshot(selectedVersion.snapshotBefore, valueContext)
                       )}
                     </TableCell>
                     <TableCell>
-                      {(renderFieldValue ?? renderValueCell)(
+                      {renderField(
                         field.field,
                         field.newValue,
                         contextFromRefundSnapshot(selectedVersion.snapshotAfter, valueContext)
@@ -279,7 +336,8 @@ function VersionDiffTable({
               {snapshotFields.map(([field, value]) => (
                 <DetailField
                   key={field}
-                  label={formatFinancePolicyVersionField(field).replace(
+                  fullWidth={Boolean(policyHistory) && Array.isArray(value)}
+                  label={formatFinancePolicyVersionField(field, valueContext).replace(
                     /\b[A-Z][a-z]+/g,
                     (word, index) => (index === 0 ? word : word.toLowerCase())
                   )}

@@ -108,13 +108,28 @@ describe('custom dialog close guard', () => {
     expect(dirty.defaultPrevented).toBe(true);
   });
 
-  it('disables the close control and Escape dismissal during a critical save', () => {
+  it('preserves the default backdrop guard', () => {
+    const handleClose = vi.fn();
+    renderWithProviders(
+      <CustomDialog open title="Existing form" handleClose={handleClose}>
+        <div>Form fields</div>
+      </CustomDialog>
+    );
+
+    const dialogContainer = screen.getByRole('dialog').parentElement!;
+    fireEvent.mouseDown(dialogContainer);
+    fireEvent.click(dialogContainer);
+    expect(handleClose).not.toHaveBeenCalled();
+  });
+
+  it('disables header, Escape and opted-in backdrop dismissal during a critical save', () => {
     const handleClose = vi.fn();
     renderWithProviders(
       <CustomDialog
         open
         disableClose
         hasForm={false}
+        closeOnBackdropClick
         title="Finalizing employee"
         handleClose={handleClose}
       >
@@ -124,6 +139,9 @@ describe('custom dialog close guard', () => {
 
     expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
     fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' });
+    const dialogContainer = screen.getByRole('dialog').parentElement!;
+    fireEvent.mouseDown(dialogContainer);
+    fireEvent.click(dialogContainer);
     expect(handleClose).not.toHaveBeenCalled();
   });
 });

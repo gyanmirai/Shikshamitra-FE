@@ -21,12 +21,14 @@ export type PaymentTermDisplayStatus = PaymentTermListItem['status'];
 export const getPaymentTermDisplayStatus = (term: PaymentTermListItem): PaymentTermDisplayStatus =>
   term.status;
 
-export const canDeletePaymentTerm = (term: PaymentTermListItem) =>
-  term.status !== 'Archived' &&
-  term.hasDraft &&
-  !term.hasPublishedVersion &&
-  term.currentVersionNumber === 1 &&
-  term.referencedStructureCount === 0;
+const getDeleteDisabledReason = (term: PaymentTermListItem) => {
+  if (term.status !== 'Draft') return 'Only draft payment terms can be deleted.';
+  if (term.isDefault) return 'Select another board default before deleting this payment term.';
+  if (term.referencedStructureCount > 0) return 'This payment term is used by a fee structure.';
+  return undefined;
+};
+
+export const canDeletePaymentTerm = (term: PaymentTermListItem) => !getDeleteDisabledReason(term);
 
 const statusColor = (status: PaymentTermDisplayStatus): LabelColor => {
   if (status === 'Active') return 'success';
@@ -151,7 +153,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
           const archived = term.status === 'Archived';
           const canActivate = !archived && term.hasDraft && canPublish;
           const archiveDisabled = term.referencedStructureCount > 0 || actionLoading;
-          const deleteDisabled = !canDeletePaymentTerm(term) || actionLoading;
+          const deleteTooltip = getDeleteDisabledReason(term);
 
           return (
             <AdaptiveThreeDotsActions
@@ -220,7 +222,8 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
                       label: 'Delete',
                       icon: 'solar:trash-bin-trash-bold',
                       color: 'error.main',
-                      disabled: deleteDisabled,
+                      disabled: Boolean(deleteTooltip) || actionLoading,
+                      tooltip: deleteTooltip,
                       onClick: () => onDelete(term),
                     },
                   ]

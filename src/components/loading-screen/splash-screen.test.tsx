@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from 'react';
 
 import { it, expect, describe } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { SplashScreen } from './splash-screen';
@@ -13,13 +13,14 @@ function Wrapper({ children }: PropsWithChildren) {
 }
 
 describe('application splash screen', () => {
-  it('announces the workspace loading state without presenting a completion percentage', () => {
+  it('announces workspace loading and displays the ShikshaMitra logo', () => {
     render(<SplashScreen portal={false} />, { wrapper: Wrapper });
 
-    expect(screen.getByRole('status', { name: 'Loading ShikshaMitra' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'A new day. A little step ahead.' })).toBeVisible();
-    expect(screen.getByRole('progressbar')).not.toHaveAttribute('aria-valuenow');
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    const status = within(screen.getByRole('status', { name: 'Loading ShikshaMitra' }));
+
+    expect(status.getByRole('img', { name: 'logo' })).toBeVisible();
+    expect(status.queryByRole('heading')).not.toBeInTheDocument();
+    expect(status.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 
   it('preserves the option to render inside the caller instead of using a portal', () => {

@@ -1,11 +1,10 @@
 'use client';
 
 import { alpha } from '@mui/material/styles';
-import { useRef, useMemo, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Alert, Paper, Drawer, Button, Typography } from '@mui/material';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 
 import VersionSidebar from './version/VersionSidebar';
 import VersionDiffTable from './version/VersionDiffTable';
@@ -13,6 +12,7 @@ import FinancePolicySkeleton from './FinancePolicySkeleton';
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 import PolicyHistoryPagination from './version/PolicyHistoryPagination';
 import { useFinancePolicyVersion } from '../hooks/useFinancePolicyVersion';
+import { usePolicyHistoryValueContext } from '../hooks/usePolicyHistoryValueContext';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -42,24 +42,7 @@ export default function FinancePolicyVersionDrawer({
     policyId: policy?.id,
     policyType: policy?.policyType,
   });
-  const { data: feeHeadData, isLoading: isFeeHeadsLoading } = useGetFeeHeadsQuery(
-    { academicYearId: policy?.academicYearId || '', page: 1, pageSize: 1000 },
-    { skip: !open || policy?.policyType !== 'collection' || !policy?.academicYearId }
-  );
-
-  const valueContext = useMemo(() => {
-    const labelsById: Record<string, string> = {};
-
-    if (policy?.id) labelsById[policy.id.toLowerCase()] = policy.policyName;
-    if (policy?.academicYearId && policy.academicYearName) {
-      labelsById[policy.academicYearId.toLowerCase()] = policy.academicYearName;
-    }
-    feeHeadData?.items.forEach((head) => {
-      labelsById[head.id.toLowerCase()] = head.name;
-    });
-
-    return { labelsById, policyType: policy?.policyType };
-  }, [policy, feeHeadData]);
+  const valueContext = usePolicyHistoryValueContext(policy, open);
 
   const handleSelectVersion = useCallback(
     (id: string) => {
@@ -135,7 +118,7 @@ export default function FinancePolicyVersionDrawer({
         />
 
         {/* Content Body */}
-        {isLoading || (policy.policyType === 'collection' && isFeeHeadsLoading) ? (
+        {isLoading ? (
           <Box sx={{ p: 2, overflow: 'auto', flex: 1, minHeight: 0 }}>
             <FinancePolicySkeleton label="Loading policy version history" />
           </Box>

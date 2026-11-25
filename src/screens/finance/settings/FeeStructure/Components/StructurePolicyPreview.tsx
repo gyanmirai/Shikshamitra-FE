@@ -1,20 +1,22 @@
 import type { StructureSettings } from 'src/redux/finance/feeStructureWorkspace';
 
+import { useEffect } from 'react';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetProrationPolicyByIdQuery,
-  useGetProrationPolicyVersionsQuery,
-} from 'src/redux/finance/prorationPolicy';
+import VersionDiffTable from 'src/screens/finance/policies/components/version/VersionDiffTable';
+import { FinancePolicyDetails } from 'src/screens/finance/policies/components/FinancePolicyDetailsDrawer';
 import {
   useGetRefundPolicyByIdQuery,
   useGetRefundPolicyVersionsQuery,
 } from 'src/redux/finance/refundPolicy';
 import {
+  useGetProrationPolicyByIdQuery,
+  useGetProrationPolicyVersionsQuery,
+} from 'src/redux/finance/prorationPolicy';
+import {
   useGetCollectionPolicyByIdQuery,
   useGetCollectionPolicyVersionsQuery,
 } from 'src/redux/finance/collectionPolicy';
-import FinancePolicyDetailsDrawer from 'src/screens/finance/policies/components/FinancePolicyDetailsDrawer';
-import VersionDiffTable from 'src/screens/finance/policies/components/version/VersionDiffTable';
 import {
   buildPolicyVersionPage,
   parsePolicyVersionSnapshot,
@@ -23,15 +25,13 @@ import {
 interface Props {
   option: StructureSettings['policies'][number];
   settings: StructureSettings;
-  onClose: () => void;
-  onRefreshOptions: () => void;
+  onVersionChanged: () => void;
 }
 
 export default function StructurePolicyPreview({
   option,
   settings,
-  onClose,
-  onRefreshOptions,
+  onVersionChanged,
 }: Props) {
   const collection = useQueryAndMutation({
     type: 'query',
@@ -58,6 +58,9 @@ export default function StructurePolicyPreview({
   const detail = query.currentData;
   const verified = detail?.currentVersionId === option.versionId && detail?.id === option.id;
   const versionChanged = !!detail && !verified;
+  useEffect(() => {
+    if (versionChanged) onVersionChanged();
+  }, [versionChanged, onVersionChanged]);
   const args = { id: option.id, versionId: option.versionId, maxResultCount: 1 };
   const collectionVersion = useQueryAndMutation({
     type: 'query',
@@ -99,14 +102,8 @@ export default function StructurePolicyPreview({
   const loading =
     query.isLoading || query.isFetching || versionQuery.isLoading || versionQuery.isFetching;
   return (
-    <FinancePolicyDetailsDrawer
-      open
-      aboveDialog
-      showProrationSimulation={false}
-      onClose={() => {
-        if (versionChanged) onRefreshOptions();
-        onClose();
-      }}
+    <FinancePolicyDetails
+      showVersionBadge
       policy={{
         id: option.id,
         policyName: option.name,

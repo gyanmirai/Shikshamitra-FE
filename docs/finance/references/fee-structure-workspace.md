@@ -38,7 +38,7 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
    **Copy structure**, immediately after **Add structure**, opens a compact dialog. Its searchable source dropdown groups every saved structure by class using only the current metadata's accessible classes (same medium, board and academic year). Choose a source and confirm the destination class and structure name, then Submit. The existing create API saves a new draft with fresh structure/line identities, preserving amounts (including variable nulls), fee-head flags, pinned payment terms and policy versions, concession scope and customized installments. Duplicate names get an editable copy-name suggestion; backend uniqueness and attachment permissions still apply. The new draft is selected without discarding other mounted edits. Failed writes retain the selection/name and reuse the creation request ID for an unchanged retry. Loading failures offer Retry and never show a partial source list as complete. Copy is available under the existing Fee Structure Add permission and absent from view-only workspaces.
 4. In **Fee Heads & Terms**, use **+ Fee Head** to select a fee head and a published payment frequency. For a fixed recurring fee with one installment per covered calendar month, turn on **Charge per month** and enter the monthly amount. The fee row shows the monthly rate and the term total. For a variable fee, enter the amount during student assignment.
 5. View opens read-only fee-head details and an installment breakdown with dates, allocations, amounts and totals. **Fee Head Details** uses the same shared detail section and label/value fields as the concession policy's **General Information**, with responsive columns and section help. Authorized draft editors can choose **Edit installments** to customize locally or restore the inherited schedule. Replacing a customized term requires confirmation when saving the row.
-6. In **Policies**, review the Collection and Refund policy selections. Both are required to complete this setup. Each row shows its selected name, version, and coverage. Edit opens the picker. Activate a picker row to open its exact version in the read-only drawer and use the check icon to attach the policy. Closing the drawer preserves the picker search. The refund picker lists covered fee heads on separate lines and accepts a selected-head policy only when at least one head overlaps. A mismatch leaves the existing selection intact and explains how to proceed. The Policies step rechecks the attached refund version when fee heads change. Missing attachments or a known mismatch block **Review & Continue**. Proration and Concession Policy selection, scope controls, defaults, lookup requests and review columns remain absent from Fee Structure settings.
+6. In **Policies**, open the Collection, Refund, or Proration picker from the policy's Select or Change action. The picker previews the attached version when it is in the list, or opens the first matching option. Click a policy name to read its configuration or choose **Select** beside an eligible policy to attach its version to the draft. Collection and Refund are required. Refund selection requires overlapping fee heads when the policy is scoped to specific heads. The Policies step rechecks the attached refund version when fee heads change. Missing required attachments or a known mismatch block **Review & Continue**. Proration is optional and supports **Use academic-year default**.
 7. Add at least one fee head before saving. To move past **Fee Heads & Terms**, include at least one required fee head. An optional-only draft can be saved and completed later. Each fixed row requires an entered amount, and each row requires a published Payment Term. Policy configuration may remain incomplete in a draft. The backend rejects invalid selected relationships.
 8. Open **Review & Publish** for backend readiness errors, mismatch warnings, per-head policy/accounting coverage and resolved installments. **Structure Summary** includes the Collection Policy and Refund Policy names using the shared `DetailField` label/value treatment. **Publish Readiness** (or **Publication Validation** for published records) follows the summary, then **Policy Coverage** and **Payment Schedules**. Shared accordions contain warnings and per-head schedules.
 9. Publish only after saving and obtaining a ready review. The server revalidates and protects the configuration. The success popup offers **Continue** to stay in the current workspace or **Exit** to return to the Fee Structure list. Exit uses the workspace’s unsaved changes guard.
@@ -56,11 +56,12 @@ additional draft was created by a retry.
 
 ## Common components and interaction rules
 
-Proration policy details opened from the Fee Structure policy picker reuse the shared Policy
-details drawer. This context shows saved configuration, fee-head rules, version and audit details
-only; it omits the editable Proration Preview calculator. The calculator remains available in the
-Proration Policy workspace. Viewing details preserves the picker search and does not attach or
-change the policy.
+The picker pairs a searchable policy list with the shared read-only configuration. On narrow
+screens the preview appears below the list. Collection options show late-fee coverage. Refund
+options show applicable fee heads and explain when a policy cannot be selected. Moving between
+previews preserves the search and the draft's current policy. The preview uses the exact saved
+version of the policy, including fee-head rules for Proration. The editable Proration Preview
+calculator is available in the Proration Policy workspace.
 
 The editor footer uses **Draft** and **Publish** for its save and publication
 buttons. An explicit **Draft** click confirms when the saved draft is already up to date,
@@ -97,7 +98,7 @@ in the first step. Review sections inherit that style without a heavier weight o
 | Workspace list and head/schedule/coverage tables             | `CustomizableTable`                                                                                                                                 |
 | Fee Head and payment-term choices                            | `CustomSelect`                                                                                                                                      |
 | Structure navigation                                         | MUI `ListItemButton`, `Scrollbar`, `Label`; responsive MUI `Drawer`                                                                                 |
-| Policy selection                                             | Searchable `CustomizableTable` inside `CustomDialog` + `DialogScrollContent`                                                                        |
+| Policy selection                                             | Searchable MUI list and read-only policy configuration inside `CustomDialog` + `DialogScrollContent` |
 | Full-screen workspace                                        | Unmodified shared `CustomDialog` with `fullScreen`, following the timetable workspace                                                               |
 | Horizontal class navigation                                  | Shared `CustomTabs` on one row within the shared `Scrollbar`; the owning form guards dirty class switches                                            |
 | Guided setup (Fee heads & terms, Policies, Review & publish) | Shared `CustomStepperWithFormik` owns navigation, scrolling and action footer, reusing the editor's one Formik instance and Yup schema              |
@@ -231,13 +232,12 @@ New editor rows retain the existing false default; no database migration or back
 
 The Policies step contains only Collection, Proration and Refund cards. Historical concession fields remain in the read contract for compatibility and are not editable or included in settings PATCH commands. Request-level policy selection is not implemented by this change; see the [backend behavior](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md).
 New structures automatically select the current version of the academic-year default Proration Policy when the catalog contains exactly one eligible default and the user can select it. **Use academic-year default** clears the version pin and lets Finance resolve the default dynamically. Saved drafts retain their existing selection or fallback.
-The other policy families retain their existing selection controls without new head selectors.
 Cards use a centered, bounded two-column grid on desktop and a single column below the medium breakpoint.
 
 Each card provides a labelled eye action using shared Iconify, CustomTooltip and MUI IconButton controls.
 The shared `src/screens/finance/settings/FeeStructure/Components/PolicyImpactDialog.tsx` uses CustomDialog and DialogScrollContent with a compact, theme-aware layout.
 The selected policy name/version is the dialog title. The body lists fee-head coverage and exclusions without repeating the policy description or generic impact explanations. Published views retain the saved-publication label; availability states remain distinct.
-Closing with the header, footer or Escape preserves the parent draft's dirty state and returns focus to the opener.
+Closing with the header button, Escape, or a backdrop click preserves the parent draft's dirty state and returns focus to the opener.
 
 The presentation adapter `src/screens/finance/settings/FeeStructure/policyImpactModel.ts` uses the already-loaded policy catalog only when its policy and current-version IDs match the selected attachment.
 Saved publication coverage takes precedence for published structures; an unavailable historical version is never replaced with current-master details.
@@ -303,8 +303,8 @@ It shows only the total label and formatted amount. It is a configuration total,
 Published rows remain read-only. Row Save updates the draft; Save draft persists it.
 
 The Policies checklist uses accessible shared section headers and compact Edit/Select buttons.
-The card footer links to Collection and Refund coverage. Removing an attachment through the
-picker footer updates the local draft and preserves the required Collection validation.
+The card actions open the attached policy's fee-head coverage. The Proration picker's academic-year
+default action clears the explicit proration version pin from the local draft.
 Choosing a policy reports one success toast that it was added to the draft; saving is separate.
 The Policies checklist omits the ready-state success alert while retaining required-policy and
 coverage warnings. Coverage dialogs use the policy name/version as their title and the shared

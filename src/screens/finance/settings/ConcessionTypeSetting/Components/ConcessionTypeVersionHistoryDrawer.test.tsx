@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import ConcessionTypeVersionHistoryDrawer from './ConcessionTypeVersionHistoryDrawer';
@@ -90,6 +90,77 @@ describe('Concession Type version history', () => {
     expect(screen.getByRole('table', { name: 'Changes in version 2' })).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
     expect(screen.getByRole('button', { name: 'View version 2' })).toBeVisible();
+  });
+
+  it.each([undefined, null, '', '   ', ' No reason recorded '])(
+    'omits the change reason section when the reason is %j',
+    (changeReason) => {
+      getHistory.mockReturnValue({
+        currentData: { data: { items: [{ ...items[1], changeReason }], totalCount: 1 } },
+      });
+      renderDrawer(<ConcessionTypeVersionHistoryDrawer {...props} />);
+
+      expect(screen.queryByText('Change reason')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Change reason information' })).toBeNull();
+    }
+  );
+
+  it('shows an explicit change reason', () => {
+    const version = { ...items[1], changeReason: 'Updated eligibility for this term' };
+    getHistory.mockReturnValue({ currentData: { data: { items: [version], totalCount: 1 } } });
+    renderDrawer(<ConcessionTypeVersionHistoryDrawer {...props} />);
+
+    expect(screen.getByText('Change reason')).toBeVisible();
+    expect(screen.getByText('Updated eligibility for this term')).toBeVisible();
+  });
+
+  it('shows the reason recorded for a deactivation', () => {
+    const version = {
+      ...items[1],
+      changedFields: [
+        { fieldName: 'IsActive', originalValue: 'true', newValue: 'false' },
+        {
+          fieldName: 'DeactivationReason',
+          originalValue: null,
+          newValue: '"Replaced by the sibling concession"',
+        },
+      ],
+    };
+    getHistory.mockReturnValue({ currentData: { data: { items: [version], totalCount: 1 } } });
+    renderDrawer(<ConcessionTypeVersionHistoryDrawer {...props} />);
+
+    expect(screen.getByText('Change reason')).toBeVisible();
+    expect(screen.queryByText('No reason recorded')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Replaced by the sibling concession')).toHaveLength(2);
+  });
+
+  it('keeps document changes in the comparison and displays only their names', () => {
+    const version = {
+      ...items[1],
+      changedFields: [
+        {
+          fieldName: 'Document 1',
+          originalValue:
+            'Adhar Card · Max file size: 5242880 bytes · Accepted formats: Pdf · Mandatory',
+          newValue:
+            '"Adhar Card · Max file size: 2097152 bytes · Accepted formats: Jpg · Optional"',
+        },
+        {
+          fieldName: 'Document 2',
+          originalValue: null,
+          newValue: '1234 · Max file size: 5242880 bytes · Accepted formats: Pdf · Mandatory',
+        },
+      ],
+    };
+    getHistory.mockReturnValue({ currentData: { data: { items: [version], totalCount: 1 } } });
+    renderDrawer(<ConcessionTypeVersionHistoryDrawer {...props} />);
+
+    const table = screen.getByRole('table', { name: 'Changes in version 2' });
+    expect(within(table).getAllByText('Adhar Card')).toHaveLength(2);
+    expect(within(table).getByText('1234')).toBeVisible();
+    expect(
+      within(table).queryByText(/Max file size|Accepted formats|Mandatory|Optional/)
+    ).toBeNull();
   });
 
   it('keeps stale data hidden on errors and supports retry', () => {

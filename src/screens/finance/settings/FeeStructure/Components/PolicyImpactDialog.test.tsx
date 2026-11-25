@@ -71,6 +71,42 @@ it('opens by keyboard, shows readable coverage, closes with Escape and preserves
   expect(confirm).not.toHaveBeenCalled();
 });
 
+it.each(['collection', 'refund', 'proration'] as const)(
+  'shows only the header close control in the %s policy preview',
+  async (family) => {
+    const user = userEvent.setup();
+    const policyLabel = `School ${family} · v1 · Default`;
+    setup({ family, policyLabel, rows: [] });
+    const trigger = screen.getByRole('button', { name: 'View impact' });
+    await user.click(trigger);
+    const dialog = screen.getByRole('dialog', { name: policyLabel });
+    expect(dialog).toBeVisible();
+    expect(screen.getAllByRole('button', { name: /^close$/i })).toHaveLength(1);
+    expect(dialog.querySelector('.MuiDialogActions-root')).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  }
+);
+
+it('dismisses the read-only preview on backdrop click and preserves parent edits', async () => {
+  const user = userEvent.setup();
+  const store = setup({ rows: [] });
+  const confirm = vi.fn();
+  vi.stubGlobal('confirm', confirm);
+  const trigger = screen.getByRole('button', { name: 'View impact' });
+  await user.click(trigger);
+
+  const dialogContainer = screen.getByRole('dialog').parentElement!;
+  await user.click(dialogContainer);
+
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+  expect(store.getState().confirmPopup.isChanges).toBe(true);
+  expect(confirm).not.toHaveBeenCalled();
+});
+
 it('explains refund coverage and shows the applied version’s amount rule and deduction', async () => {
   const user = userEvent.setup();
   setup({
@@ -87,7 +123,16 @@ it('explains refund coverage and shows the applied version’s amount rule and d
   expect(screen.getByText('This policy covers 1 of 2 fee heads for refunds.')).toBeVisible();
   expect(screen.getByText('75% of the eligible amount')).toBeVisible();
   expect(screen.getByText('5% deduction')).toBeVisible();
+  expect(screen.getByText('Eligible for refunds')).toBeVisible();
   expect(screen.getByText('The policy excludes this fee head from refunds.')).toBeVisible();
+  expect(
+    screen.queryByText(
+      'The refund amount depends on eligible paid amounts and any previous refunds.'
+    )
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByText('Eligible paid amounts can be considered for a refund under this policy.')
+  ).not.toBeInTheDocument();
 });
 
 it('reflects a saved collection override that disables late fees for a covered head', async () => {
@@ -115,7 +160,7 @@ it.each([
   [{ rows: undefined }, 'Fee head details for this selected version are not available here.'],
   [{ rows: [] }, 'No fee heads have been added to this structure.'],
 ])(
-  'shows the appropriate availability state and closes with the footer',
+  'shows the appropriate availability state and closes with the header',
   async (props, message) => {
     const user = userEvent.setup();
     setup(props);
@@ -123,7 +168,7 @@ it.each([
     if ('loading' in props && props.loading)
       expect(screen.getByRole('status', { name: message })).toBeTruthy();
     else expect(screen.getByText(message, { exact: false })).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: /^Close$/ }));
+    await user.click(screen.getByRole('button', { name: 'close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   }
 );

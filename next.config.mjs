@@ -17,12 +17,10 @@ const nextConfig = {
     BUILD_STATIC_EXPORT: isStaticExport,
   },
 
+  // Let Next.js optimize @mui/material using its exports, including chipClasses.
   modularizeImports: {
     '@mui/icons-material': {
       transform: '@mui/icons-material/{{member}}',
-    },
-    '@mui/material': {
-      transform: '@mui/material/{{member}}',
     },
     '@mui/lab': {
       transform: '@mui/lab/{{member}}',

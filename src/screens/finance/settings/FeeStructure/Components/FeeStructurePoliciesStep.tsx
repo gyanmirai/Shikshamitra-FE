@@ -1,21 +1,13 @@
-import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   StructureSettings,
   StructureCandidate,
 } from 'src/redux/finance/feeStructureWorkspace';
 
 import { useState } from 'react';
-import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
-import { alpha, useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionHeader } from 'src/components/form-section-card';
-import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
-import CheckCircleOutlineRounded from '@mui/icons-material/CheckCircleOutlineRounded';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Card,
@@ -28,12 +20,12 @@ import {
   FormHelperText,
 } from '@mui/material';
 
-import StructurePolicyPreview from './StructurePolicyPreview';
+import StructurePolicyPicker from './StructurePolicyPicker';
 import { structurePolicyError } from '../feeStructureModel';
-import { policyImpactRows, refundPolicyMatchesHeads } from '../policyImpactModel';
 
 import type { StructurePolicyFamily } from '../feeStructureModel';
-import type { PolicyImpactRow, ImpactPolicyData } from '../policyImpactModel';
+import type { PolicyImpactRow } from '../policyImpactModel';
+import type { StructurePolicyCatalog } from './StructurePolicyPicker';
 
 export interface StructurePolicyImpact {
   key: StructurePolicyFamily;
@@ -51,9 +43,9 @@ interface Props {
   impacts: StructurePolicyImpact[];
   catalogs: Record<
     Exclude<StructurePolicyFamily, 'proration'>,
-    { items: ImpactPolicyData[]; loading: boolean; error: boolean; retry: () => void }
+    StructurePolicyCatalog
   > & {
-    proration?: { items: ImpactPolicyData[]; loading: boolean; error: boolean; retry: () => void };
+    proration?: StructurePolicyCatalog;
   };
   writable: boolean;
   locked: boolean;
@@ -73,86 +65,10 @@ export default function FeeStructurePoliciesStep({
   onChange,
   onView,
 }: Props) {
-  const theme = useTheme();
-  const selectionTint = theme.vars
-    ? varAlpha(theme.vars.palette.success.mainChannel, 0.08)
-    : alpha(theme.palette.success.main, 0.08);
   const [choosing, setChoosing] = useState<StructurePolicyFamily>();
-  const [previewOption, setPreviewOption] = useState<StructureSettings['policies'][number]>();
-  const [choiceError, setChoiceError] = useState('');
   const selectedFamily = impacts.find((impact) => impact.key === choosing);
   const catalogFor = (family: StructurePolicyFamily) => catalogs[family] ?? {
     items: [], loading: false, error: false, retry: () => {},
-  };
-  const options = choosing
-    ? settings.policies
-        .filter((policy) => policy.family === choosing)
-        .map((policy) => {
-          const detail = catalogFor(choosing).items?.find(
-            (item) => item.id === policy.id && item.currentVersionId === policy.versionId
-          );
-          const refund =
-            choosing === 'refund' ? (policy.feeHeadScope ? policy : detail) : undefined;
-          const eligible = refundPolicyMatchesHeads(refund, candidate.feeHeads);
-          const refundHeadNames = refund?.applicableFeeHeadIds?.map(
-            (id) =>
-              policy.feeHeadNames?.[id] ??
-              settings.heads.find((head) => head.id === id)?.name ??
-              'Fee head name unavailable'
-          );
-          const rows = policyImpactRows(
-            choosing,
-            {
-              ...candidate,
-              [`${choosing}PolicyId`]: policy.id,
-              [`${choosing}PolicyVersionId`]: policy.versionId,
-            },
-            settings,
-            refund
-              ? {
-                  id: policy.id,
-                  currentVersionId: policy.versionId,
-                  feeHeadScope: refund.feeHeadScope ?? undefined,
-                  applicableFeeHeadIds: refund.applicableFeeHeadIds ?? [],
-                }
-              : detail
-          );
-          const matches = rows?.filter((row) =>
-            choosing === 'collection'
-              ? row.treatment === 'Late fee applies'
-              : row.treatment !== 'Excluded'
-          ).length;
-          const attachedVersionId = candidate[`${choosing}PolicyVersionId`];
-          const attachedPolicyId = candidate[`${choosing}PolicyId`];
-          const isSelected = Boolean(
-            (attachedVersionId &&
-              String(attachedVersionId).trim().toLowerCase() ===
-                String(policy.versionId).trim().toLowerCase()) ||
-            (!attachedVersionId &&
-              attachedPolicyId &&
-              String(attachedPolicyId).trim().toLowerCase() ===
-                String(policy.id).trim().toLowerCase())
-          );
-          return {
-            ...policy,
-            _id: policy.versionId,
-            selected: isSelected,
-            eligible,
-            policyFeeHeads:
-              refund?.feeHeadScope === 'AllFeeHeads'
-                ? ['All fee heads']
-                : refundHeadNames ?? [],
-            coverage: rows
-              ? choosing === 'collection'
-                ? `Late fees on ${matches} of ${rows.length} fee heads`
-                : `${matches} of ${rows.length} fee heads`
-              : 'Unavailable',
-          };
-        })
-    : [];
-  const closePicker = () => {
-    setChoiceError('');
-    setChoosing(undefined);
   };
   return (
     <>
@@ -242,17 +158,12 @@ export default function FeeStructurePoliciesStep({
                                   type="button"
                                   size="small"
                                   disabled={!allowed || busy}
-                                  sx={
-                                    version
-                                      ? undefined
-                                      : { border: 1, borderColor: 'divider', borderRadius: 1 }
-                                  }
                                   aria-label={`${version ? 'Change' : 'Select'} ${impact.label}`}
                                   onClick={() => setChoosing(key)}
                                 >
                                   <Iconify
                                     icon={version ? GlobalIcons.edit : GlobalIcons.addIcon}
-                                    width={version ? 16 : undefined}
+                                    width={16}
                                   />
                                 </IconButton>
                               </span>
@@ -363,223 +274,17 @@ export default function FeeStructurePoliciesStep({
           </Stack>
         </Card>
       </Stack>
-      {choosing && selectedFamily && (
-        <CustomDialog
-          titleInfo={selectedFamily.description}
-          open
-          title={`Choose ${selectedFamily.label}`}
-          maxWidth="md"
-          hasForm={false}
-          guardUnsavedChanges={false}
-          disableClose={busy}
-          handleClose={() => {
-            if (!busy) closePicker();
-          }}
-        >
-          <DialogScrollContent>
-            {choiceError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {choiceError}
-              </Alert>
-            )}
-            {choosing === 'proration' && (
-              <Button size="small" disabled={busy} sx={{ mb: 1 }} onClick={() => {
-                onChange('proration', '');
-                closePicker();
-              }}>
-                Use academic-year default
-              </Button>
-            )}
-            <CustomizableTable
-              tableTitle={`${selectedFamily.label} choices`}
-              tableId={`structure-policy-picker-${choosing}`}
-              data={options}
-              getRowAction={(row) =>
-                !busy && settings.permissions[`${choosing}Read`]
-                  ? {
-                      label: `View ${row.name} version ${row.versionNumber}`,
-                      onClick: () =>
-                        setPreviewOption(
-                          options.find((option) => option.versionId === row.versionId)
-                        ),
-                    }
-                  : undefined
-              }
-              rowProps={(row) => ({
-                selected: row.selected,
-                'aria-selected': row.selected,
-                sx: row.selected
-                  ? {
-                      '&.Mui-selected, &.Mui-selected:hover': { bgcolor: 'transparent' },
-                      '& > td': {
-                        bgcolor: 'background.paper',
-                        backgroundImage: `linear-gradient(${selectionTint}, ${selectionTint})`,
-                      },
-                    }
-                  : undefined,
-              })}
-              isLoading={catalogFor(choosing).loading && !options.length}
-              isSearch
-              isFilter={false}
-              isPagination={options.length > 10}
-              isShowedDense={false}
-              searchableFields={['name']}
-              noDataText={`No published ${selectedFamily.label.toLowerCase()} is available for this academic year.`}
-              errorContent={
-                catalogFor(choosing).error ? (
-                  <Alert
-                    severity="error"
-                    action={
-                      <Button size="small" onClick={catalogFor(choosing).retry} disabled={busy}>
-                        Retry
-                      </Button>
-                    }
-                  >
-                    Policies could not be loaded.
-                  </Alert>
-                ) : undefined
-              }
-              columns={[
-                {
-                  id: 'name',
-                  label: 'Policy',
-                  headerSx: { minWidth: { sm: 220 } },
-                  cellSx: { overflowWrap: 'anywhere' },
-                  isSort: false,
-                  isFilter: false,
-                  render: (_value, row) => (
-                    <Stack spacing={0.5}>
-                      <Typography variant="subtitle2">{row.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Version {row.versionNumber}
-                        {row.isDefault ? ' · Default' : ''}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ display: { xs: 'block', sm: 'none' } }}
-                      >
-                        {row.coverage}
-                      </Typography>
-                    </Stack>
-                  ),
-                },
-                {
-                  id: 'coverage',
-                  label: 'Fee head coverage',
-                  minWidth: 180,
-                  headerSx: { display: { xs: 'none', sm: 'table-cell' } },
-                  cellSx: { display: { xs: 'none', sm: 'table-cell' } },
-                  isFilter: false,
-                  isSort: false,
-                },
-                ...(choosing === 'refund'
-                  ? ([
-                      {
-                        id: 'policyFeeHeads',
-                        label: 'Fee Heads',
-                        minWidth: 140,
-                        cellSx: { whiteSpace: 'normal', overflowWrap: 'anywhere' },
-                        isFilter: false,
-                        isSort: false,
-                        render: (_value, row) =>
-                          row.policyFeeHeads.length ? (
-                            <Stack component="ul" spacing={0.5} sx={{ m: 0, p: 0, listStyle: 'none' }}>
-                              {row.policyFeeHeads.map((name: string, index: number) => (
-                                <li key={`${name}-${index}`}>{name}</li>
-                              ))}
-                            </Stack>
-                          ) : (
-                            'Unavailable'
-                          ),
-                      },
-                    ] satisfies IColumn[])
-                  : []),
-                {
-                  id: 'actions',
-                  label: 'Actions',
-                  width: 80,
-                  minWidth: 80,
-                  sticky: true,
-                  stickyPosition: 'right',
-                  align: 'left',
-                  isFilter: false,
-                  isSort: false,
-                  excludeFromExport: true,
-                  render: (_value, row) => (
-                    row.selected ? (
-                      <CustomTooltip title="Selected">
-                        <Box
-                          component="span"
-                          role="img"
-                          aria-label="Selected"
-                          sx={{ color: 'success.main', display: 'inline-flex', p: 0.625 }}
-                        >
-                          <CheckCircleRounded fontSize="small" />
-                        </Box>
-                      </CustomTooltip>
-                    ) : (
-                      <CustomTooltip title="Select policy">
-                        <span>
-                          <IconButton
-                            type="button"
-                            size="small"
-                            aria-label={`Select ${row.name} version ${row.versionNumber}`}
-                            disabled={
-                              busy ||
-                              !writable ||
-                              !settings.permissions[choosing] ||
-                              !settings.permissions[`${choosing}Read`]
-                            }
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (choosing === 'refund' && row.eligible !== true) {
-                                setChoiceError(
-                                  row.eligible === false
-                                    ? `${row.name} has no matching fee heads. Choose another refund policy.`
-                                    : catalogs.refund.loading
-                                      ? 'Refund policy coverage is loading. Try again when it is ready.'
-                                      : 'Coverage for this policy version is unavailable. Refresh the list or choose another refund policy.'
-                                );
-                                return;
-                              }
-                              onChange(choosing, row.versionId);
-                              shikshaMitraToast.success({
-                                message: `${selectedFamily.label} added to this draft.`,
-                              });
-                              closePicker();
-                            }}
-                            sx={{ color: 'text.secondary' }}
-                          >
-                            <CheckCircleOutlineRounded fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </CustomTooltip>
-                    )
-                  ),
-                },
-              ]}
-              searchFieldProps={{
-                placeholder: 'Search policies',
-                inputProps: {
-                  'aria-label': `Search ${selectedFamily.label.toLowerCase()} choices`,
-                },
-              }}
-            />
-            {catalogFor(choosing).loading && !!options.length && (
-              <Typography variant="caption" role="status">
-                Loading more policies…
-              </Typography>
-            )}
-          </DialogScrollContent>
-        </CustomDialog>
-      )}
-      {previewOption && (
-        <StructurePolicyPreview
-          option={previewOption}
+      {selectedFamily && !locked && settings.permissions[`${selectedFamily.key}Read`] && (
+        <StructurePolicyPicker
+          key={selectedFamily.key}
+          family={selectedFamily}
+          candidate={candidate}
           settings={settings}
-          onClose={() => setPreviewOption(undefined)}
-          onRefreshOptions={catalogFor(previewOption.family as StructurePolicyFamily).retry}
+          catalog={catalogFor(selectedFamily.key)}
+          canSelect={writable && !!settings.permissions[selectedFamily.key] && !busy}
+          busy={busy}
+          onChange={onChange}
+          onClose={() => setChoosing(undefined)}
         />
       )}
     </>

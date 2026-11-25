@@ -12,6 +12,7 @@ export interface ConcessionTypeVersionHistoryItem {
   id: string;
   versionNumber: number;
   changeAction: string;
+  changeReason?: string | null;
   changeTime: string;
   actorId?: string | null;
   actorName?: string | null;

@@ -4,8 +4,7 @@ import type { BoxProps } from '@mui/material/Box';
 
 import Box from '@mui/material/Box';
 import Portal from '@mui/material/Portal';
-
-import { SplashContent } from './splash-content';
+import { AnimateLogo1 } from 'src/components/animate/animate-logo';
 
 type Props = BoxProps & {
   portal?: boolean;
@@ -26,19 +25,16 @@ export function SplashScreen({ portal = true, sx, ...other }: Props) {
             height: 1,
             zIndex: 9998,
             display: 'flex',
-            flexDirection: 'column',
             position: 'fixed',
             alignItems: 'center',
+            justifyContent: 'center',
             bgcolor: 'background.default',
-            px: 3,
-            py: { xs: 7, sm: 8 },
-            overflowY: 'auto',
           },
           ...(Array.isArray(sx) ? sx : [sx]),
         ]}
         {...other}
       >
-        <SplashContent />
+        <AnimateLogo1 />
       </Box>
     </Box>
   );

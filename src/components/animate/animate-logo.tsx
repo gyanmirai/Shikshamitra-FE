@@ -1,8 +1,8 @@
 import type { BoxProps } from '@mui/material/Box';
 
 import Box from '@mui/material/Box';
-import { motion } from 'framer-motion';
 import { varAlpha } from 'src/theme/styles';
+import { motion, useReducedMotion } from 'framer-motion';
 
 import { Logo } from '../logo';
 
@@ -13,6 +13,8 @@ export type AnimateLogoProps = BoxProps & {
 };
 
 export function AnimateLogo1({ logo, sx, ...other }: AnimateLogoProps) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <Box
       sx={{
@@ -28,7 +30,9 @@ export function AnimateLogo1({ logo, sx, ...other }: AnimateLogoProps) {
     >
       <Box
         component={motion.div}
-        animate={{ scale: [1, 0.9, 0.9, 1, 1], opacity: [1, 0.48, 0.48, 1, 1] }}
+        animate={
+          reduceMotion ? undefined : { scale: [1, 0.9, 0.9, 1, 1], opacity: [1, 0.48, 0.48, 1, 1] }
+        }
         transition={{
           duration: 2,
           repeatDelay: 1,
@@ -42,12 +46,16 @@ export function AnimateLogo1({ logo, sx, ...other }: AnimateLogoProps) {
 
       <Box
         component={motion.div}
-        animate={{
-          scale: [1.6, 1, 1, 1.6, 1.6],
-          rotate: [270, 0, 0, 270, 270],
-          opacity: [0.25, 1, 1, 1, 0.25],
-          borderRadius: ['25%', '25%', '50%', '50%', '25%'],
-        }}
+        animate={
+          reduceMotion
+            ? undefined
+            : {
+                scale: [1.6, 1, 1, 1.6, 1.6],
+                rotate: [270, 0, 0, 270, 270],
+                opacity: [0.25, 1, 1, 1, 0.25],
+                borderRadius: ['25%', '25%', '50%', '50%', '25%'],
+              }
+        }
         transition={{ ease: 'linear', duration: 3.2, repeat: Infinity }}
         sx={{
           position: 'absolute',
@@ -59,12 +67,16 @@ export function AnimateLogo1({ logo, sx, ...other }: AnimateLogoProps) {
 
       <Box
         component={motion.div}
-        animate={{
-          scale: [1, 1.2, 1.2, 1, 1],
-          rotate: [0, 270, 270, 0, 0],
-          opacity: [1, 0.25, 0.25, 0.25, 1],
-          borderRadius: ['25%', '25%', '50%', '50%', '25%'],
-        }}
+        animate={
+          reduceMotion
+            ? undefined
+            : {
+                scale: [1, 1.2, 1.2, 1, 1],
+                rotate: [0, 270, 270, 0, 0],
+                opacity: [1, 0.25, 0.25, 0.25, 1],
+                borderRadius: ['25%', '25%', '50%', '50%', '25%'],
+              }
+        }
         transition={{ ease: 'linear', duration: 3.2, repeat: Infinity }}
         sx={{
           width: 1,

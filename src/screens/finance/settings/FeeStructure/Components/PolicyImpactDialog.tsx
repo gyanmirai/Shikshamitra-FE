@@ -6,7 +6,6 @@ import type {
 
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -14,7 +13,7 @@ import { useGetRefundPolicyVersionsQuery } from 'src/redux/finance/refundPolicy'
 import { useGetProrationPolicyVersionsQuery } from 'src/redux/finance/prorationPolicy';
 import { useGetCollectionPolicyVersionsQuery } from 'src/redux/finance/collectionPolicy';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, Skeleton, Typography, DialogActions } from '@mui/material';
+import { Alert, Stack, Skeleton, Typography } from '@mui/material';
 import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import { parsePolicyVersionSnapshot } from 'src/screens/finance/policies/utils/policy-version-page';
 
@@ -42,10 +41,9 @@ interface Props {
   onClose: () => void;
 }
 
-const effects: Record<string, { label: string; description: string; covered: boolean }> = {
+const effects: Record<string, { label: string; description?: string; covered: boolean }> = {
   'Policy eligible': {
     label: 'Eligible for refunds',
-    description: 'Eligible paid amounts can be considered for a refund under this policy.',
     covered: true,
   },
   Excluded: {
@@ -166,6 +164,7 @@ export default function PolicyImpactDialog({
       handleClose={onClose}
       maxWidth="md"
       hasForm={false}
+      closeOnBackdropClick
       guardUnsavedChanges={false}
       paperProps={{ sx: { backgroundImage: 'none' } }}
     >
@@ -180,11 +179,6 @@ export default function PolicyImpactDialog({
                 helpText="Coverage is based on the fee heads in this structure and the attached version’s rules."
               >
                 {showSummary && <Typography variant="subtitle2">{summary}</Typography>}
-                {family === 'refund' && total > 0 && affected > 0 && (
-                  <Typography variant="body2" color="text.secondary">
-                    The refund amount depends on eligible paid amounts and any previous refunds.
-                  </Typography>
-                )}
                 {rulesLoading && !policy ? (
                   <Skeleton aria-label="Loading applied policy rules" />
                 ) : rules.length > 0 ? (
@@ -241,7 +235,7 @@ export default function PolicyImpactDialog({
                           <Label color={effects[value]?.covered ? 'success' : 'default'}>
                             {effects[value]?.label ?? value}
                           </Label>
-                          {effects[value] && (
+                          {effects[value]?.description && (
                             <Typography
                               variant="body2"
                               color="text.secondary"
@@ -278,16 +272,6 @@ export default function PolicyImpactDialog({
           </DetailSection>
         </Stack>
       </DialogScrollContent>
-      <DialogActions>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
-        >
-          Close
-        </Button>
-      </DialogActions>
     </CustomDialog>
   );
 }

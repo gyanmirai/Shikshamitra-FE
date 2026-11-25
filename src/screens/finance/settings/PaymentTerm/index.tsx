@@ -462,19 +462,10 @@ const PaymentTerm = () => {
             unused first draft can be deleted.
           </>
         }
-        action={
-          <LoadingButton
-            startIcon={<Iconify icon="mdi:delete-outline" />}
-            variant="contained"
-            color="error"
-            size="small"
-            loading={deleteState.isLoading}
-            onClick={handleDeleteConfirm}
-          >
-            Delete
-          </LoadingButton>
-        }
-      />
+        successMessage="Payment term deleted successfully."
+      >
+        Delete draft payment term <strong>{selectedPaymentTerm?.paymentTermName}</strong>?
+      </FinanceSettingDeleteDialog>
 
       <ConfirmDialog
         open={Boolean(publishTarget)}
