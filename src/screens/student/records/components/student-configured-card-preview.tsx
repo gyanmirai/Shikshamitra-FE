@@ -7,15 +7,19 @@ import type {
 import { useState } from 'react';
 import { Box, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { IdentityCardPreview } from 'src/components/identity-card-designer';
+import { CardTrimPreview } from 'src/components/identity-card-designer/card-trim-preview';
 
-import { getStudentICardLayout } from '../student-icard-design';
+import { StudentICardSignaturePreview } from './student-icard-signature-preview';
+import { getStudentICardLayout, getStudentICardPrintSettings } from '../student-icard-design';
 
 export type StudentCardPreviewProps = {
   template: IdCardTemplate;
-  card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'>;
+  card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'> & Partial<Pick<IdCard, 'templateSnapshot'>>;
   side?: 'front' | 'back';
   interactive?: boolean;
   photoUrl?: string;
+  showTrim?: boolean;
+  flat?: boolean;
 };
 
 export function StudentConfiguredCardPreview({
@@ -25,10 +29,13 @@ export function StudentConfiguredCardPreview({
   interactive = true,
   photoUrl,
   legacyFront,
+  showTrim = false,
+  flat = false,
 }: StudentCardPreviewProps & { legacyFront?: ReactNode }) {
   const [selected, setSelected] = useState<'front' | 'back'>('front');
   const canPreviewBack = template.backSideEnabled || Boolean(legacyFront);
   const activeSide = canPreviewBack ? (side ?? selected) : 'front';
+  const layout = getStudentICardLayout(template);
   const values = {
     ...card?.studentSnapshot,
     schoolName: template.schoolName,
@@ -37,6 +44,26 @@ export function StudentConfiguredCardPreview({
     footerText: template.footerText,
     CardNumber: card?.cardNumber ?? 'Preview',
   };
+  const renderArtwork = (signatureUrl?: string) => (
+    <IdentityCardPreview
+      photoUrl={photoUrl}
+      layout={layout}
+      side={activeSide}
+      values={values}
+      qrCodeEnabled={template.showQrCode}
+      logoHidden={template.logo?.mode === 2}
+      signatureUrl={signatureUrl}
+      flat={flat || showTrim}
+    />
+  );
+  const identityTemplate = card?.templateSnapshot ?? template;
+  const artwork = identityTemplate.signature && identityTemplate.signature.mode !== 2
+    && layout[activeSide]?.elements.some((element) => element.type === 'signature' && element.visible)
+    ? (
+      <StudentICardSignaturePreview template={identityTemplate} snapshot={identityTemplate.schoolIdentity}>
+        {renderArtwork}
+      </StudentICardSignaturePreview>
+    ) : renderArtwork();
   return (
     <Stack spacing={1} sx={{ width: 1, minWidth: 0 }}>
       {interactive && canPreviewBack && (
@@ -54,17 +81,16 @@ export function StudentConfiguredCardPreview({
         </ToggleButtonGroup>
       )}
       <Box sx={{ width: 1, minWidth: 0 }}>
-        {activeSide === 'front' && legacyFront ? (
-          legacyFront
+        {activeSide === 'front' && legacyFront ? legacyFront : showTrim ? (
+          <CardTrimPreview
+            layout={layout}
+            settings={getStudentICardPrintSettings(template)}
+            back={activeSide === 'back'}
+          >
+            {artwork}
+          </CardTrimPreview>
         ) : (
-          <IdentityCardPreview
-            photoUrl={photoUrl}
-            layout={getStudentICardLayout(template)}
-            side={activeSide}
-            values={values}
-            qrCodeEnabled={template.showQrCode}
-            logoHidden={template.logo?.mode === 2}
-          />
+          artwork
         )}
       </Box>
     </Stack>

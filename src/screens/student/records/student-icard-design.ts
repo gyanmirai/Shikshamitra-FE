@@ -108,6 +108,12 @@ export function applyStudentICardDesign(
   };
 }
 
+export function hasStudentICardSignatureLayer(layout: IdentityCardLayout) {
+  return [layout.front, layout.back].some((side) =>
+    side?.elements.some((element) => element.type === 'signature')
+  );
+}
+
 export function createStudentICardTemplate(
   orientation: IdCardTemplate['orientation'] = 'Horizontal'
 ): IdCardTemplate {
@@ -162,6 +168,11 @@ export function getStudentICardDesignErrors(template: IdCardTemplate): string[] 
   if (!layout)
     return ['The saved card design is invalid. Choose Classic Identity to reset the design.'];
   const errors = validateIdentityCardLayout(layout, STUDENT_ICARD_FIELDS);
+  if (template.signature?.mode === 1) {
+    if (!template.signature.assetId) errors.push('Upload the custom principal’s signature.');
+    else if (!template.signature.principalName?.trim() || !template.signature.designation?.trim())
+      errors.push('Enter the principal’s name and designation for the custom signature.');
+  }
   if (template.backSideEnabled && !layout.back?.elements.length)
     errors.push('Add a back design or disable the back side.');
   return [

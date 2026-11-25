@@ -41,6 +41,9 @@ export function getStudentICardPrintSettings(template: IdCardTemplate): Identity
       ...DEFAULT_IDENTITY_CARD_PRINT_SETTINGS,
       ...settings,
       cardsPerPage: template.cardsPerPage,
+      showCutMarks:
+        settings.showCutMarks ??
+        (template.schemaVersion !== 2 && DEFAULT_IDENTITY_CARD_PRINT_SETTINGS.showCutMarks),
       units: 'mm',
     };
   } catch {

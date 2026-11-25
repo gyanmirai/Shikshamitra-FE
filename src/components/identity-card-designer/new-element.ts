@@ -6,15 +6,16 @@ export function newIdentityCardElement(
   layout: IdentityCardLayout,
   elements: IdentityCardElement[]
 ): IdentityCardElement {
+  const signature = type === 'signature';
   return {
     id,
     type,
     fieldKey: type === 'text' ? 'static' : undefined,
-    label: `New ${type}`,
+    label: signature ? 'Principal’s signature' : `New ${type}`,
     value: type === 'text' ? 'Enter text' : undefined,
-    x: layout.width * 0.05,
-    y: layout.height * 0.4,
-    w: type === 'text' ? layout.width * 0.5 : layout.width * 0.15,
+    x: layout.width * (signature ? 0.67 : 0.05),
+    y: layout.height * (signature ? 0.62 : 0.4),
+    w: layout.width * (signature ? 0.28 : type === 'text' ? 0.5 : 0.15),
     h: type === 'line' ? 1 : layout.height * 0.15,
     z: Math.max(0, ...elements.map((element) => element.z)) + 1,
     visible: true,

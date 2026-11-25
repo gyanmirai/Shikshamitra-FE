@@ -49,7 +49,7 @@ export function validateIdentityCardLayout(
         errors.push(`${side}: every element needs an identifier.`);
       errors.push(...validateEditorElement(element).map((error) => `${side}: ${name}: ${error}`));
       if (
-        !['text', 'photo', 'logo', 'image', 'qr', 'barcode', 'shape', 'line'].includes(element.type)
+        !['text', 'photo', 'logo', 'signature', 'image', 'qr', 'barcode', 'shape', 'line'].includes(element.type)
       )
         errors.push(`${side}: ${name} has an unsupported element type.`);
       if (element.style) {

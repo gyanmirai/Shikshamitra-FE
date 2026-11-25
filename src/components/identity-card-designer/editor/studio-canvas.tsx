@@ -55,6 +55,7 @@ export function StudioCanvas({
       (e) =>
         e.visible &&
         !(e.type === 'logo' && props.logoHidden) &&
+        (e.type !== 'signature' || props.signatureUrl || props.signaturePlaceholder) &&
         !(e.type === 'qr' && props.qrCodeEnabled === false) &&
         !(e.type === 'barcode' && props.barcodeEnabled === false)
     )

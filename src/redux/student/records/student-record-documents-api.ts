@@ -1,5 +1,5 @@
 import type { IdentityCardPhotoEdit } from 'src/components/identity-card-designer/types';
-import type { IdentityChoices, IdentitySelection } from 'src/screens/setting/school-identity/types';
+import type { IdentityChoices, IdentityContext, IdentitySelection } from 'src/screens/setting/school-identity/types';
 
 import { api } from 'src/redux/service';
 import { studentType } from 'src/redux/tagTypes';
@@ -18,6 +18,8 @@ export type CertificateBatchQuery = { certificateType: CertificateType; generate
 export type IdCardSelection = { academicYearId?: string | null; boardIds: string[]; mediumIds: string[]; standardIds: string[]; divisionIds: string[]; studentIds: string[] };
 export type IdCardTemplate = {
   logo?: IdentitySelection;
+  signature?: IdentitySelection | null;
+  schoolIdentity?: (IdentityContext & { signatureAssetId?: string | null }) | null;
   id?: string | null;
   name: string;
   presetKey: string;

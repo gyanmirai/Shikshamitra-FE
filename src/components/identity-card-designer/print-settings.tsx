@@ -1,5 +1,5 @@
 import { GlobalIcons } from 'src/utils/icons';
-import { Box, Alert, Typography } from '@mui/material';
+import { Box, Alert, Button, Typography } from '@mui/material';
 import { FormSectionCard } from 'src/components/form-section-card';
 
 import { getIdentityCardSheetLayout } from './geometry';
@@ -15,7 +15,9 @@ export function PrintSettings({
   onPrintSettingsChange,
   disabled,
   backSideEnabled,
-}: IdentityCardDesignerProps) {
+  printPreviewOpen,
+  onPrintPreviewToggle,
+}: IdentityCardDesignerProps & { printPreviewOpen: boolean; onPrintPreviewToggle: () => void }) {
   const update = <K extends keyof IdentityCardPrintSettings>(
     key: K,
     value: IdentityCardPrintSettings[K]
@@ -37,12 +39,12 @@ export function PrintSettings({
     max?: number;
   }[] = [
     { key: 'cardsPerPage', label: 'Cards per page', min: 1, max: 10 },
-    { key: 'margin', label: 'Margin (mm)', min: 0 },
-    { key: 'gap', label: 'Gap (mm)', min: 0 },
-    { key: 'bleedMm', label: 'Bleed per edge (mm)', min: 0 },
-    { key: 'safeInsetMm', label: 'Safe inset (mm)', min: 0 },
-    { key: 'backOffsetXmm', label: 'Back X offset (mm)' },
-    { key: 'backOffsetYmm', label: 'Back Y offset (mm)' },
+    { key: 'margin', label: 'Margin (mm)', min: 0, max: 60 },
+    { key: 'gap', label: 'Gap (mm)', min: 0, max: 40 },
+    { key: 'bleedMm', label: 'Bleed per edge (mm)', min: 0, max: 10 },
+    { key: 'safeInsetMm', label: 'Safe inset (mm)', min: 0, max: 20 },
+    { key: 'backOffsetXmm', label: 'Back X offset (mm)', min: -30, max: 30 },
+    { key: 'backOffsetYmm', label: 'Back Y offset (mm)', min: -30, max: 30 },
   ];
   return (
     <FormSectionCard
@@ -51,6 +53,9 @@ export function PrintSettings({
       descriptionTooltip="Cards print at actual size. Sheet capacity includes margins, spacing and bleed. Test duplex alignment on your printer."
       titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
     >
+      <Button variant="outlined" aria-expanded={printPreviewOpen} onClick={onPrintPreviewToggle}>
+        {printPreviewOpen ? 'Close print preview' : 'Print Preview'}
+      </Button>
       <DesignerSelect
         label="Paper size"
         value={settings.pageSize}
