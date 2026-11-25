@@ -75,14 +75,14 @@ function completedPreview(id = 'run-1') {
 }
 
 describe('background payroll preview', () => {
-  it('opens the first register page with saved rows before fetching review details', () => {
+  it('fetches both register views together and shows saved rows until details arrive', () => {
     mocks.opening = {};
     const { result, rerender } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1', true));
     expect(mocks.openingHook).toHaveBeenLastCalledWith(
       expect.objectContaining({ month: '2026-08', academicYearId: 'year-1', page: 0, pageSize: 25 }),
       { skip: false }
     );
-    expect(mocks.registerHook.mock.lastCall?.[1]).toMatchObject({ skip: true });
+    expect(mocks.registerHook.mock.lastCall?.[1]).toMatchObject({ skip: false });
     expect(result.current.fetching).toBe(true);
 
     const registerRows = [{ employeeId: '1', employeeName: 'Asha Rao' }];
@@ -91,7 +91,6 @@ describe('background payroll preview', () => {
     expect(result.current.openingRows).toEqual(registerRows);
     expect(result.current.data).toBeUndefined();
     expect(result.current.isCurrent).toBe(false);
-    expect(mocks.registerHook.mock.lastCall?.[1]).toMatchObject({ skip: false });
 
     completedPreview();
     rerender();
