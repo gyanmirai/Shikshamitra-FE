@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   page: {} as any,
   statusHook: vi.fn(),
   pageHook: vi.fn(),
+  registerHook: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),
@@ -20,7 +21,10 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('src/redux/runPayroll/payroll-preview-run-api', () => ({
   usePayrollPreviewLookupQuery: () => mocks.lookup,
-  usePayrollRegisterQuery: () => mocks.page,
+  usePayrollRegisterQuery: (input: unknown, options: unknown) => {
+    mocks.registerHook(input, options);
+    return mocks.page;
+  },
   useStartPayrollPreviewMutation: () => [mocks.start, { isLoading: false }],
   usePayrollPreviewStatusQuery: (id: string, options: unknown) => {
     mocks.statusHook(id, options);
@@ -63,6 +67,38 @@ function completedPreview(id = 'run-1') {
 }
 
 describe('background payroll preview', () => {
+  it('does not fetch the same register again when lookup finds its already loaded preview', () => {
+    completedPreview();
+    mocks.params.delete('previewRunId');
+    const status = mocks.status.currentData;
+    delete mocks.status.currentData;
+    const { result, rerender } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1', true));
+    const initialRegisterArgs = mocks.registerHook.mock.calls[0][0];
+    mocks.lookup.currentData = { currentRun: status };
+    rerender();
+    expect(mocks.registerHook.mock.calls.at(-1)?.[0]).toEqual(initialRegisterArgs);
+    expect(initialRegisterArgs).not.toHaveProperty('completedId');
+    expect(mocks.page.refetch).not.toHaveBeenCalled();
+    expect(result.current.isCurrent).toBe(true);
+  });
+
+  it('reconciles a stale register once after a newer run completes', () => {
+    completedPreview('run-2');
+    mocks.page.currentData = { ...mocks.page.currentData, previewRunId: 'run-1' };
+    mocks.page.isFetching = true;
+    const { result, rerender } = renderHook(() => usePayrollPreviewRun('2026-08', 'year-1', true));
+    expect(mocks.page.refetch).not.toHaveBeenCalled();
+    expect(result.current.isCurrent).toBe(false);
+    mocks.page.isFetching = false;
+    rerender();
+    rerender();
+    expect(mocks.page.refetch).toHaveBeenCalledOnce();
+    expect(result.current.isCurrent).toBe(false);
+    mocks.page.currentData = { ...mocks.page.currentData, previewRunId: 'run-2' };
+    rerender();
+    expect(result.current.isCurrent).toBe(true);
+  });
+
   it.each(['month', 'year', 'return', 'unmount'])(
     'rejects an old refresh callback invoked after a context %s',
     async (change) => {

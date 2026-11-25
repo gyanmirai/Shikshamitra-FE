@@ -148,8 +148,10 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
     : display?.key === key
           ? display.data.previewRunId || ''
           : '';
+  const registerArgs = { month, academicYearId, page, pageSize, search, ...registerCriteria };
+  const registerKey = JSON.stringify(registerArgs);
   const registerQuery = usePayrollRegisterQuery(
-    { month, academicYearId, completedId, page, pageSize, search, ...registerCriteria },
+    registerArgs,
     { skip: !useRegister || !month || !academicYearId, refetchOnFocus: true, refetchOnMountOrArgChange: true }
   );
   const employeesQuery = usePayrollPreviewEmployeesQuery(
@@ -181,6 +183,23 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
       updateQuery({ month, previewRunId: currentPage.previewRunId });
     }
   }, [currentPage, matches, month, requestedRunId, status, updateQuery, useRegister]);
+  // The register resolves its own generation. Discovery alone must not re-read the
+  // same page, but an in-flight page can predate a newly completed current run.
+  const reconciledRegister = useRef<{ context: typeof renderedContext; signature: string } | null>(null);
+  const { refetch: refetchRegister } = registerQuery;
+  const needsReconciliation = Boolean(
+    useRegister && matches && status.status === 'SUCCEEDED' && status.isCurrent &&
+      !lookupFailed && !statusQuery.isError && !registerQuery.isError &&
+      !registerQuery.isFetching && currentPage && currentPage.previewRunId !== requestedRunId
+  );
+  useEffect(() => {
+    if (!needsReconciliation || statusRefreshRequest.current === renderedContext) return;
+    const signature = JSON.stringify([registerKey, requestedRunId]);
+    if (reconciledRegister.current?.context === renderedContext &&
+        reconciledRegister.current.signature === signature) return;
+    reconciledRegister.current = { context: renderedContext, signature };
+    void refetchRegister();
+  }, [needsReconciliation, refetchRegister, registerKey, renderedContext, requestedRunId]);
   const previousPage = display?.key === key ? display.data : undefined;
   const data = (useRegister ? pageQuery.isError : lookupFailed) ? undefined : currentPage || previousPage;
   const queryError =
@@ -277,7 +296,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
         updateQuery({ month, previewRunId: result.id });
         if (result.id === urlRunId) {
           statusQuery.refetch();
-          if (completedId) pageQuery.refetch();
+          if (completedId && !useRegister) pageQuery.refetch();
         }
         return result;
       } catch (caught) {
@@ -303,6 +322,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
       statusQuery,
       updateQuery,
       urlRunId,
+      useRegister,
     ]
   );
 

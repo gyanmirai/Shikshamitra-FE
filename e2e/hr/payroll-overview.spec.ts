@@ -17,6 +17,28 @@ test('opens saved and empty months without generating payroll', async ({ page })
   expect(starts).toHaveLength(0);
 });
 
+test('opening a saved workbench reads the register once without calculating', async ({ page }) => {
+  const registerReads: string[] = [];
+  const calculations: string[] = [];
+  page.on('request', (request) => {
+    const { pathname } = new URL(request.url());
+    if (request.method() === 'GET' && pathname === '/api/payroll/run/register')
+      registerReads.push(request.url());
+    if (request.method() === 'POST' && pathname === '/api/payroll/run/previews')
+      calculations.push(request.url());
+  });
+  const discovered = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === '/api/payroll/run/previews/run-1'
+  );
+  await page.goto('/hr/payroll/run-payroll?month=2026-09');
+  await discovered;
+  const register = page.getByRole('region', { name: 'Payroll Register' });
+  await expect(register.getByText('Asha Rao')).toBeVisible();
+  await expect(register).toHaveAttribute('aria-busy', 'false');
+  expect(registerReads).toHaveLength(1);
+  expect(calculations).toHaveLength(0);
+});
+
 test('overview navigation retains the selected month', async ({ page }) => {
   await page.goto('/hr/payroll?month=2026-09');
   await expect(page.getByRole('link', { name: 'Open payroll workbench' }).first()).toHaveAttribute(

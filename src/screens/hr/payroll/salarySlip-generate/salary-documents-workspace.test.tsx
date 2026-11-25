@@ -154,6 +154,23 @@ describe('salary document previews', () => {
     });
   });
 
+  it('does not repeat the base preview while a filtered report owns the visible rows', async () => {
+    state.preview.mockReturnValue({
+      abort: vi.fn(),
+      unwrap: async () => ({ reportType: 'Saved payroll' }),
+    });
+    render(<SalaryDocumentsWorkspace kind="register" />);
+    await settlePreview();
+    fireEvent.click(screen.getByRole('button', { name: 'Filter net pay' }));
+    fireEvent.change(screen.getByLabelText('Payroll month'), { target: { value: '2026-09' } });
+    await settlePreview();
+    expect(state.preview).toHaveBeenCalledTimes(1);
+    expect(state.tableRead.mock.calls.at(-1)?.[0]).toMatchObject({
+      query: { filters: { month: '2026-09' } },
+      criteria: { filters: [{ column: 'netPay', type: 'greaterThan', value: 0 }] },
+    });
+  });
+
   it('aborts an obsolete preview and ignores its late result', async () => {
     let resolveOld!: (data: any) => void;
     const abort = vi.fn();

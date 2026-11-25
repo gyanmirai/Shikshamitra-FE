@@ -136,6 +136,7 @@ Download retains the original stored bytes.
 The durable payroll preview client is a pending coordinated release and requires the additive backend schema.
 `src/screens/hr/payroll/run-payroll/use-payroll-preview-run.ts` owns month/run URL state, bounded polling, debounced search, and late-response protection.
 The Run Payroll register reads the selected month through `/payroll/run/register` and passes the same criteria to the generic export.
+The register cache key uses the actual request criteria, not the discovered preview ID. When a current preview completes and the loaded page belongs to a different generation, the screen refreshes that page once before allowing generation-bound actions.
 `src/redux/runPayroll/payroll-approval-api.ts` reads workflow settings and submissions, reads section, role and eligible reviewer options, sends versioned commands and invalidates the payroll register after a successful mutation.
 Section review handoff reuses the selected generation and staff IDs.
 The same client reads scoped batch details and uses the server’s allowed actions.
@@ -215,6 +216,7 @@ Settings writes send presentation, automaticEmail, concurrencyStamp and idempote
 School identity fields are read-only and the form offers no payroll-specific logo upload.
 School Identity cache invalidation refreshes the displayed document settings.
 `src/redux/hr/hrReportsApi.ts` retains existing preview/export jobs for payroll_statement and payroll_register.
+The salary document workspace uses the ordinary preview only without table criteria. Search, filters and sorting use the operational table request without launching a second preview. Monthly Payslips reuses matching issued-list data for up to 15 seconds on mount and still revalidates on focus or tag invalidation.
 Salary save responses include the saved statutory profile so the editor adopts the new concurrency stamp atomically.
 
 ## Reporting workspace client
