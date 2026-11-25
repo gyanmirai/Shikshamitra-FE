@@ -28,6 +28,7 @@ export function approveInquirySource(
   return {
     ...form,
     inheritance: {
+      ...form.inheritance,
       enabled: true,
       sources: sources.some((source) => source.inquiryFormDefinitionId === sourceId)
         ? sources
@@ -182,29 +183,91 @@ export function setInheritedFieldMapping(
   });
 }
 
+/** Keep source section rules from composition and take step metadata from the live draft. */
+function placeQuestionsWithinRegistrationSteps(
+  form: CreateUpdateAdmissionForm,
+  sections: FormSections['sections']
+): FormSections['sections'] {
+  const baseById = new Map(form.sections.map((section) => [section.id, section] as const));
+  const sourceIds = new Set(
+    sections
+      .filter(
+        (section) =>
+          !baseById.has(section.id) && section.fields.some((field) => field.inheritedFrom)
+      )
+      .map((section) => section.id)
+  );
+  const steps = getAdmissionFormStepGroups(
+    [...form.sections].sort((left, right) => left.displayOrder - right.displayOrder)
+  );
+  const stepBySection = new Map(
+    steps.flatMap((step) => step.sections.map(({ section }) => [section.id, step] as const))
+  );
+  const registrationPage = {
+    id:
+      sections.find((section) => section.stepCode === 'REGISTRATION_PAGE')?.stepId ??
+      'registration-page',
+    code: 'REGISTRATION_PAGE',
+    name: form.name,
+    displayOrder: 0,
+    visibilityRuleJson: null,
+  };
+  const firstStep = steps[0] ?? registrationPage;
+  return sections
+    .filter((section) => baseById.has(section.id) || sourceIds.has(section.id))
+    .sort(
+      (left, right) =>
+        Number(sourceIds.has(right.id)) - Number(sourceIds.has(left.id)) ||
+        left.displayOrder - right.displayOrder
+    )
+    .map((section, displayOrder) => {
+      const step =
+        form.layoutType === 1 ? (stepBySection.get(section.id) ?? firstStep) : registrationPage;
+      const base = baseById.get(section.id);
+      const sharesFirstStep = step === firstStep && sourceIds.size > 0;
+      // Each form's visibility stays scoped to its own sections inside the shared step.
+      const sectionRule = base ? base.visibilityRuleJson : section.visibilityRuleJson;
+      const ownStepRule = sharesFirstStep && base ? step.visibilityRuleJson?.trim() : undefined;
+      const visibilityRuleJson = ownStepRule
+        ? sectionRule?.trim()
+          ? `{"operator":"ALL","conditions":[${sectionRule},${ownStepRule}]}`
+          : ownStepRule
+        : sectionRule;
+      return {
+        ...section,
+        displayOrder,
+        stepId: step.id,
+        stepCode: step.code,
+        stepName: step.name,
+        stepDisplayOrder: step.displayOrder,
+        stepVisibilityRuleJson: sharesFirstStep ? null : (step.visibilityRuleJson ?? null),
+        visibilityRuleJson,
+      };
+    });
+}
+
 export function getInheritancePreviewValues(
   form: CreateUpdateAdmissionForm,
   effective?: ComposedForm | null,
   contextSections: CreateUpdateAdmissionForm['sections'] = []
 ): CreateUpdateAdmissionForm {
-  // The composition preserves Inquiry steps and section columns. Keep live
-  // Registration grid changes, and immediately reflect a newly added base step.
-  return effective
-    ? {
-        ...form,
-        layoutType: form.layoutType === 1 ? 1 : (effective.layoutType ?? form.layoutType),
-        supportedLanguages: [
-          ...new Set([...form.supportedLanguages, ...(effective.supportedLanguages ?? [])]),
-        ],
-        sections: applyInheritedStepNames(
-          form,
-          mergeInquiryContextSections(effective.sections, contextSections)
-        ).map((section) => ({
-          ...section,
-          fieldsPerRow: form.fieldsPerRow,
-        })),
-      }
-    : form;
+  if (!effective || form.inheritance?.enabled === false) return form;
+  const sections = mergeInquiryContextSections(effective.sections, contextSections);
+  const useRegistrationSteps = form.inheritance?.useRegistrationSteps;
+  return {
+    ...form,
+    layoutType:
+      useRegistrationSteps || form.layoutType === 1
+        ? form.layoutType
+        : (effective.layoutType ?? form.layoutType),
+    supportedLanguages: [
+      ...new Set([...form.supportedLanguages, ...(effective.supportedLanguages ?? [])]),
+    ],
+    sections: (useRegistrationSteps
+      ? placeQuestionsWithinRegistrationSteps(form, sections)
+      : applyInheritedStepNames(form, sections)
+    ).map((section) => ({ ...section, fieldsPerRow: form.fieldsPerRow })),
+  };
 }
 
 /** Keep a pending preview's source structure without restoring an older base draft. */
@@ -214,7 +277,7 @@ export function getInheritanceBuilderValues(
   previewBaseSectionIds: readonly string[] = form.sections.map((section) => section.id),
   contextSections: CreateUpdateAdmissionForm['sections'] = []
 ): CreateUpdateAdmissionForm {
-  if (!effective) return form;
+  if (!effective || form.inheritance?.enabled === false) return form;
   effective = {
     ...effective,
     sections: mergeInquiryContextSections(effective.sections, contextSections).map((section) => ({
@@ -271,6 +334,12 @@ export function getInheritanceBuilderValues(
         },
       ];
     });
+  if (form.inheritance?.useRegistrationSteps) {
+    return getInheritancePreviewValues(form, {
+      ...effective,
+      sections: [...sourceSections, ...baseSections],
+    });
+  }
   // A single-page Registration stays one group when the selected Inquiry has
   // steps, including base sections added while a fresh composition is pending.
   const basePage =
@@ -428,6 +497,7 @@ export function markInheritedRegistrationFields(
   form: CreateUpdateAdmissionForm,
   effective?: FormSections | null
 ): CreateUpdateAdmissionForm {
+  if (form.inheritance?.enabled === false) return form;
   const inherited = getInheritedFields(effective);
   if (!inherited.length) return form;
   return {

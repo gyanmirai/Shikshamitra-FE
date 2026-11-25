@@ -6,24 +6,21 @@ import { serializeFinanceTableFilters } from 'src/screens/finance/components/fin
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
-import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useState, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 
-import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FinanceSettingDeleteDialog } from 'src/screens/finance/settings/components/FinanceSettingDeleteDialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import {
   useGetFeeHeadsQuery,
-  FeeHeadManagementApi,
   useDeleteFeeHeadMutation,
 } from 'src/redux/feeHeadManage/feeHeadManageApi';
 
@@ -52,7 +49,6 @@ const FeeHeadCreation = () => {
   // Custom hook to fetch fee head data
   const {
     data: feeHeadData,
-    refetch,
     isLoading: isFeeHeadLoading,
     isFetching: isFeeHeadFetching,
   } = useQueryAndMutation({
@@ -67,21 +63,15 @@ const FeeHeadCreation = () => {
   });
 
   // DELETE mutation
-  const [deleteFeeHead] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteFeeHeadMutation,
-  });
+  const [deleteFeeHead] = useDeleteFeeHeadMutation();
 
   // Dialog control states
   const addFeeHeadDialog = useBoolean(); // Controls add/edit fee head dialog
   const deleteDialog = useBoolean(); // Controls delete confirmation dialog
-  const { confirmWithUndo } = useConfirmWithUndo();
 
   // State management
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup); // Tracks unsaved changes
   const [selectedFeeHead, setSelectedFeeHead] = useState<IFeeHead | null>(null); // Currently selected fee head for edit/delete
   const [selectedEntry, setSelectedEntry] = useState<IFeeHead | null>(null);
-  const dispatch = useDispatch();
 
   /**
    * Handles closing of the fee head form dialog
@@ -130,7 +120,7 @@ const FeeHeadCreation = () => {
           addFeeHeadDialog.onTrue();
         }}
         onDelete={(data) => {
-          if (!access.canDelete) return;
+          if (!access.canDelete || data.isUsedInDownstream) return;
           setSelectedEntry(data);
           deleteDialog.onTrue();
         }}
@@ -182,60 +172,22 @@ const FeeHeadCreation = () => {
       </CustomDialog>
 
       {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
+      <FinanceSettingDeleteDialog
         open={deleteDialog.value && access.canDelete}
+        title="Delete Fee Head"
         onClose={() => {
-          setTimeout(() => {
-            setSelectedEntry(null);
-          }, 200);
           deleteDialog.onFalse();
+          setSelectedEntry(null);
         }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete fee head <strong>{selectedEntry?.name}</strong>?
-          </>
+        onDelete={
+          access.canDelete && selectedEntry && !selectedEntry.isUsedInDownstream
+            ? () => deleteFeeHead({ id: selectedEntry.id }).unwrap()
+            : undefined
         }
-        action={
-          <LoadingButton
-            startIcon={<Iconify icon="mdi:delete-outline" />}
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={async () => {
-              if (!access.canDelete) return;
-              confirmWithUndo({
-                item: selectedEntry,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    FeeHeadManagementApi.util.updateQueryData(
-                      'getFeeHeads',
-                      { academicYearId: currentYear?.id },
-                      (draft: any) => {
-                        const index = draft.items?.findIndex(
-                          (b: any) => b.id === (selectedEntry as any)?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          draft.items.splice(index, 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () =>
-                  deleteFeeHead({
-                    id: (selectedEntry as any).id,
-                  }),
-              });
-              deleteDialog.onFalse();
-              setSelectedEntry(null);
-            }}
-          >
-            Yes
-          </LoadingButton>
-        }
-      />
+        successMessage="Fee head deleted successfully."
+      >
+        Delete fee head <strong>{selectedEntry?.name}</strong>?
+      </FinanceSettingDeleteDialog>
     </Box>
   );
 };

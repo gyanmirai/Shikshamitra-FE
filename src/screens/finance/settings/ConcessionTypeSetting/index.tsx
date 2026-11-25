@@ -3,7 +3,6 @@
 import type { RootState } from 'src/redux/store';
 import type { IParams } from 'src/components/customizabaleTable/types';
 
-import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { useState, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -13,21 +12,19 @@ import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FinanceSettingDeleteDialog } from 'src/screens/finance/settings/components/FinanceSettingDeleteDialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 import {
-  concessionTypeApi,
   useGetConcessionTypesQuery,
   useDeleteConcessionTypeMutation,
 } from 'src/redux/finance/concessionType';
 
-import ConcessionTypeTable from './Components/ConcessionTable';
+import ConcessionTypeTable, { canDeleteConcessionType } from './Components/ConcessionTable';
 import ConcessionTypeDrawer from './Components/ConcessionTypeDrawer';
 import ConcessionDocumentTable from './Components/ConcessionDocuments';
 import ConcessionTypeVersionHistoryDrawer from './Components/ConcessionTypeVersionHistoryDrawer';
@@ -83,7 +80,6 @@ const ConcessionType = () => {
     data: concessionTypes,
     isLoading,
     isFetching,
-    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypesQuery,
@@ -95,12 +91,8 @@ const ConcessionType = () => {
   const dispatch = useDispatch();
 
   // Delete mutation
-  const [deleteConcessionType, { isLoading: isLoadingDelete }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteConcessionTypeMutation,
-  });
+  const [deleteConcessionType, { isLoading: isLoadingDelete }] = useDeleteConcessionTypeMutation();
 
-  const { confirmWithUndo } = useConfirmWithUndo();
 
   /**
    * Handles closing the concession type dialog
@@ -121,7 +113,7 @@ const ConcessionType = () => {
     >
       {confirmation}
       <FinanceSetupManagerHeader
-        editorOpen={addConcessionTypeDialog.value || isFormBusy || isLoadingDelete}
+        editorOpen={addConcessionTypeDialog.value || deleteConcessionTypeDialog.value || isFormBusy || isLoadingDelete}
         description={
           addConcessionTypeDialog.value
             ? 'Access detailed information on the selected concession type such as discount rules and applicable conditions.'
@@ -181,6 +173,7 @@ const ConcessionType = () => {
             setSelectedConcessionType(data);
           }}
           onDelete={(data) => {
+            if (!canDelete || !data.id || !canDeleteConcessionType(data)) return;
             deleteConcessionTypeDialog.onTrue();
             setSelectedConcessionType(data);
           }}
@@ -197,65 +190,22 @@ const ConcessionType = () => {
           onServerSearch={handleServerSearch}
         />
 
-        <ConfirmDialog
+        <FinanceSettingDeleteDialog
           open={deleteConcessionTypeDialog.value}
-          icon="error"
+          title="Delete Concession Type"
           onClose={() => {
             deleteConcessionTypeDialog.onFalse();
-            setTimeout(() => {
-              setSelectedConcessionType(null);
-            }, 200);
+            setSelectedConcessionType(null);
           }}
-          title="Delete"
-          content={
-            <>
-              Are you sure you want to delete concession type{' '}
-              <strong>
-                {selectedConcessionType?.name || (selectedConcessionType as any)?.concessionName}
-              </strong>
-              ?
-            </>
+          onDelete={
+            canDelete && selectedConcessionType?.id && canDeleteConcessionType(selectedConcessionType)
+              ? () => deleteConcessionType({ concessionTypeId: selectedConcessionType.id }).unwrap()
+              : undefined
           }
-          action={
-            <LoadingButton
-              startIcon={<Iconify icon="mdi:delete-outline" />}
-              variant="contained"
-              color="error"
-              size="small"
-              loading={isLoadingDelete}
-              onClick={() => {
-                confirmWithUndo({
-                  item: selectedConcessionType,
-                  onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                    dispatchFn(
-                      concessionTypeApi.util.updateQueryData(
-                        'getConcessionTypes',
-                        apiParams,
-                        (draft: any) => {
-                          const index = draft.data?.items?.findIndex(
-                            (b: any) => b.id === (selectedConcessionType as any)?.id
-                          );
-                          setDeleteIndex(index);
-                          if (index !== -1) {
-                            draft.data.items.splice(index, 1);
-                          }
-                        }
-                      )
-                    ),
-                  onUndoRestore: () => refetch(),
-                  onCommit: () =>
-                    deleteConcessionType({
-                      concessionTypeId: selectedConcessionType?.id,
-                    }),
-                });
-                deleteConcessionTypeDialog.onFalse();
-                setSelectedConcessionType(null);
-              }}
-            >
-              Yes
-            </LoadingButton>
-          }
-        />
+          successMessage="Concession type deleted successfully."
+        >
+          Delete concession type <strong>{selectedConcessionType?.name}</strong>?
+        </FinanceSettingDeleteDialog>
 
         <CustomDialog
           open={viewConcessionTypeDialog.value}

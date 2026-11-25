@@ -1,6 +1,5 @@
 'use client';
 
-import { sanitizeFinanceName } from 'src/utils/finance-name';
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
@@ -10,12 +9,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { sanitizeFinanceName } from 'src/utils/finance-name';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Alert, Button, TextField, DialogActions } from '@mui/material';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { getAccountSettingSaveError } from 'src/screens/finance/settings/components/account-setting-save-error';
 import {
   useGetExpenseCategoryQuery,
@@ -49,17 +49,8 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
     [expenseCategoryData]
   );
 
-  // POST mutation for creating
-  const [addExpenseCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: usePostExpenseCategoryMutation,
-  });
-
-  // PUT mutation for updating
-  const [updateExpenseCategory, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: usePutExpenseCategoryMutation,
-  });
+  const [addExpenseCategory, { isLoading: isAddLoading }] = usePostExpenseCategoryMutation();
+  const [updateExpenseCategory, { isLoading: isUpdateLoading }] = usePutExpenseCategoryMutation();
 
   const formik = useFormik({
     initialValues: getExpenseCategoryInitialValues(editData),
@@ -77,14 +68,13 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
         name: values.name.trim(),
         description: values.description || '',
         tags: editData?.tags || [],
-        concurrencyStamp: editData ? values.concurrencyStamp : null,
       };
 
       if (editData?.id) {
         // Update existing expense category
         await updateExpenseCategory({
           expenseCategoryId: editData.id,
-          body: payload,
+          body: { ...payload, concurrencyStamp: values.concurrencyStamp },
         }).unwrap();
 
         shikshaMitraToast.success({
@@ -104,10 +94,11 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
       onClose(null, true);
     } catch (error) {
       const problem = getAccountSettingSaveError(error, 'category');
-      setSaveError(problem.message);
       if (problem.field) {
         formik.setFieldTouched(problem.field, true, false);
         formik.setFieldError(problem.field, problem.message);
+      } else {
+        setSaveError(problem.message);
       }
     }
   };

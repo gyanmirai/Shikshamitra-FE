@@ -20,7 +20,6 @@ const props = () => ({
   canPublish: true,
   canEdit: true,
   canDelete: true,
-  canClone: true,
   canCreateVersion: true,
   canArchive: true,
   canReopen: true,
@@ -28,7 +27,6 @@ const props = () => ({
   onPublish: vi.fn(),
   onEdit: vi.fn(),
   onDelete: vi.fn(),
-  onClone: vi.fn(),
   onCreateVersion: vi.fn(),
   onUsage: vi.fn(),
   onArchive: vi.fn(),
@@ -49,7 +47,7 @@ it('keeps Publish visible before overflow and does not trigger the row click', (
   expect(screen.getByRole('button', { name: 'Edit Regular admission' })).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Clone as Draft' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Actions For Regular admission' }));
-  expect(screen.getByRole('menuitem', { name: 'Clone as Draft' })).toBeVisible();
+  expect(screen.queryByRole('menuitem', { name: 'Clone as Draft' })).not.toBeInTheDocument();
   expect(screen.getByRole('menuitem', { name: /^Delete$/ })).toBeVisible();
 });
 

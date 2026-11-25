@@ -1,7 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, within, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import FinanceChargeCategory, { ChargeCategoryDialog } from './ChargeCategory';
 
@@ -46,6 +44,7 @@ vi.mock('react-redux', () => ({
   useDispatch: () => vi.fn(),
   useSelector: (selector: (state: unknown) => unknown) =>
     selector({
+      confirmPopup: { isChanges: false },
       globalState: { currentYear: { id: 'year' } },
       auth: {
         permissions: [
@@ -94,16 +93,12 @@ vi.mock('src/components/adaptive-three-dots-actions', () => ({
   default: ({ actions }: any) => (
     <>
       {actions.map((action: any) => (
-        <button key={action.id} onClick={action.onClick}>
+        <button type="button" key={action.id} onClick={action.onClick}>
           {action.label}
         </button>
       ))}
     </>
   ),
-}));
-vi.mock('src/components/customDialog', () => ({
-  default: () => null,
-  DialogScrollContent: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/toast', () => ({
@@ -136,7 +131,9 @@ describe('Charge category deletion dependencies', () => {
     mocks.usage.mockResolvedValue(used);
     render(<FinanceChargeCategory />);
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
-    expect(await screen.findByText('Test Charge One')).toBeVisible();
+    const dialog = await screen.findByRole('dialog', { name: 'Charge Category In Use' });
+    const relatedCharges = within(dialog).getByRole('list', { name: 'Related Charges' });
+    expect(within(relatedCharges).getByRole('listitem')).toHaveTextContent('Test Charge One');
     expect(screen.getByText('1 charge')).toBeVisible();
     expect(screen.getByText(/3 student assignments/)).toBeVisible();
     expect(screen.getByRole('link', { name: 'Review charges' })).toHaveAttribute(
@@ -144,7 +141,10 @@ describe('Charge category deletion dependencies', () => {
       '/finance/charge-management'
     );
     expect(mocks.remove).not.toHaveBeenCalled();
-    expect(screen.getByRole('dialog')).not.toHaveTextContent('This action cannot be undone');
+    expect(dialog).not.toHaveTextContent('This action cannot be undone');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(mocks.remove).not.toHaveBeenCalled();
   });
 
   it('requires confirmation and keeps cancellation free of mutations', async () => {

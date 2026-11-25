@@ -1,6 +1,7 @@
 import { useId } from 'react';
-import { Typography } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { Button, Typography } from '@mui/material';
 
 import { hasAdmissionPrintPhotoField } from './form-print-model';
 import {
@@ -28,6 +29,7 @@ export function AdmissionPrintHeaderFooterSettings({
   branding,
   form,
   onChange,
+  onEditHeader,
   update,
 }: AdmissionPrintAdvancedTabProps) {
   const { header, photo, footer } = advanced;
@@ -62,6 +64,19 @@ export function AdmissionPrintHeaderFooterSettings({
         descriptionTooltip="Use the school identity configured in Institute Setup. These options do not change Institute Setup."
       >
         {branding.schoolName && <Typography variant="subtitle2">{branding.schoolName}</Typography>}
+        {onEditHeader && (
+          <Button
+            type="button"
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.edit} />}
+            onClick={onEditHeader}
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            Edit header
+          </Button>
+        )}
         <PrintSettingToggle
           label="School name"
           checked={header.schoolName}

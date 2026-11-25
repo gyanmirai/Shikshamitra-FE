@@ -40,6 +40,7 @@ interface VersionDiffTableProps {
   showChangeReason?: boolean;
   collapsibleChanges?: boolean;
   showSavedDetails?: boolean;
+  noChangesMessage?: string;
   renderFieldValue?: (fieldName: string, value: unknown) => React.ReactNode;
 }
 
@@ -156,6 +157,7 @@ function VersionDiffTable({
   showChangeReason = true,
   collapsibleChanges = false,
   showSavedDetails = false,
+  noChangesMessage = 'No changes recorded for this version.',
   renderFieldValue,
 }: VersionDiffTableProps) {
   const policyHistory = getPolicyFormHistory(selectedVersion, valueContext?.policyType);
@@ -256,7 +258,7 @@ function VersionDiffTable({
         {changedFields.length === 0 ? (
           <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
-              {policyHistory ? 'No policy form field changes to display.' : noChangesMessage}
+              {noChangesMessage}
             </Typography>
           </Paper>
         ) : (

@@ -2,13 +2,15 @@ import type { AdmissionPrintAssetPlacement } from 'src/redux/student/admissions/
 
 const MIN_SIZE = 5;
 const round = (value: number) => Math.round(value * 10) / 10;
-const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+const fit = (value: number, min: number, max: number) =>
+  clamp(round(value), min, Math.floor(max * 10) / 10);
 
 export function movePrintAsset(placement: AdmissionPrintAssetPlacement, x: number, y: number) {
   return {
     ...placement,
-    x: round(clamp(x, 0, 100 - placement.width)),
-    y: round(clamp(y, 0, 100 - placement.height)),
+    x: x === placement.x ? x : fit(x, 0, 100 - placement.width),
+    y: y === placement.y ? y : fit(y, 0, 100 - placement.height),
   };
 }
 
@@ -23,19 +25,15 @@ export function resizePrintAsset(
   if (placement.lockAspectRatio === false) {
     return {
       ...placement,
-      width: round(
-        clamp(
-          dimension === 'width' ? value : (otherValue ?? placement.width),
-          MIN_SIZE,
-          availableWidth
-        )
+      width: fit(
+        dimension === 'width' ? value : (otherValue ?? placement.width),
+        MIN_SIZE,
+        availableWidth
       ),
-      height: round(
-        clamp(
-          dimension === 'height' ? value : (otherValue ?? placement.height),
-          MIN_SIZE,
-          availableHeight
-        )
+      height: fit(
+        dimension === 'height' ? value : (otherValue ?? placement.height),
+        MIN_SIZE,
+        availableHeight
       ),
     };
   }
@@ -44,7 +42,7 @@ export function resizePrintAsset(
   const scale = clamp(value / placement[dimension], min, max);
   return {
     ...placement,
-    width: round(placement.width * scale),
-    height: round(placement.height * scale),
+    width: fit(placement.width * scale, MIN_SIZE, availableWidth),
+    height: fit(placement.height * scale, MIN_SIZE, availableHeight),
   };
 }

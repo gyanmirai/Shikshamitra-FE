@@ -24,7 +24,6 @@ const columns = createWorkflowColumns(
   {
     canEdit: false,
     canDelete: false,
-    canClone: false,
     canCreateVersion: false,
     canArchive: false,
     canReopen: false,
@@ -32,7 +31,6 @@ const columns = createWorkflowColumns(
   },
   {
     onEdit: () => undefined,
-    onClone: () => undefined,
     onCreateVersion: () => undefined,
     onUsage: () => undefined,
     onArchive: () => undefined,

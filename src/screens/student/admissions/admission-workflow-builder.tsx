@@ -263,7 +263,6 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
             transitions={draft.transitions}
             readOnly={readOnly || lifecycleBusy}
             loadingStageTypes={stageTypesQuery.isLoading}
-            issueCountByStage={draft.issueCountByStage}
             issuesByStage={draft.issuesByStage}
             hasBlockingIssues={draft.validation?.isValid === false}
             onAddStage={() => {

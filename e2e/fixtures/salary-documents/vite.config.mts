@@ -59,6 +59,7 @@ export default defineConfig({
             const request = body.query ?? body;
             const search = body.criteria?.search?.trim().toLowerCase();
             const filters = request.filters;
+            const isRegister = request.dataSource === 'payroll_register';
             const columns = [
               ['month', 'Month'],
               ['employeeCode', 'Staff code'],
@@ -72,25 +73,29 @@ export default defineConfig({
             ]
               .filter(([id]) => request.columns.includes(id) || id === 'pf' || id === 'pt')
               .map(([id, label]) => ({ id, label }));
-            const rows = ['2026-10', '2026-09', '2026-08', '2026-07', '2026-06', '2026-05']
-              .filter(
-                (month) =>
-                  month >= filters.fromDate.slice(0, 7) && month <= filters.toDate.slice(0, 7)
-              )
-              .map((month, index) => ({
-                month,
-                employeeCode: filters.employeeIds[0] === 'employee-a' ? 'PAY-001' : 'PAY-002',
-                employeeName:
-                  filters.employeeIds[0] === 'employee-a'
-                    ? 'Synthetic Employee A'
-                    : 'Synthetic Employee B',
-                totalEarnings: index === 0 ? '56750.00' : '55000.00',
-                totalDeduction: '2250.00',
-                netPay: index === 0 ? '54500.00' : '52750.00',
-                pf: '2050.00',
-                pt: '200.00',
-                status: 'Paid',
-              }))
+            const months = isRegister
+              ? [filters.month, filters.month]
+              : ['2026-10', '2026-09', '2026-08', '2026-07', '2026-06', '2026-05'].filter(
+                  (month) =>
+                    month >= filters.fromDate.slice(0, 7) && month <= filters.toDate.slice(0, 7)
+                );
+            const rows = months
+              .map((month, index) => {
+                const firstEmployee = isRegister
+                  ? index === 0
+                  : filters.employeeIds[0] === 'employee-a';
+                return {
+                  month,
+                  employeeCode: firstEmployee ? 'PAY-001' : 'PAY-002',
+                  employeeName: firstEmployee ? 'Synthetic Employee A' : 'Synthetic Employee B',
+                  totalEarnings: index === 0 ? '56750.00' : '55000.00',
+                  totalDeduction: '2250.00',
+                  netPay: index === 0 ? '54500.00' : '52750.00',
+                  pf: '2050.00',
+                  pt: '200.00',
+                  status: isRegister ? 'Issued' : 'Paid',
+                };
+              })
               .filter(
                 (row) =>
                   !search ||
@@ -108,7 +113,8 @@ export default defineConfig({
                 page: request.page,
                 pageSize: request.pageSize,
                 normalizedFilters: filters,
-                totalsLabel: 'Displayed Row Totals',
+                totalsLabel: isRegister && !search ? 'Payroll totals' : 'Displayed Row Totals',
+                queryWarnings: isRegister ? ['2 of 2 staff finalized.'] : [],
                 totals: {
                   totalEarnings: sum('totalEarnings'),
                   totalDeduction: sum('totalDeduction'),

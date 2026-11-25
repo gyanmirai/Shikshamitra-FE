@@ -76,14 +76,22 @@ export function nextSectionNumber(sections: CreateUpdateAdmissionForm['sections'
 export function getVisibleAdmissionFormSteps<
   TSection extends StepSection & { visibilityRuleJson?: string | null },
 >(sections: TSection[], values: Record<string, string>, usePublishedGroups: boolean) {
-  const groups = usePublishedGroups
-    ? getAdmissionFormStepGroups(sections)
-    : sections.map((section, sectionIndex) => ({
-        id: section.id,
-        name: section.name,
-        visibilityRuleJson: section.stepVisibilityRuleJson,
-        sections: [{ section, sectionIndex }],
-      }));
+  const firstStepId = sections[0]?.stepId;
+  // A composed single-page Registration already has one shared group in its frozen schema.
+  const composedRegistrationPage =
+    firstStepId &&
+    sections.every(
+      (section) => section.stepId === firstStepId && section.stepCode === 'REGISTRATION_PAGE'
+    );
+  const groups =
+    usePublishedGroups || composedRegistrationPage
+      ? getAdmissionFormStepGroups(sections)
+      : sections.map((section, sectionIndex) => ({
+          id: section.id,
+          name: section.name,
+          visibilityRuleJson: section.stepVisibilityRuleJson,
+          sections: [{ section, sectionIndex }],
+        }));
 
   return groups
     .filter((step) => isAdmissionRuleVisible(step.visibilityRuleJson, values))

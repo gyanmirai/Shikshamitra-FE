@@ -9,6 +9,15 @@ describe('print branding editor bounds', () => {
     expect(movePrintAsset(logo, 95, -20)).toEqual({ ...logo, x: 80, y: 0 });
   });
 
+  it('leaves the other axis in place and clamps fractional bounds without overflow', () => {
+    const placement = { x: 20, y: 18.27, width: 19.82, height: 50 };
+    expect(movePrintAsset(placement, 100, placement.y)).toEqual({
+      ...placement,
+      x: 80.1,
+    });
+    expect(movePrintAsset(placement, placement.x, placement.y)).toEqual(placement);
+  });
+
   it('preserves locked proportions while resizing against the bottom edge', () => {
     expect(resizePrintAsset(logo, 'width', 80)).toEqual({ ...logo, width: 36, height: 90 });
   });

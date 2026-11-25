@@ -16,6 +16,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { FinanceSettingDeleteDialog } from 'src/screens/finance/settings/components/FinanceSettingDeleteDialog';
 import {
   Box,
   Stack,
@@ -69,6 +70,7 @@ export default function ExceptionWindowsDialog({ open, onClose }: ExceptionWindo
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; dateRange: string } | null>(null);
 
   const { data: windows, isLoading } = useGetExceptionWindowsQuery({}, { skip: !open });
   const [createWindow, { isLoading: isCreating }] = useCreateExceptionWindowMutation();
@@ -115,19 +117,13 @@ export default function ExceptionWindowsDialog({ open, onClose }: ExceptionWindo
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteWindow(id).unwrap();
-      shikshaMitraToast.success({ message: 'Exception window deleted successfully.' });
-    } catch {
-      // toast handled by middleware
-    }
-  };
-
   return (
     <CustomDialog
       open={open}
-      handleClose={onClose}
+      handleClose={() => {
+        setDeleteTarget(null);
+        onClose();
+      }}
       maxWidth="md"
       title={
         <Stack direction="row" spacing={1} alignItems="center">
@@ -215,7 +211,11 @@ export default function ExceptionWindowsDialog({ open, onClose }: ExceptionWindo
                       <IconButton
                         size="small"
                         color="error"
-                        onClick={() => handleDelete(w.id)}
+                        aria-label={`Delete exception window from ${startFormatted} to ${endFormatted}`}
+                        onClick={() => setDeleteTarget({
+                          id: w.id,
+                          dateRange: `${startFormatted} to ${endFormatted}`,
+                        })}
                         sx={{
                           ml: 1,
                           '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.1) },
@@ -369,6 +369,15 @@ export default function ExceptionWindowsDialog({ open, onClose }: ExceptionWindo
           )}
         </Box>
       </DialogScrollContent>
+      <FinanceSettingDeleteDialog
+        open={open && Boolean(deleteTarget)}
+        title="Delete Exception Window"
+        onClose={() => setDeleteTarget(null)}
+        onDelete={deleteTarget ? () => deleteWindow(deleteTarget.id).unwrap() : undefined}
+        successMessage="Exception window deleted successfully."
+      >
+        Delete the exception window from <strong>{deleteTarget?.dateRange}</strong>?
+      </FinanceSettingDeleteDialog>
     </CustomDialog>
   );
 }

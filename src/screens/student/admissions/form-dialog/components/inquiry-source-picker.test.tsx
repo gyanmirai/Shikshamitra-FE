@@ -26,7 +26,7 @@ function setup() {
       <InquirySourcePicker />
     </ThemeProvider>
   );
-  return screen.getByRole('combobox', { name: 'Preview Using Inquiry Form' });
+  return screen.getByRole('combobox', { name: 'Preview Inquiry form' });
 }
 
 describe('Inquiry source picker', () => {
@@ -34,7 +34,7 @@ describe('Inquiry source picker', () => {
     const fetchSources = vi.fn();
     context.value = { ...context.value, initializingSources: true, fetchSources };
     const view = render(<InquirySourcePicker />);
-    expect(screen.getByLabelText('Preview Using Inquiry Form')).toBeDisabled();
+    expect(screen.getByLabelText('Preview Inquiry form')).toBeDisabled();
     expect(screen.getByRole('progressbar', { name: 'Loading Inquiry Forms' })).toBeVisible();
     expect(fetchSources).not.toHaveBeenCalled();
     context.value = {
@@ -43,7 +43,7 @@ describe('Inquiry source picker', () => {
       fetchSources: vi.fn(async () => ({ data: [], hasMore: false })),
     };
     view.rerender(<InquirySourcePicker />);
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Using Inquiry Form' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Inquiry form' }));
     expect(await screen.findByText('No matching Inquiry forms found')).toBeVisible();
     expect(context.value.fetchSources).toHaveBeenCalledWith('', 1);
   });
@@ -65,7 +65,7 @@ describe('Inquiry source picker', () => {
         <InquirySourcePicker />
       </ThemeProvider>
     );
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Using Inquiry Form' }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Preview Inquiry form' }));
     await screen.findByRole('option', { name: 'Protected catalogue · v1' });
     context.value = { ...context.value, canViewSources: false };
     view.rerender(

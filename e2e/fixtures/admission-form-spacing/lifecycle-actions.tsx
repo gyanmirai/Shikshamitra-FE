@@ -41,7 +41,6 @@ export function LifecycleActionsFixture() {
             canPublish
             canEdit
             canDelete
-            canClone
             canCreateVersion
             canArchive
             canReopen
@@ -49,7 +48,6 @@ export function LifecycleActionsFixture() {
             onPublish={noop}
             onEdit={noop}
             onDelete={noop}
-            onClone={noop}
             onCreateVersion={noop}
             onArchive={noop}
             onReopen={noop}

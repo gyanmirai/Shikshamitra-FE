@@ -6,6 +6,7 @@ import type { HrReportPreview, HrReportRequest } from 'src/redux/hr/hrReportsApi
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { DatePicker } from '@mui/x-date-pickers';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { formatNumber } from 'src/utils/formate_number';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -20,8 +21,6 @@ import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import {
   Box,
-  Chip,
-  Card,
   Alert,
   Stack,
   Button,
@@ -66,7 +65,7 @@ export default function SalaryDocumentsWorkspace({
     kind === 'statement' ? statementDefaultColumns : standardSalaryDocumentColumns
   );
   const [page, setPage] = useState({ number: 1, size: 25 });
-  const [statementSearch, setStatementSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const notesId = useId();
   const {
     open: notesOpen,
@@ -118,26 +117,22 @@ export default function SalaryDocumentsWorkspace({
     setError(null);
     setLoading(active && ready);
     if (!active || !ready) return undefined;
-    let pendingRequest: ReturnType<typeof loadPreview> | undefined;
-    const timer = setTimeout(() => {
-      pendingRequest = loadPreview(JSON.parse(signature));
-      pendingRequest
-        .unwrap()
-        .then((data) => {
-          if (current === sequence.current) setPreview({ signature, data });
-        })
-        .catch((failure) => {
-          if (current === sequence.current)
-            setError(payslipActionError(failure, 'The document preview could not be loaded.'));
-        })
-        .finally(() => {
-          if (current === sequence.current) setLoading(false);
-        });
-    }, 350);
+    const pendingRequest = loadPreview(JSON.parse(signature));
+    pendingRequest
+      .unwrap()
+      .then((data) => {
+        if (current === sequence.current) setPreview({ signature, data });
+      })
+      .catch((failure) => {
+        if (current === sequence.current)
+          setError(payslipActionError(failure, 'The document preview could not be loaded.'));
+      })
+      .finally(() => {
+        if (current === sequence.current) setLoading(false);
+      });
     return () => {
       sequence.current += 1;
-      clearTimeout(timer);
-      pendingRequest?.abort();
+      pendingRequest.abort();
     };
   }, [signature, ready, active, refresh, loadPreview, closeNotes]);
   const previewView = useHrTableQuery(
@@ -148,7 +143,7 @@ export default function SalaryDocumentsWorkspace({
       size: page.size,
       resetPage: () => setPage((current) => ({ ...current, number: 1 })),
       skip: !active || !ready,
-      genericSearch: statement,
+      genericSearch: true,
       columnTypes: Object.fromEntries(
         salaryDocumentFields.map(([id]) => [
           id,
@@ -212,7 +207,7 @@ export default function SalaryDocumentsWorkspace({
             : event.target.value
         )
       }
-      helperText="Identity, totals, and all nonzero deductions always appear."
+      helperText={statement ? 'Identity, totals, and all nonzero deductions always appear.' : undefined}
     >
       {salaryDocumentFields.map(([id, label]) => (
         <MenuItem key={id} value={id} disabled={mandatorySalaryDocumentColumns.includes(id)}>
@@ -246,7 +241,18 @@ export default function SalaryDocumentsWorkspace({
         HR Reports View permission is required to preview salary documents.
       </HrNotice>
     );
-  const controls = (
+  const refreshButton = (
+    <Button
+      size="small"
+      variant="outlined"
+      startIcon={<Iconify icon="mdi:refresh" width={18} />}
+      disabled={!ready || loading}
+      onClick={() => previewView.refetch()}
+    >
+      Refresh preview
+    </Button>
+  );
+  const controls = statement ? (
     <Stack spacing={1.5}>
       <Box
         sx={{
@@ -254,48 +260,40 @@ export default function SalaryDocumentsWorkspace({
           gap: 1.5,
           gridTemplateColumns: {
             xs: '1fr',
-            sm: statement
-              ? 'minmax(0, 2fr) repeat(2, minmax(0, 1fr))'
-              : 'repeat(2, minmax(0, 1fr))',
-            lg: statement
-              ? 'minmax(230px, 360px) repeat(2, minmax(150px, 205px))'
-              : '240px minmax(0, 1fr)',
+            sm: 'minmax(0, 2fr) repeat(2, minmax(0, 1fr))',
+            lg: 'minmax(230px, 360px) repeat(2, minmax(150px, 205px))',
           },
         }}
       >
-        {statement && (
-          <PaginatedSearchSelect
-            id="salary-statement-staff"
-            label="Staff member"
-            value={employee}
-            size="small"
-            minChars={2}
-            debounceMs={400}
-            fetchOptions={fetchEmployees}
-            filterOptions={(options) => options}
-            onChange={(_, value) => {
-              setEmployee(value);
-              setPage({ ...page, number: 1 });
-            }}
-            getOptionLabel={(option: { label: string }) => option.label}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-          />
-        )}
-        {statement && (
-          <TextField
-            label="From month"
-            type="month"
-            size="small"
-            value={from}
-            onChange={(event) => {
-              setFrom(event.target.value);
-              setPage({ ...page, number: 1 });
-            }}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-        )}
+        <PaginatedSearchSelect
+          id="salary-statement-staff"
+          label="Staff member"
+          value={employee}
+          size="small"
+          minChars={2}
+          debounceMs={400}
+          fetchOptions={fetchEmployees}
+          filterOptions={(options) => options}
+          onChange={(_, value) => {
+            setEmployee(value);
+            setPage({ ...page, number: 1 });
+          }}
+          getOptionLabel={(option: { label: string }) => option.label}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+        />
         <TextField
-          label={statement ? 'To month' : 'Payroll month'}
+          label="From month"
+          type="month"
+          size="small"
+          value={from}
+          onChange={(event) => {
+            setFrom(event.target.value);
+            setPage({ ...page, number: 1 });
+          }}
+          slotProps={{ inputLabel: { shrink: true } }}
+        />
+        <TextField
+          label="To month"
           type="month"
           size="small"
           value={to}
@@ -305,9 +303,8 @@ export default function SalaryDocumentsWorkspace({
           }}
           slotProps={{ inputLabel: { shrink: true } }}
         />
-        {!statement && columnControl}
       </Box>
-      {statement && from > to && (
+      {from > to && (
         <Alert severity="warning">The end month must be on or after the start month.</Alert>
       )}
 
@@ -318,147 +315,142 @@ export default function SalaryDocumentsWorkspace({
         alignItems={{ xs: 'stretch', lg: 'center' }}
       >
         <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-          {statement && (
-            <Stack
-              direction="row"
-              spacing={1}
-              useFlexGap
-              flexWrap="wrap"
-              aria-label="Quick pay periods"
-            >
-              {[3, 6, 12].map((months) => (
-                <Button
-                  key={months}
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    setFrom(
-                      dayjs(`${to}-01`)
-                        .subtract(months - 1, 'month')
-                        .format('YYYY-MM')
-                    );
-                    setPage({ ...page, number: 1 });
-                  }}
-                >
-                  Last {months} months
-                </Button>
-              ))}
-            </Stack>
-          )}
-          {statement ? (
-            <Box
-              component="details"
-              sx={{
-                '& > summary': {
-                  cursor: 'pointer',
-                  typography: 'body2',
-                  fontWeight: 600,
-                  py: 0.75,
-                },
-              }}
-            >
-              <Box component="summary">Document options</Box>
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1}
-                alignItems={{ sm: 'flex-start' }}
-                sx={{ pt: 1 }}
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            aria-label="Quick pay periods"
+          >
+            {[3, 6, 12].map((months) => (
+              <Button
+                key={months}
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  setFrom(
+                    dayjs(`${to}-01`)
+                      .subtract(months - 1, 'month')
+                      .format('YYYY-MM')
+                  );
+                  setPage({ ...page, number: 1 });
+                }}
               >
-                {columnControl}
-                {presetButton}
-              </Stack>
-            </Box>
-          ) : (
-            <>
-              <Typography variant="body2" color="text.secondary">
-                Only issued payslips from locked payroll are included.
-              </Typography>
+                Last {months} months
+              </Button>
+            ))}
+          </Stack>
+          <Box
+            component="details"
+            sx={{
+              '& > summary': {
+                cursor: 'pointer',
+                typography: 'body2',
+                fontWeight: 600,
+                py: 0.75,
+              },
+            }}
+          >
+            <Box component="summary">Document options</Box>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              alignItems={{ sm: 'flex-start' }}
+              sx={{ pt: 1 }}
+            >
+              {columnControl}
               {presetButton}
-            </>
-          )}
+            </Stack>
+          </Box>
         </Stack>
         <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:refresh" width={18} />}
-            disabled={!ready || loading}
-            onClick={() => previewView.refetch()}
-          >
-            Refresh preview
-          </Button>
+          {refreshButton}
         </Stack>
+      </Stack>
+    </Stack>
+  ) : (
+    <Stack direction="row" alignItems="center" flexWrap="wrap" useFlexGap spacing={1}>
+      <DatePicker
+        label="Payroll month"
+        views={['year', 'month']}
+        openTo="month"
+        closeOnSelect
+        format="MMMM YYYY"
+        value={payrollMonth}
+        onChange={(value) => {
+          if (!value?.isValid()) return;
+          setPayrollMonth(value);
+          setPage((current) => ({ ...current, number: 1 }));
+        }}
+        slotProps={{ textField: { size: 'small' } }}
+        sx={{ width: { xs: '100%', sm: 220 } }}
+      />
+      <Box sx={{ width: { xs: '100%', sm: 220 }, '& > *': { width: 1 } }}>{columnControl}</Box>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="flex-end"
+        flexWrap="wrap"
+        useFlexGap
+        spacing={1}
+        sx={{ ml: 'auto' }}
+      >
+        {presetButton}
+        {refreshButton}
       </Stack>
     </Stack>
   );
   return (
-    <Stack
-      spacing={statement ? 0 : 2}
-      sx={{ minWidth: 0, ...(statement && { flex: 1, minHeight: { xs: 460, sm: 0 } }) }}
-    >
-      {!statement && (
-        <Box sx={{ px: 1 }}>
-          <Chip size="small" variant="soft" label="Issued payroll" color="default" />
-        </Box>
-      )}
-      {!statement && <Card sx={{ p: 1.5 }}>{controls}</Card>}
-      {!statement && error && (
-        <Alert
-          severity="error"
-          action={
-            <Button size="small" disabled={!ready || loading} onClick={() => previewView.refetch()}>
-              Retry preview
-            </Button>
-          }
-        >
-          {error}
-        </Alert>
-      )}
-
+    <Stack sx={{ minWidth: 0, flex: 1, minHeight: { xs: 460, sm: 0 } }}>
       <HrReportPreviewTable
         operationalProps={{
           ...previewView.tableProps,
-          ...(statement && {
-            tableId: 'hr-employee-statement',
-            headerContent: (
-              <Stack spacing={1.5}>
-                {controls}
-                {preview?.totals && preview.rows.length > 0 && (
-                  <Stack
-                    direction="row"
-                    useFlexGap
-                    flexWrap="wrap"
-                    spacing={1.5}
-                    alignItems="baseline"
-                  >
-                    <Typography variant="subtitle2">
-                      {hasTableCriteria ? 'Displayed row totals' : 'Period totals'}
+          tableId: statement ? 'hr-employee-statement' : 'hr-school-payroll-register',
+          headerContent: (
+            <Stack spacing={1.5}>
+              {controls}
+              {preview?.totals && preview.rows.length > 0 && (
+                <Stack
+                  direction="row"
+                  useFlexGap
+                  flexWrap="wrap"
+                  spacing={1.5}
+                  alignItems="baseline"
+                >
+                  <Typography variant="subtitle2">
+                    {hasTableCriteria
+                      ? 'Displayed row totals'
+                      : statement
+                        ? 'Period totals'
+                        : preview.totalsLabel || 'Payroll totals'}
+                  </Typography>
+                  {(['totalEarnings', 'totalDeduction', 'netPay'] as const).map((field) => (
+                    <Typography key={field} variant="body2" color="text.secondary">
+                      {salaryDocumentFields.find(([id]) => id === field)?.[1]}{' '}
+                      <Box component="strong" sx={{ color: 'text.primary' }}>
+                        {preview.totals?.[field] == null
+                          ? 'Unavailable'
+                          : formatNumber(preview.totals[field], 'INR', { fractionDigits: 2 })}
+                      </Box>
                     </Typography>
-                    {(['totalEarnings', 'totalDeduction', 'netPay'] as const).map((field) => (
-                      <Typography key={field} variant="body2" color="text.secondary">
-                        {salaryDocumentFields.find(([id]) => id === field)?.[1]}{' '}
-                        <Box component="strong" sx={{ color: 'text.primary' }}>
-                          {preview.totals?.[field] == null
-                            ? 'Unavailable'
-                            : formatNumber(preview.totals[field], 'INR', { fractionDigits: 2 })}
-                        </Box>
-                      </Typography>
-                    ))}
-                  </Stack>
-                )}
-              </Stack>
-            ),
-            exportDisabled: !ready || loading || !preview?.totalCount,
-            searchTerm: statementSearch,
-            onSearchInputChange: setStatementSearch,
-            onClearCriteria: () => {
-              setStatementSearch('');
-              previewView.resetCriteria();
-            },
-            searchFieldProps: { placeholder: 'Search statement', disabled: !ready },
-            error: error ? { data: { detail: error } } : undefined,
-            onRetry: previewView.refetch,
-          }),
+                  ))}
+                </Stack>
+              )}
+            </Stack>
+          ),
+          exportDisabled: !ready || loading || !preview?.totalCount,
+          searchTerm,
+          onSearchInputChange: setSearchTerm,
+          onClearCriteria: () => {
+            setSearchTerm('');
+            previewView.resetCriteria();
+          },
+          searchFieldProps: {
+            placeholder: statement ? 'Search statement' : 'Search staff or payroll details',
+            disabled: !ready,
+          },
+          error: error ? { data: { detail: error } } : undefined,
+          onRetry: previewView.refetch,
         }}
         onExport={exportTable}
         preview={preview}
@@ -511,7 +503,7 @@ export default function SalaryDocumentsWorkspace({
         sourceLabel={
           statement && employee && ready
             ? `${employee.label} · ${dayjs(`${from}-01`).format('MMM YYYY')} to ${payrollMonth.format('MMM YYYY')}`
-            : title
+            : 'issued payroll'
         }
         emptyMessage={
           statement && !ready
@@ -521,28 +513,6 @@ export default function SalaryDocumentsWorkspace({
         isLoading={loading}
         onPageChange={(number, size) => setPage({ number, size })}
       />
-      {!statement && !!preview?.totals && (
-        <Card sx={{ p: 1.5 }}>
-          <Typography variant="caption" color="text.secondary">
-            {preview.totalsLabel}
-          </Typography>
-          <Stack direction="row" spacing={3} flexWrap="wrap">
-            {(['totalEarnings', 'totalDeduction', 'netPay'] as const).map((field) => (
-              <Box key={field}>
-                <Typography variant="caption">
-                  {salaryDocumentFields.find(([id]) => id === field)?.[1]}
-                </Typography>
-                <Typography variant="subtitle1">
-                  {preview.totals?.[field]?.toLocaleString('en-IN', {
-                    style: 'currency',
-                    currency: 'INR',
-                  }) ?? 'Unavailable'}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
-        </Card>
-      )}
     </Stack>
   );
 }

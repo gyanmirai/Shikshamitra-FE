@@ -5,17 +5,27 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider, useColorScheme } from '@mui/material/styles';
 import { Box, Button, CssBaseline, Typography } from '@mui/material';
+import { Toaster } from 'sonner';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useBoolean } from 'src/hooks/use-boolean';
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
 import FeeCategoryCreation from 'src/screens/finance/settings/FeeCategory';
+import FeeHeadCreation from 'src/screens/finance/settings/feeHead';
+import ReceiptBookSetting from 'src/screens/finance/settings/receipt-book/finance-receipt-book';
 import FeeCategoryTable from 'src/screens/finance/settings/FeeCategory/Components/FeeCategoryTable';
 import FeeCategoryForm from 'src/screens/finance/settings/FeeCategory/Components/FeeCategoryForm';
 import 'simplebar-react/dist/simplebar.min.css';
 const unifiedMode = new URLSearchParams(window.location.search).has('unified');
 const dependencyMode = new URLSearchParams(window.location.search).has('dependencies');
+const deleteSurface = new URLSearchParams(window.location.search).get('delete');
+const deletePermissions =
+  deleteSurface === 'fee-head'
+    ? financePermissions.fees.settings.feeHead
+    : deleteSurface === 'receipt-book'
+      ? financePermissions.fees.settings.receiptBook
+      : null;
 const store = configureStore({
   reducer: {
     globalState: (state = { currentYear: { id: 'year' } }) => state,
@@ -25,6 +35,9 @@ const store = configureStore({
           .concat([
             `${financePermissions.fees.structureAssign}.View`,
             `${financePermissions.fees.settings.feeStructure}.View`,
+            ...(deletePermissions
+              ? [`${deletePermissions}.View`, `${deletePermissions}.Delete`]
+              : []),
           ])
           .map((name) => ({ name, isGranted: true })),
         permissionsInitialized: true,
@@ -75,7 +88,7 @@ function Fixture() {
           <Box
             sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100dvh', minHeight: 0 }}
           >
-            {!unifiedMode && (
+            {!unifiedMode && !deleteSurface && (
               <>
                 <Typography variant="h5">
                   {dependencyMode ? 'Fee Head Dependency Checks' : 'Archived Fee Category'}
@@ -87,7 +100,11 @@ function Fixture() {
                 <Button onClick={editor.onTrue}>Create fee category</Button>
               </>
             )}
-            {unifiedMode ? (
+            {deleteSurface === 'fee-head' ? (
+              <FeeHeadCreation />
+            ) : deleteSurface === 'receipt-book' ? (
+              <ReceiptBookSetting />
+            ) : unifiedMode || deleteSurface === 'fee-category' ? (
               <FeeCategoryCreation />
             ) : (
               <FeeCategoryTable onAddFeeCategory={editor} setEditData={setEditData} />
@@ -102,6 +119,7 @@ function Fixture() {
                 }}
               />
             )}
+            {deleteSurface && <Toaster />}
           </Box>
         </ThemeProvider>
       </Provider>

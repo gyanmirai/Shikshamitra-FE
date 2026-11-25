@@ -1,3 +1,5 @@
+import type { ChangeEvent } from 'react';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { signIn } from 'next-auth/react';
@@ -6,6 +8,8 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { AUTH_ERROR_CODE, getLoginErrorMessage } from 'src/constants/auth-errors';
 
 export type LoginValues = { organization: string; email: string; password: string };
+
+const SCHOOL_CODE_STORAGE_KEY = 'shikshamitra.login.school-code';
 
 const loginSchema = Yup.object({
   organization: Yup.string().trim(),
@@ -59,9 +63,31 @@ export function useLoginForm() {
 
   const { setFieldValue } = formik;
   useEffect(() => {
-    const organization = new URLSearchParams(window.location.search).get('organization')?.trim();
+    let organization = new URLSearchParams(window.location.search).get('organization')?.trim();
+    if (!organization) {
+      try {
+        organization = window.localStorage.getItem(SCHOOL_CODE_STORAGE_KEY)?.trim();
+      } catch {
+        // Storage may be blocked. The school code can still be entered manually.
+      }
+    }
     if (organization) setFieldValue('organization', organization, false);
   }, [setFieldValue]);
 
-  return { formik, tenantInactive, errorMessage, loginSucceeded };
+  const handleSchoolCodeChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    formik.handleChange(event);
+
+    const schoolCode = event.target.value.trim();
+    try {
+      if (schoolCode) {
+        window.localStorage.setItem(SCHOOL_CODE_STORAGE_KEY, schoolCode);
+      } else {
+        window.localStorage.removeItem(SCHOOL_CODE_STORAGE_KEY);
+      }
+    } catch {
+      // Storage may be blocked. The current form value still works for sign-in.
+    }
+  };
+
+  return { formik, tenantInactive, errorMessage, loginSucceeded, handleSchoolCodeChange };
 }

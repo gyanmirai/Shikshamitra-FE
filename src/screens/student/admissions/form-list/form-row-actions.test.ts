@@ -13,7 +13,6 @@ describe('admission form row action visibility', () => {
   it('offers draft-only actions for a draft', () => {
     expect(getFormRowActionVisibility(0, true, true, true)).toEqual({
       edit: true,
-      clone: true,
       validate: true,
       publish: true,
       delete: true,
@@ -27,7 +26,6 @@ describe('admission form row action visibility', () => {
   it('offers immutable-version actions for a published form', () => {
     expect(getFormRowActionVisibility(1, true, true, true)).toEqual({
       edit: false,
-      clone: true,
       validate: false,
       publish: false,
       delete: false,
@@ -41,7 +39,6 @@ describe('admission form row action visibility', () => {
   it('allows restoring an archived form with management permission', () => {
     expect(getFormRowActionVisibility(2, true, true, false)).toEqual({
       edit: false,
-      clone: true,
       validate: false,
       publish: false,
       delete: false,

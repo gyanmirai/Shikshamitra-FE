@@ -309,6 +309,7 @@ function renderForm(overrides: Partial<Props> = {}) {
   const rendered = render(content());
   return {
     onValidateStep,
+    unmount: rendered.unmount,
     rerenderForm: (next: Partial<Props>) => {
       currentOverrides = { ...currentOverrides, ...next };
       rendered.rerender(content());
@@ -317,6 +318,33 @@ function renderForm(overrides: Partial<Props> = {}) {
 }
 
 describe('application form step navigation', () => {
+  it('restores the last selected registration step by ID when the form is reopened', async () => {
+    const resumeStepKey = 'registration-step-test:application-a';
+    window.localStorage.removeItem(resumeStepKey);
+    const first = renderForm({ compact: true, resumeStepKey });
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+    await screen.findByRole('textbox', { name: 'Health details answer' });
+    first.unmount();
+
+    const another = renderForm({
+      compact: true,
+      resumeStepKey: 'registration-step-test:application-b',
+    });
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeVisible();
+    another.unmount();
+
+    const reopened = renderForm({ compact: true, resumeStepKey, readOnly: true });
+    expect(await screen.findByRole('textbox', { name: 'Health details answer' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeVisible();
+    reopened.unmount();
+    window.localStorage.setItem(resumeStepKey, JSON.stringify('removed-step'));
+    const changedForm = renderForm({ compact: true, resumeStepKey });
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeVisible();
+    changedForm.unmount();
+    window.localStorage.removeItem(resumeStepKey);
+  });
+
   it('shows validation progress and locks the form before checking an invalid step', async () => {
     const onSave = vi.fn(async () => true);
     let busyDuringValidation = false;
@@ -683,6 +711,14 @@ describe('application form step navigation', () => {
     expect(screen.queryByRole('button', { name: 'Submit Application' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save & Next' })).toHaveClass('MuiButton-sizeSmall');
   }, 15000);
+
+  it('shows the saved section without step navigation while staff has yet to open parent review', () => {
+    renderForm({ compact: true, readOnly: true, hideStepNavigation: true });
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeDisabled();
+    expect(screen.queryByRole('navigation', { name: 'Form Steps' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Submit Application' })).not.toBeInTheDocument();
+  });
 
   it('refreshes saved application data above the stepper and locks refresh while form answers are unsaved', async () => {
     const onRefresh = vi.fn();

@@ -1,5 +1,6 @@
 import type {
   AdmissionInquiry,
+  AdmissionInquirySiblingReview,
   AdmissionInquiryDuplicateInput,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
@@ -29,6 +30,10 @@ export type InquiryFamilyConfirmationProps = {
   onConfirmed: (inquiry: AdmissionInquiry) => void;
   onBusyChange: (busy: boolean) => void;
   onTargetRefreshed?: (inquiry: AdmissionInquiry) => AdmissionInquiryDuplicateInput | null;
+  listReview?: {
+    load: (id: string) => Promise<AdmissionInquirySiblingReview>;
+    onClose: () => void;
+  };
 };
 
 export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationProps) {
@@ -37,8 +42,9 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
   const [checkDuplicates] = useCheckAdmissionInquiryDuplicatesMutation();
   const [confirm] = useConfirmAdmissionInquiryFamilyMutation();
   const [refreshTarget] = useLazyGetAdmissionInquiryQuery();
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const fromList = Boolean(props.listReview);
+  const [open, setOpen] = useState(fromList);
+  const [loading, setLoading] = useState(fromList);
   const [saving, setSaving] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const savingRef = useRef(false);
@@ -63,9 +69,16 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
       : inquiry;
   };
   const target = effectiveTarget(props.inquiry);
+  const linked = Boolean(target.hasLinkedSiblings || target.siblingFamilyConfirmed);
   const entryReason =
-    inquiryFamilyConfirmationReason(target, props.readOnly, props.dirty, props.busy) ||
-    (!props.duplicateInput ? 'Wait for the saved inquiry details to load.' : null);
+    fromList && (!snapshot || linked)
+      ? null
+      : fromList && props.readOnly
+        ? 'You do not have permission to confirm siblings.'
+        : inquiryFamilyConfirmationReason(target, props.readOnly, props.dirty, props.busy) ||
+          (!fromList && !props.duplicateInput
+            ? 'Wait for the saved inquiry details to load.'
+            : null);
   const staleTarget = Boolean(
     snapshot && (snapshot.id !== target.id || snapshot.stamp !== target.concurrencyStamp)
   );
@@ -125,6 +138,7 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
         setOpen(false);
         formik.resetForm();
         current.onBusyChange(false);
+        current.listReview?.onClose();
         shikshaMitraToast.success({ message: 'Sibling family confirmed.' });
       } catch (error) {
         if (mounted.current && activeGeneration === generation.current) {
@@ -140,9 +154,15 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
       }
     },
   });
+  const hasUnsavedSelection = formik.dirty && (!fromList || (!props.readOnly && !linked));
   const load = async (reloadTarget = false) => {
     const { current } = latest;
-    if (savingRef.current || loadingRef.current || entryReason || !current.duplicateInput) return;
+    if (
+      savingRef.current ||
+      loadingRef.current ||
+      (!current.listReview && (entryReason || !current.duplicateInput))
+    )
+      return;
     loadingRef.current = true;
     generation.current += 1;
     const activeGeneration = generation.current;
@@ -153,15 +173,34 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
     try {
       let lookupTarget = effectiveTarget(current.inquiry);
       let { duplicateInput } = current;
-      if (reloadTarget || needsTargetRefresh) {
+      const isCurrent = () =>
+        mounted.current &&
+        activeGeneration === generation.current &&
+        latest.current.inquiry.id === current.inquiry.id;
+      const acceptTarget = (refreshed: AdmissionInquiry) => {
+        const accepted = { inquiry: refreshed, previousStamp: current.inquiry.concurrencyStamp };
+        refreshedTargetRef.current = accepted;
+        setRefreshedTarget(accepted);
+        lookupTarget = refreshed;
+      };
+      const savedInput = (inquiry: AdmissionInquiry) => ({
+        admissionCycleId: inquiry.admissionCycleId,
+        guardianPhone: inquiry.normalizedPhone,
+        guardianEmail: inquiry.email ?? undefined,
+        applicantName: inquiry.applicantName,
+        applicantDateOfBirth: inquiry.applicantDateOfBirth ?? undefined,
+      });
+      const review = current.listReview && (await current.listReview.load(current.inquiry.id));
+      if (!isCurrent()) return;
+      if (review) {
+        if (review.inquiry.id !== current.inquiry.id)
+          throw new Error('The family review did not match this inquiry. Reload matches.');
+        acceptTarget(review.inquiry);
+        duplicateInput = savedInput(lookupTarget);
+      } else if (reloadTarget || needsTargetRefresh) {
         setNeedsTargetRefresh(true);
         const refreshed = await refreshTarget(current.inquiry.id, false).unwrap();
-        if (
-          !mounted.current ||
-          activeGeneration !== generation.current ||
-          latest.current.inquiry.id !== current.inquiry.id
-        )
-          return;
+        if (!isCurrent()) return;
         const guard = inquiryFamilyConfirmationReason(
           refreshed,
           latest.current.readOnly,
@@ -177,27 +216,21 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
         const refreshedInput = latest.current.onTargetRefreshed?.(refreshed);
         if (refreshedInput === null)
           throw new Error('The inquiry draft changed. Save or discard it before reloading.');
-        const accepted = { inquiry: refreshed, previousStamp: current.inquiry.concurrencyStamp };
-        refreshedTargetRef.current = accepted;
-        setRefreshedTarget(accepted);
-        lookupTarget = refreshed;
+        acceptTarget(refreshed);
         if (guard) throw new Error(guard);
-        duplicateInput = refreshedInput ?? {
-          admissionCycleId: refreshed.admissionCycleId,
-          guardianPhone: refreshed.normalizedPhone,
-          guardianEmail: refreshed.email ?? undefined,
-          applicantName: refreshed.applicantName,
-          applicantDateOfBirth: refreshed.applicantDateOfBirth ?? undefined,
-        };
+        duplicateInput = refreshedInput ?? savedInput(refreshed);
       }
-      const matches = await checkDuplicates(duplicateInput).unwrap();
-      if (
-        mounted.current &&
-        activeGeneration === generation.current &&
-        latest.current.inquiry.id === current.inquiry.id
-      ) {
+      const matches = review
+        ? review.matches
+        : duplicateInput
+          ? await checkDuplicates(duplicateInput).unwrap()
+          : [];
+      if (isCurrent()) {
         setSnapshot({ id: lookupTarget.id, stamp: lookupTarget.concurrencyStamp });
-        const nextCandidates = inquiryFamilyCandidates(lookupTarget, matches);
+        const nextCandidates =
+          review && (lookupTarget.hasLinkedSiblings || lookupTarget.siblingFamilyConfirmed)
+            ? matches
+            : inquiryFamilyCandidates(lookupTarget, matches);
         setCandidates(nextCandidates);
         setReviewInput(duplicateInput);
         const families = buildInquiryFamilyReviews(nextCandidates);
@@ -230,30 +263,41 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
     loadingRef.current = false;
     formik.resetForm();
     props.onBusyChange(false);
+    props.listReview?.onClose();
   };
   const requestClose = () => {
     if (savingRef.current || saving || formik.isSubmitting) return;
-    if (formik.dirty) setDiscardOpen(true);
+    if (hasUnsavedSelection) setDiscardOpen(true);
     else close();
   };
   useEffect(() => {
-    if (!open || !formik.dirty) return undefined;
+    if (!open || !hasUnsavedSelection) return undefined;
     const warn = (event: BeforeUnloadEvent) => event.preventDefault();
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [open, formik.dirty]);
+  }, [open, hasUnsavedSelection]);
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
       generation.current += 1;
+      loadingRef.current = false;
       latest.current.onBusyChange(false);
     };
   }, []);
+  const loadRef = useRef(load);
+  useEffect(() => {
+    loadRef.current = load;
+  });
+  useEffect(() => {
+    if (fromList) loadRef.current();
+  }, [fromList]);
   const families = buildInquiryFamilyReviews(candidates);
   const selectedFamily = families.find((family) => family.familyId === formik.values.family);
   return {
     open,
+    target,
+    linked,
     load,
     reload: () => load(true),
     close,
@@ -269,6 +313,7 @@ export function useInquiryFamilyConfirmation(props: InquiryFamilyConfirmationPro
     entryReason,
     staleTarget,
     needsTargetRefresh,
+    hasUnsavedSelection,
     requestError,
     formik,
     families,

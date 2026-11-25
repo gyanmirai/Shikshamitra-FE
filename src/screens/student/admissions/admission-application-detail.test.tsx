@@ -25,6 +25,12 @@ const offeringContext = vi.hoisted(() => vi.fn());
 const decisionCardProps = vi.hoisted(() => ({ current: null as any }));
 const responsive = vi.hoisted(() => ({ desktop: true }));
 const onboardingCaseQuery = vi.hoisted(() => vi.fn());
+const parentRegistrationState = vi.hoisted(() => vi.fn());
+vi.mock('src/redux/student/admissions/admission-parent-registration-api', () => ({
+  admissionParentRegistrationApi: {
+    endpoints: { getParentRegistration: { useQueryState: parentRegistrationState } },
+  },
+}));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingCaseQuery: onboardingCaseQuery,
 }));
@@ -32,6 +38,7 @@ vi.mock('src/hooks/use-responsive', () => ({ useResponsive: () => responsive.des
 beforeEach(() => {
   responsive.desktop = true;
   onboardingCaseQuery.mockReturnValue({ currentData: undefined });
+  parentRegistrationState.mockReturnValue({ currentData: undefined });
 });
 vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
   useGetAdmissionOfferingQuery: offeringContext,
@@ -199,11 +206,13 @@ vi.mock('./application-detail/application-runtime-form', () => ({
     readOnly,
     canSubmitForm,
     documents,
+    reviewAction,
     renderToolbarActions,
   }: {
     readOnly: boolean;
     canSubmitForm: boolean;
     documents?: React.ReactNode;
+    reviewAction?: React.ReactNode;
     renderToolbarActions?: (actions: {
       print: React.ReactNode;
       refresh: React.ReactNode;
@@ -220,12 +229,20 @@ vi.mock('./application-detail/application-runtime-form', () => ({
         refresh: <button type="button">Refresh</button>,
       })}
       Runtime application form
+      {reviewAction}
     </div>
   ),
 }));
 
 vi.mock('./application-detail/parent-registration/parent-registration-panel', () => ({
-  ParentRegistrationPanel: ({ applicationId, canView, canManage, placement, formActions }: any) => (
+  ParentRegistrationPanel: ({
+    applicationId,
+    canView,
+    canManage,
+    placement,
+    formActions,
+    completionStatus,
+  }: any) => (
     <div
       data-testid="parent-registration-panel"
       data-application-id={applicationId}
@@ -234,6 +251,7 @@ vi.mock('./application-detail/parent-registration/parent-registration-panel', ()
       data-placement={placement}
     >
       Parent registration controls
+      {completionStatus}
       {formActions?.print}
       {formActions?.refresh}
     </div>
@@ -571,6 +589,58 @@ describe('finalized application footer onboarding status', () => {
 });
 
 describe('AdmissionApplicationDetailScreen', () => {
+  it('opens parent answers for review before enabling the staff submission action', () => {
+    loadPaymentDetail();
+    detailState.applicationQuery.data.status = 0;
+    detailState.workflowQuery.data.stages[0].stageType = 1;
+    detailState.workflowQuery.data.stages[0].name = 'Registration Form';
+    parentRegistrationState.mockReturnValue({
+      currentData: {
+        request: {
+          id: 'parent-request-1',
+          purpose: 'initial',
+          status: 'ReadyForReview',
+          handedInAt: '2026-11-24T08:40:00Z',
+        },
+      },
+    });
+    render(<AdmissionApplicationDetailScreen />);
+
+    const status = screen.getByRole('status', { name: 'Parent registration status' });
+    expect(status).toHaveTextContent('Completed by parent');
+    expect(screen.getByTestId('parent-registration-panel')).toContainElement(status);
+    expect(status).toHaveTextContent('Ready for review');
+    expect(screen.queryByRole('button', { name: 'Review registration' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'true');
+    expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-can-submit', 'false');
+
+    const startReview = screen.getByRole('button', { name: 'Start review' });
+    expect(screen.getByTestId('runtime-form')).toContainElement(startReview);
+    fireEvent.click(startReview);
+
+    expect(screen.getByRole('region', { name: 'Registration answers' })).toHaveFocus();
+    expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-read-only', 'false');
+    expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-can-submit', 'true');
+    expect(screen.queryByRole('button', { name: 'Start review' })).not.toBeInTheDocument();
+    expect(detailState.submitApplication).not.toHaveBeenCalled();
+    expect(detailState.advance).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { purpose: 'initial', status: 'InProgress', handedInAt: null },
+    { purpose: 'correction', status: 'ReadyForReview', handedInAt: '2026-11-24T08:40:00Z' },
+  ])('keeps the staff editor available for a $purpose request in $status', (request) => {
+    loadPaymentDetail();
+    detailState.applicationQuery.data.status = 0;
+    detailState.workflowQuery.data.stages[0].stageType = 1;
+    parentRegistrationState.mockReturnValue({ currentData: { request } });
+    render(<AdmissionApplicationDetailScreen />);
+
+    expect(screen.queryByRole('button', { name: 'Start review' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('runtime-form')).toHaveAttribute('data-can-submit', 'true');
+  });
+
   it('mounts one parent registration controller with Print and Refresh in the application header', () => {
     loadPaymentDetail();
     permissions.push({ name: 'Students.Admissions.Applications.View', isGranted: true });

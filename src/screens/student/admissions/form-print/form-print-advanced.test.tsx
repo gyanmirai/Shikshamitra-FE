@@ -89,6 +89,42 @@ async function artifact(
 }
 
 describe('Advanced Registration paper settings', () => {
+  it('prints independently moved header text at its saved coordinates', async () => {
+    const build = (moved: boolean) =>
+      buildAdmissionPrintDocument({
+        definition: { name: 'Movable Form Title', sections: [section('STUDENT')] },
+        values: {},
+        mode: 'blank',
+        settings: {
+          advanced: {
+            header: {
+              alignment: 'left',
+              layout: moved
+                ? {
+                    title: { x: 50, y: 18, width: 30, height: 12 },
+                    schoolName: { x: 32, y: 0, width: 30, height: 12 },
+                  }
+                : undefined,
+            },
+          },
+        },
+      });
+    const original = await artifact('header-preset', build(false));
+    const revised = await artifact('header-custom', build(true));
+    const getX = (output: typeof revised, text: string) => {
+      const item = output.pages[0].items.find(
+        (entry) => 'str' in entry && entry.str.includes(text)
+      );
+      if (!item || !('transform' in item))
+        throw new Error(`Missing PDF text ${text}: ${output.text}`);
+      return item.transform[4];
+    };
+    expect(revised.text.replace(/\s+/g, ' ')).toContain('Movable Form Title');
+    expect(getX(revised, 'Movable') - getX(original, 'Movable')).toBeGreaterThan(150);
+    expect(getX(revised, 'Example') - getX(original, 'Example')).toBeGreaterThan(80);
+    expect(revised.text).toContain('NAME');
+  }, 25000);
+
   it('reveals the changed section and field on page 3 in the generated PDF', async () => {
     const model = buildAdmissionPrintDocument({
       definition: {

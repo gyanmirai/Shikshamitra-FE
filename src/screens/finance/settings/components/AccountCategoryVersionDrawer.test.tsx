@@ -33,7 +33,7 @@ const data = {
 };
 
 describe('Category version history drawer', () => {
-  it.each(['Income category', 'Expense category', 'Bank account'])(
+  it.each(['Income category', 'Expense category', 'Bank account'] as const)(
     'selects and searches recorded versions for %s',
     (recordType) => {
       const onClose = vi.fn();
@@ -43,7 +43,6 @@ describe('Category version history drawer', () => {
           title="School income"
           recordType={recordType}
           data={data}
-          hiddenFields={['tags']}
           onClose={onClose}
           onPageChange={vi.fn()}
         />
@@ -66,8 +65,12 @@ describe('Category version history drawer', () => {
       ).toEqual(['Field', 'Before', 'After']);
       expect(within(table).getByText('School income')).toBeVisible();
       expect(within(table).getByText('Active')).toBeVisible();
-      expect(within(table).getByText('3A2499917E0DB739D5A9C5D2F8450600')).toBeVisible();
-      expect(screen.queryByText('hidden tag')).not.toBeInTheDocument();
+      if (recordType === 'Bank account') {
+        expect(within(table).getByText('3A2499917E0DB739D5A9C5D2F8450600')).toBeVisible();
+      } else {
+        expect(within(table).queryByRole('rowheader', { name: 'Code' })).not.toBeInTheDocument();
+        expect(screen.queryByText('hidden tag')).not.toBeInTheDocument();
+      }
       fireEvent.click(screen.getByRole('button', { name: 'Changes' }));
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Changes' }));
@@ -87,6 +90,78 @@ describe('Category version history drawer', () => {
       expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: /^Close .+ Version History$/ }));
       expect(onClose).toHaveBeenCalledOnce();
+    }
+  );
+
+  it.each(['Income category', 'Expense category'] as const)(
+    'shows only populated or changed business fields for %s',
+    (recordType) => {
+      renderWithProviders(
+        <AccountCategoryVersionDrawer
+          open
+          title="School income"
+          recordType={recordType}
+          onClose={vi.fn()}
+          data={{
+            items: [
+              {
+                id: 'created',
+                versionNumber: 1,
+                changeAction: 'created',
+                changedFields: [
+                  { fieldName: 'Description', originalValue: null, newValue: 'null' },
+                  { fieldName: 'EffectiveTo', newValue: '""' },
+                  { fieldName: 'IsActive', newValue: 'true' },
+                  { fieldName: 'EffectiveFrom', originalValue: '', newValue: null },
+                  { fieldName: 'DeactivationReason', newValue: '"  "' },
+                  { fieldName: 'Name', newValue: '"School income"' },
+                  { fieldName: 'DefaultAccountHeadId', newValue: '"internal-account-id"' },
+                  { fieldName: 'Code', newValue: '"3A251E846DEA63D42F401CE39C8F04E9"' },
+                ],
+              },
+              {
+                id: 'updated',
+                versionNumber: 2,
+                changeAction: 'updated',
+                changedFields: [
+                  { fieldName: 'Name', originalValue: 'School income', newValue: '"School income"' },
+                  { fieldName: 'Description', originalValue: '"Old description"', newValue: 'null' },
+                  { fieldName: 'IsActive', originalValue: 'true', newValue: 'false' },
+                  { fieldName: 'DeactivationReason', newValue: '"Not set"' },
+                  { fieldName: 'EffectiveFrom', newValue: '"2026-11-24T00:00:00+05:30"' },
+                ],
+              },
+              {
+                id: 'internal-only',
+                versionNumber: 3,
+                changeAction: 'updated',
+                changedFields: [{ fieldName: 'Code', newValue: '"LEGACY-123"' }],
+              },
+            ],
+          }}
+        />
+      );
+
+      expect(screen.getByText('No changes to display for this version.')).toBeVisible();
+      fireEvent.click(screen.getByRole('button', { name: 'View version 1' }));
+      const creation = within(screen.getByRole('table', { name: 'Changes in version 1' }));
+      expect(creation.getAllByRole('rowheader').map((cell) => cell.textContent)).toEqual([
+        'Status',
+        'Name',
+      ]);
+      expect(creation.getByRole('row', { name: 'Status Not set Active' })).toBeVisible();
+      expect(creation.getByRole('row', { name: 'Name Not set School income' })).toBeVisible();
+
+      fireEvent.click(screen.getByRole('button', { name: 'View version 2' }));
+      const update = within(screen.getByRole('table', { name: 'Changes in version 2' }));
+      expect(update.getAllByRole('rowheader').map((cell) => cell.textContent)).toEqual([
+        'Description',
+        'Status',
+        'Deactivation Reason',
+        'Effective From',
+      ]);
+      expect(update.getByRole('row', { name: 'Description Old description Not set' })).toBeVisible();
+      expect(update.getByRole('row', { name: 'Status Active Inactive' })).toBeVisible();
     }
   );
 
@@ -117,7 +192,7 @@ describe('Category version history drawer', () => {
     const props = {
       open: true,
       title: 'Tuition',
-      recordType: 'Income category',
+      recordType: 'Income category' as const,
       onClose: vi.fn(),
       onRetry,
     };

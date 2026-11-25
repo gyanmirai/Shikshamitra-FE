@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import type { Dayjs } from 'dayjs';
 
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
@@ -37,14 +38,37 @@ vi.mock('react-redux', () => ({ useSelector: () => [] }));
 vi.mock('src/redux/hr/payslip-api', () => ({ useGetPayslipSettingsQuery: () => ({}) }));
 vi.mock('src/redux/hr/employeeApi', () => ({ useLazyGetEmployeeOptionsQuery: () => [vi.fn()] }));
 vi.mock('src/components/paginated-search-select', () => ({ PaginatedSearchSelect: () => null }));
+vi.mock('@mui/x-date-pickers', async () => {
+  const { default: dayjs } = await import('dayjs');
+  return {
+    DatePicker: ({ label, value, onChange }: {
+      label: string;
+      value: Dayjs;
+      onChange: (month: Dayjs) => void;
+    }) => (
+      <input
+        aria-label={label}
+        type="month"
+        value={value.format('YYYY-MM')}
+        onChange={(event) => onChange(dayjs(`${event.target.value}-01`))}
+      />
+    ),
+  };
+});
 vi.mock('../../reports/hooks/useHrReportPermissions', () => ({
   useHrReportPermissions: () => ({ canView: true, canExport: true }),
 }));
 vi.mock('../../reports/components/HrReportPreviewTable', () => ({
   HrReportPreviewTable: ({ preview, operationalProps, headerAction, onExport }: any) => (
     <div>
+      {operationalProps.headerContent}
       {preview?.reportType}
       {headerAction}
+      {operationalProps.error && (
+        <button type="button" onClick={operationalProps.onRetry}>
+          Retry
+        </button>
+      )}
       <button
         type="button"
         onClick={() =>
@@ -94,10 +118,7 @@ vi.mock('src/redux/hr/hrReportsApi', () => ({
   useGetHrReportExportQuery: () => state.job,
   useDownloadHrReportExportMutation: () => [state.download, { isLoading: false }],
 }));
-const settleDebounce = () =>
-  act(async () => {
-    await vi.advanceTimersByTimeAsync(351);
-  });
+const settlePreview = () => act(async () => {});
 
 describe('salary document previews', () => {
   beforeEach(() => {
@@ -123,9 +144,9 @@ describe('salary document previews', () => {
       unwrap: async () => ({ reportType: 'Saved payroll' }),
     });
     render(<SalaryDocumentsWorkspace kind="register" />);
-    await settleDebounce();
+    await settlePreview();
     fireEvent.click(screen.getByRole('button', { name: 'Sort net pay' }));
-    await settleDebounce();
+    await settlePreview();
     expect(state.tableRead.mock.calls.at(-1)?.[0]).toMatchObject({
       table: 'hr-salary-documents',
       offset: 0,
@@ -148,9 +169,9 @@ describe('salary document previews', () => {
       unwrap: async () => ({ reportType: 'Current saved payroll' }),
     });
     render(<SalaryDocumentsWorkspace kind="register" />);
-    await settleDebounce();
+    expect(state.preview).toHaveBeenCalledTimes(1);
     fireEvent.change(screen.getByLabelText('Payroll month'), { target: { value: '2026-09' } });
-    await settleDebounce();
+    expect(state.preview).toHaveBeenCalledTimes(2);
     await act(async () => resolveOld({ reportType: 'Obsolete payroll' }));
     expect(abort).toHaveBeenCalled();
     expect(screen.queryByText('Obsolete payroll')).not.toBeInTheDocument();
@@ -162,13 +183,12 @@ describe('salary document previews', () => {
       abort: vi.fn(),
       unwrap: async () => ({ reportType: 'Saved payroll' }),
     });
-    const view = render(<SalaryDocumentsWorkspace kind="register" />);
+    const view = render(<SalaryDocumentsWorkspace kind="register" active={false} />);
     fireEvent.change(screen.getByLabelText('Payroll month'), { target: { value: '2026-06' } });
-    view.rerender(<SalaryDocumentsWorkspace kind="register" active={false} />);
-    await settleDebounce();
+    await settlePreview();
     expect(state.preview).not.toHaveBeenCalled();
     view.rerender(<SalaryDocumentsWorkspace kind="register" />);
-    await settleDebounce();
+    await settlePreview();
     expect(state.preview.mock.calls[0][0].filters.month).toBe('2026-06');
     expect(state.preview.mock.calls[0][0].columns).toEqual(
       expect.arrayContaining(['employeeName', 'month', 'totalEarnings', 'totalDeduction', 'netPay'])
@@ -186,7 +206,7 @@ describe('salary document previews', () => {
       unwrap: async () => ({ reportType: 'Saved payroll', queryWarnings: warnings }),
     });
     render(<SalaryDocumentsWorkspace kind="register" />);
-    await settleDebounce();
+    await settlePreview();
     const trigger = screen.getByRole('button', { name: 'Report notes (3)' });
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText(warnings[0])).not.toBeInTheDocument();
@@ -207,7 +227,7 @@ describe('salary document previews', () => {
       unwrap: async () => ({ reportType: 'Base payroll' }),
     });
     const view = render(<SalaryDocumentsWorkspace kind="register" />);
-    await settleDebounce();
+    await settlePreview();
     state.tableResult = {
       currentData: undefined,
       isFetching: false,
@@ -216,7 +236,7 @@ describe('salary document previews', () => {
     };
     fireEvent.click(screen.getByText('Sort net pay'));
     fireEvent.click(screen.getByText('Filter net pay'));
-    expect(screen.getByRole('button', { name: 'Retry preview' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /^Retry$/ })).toBeEnabled();
     const baseCalls = state.preview.mock.calls.length;
     state.tableRetry.mockImplementation(() => {
       state.tableResult = {
@@ -225,17 +245,17 @@ describe('salary document previews', () => {
         isError: false,
       };
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Retry preview' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Retry$/ }));
     expect(state.tableRetry).toHaveBeenCalledOnce();
     view.rerender(<SalaryDocumentsWorkspace kind="register" />);
     expect(screen.getByText('Retried filtered payroll')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Retry preview' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Retry$/ })).not.toBeInTheDocument();
     expect(state.tableRead.mock.calls.at(-1)?.[0].criteria).toMatchObject({
       sorts: [{ column: 'netPay', direction: 'desc' }],
       filters: [{ column: 'netPay', type: 'greaterThan', value: 0 }],
     });
     fireEvent.click(screen.getByRole('button', { name: 'Refresh preview' }));
-    await settleDebounce();
+    await settlePreview();
     expect(state.tableRetry).toHaveBeenCalledTimes(2);
     expect(state.preview).toHaveBeenCalledTimes(baseCalls);
   });
@@ -247,10 +267,10 @@ describe('salary document previews', () => {
     });
     state.export.mockResolvedValue(undefined);
     render(<SalaryDocumentsWorkspace kind="register" />);
-    await settleDebounce();
+    await settlePreview();
     fireEvent.change(screen.getByLabelText('Payroll month'), { target: { value: '2026-09' } });
     fireEvent.click(screen.getByRole('button', { name: 'Sort net pay' }));
-    await settleDebounce();
+    await settlePreview();
     fireEvent.click(screen.getByRole('button', { name: 'Export complete table' }));
     expect(state.export).toHaveBeenCalledWith(
       expect.objectContaining({ format: 'excel', sorts: [{ column: 'netPay', direction: 'desc' }] })

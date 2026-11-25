@@ -6,14 +6,17 @@ import type { IdentityCardPhotoEdit, IdentityCardPhotoRecord } from 'src/compone
 
 import { Stack, Alert } from '@mui/material';
 import { IdentityCardDesigner } from 'src/components/identity-card-designer';
+import { useIdentityPermissions } from 'src/screens/setting/school-identity/hooks/use-identity-permissions';
 
 import { StudentICardBranding } from './student-icard-branding';
+import { StudentICardSignaturePreview } from './student-icard-signature-preview';
 import {
   STUDENT_ICARD_FIELDS,
   STUDENT_ICARD_TOKENS,
   getStudentICardLayout,
   applyStudentICardDesign,
   getStudentICardPrintSettings,
+  hasStudentICardSignatureLayer,
 } from '../student-icard-design';
 
 export function StudentICardDesigner({
@@ -37,6 +40,10 @@ export function StudentICardDesigner({
 }) {
   const layout = getStudentICardLayout(template);
   const settings = getStudentICardPrintSettings(template);
+  const permissions = useIdentityPermissions();
+  const hasSignature = hasStudentICardSignatureLayer(layout);
+  const canConfigureSignature = permissions.canView && permissions.canAccessSignature;
+  const showSignature = canConfigureSignature && template.signature?.mode !== 2;
   const values = {
     ...card?.studentSnapshot,
     schoolName: template.schoolName,
@@ -45,7 +52,7 @@ export function StudentICardDesigner({
     footerText: template.footerText,
     CardNumber: card?.cardNumber ?? 'Preview',
   };
-  return (
+  const designer = (signatureUrl?: string) => (
     <IdentityCardDesigner
       photoRecords={photoRecords}
       photoEdits={photoEdits}
@@ -61,6 +68,7 @@ export function StudentICardDesigner({
             template={template}
             onChange={onChange}
             disabled={disabled}
+            canConfigureSignature={canConfigureSignature}
             onBusyChange={onBusyChange}
           />
         </Stack>
@@ -71,9 +79,22 @@ export function StudentICardDesigner({
       fieldPickerLabel="Select Student Field"
       fieldTokens={STUDENT_ICARD_TOKENS}
       logoHidden={template.logo?.mode === 2}
+      signatureUrl={signatureUrl}
+      signaturePlaceholder={showSignature}
+      canPlaceSignature={showSignature}
       printSettings={settings}
       disabled={disabled}
-      onLayoutChange={(next) => onChange(applyStudentICardDesign(template, next, settings))}
+      onLayoutChange={(next) =>
+        onChange(
+          applyStudentICardDesign(
+            !template.signature && !hasSignature && hasStudentICardSignatureLayer(next)
+              ? { ...template, signature: { mode: 0 } }
+              : template,
+            next,
+            settings
+          )
+        )
+      }
       onPrintSettingsChange={(next) => onChange(applyStudentICardDesign(template, layout, next))}
       backSideEnabled={template.backSideEnabled ?? false}
       onBackSideEnabledChange={(enabled) =>
@@ -86,5 +107,12 @@ export function StudentICardDesigner({
         onChange(applyStudentICardDesign({ ...template, showQrCode: enabled }, layout, settings))
       }
     />
+  );
+  return canConfigureSignature ? (
+    <StudentICardSignaturePreview template={template} enabled={hasSignature}>
+      {designer}
+    </StudentICardSignaturePreview>
+  ) : (
+    designer()
   );
 }

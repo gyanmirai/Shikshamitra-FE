@@ -2,10 +2,11 @@ import COLORS from 'src/theme/core/colors.json';
 import { pdf, Font, Page, Text, View, Image, Document } from '@react-pdf/renderer';
 import { splitPdfScriptRuns } from 'src/components/customizabaleTable/indic-pdf-export';
 
-import { estimatePrintTextLines } from './form-print-text-layout';
 import { AdmissionPaperTemplate } from './form-print-paper-templates';
 import { AdmissionAdvancedPaperTemplate } from './form-print-advanced-template';
+import { estimatePrintTextLines, estimateStandardPrintFieldHeight } from './form-print-text-layout';
 import {
+  PRINT_PAPER_POINTS,
   AdmissionPrintLayoutError,
   getAdmissionPrintLayoutError,
   formatAdmissionPrintPhotoSize,
@@ -81,12 +82,6 @@ function fieldRows(fields: AdmissionPrintField[], columns: number) {
   return rows;
 }
 
-// Keep ordinary label/answer rows together. Oversized content retains page flow.
-const needsPageFlow = (field: AdmissionPrintField) =>
-  field.value.length > 1200 ||
-  field.label.length > 1200 ||
-  (field.options?.reduce((length, option) => length + option.label.length, 0) ?? 0) > 1200;
-
 export async function createAdmissionFormPdfBlob(
   model: AdmissionPrintDocument,
   branding: AdmissionPrintBranding = {},
@@ -114,7 +109,6 @@ export async function createAdmissionFormPdfBlob(
         branding={branding}
         textRuns={textRuns}
         fieldRows={fieldRows}
-        needsPageFlow={needsPageFlow}
         baseFamily={BASE_FAMILY}
         devanagariFamily={DEVANAGARI_FAMILY}
       />
@@ -125,11 +119,13 @@ export async function createAdmissionFormPdfBlob(
   const fieldPadding = spacious ? 9 : 6;
   const fontSize = spacious ? 10 : 9;
   const labelSize = spacious ? 9 : 8;
+  const [pageWidth, pageHeight] = PRINT_PAPER_POINTS.A4;
+  const footerReserve = 43;
   const schoolHeader = model.settings.showSchoolHeader;
   const addressLines = schoolHeader
     ? (branding.addressLines ?? []).filter((line) => line.trim())
     : [];
-  const brandingWidth = 595.28 - margin * 2 - (schoolHeader && branding.logoUrl ? 54 : 0);
+  const brandingWidth = pageWidth - margin * 2 - (schoolHeader && branding.logoUrl ? 54 : 0);
   const titleSize = schoolHeader && branding.schoolName ? 10 : 14;
   const brandingHeight = Math.max(
     schoolHeader && branding.logoUrl ? 44 : 0,
@@ -149,6 +145,7 @@ export async function createAdmissionFormPdfBlob(
   );
   const photoWidth = 70;
   const photoHeight = 84;
+  const bodyCapacity = pageHeight - margin - headerHeight - footerReserve;
   const renderField = (field: AdmissionPrintField, width: string) => (
     <View key={field.key} style={{ width, padding: fieldPadding, paddingTop: spacious ? 8 : 5 }}>
       <Text
@@ -183,7 +180,9 @@ export async function createAdmissionFormPdfBlob(
             />
           ) : (
             <>
-              <Text style={{ fontSize: 8, textAlign: 'center' }}>{textRuns(model.labels.photo)}</Text>
+              <Text style={{ fontSize: 8, textAlign: 'center' }}>
+                {textRuns(model.labels.photo)}
+              </Text>
               <Text style={{ fontSize: 7, textAlign: 'center', marginTop: 2 }}>
                 {textRuns(formatAdmissionPrintPhotoSize(photoWidth, photoHeight))}
               </Text>
@@ -270,7 +269,7 @@ export async function createAdmissionFormPdfBlob(
         wrap
         style={{
           paddingTop: margin + headerHeight,
-          paddingBottom: 43,
+          paddingBottom: footerReserve,
           paddingHorizontal: margin,
           fontFamily: BASE_FAMILY,
           fontSize,
@@ -328,69 +327,79 @@ export async function createAdmissionFormPdfBlob(
             </View>
           </View>
         </View>
-        {model.steps.map((step) => (
-          <View key={step.key}>
-            {model.steps.length > 1 || step.sections.length > 1 ? (
-              <Text
-                minPresenceAhead={55}
-                style={{
-                  fontWeight: 700,
-                  fontSize: 12,
-                  marginTop: spacious ? 15 : 9,
-                  marginBottom: 5,
-                }}
-              >
-                {textRuns(step.title)}
-              </Text>
-            ) : null}
-            {step.sections.map((section) => (
-              <View key={section.key} style={{ marginBottom: spacious ? 12 : 8 }}>
-                <Text
-                  minPresenceAhead={45}
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    backgroundColor: COLORS.grey[100],
-                    padding: 6,
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: COLORS.grey[300],
-                  }}
+        {model.steps.flatMap((step) =>
+          step.sections.flatMap((section, sectionIndex) => {
+            const rows = section.entries.flatMap((entry) =>
+              fieldRows(
+                entry.fields.filter((field) => model.settings.showPhoto || field.kind !== 'photo'),
+                section.columns
+              ).map((row, rowIndex) => ({ row, rowIndex, entry }))
+            );
+            return rows.map(({ row, rowIndex, entry }, index) => {
+              const firstRow = index === 0;
+              const rowWidth = (pageWidth - margin * 2) / row.length - fieldPadding * 2;
+              const canFlow = row.some(
+                (field) =>
+                  estimateStandardPrintFieldHeight(
+                    field,
+                    rowWidth,
+                    fontSize,
+                    model.mode === 'blank'
+                  ) >
+                  bodyCapacity - (firstRow ? 55 : 0)
+              );
+              return (
+                <View
+                  key={`${section.key}:${entry.key}:${rowIndex}`}
+                  wrap={canFlow}
+                  style={{ marginBottom: index === rows.length - 1 ? (spacious ? 12 : 8) : 0 }}
                 >
-                  {textRuns(section.title)}
-                </Text>
-                {section.entries.map((entry) => (
-                  <View key={entry.key}>
-                    {entry.label ? (
+                  {firstRow &&
+                    sectionIndex === 0 &&
+                    (model.steps.length > 1 || step.sections.length > 1) && (
                       <Text
-                        minPresenceAhead={
-                          entry.fields.some((field) => field.kind === 'photo') ? 120 : 35
-                        }
-                        style={{ fontWeight: 700, marginTop: 7, paddingHorizontal: fieldPadding }}
+                        minPresenceAhead={canFlow ? 55 : 0}
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 12,
+                          marginTop: spacious ? 15 : 9,
+                          marginBottom: 5,
+                        }}
                       >
-                        {textRuns(entry.label)}
+                        {textRuns(step.title)}
                       </Text>
-                    ) : null}
-                    {fieldRows(
-                      entry.fields.filter(
-                        (field) => model.settings.showPhoto || field.kind !== 'photo'
-                      ),
-                      section.columns
-                    ).map((row, index) => (
-                      <View
-                        key={index}
-                        wrap={row.some(needsPageFlow)}
-                        minPresenceAhead={55}
-                        style={{ flexDirection: 'row', alignItems: 'flex-start' }}
-                      >
-                        {row.map((field) => renderField(field, `${100 / row.length}%`))}
-                      </View>
-                    ))}
+                    )}
+                  {firstRow && (
+                    <Text
+                      minPresenceAhead={canFlow ? 45 : 0}
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        backgroundColor: COLORS.grey[100],
+                        padding: 6,
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: COLORS.grey[300],
+                      }}
+                    >
+                      {textRuns(section.title)}
+                    </Text>
+                  )}
+                  {rowIndex === 0 && entry.label && (
+                    <Text
+                      minPresenceAhead={canFlow ? 35 : 0}
+                      style={{ fontWeight: 700, marginTop: 7, paddingHorizontal: fieldPadding }}
+                    >
+                      {textRuns(entry.label)}
+                    </Text>
+                  )}
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                    {row.map((field) => renderField(field, `${100 / row.length}%`))}
                   </View>
-                ))}
-              </View>
-            ))}
-          </View>
-        ))}
+                </View>
+              );
+            });
+          })
+        )}
         {model.settings.showSignature ? (
           <View
             wrap={false}

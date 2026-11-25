@@ -8,6 +8,43 @@ import { act, render, screen, waitFor, fireEvent } from '@testing-library/react'
 
 import { buildAdmissionInquiryColumns } from './admission-inquiry-columns';
 
+it('opens sibling review from eligible name cells without selecting the table row', () => {
+  const onCheckSiblings = vi.fn();
+  const onRowClick = vi.fn();
+  const column = buildAdmissionInquiryColumns({
+    canManage: true,
+    canMove: false,
+    isMoving: false,
+    counsellorNames: {},
+    counsellorOptions: [],
+    offeringOptions: [],
+    onManage: vi.fn(),
+    onMove: vi.fn(async () => false),
+    onCheckSiblings,
+  }).find((item) => item.id === 'applicantName')!;
+  const rows = [
+    { id: 'one', applicantName: 'Priya', hasPossibleSiblingMatch: true },
+    { id: 'two', applicantName: 'Riya', hasPossibleSiblingMatch: true },
+    { id: 'three', applicantName: 'Jay' },
+    { id: 'four', applicantName: 'Sam', hasLinkedSiblings: true },
+  ];
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <div role="presentation" onClick={onRowClick}>
+        {rows.map((item) => (
+          <div key={item.id}>{column.render?.(item.applicantName, item)}</div>
+        ))}
+      </div>
+    </ThemeProvider>
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Check Parent Details for Priya' }));
+  expect(onCheckSiblings).toHaveBeenCalledWith(rows[0]);
+  expect(screen.getByRole('button', { name: 'Check Parent Details for Riya' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Siblings linked for Sam' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: /Jay/ })).not.toBeInTheDocument();
+  expect(onRowClick).not.toHaveBeenCalled();
+});
+
 it('keeps the move menu open during the request and on failure, then closes on success', async () => {
   let finish: (success: boolean) => void = () => {};
   const onMove = vi.fn(
@@ -48,9 +85,7 @@ it('keeps the move menu open during the request and on failure, then closes on s
   view.rerender(menu(true));
   expect(move()).toBeVisible();
   expect(move()).toHaveAttribute('aria-busy', 'true');
-  expect(
-    screen.getByLabelText('Starting Application for QA Student')
-  ).toBeVisible();
+  expect(screen.getByLabelText('Starting Application for QA Student')).toBeVisible();
   fireEvent.keyDown(move(), { key: 'Escape' });
   expect(move()).toBeVisible();
   fireEvent.click(move());

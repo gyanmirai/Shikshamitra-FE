@@ -274,11 +274,226 @@ export default function FeeStructurePoliciesStep({
           </Stack>
         </Card>
       </Stack>
-      {selectedFamily && !locked && settings.permissions[`${selectedFamily.key}Read`] && (
-        <StructurePolicyPicker
-          key={selectedFamily.key}
-          family={selectedFamily}
-          candidate={candidate}
+      {choosing && selectedFamily && (
+        <CustomDialog
+          titleInfo={selectedFamily.description}
+          open
+          title={`Choose ${selectedFamily.label}`}
+          maxWidth="md"
+          hasForm={false}
+          guardUnsavedChanges={false}
+          disableClose={busy}
+          handleClose={() => {
+            if (!busy) closePicker();
+          }}
+        >
+          <DialogScrollContent>
+            {choiceError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {choiceError}
+              </Alert>
+            )}
+            {choosing === 'proration' && (
+              <Button size="small" disabled={busy} sx={{ mb: 1 }} onClick={() => {
+                onChange('proration', '');
+                closePicker();
+              }}>
+                Use academic-year default
+              </Button>
+            )}
+            <CustomizableTable
+              tableTitle={`${selectedFamily.label} choices`}
+              tableId={`structure-policy-picker-${choosing}`}
+              data={options}
+              getRowAction={(row) =>
+                !busy && settings.permissions[`${choosing}Read`]
+                  ? {
+                      label: `View ${row.name} version ${row.versionNumber}`,
+                      onClick: () =>
+                        setPreviewOption(
+                          options.find((option) => option.versionId === row.versionId)
+                        ),
+                    }
+                  : undefined
+              }
+              rowProps={(row) => ({
+                selected: row.selected,
+                'aria-selected': row.selected,
+                sx: row.selected
+                  ? {
+                      '&.Mui-selected, &.Mui-selected:hover': { bgcolor: 'transparent' },
+                      '& > td': {
+                        bgcolor: 'background.paper',
+                        backgroundImage: `linear-gradient(${selectionTint}, ${selectionTint})`,
+                      },
+                    }
+                  : undefined,
+              })}
+              isLoading={catalogFor(choosing).loading && !options.length}
+              isSearch
+              isFilter={false}
+              isPagination={options.length > 10}
+              isShowedDense={false}
+              searchableFields={['name']}
+              noDataText={`No published ${selectedFamily.label.toLowerCase()} is available for this academic year.`}
+              errorContent={
+                catalogFor(choosing).error ? (
+                  <Alert
+                    severity="error"
+                    action={
+                      <Button size="small" onClick={catalogFor(choosing).retry} disabled={busy}>
+                        Retry
+                      </Button>
+                    }
+                  >
+                    Policies could not be loaded.
+                  </Alert>
+                ) : undefined
+              }
+              columns={[
+                {
+                  id: 'name',
+                  label: 'Policy',
+                  headerSx: { minWidth: { sm: 220 } },
+                  cellSx: { overflowWrap: 'anywhere' },
+                  isSort: false,
+                  isFilter: false,
+                  render: (_value, row) => (
+                    <Stack spacing={0.5}>
+                      <Typography variant="subtitle2">{row.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Version {row.versionNumber}
+                        {row.isDefault ? ' · Default' : ''}
+                      </Typography>
+                      {choosing === 'collection' && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: { xs: 'block', sm: 'none' } }}
+                        >
+                          {row.coverage}
+                        </Typography>
+                      )}
+                    </Stack>
+                  ),
+                },
+                ...(choosing === 'collection'
+                  ? ([
+                      {
+                        id: 'coverage',
+                        label: 'Fee head coverage',
+                        minWidth: 180,
+                        headerSx: { display: { xs: 'none', sm: 'table-cell' } },
+                        cellSx: { display: { xs: 'none', sm: 'table-cell' } },
+                        isFilter: false,
+                        isSort: false,
+                      },
+                    ] satisfies IColumn[])
+                  : []),
+                ...(choosing === 'refund'
+                  ? ([
+                      {
+                        id: 'policyFeeHeads',
+                        label: 'Fee Heads',
+                        minWidth: 140,
+                        cellSx: { whiteSpace: 'normal', overflowWrap: 'anywhere' },
+                        isFilter: false,
+                        isSort: false,
+                        render: (_value, row) =>
+                          row.policyFeeHeads.length ? (
+                            <Stack component="ul" spacing={0.5} sx={{ m: 0, p: 0, listStyle: 'none' }}>
+                              {row.policyFeeHeads.map((name: string, index: number) => (
+                                <li key={`${name}-${index}`}>{name}</li>
+                              ))}
+                            </Stack>
+                          ) : (
+                            'Unavailable'
+                          ),
+                      },
+                    ] satisfies IColumn[])
+                  : []),
+                {
+                  id: 'actions',
+                  label: 'Actions',
+                  width: 80,
+                  minWidth: 80,
+                  sticky: true,
+                  stickyPosition: 'right',
+                  align: 'left',
+                  isFilter: false,
+                  isSort: false,
+                  excludeFromExport: true,
+                  render: (_value, row) => (
+                    row.selected ? (
+                      <CustomTooltip title="Selected">
+                        <Box
+                          component="span"
+                          role="img"
+                          aria-label="Selected"
+                          sx={{ color: 'success.main', display: 'inline-flex', p: 0.625 }}
+                        >
+                          <CheckCircleRounded fontSize="small" />
+                        </Box>
+                      </CustomTooltip>
+                    ) : (
+                      <CustomTooltip title="Select policy">
+                        <span>
+                          <IconButton
+                            type="button"
+                            size="small"
+                            aria-label={`Select ${row.name} version ${row.versionNumber}`}
+                            disabled={
+                              busy ||
+                              !writable ||
+                              !settings.permissions[choosing] ||
+                              !settings.permissions[`${choosing}Read`]
+                            }
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (choosing === 'refund' && row.eligible !== true) {
+                                setChoiceError(
+                                  row.eligible === false
+                                    ? `${row.name} has no matching fee heads. Choose another refund policy.`
+                                    : catalogs.refund.loading
+                                      ? 'Refund policy coverage is loading. Try again when it is ready.'
+                                      : 'Coverage for this policy version is unavailable. Refresh the list or choose another refund policy.'
+                                );
+                                return;
+                              }
+                              onChange(choosing, row.versionId);
+                              shikshaMitraToast.success({
+                                message: `${selectedFamily.label} added to this draft.`,
+                              });
+                              closePicker();
+                            }}
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            <CheckCircleOutlineRounded fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </CustomTooltip>
+                    )
+                  ),
+                },
+              ]}
+              searchFieldProps={{
+                placeholder: 'Search policies',
+                inputProps: {
+                  'aria-label': `Search ${selectedFamily.label.toLowerCase()} choices`,
+                },
+              }}
+            />
+            {catalogFor(choosing).loading && !!options.length && (
+              <Typography variant="caption" role="status">
+                Loading more policies…
+              </Typography>
+            )}
+          </DialogScrollContent>
+        </CustomDialog>
+      )}
+      {previewOption && (
+        <StructurePolicyPreview
+          option={previewOption}
           settings={settings}
           catalog={catalogFor(selectedFamily.key)}
           canSelect={writable && !!settings.permissions[selectedFamily.key] && !busy}

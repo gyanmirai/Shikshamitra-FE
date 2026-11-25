@@ -13,7 +13,6 @@ type Handlers = {
   canDelete: boolean;
   creatingVersionId?: string | null;
   onEdit: (form: AdmissionForm) => void;
-  onClone: (form: AdmissionForm) => void;
   onValidate: (form: AdmissionForm) => void;
   onPublish: (form: AdmissionForm) => void;
   onHistory: (form: AdmissionForm) => void;
@@ -117,7 +116,6 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
             canPublish={handlers.canPublish}
             canDelete={handlers.canDelete}
             onEdit={() => handlers.onEdit(form)}
-            onClone={() => handlers.onClone(form)}
             onValidate={() => handlers.onValidate(form)}
             onPublish={() => handlers.onPublish(form)}
             onHistory={() => handlers.onHistory(form)}

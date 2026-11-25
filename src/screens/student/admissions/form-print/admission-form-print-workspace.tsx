@@ -9,6 +9,8 @@ import CustomSelect from 'src/components/custom-select';
 import { useId, useRef, useState, useCallback } from 'react';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 import {
   Box,
@@ -16,6 +18,7 @@ import {
   Alert,
   Button,
   Typography,
+  IconButton,
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -26,15 +29,19 @@ import { AdmissionPrintSettingsPanel } from './admission-print-settings';
 import { useAdmissionPrintOptions } from './use-admission-print-options';
 import { getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
-import { AdmissionPrintBrandingEditor } from './admission-print-branding-editor';
+import { AdmissionPrintHeaderEditor } from './admission-print-header-editor';
 import { getAdmissionPrintPreviewTarget } from './admission-print-preview-target';
 import { AdmissionPrintAdvancedSettings } from './admission-print-advanced-settings';
-import { buildAdmissionPrintDocument, DEFAULT_ADMISSION_PRINT_SETTINGS } from './form-print-model';
 import {
   printAdmissionForm,
   downloadAdmissionForm,
   useAdmissionPrintPreview,
 } from './use-admission-print-preview';
+import {
+  buildAdmissionPrintDocument,
+  hasAdmissionPrintPhotoField,
+  DEFAULT_ADMISSION_PRINT_SETTINGS,
+} from './form-print-model';
 
 import type { AdmissionPrintDefinition } from './form-print-model';
 
@@ -74,8 +81,10 @@ export function AdmissionFormPrintWorkspace({
     ...(settings ?? form.printSettings),
   };
   const [mode, setMode] = useState(initialMode);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsView, setSettingsView] = useState<'basic' | 'advanced'>('basic');
-  const [editingBranding, setEditingBranding] = useState(false);
+  const [editingHeader, setEditingHeader] = useState(false);
+  const optionsPopover = usePopover();
   const [previewPages, setPreviewPages] = useState<{ context: string; count: number }>();
   const [previewChange, setPreviewChange] = useState<
     (PdfPreviewReveal & { context: string; settingsKey: string }) | undefined
@@ -83,9 +92,15 @@ export function AdmissionFormPrintWorkspace({
   const [shownChange, setShownChange] = useState<{ id: number; page?: number }>();
   const changeId = useRef(0);
   const previewScroller = useRef<HTMLDivElement>(null);
-  const brandingEditorId = useId();
-  const revealBrandingEditor = useCallback((node: HTMLDivElement | null) => {
+  const settingsTrigger = useRef<HTMLButtonElement>(null);
+  const headerTrigger = useRef<HTMLElement | null>(null);
+  const settingsTitleId = useId();
+  const settingsId = useId();
+  const previewOptionsId = useId();
+  const headerEditorId = useId();
+  const revealHeaderEditor = useCallback((node: HTMLButtonElement | null) => {
     node?.scrollIntoView?.({ block: 'nearest' });
+    node?.focus({ preventScroll: true });
   }, []);
   const [selectedLanguage, setLanguage] = useState(form.defaultLanguage ?? 'en');
   const languages = form.supportedLanguages?.length
@@ -194,44 +209,256 @@ export function AdmissionFormPrintWorkspace({
     });
   }, []);
   const steps = getAdmissionFormStepGroups(definition.sections);
-  const brandingSettings = advanced.branding;
-  const canEditBranding =
-    canEdit &&
-    effectiveSettings.showSchoolHeader &&
-    Boolean(
-      (brandingSettings.showLogo && brand.branding.logoUrl) ||
-      (brandingSettings.showBanner && brand.branding.bannerUrl)
-    );
-  const showBrandingEditor = canEditBranding && editingBranding;
+  const showHeaderEditor = canEdit && editingHeader;
   const previewUrl = hasFields
     ? (preview.previewUrl ?? (!busy && !error ? preview.url : undefined))
     : undefined;
   const updatingPreview = hasFields && !error && (busy || Boolean(currentChange && !revealResult));
+  const showSettings = canEdit && settingsOpen;
+  const outputDisabled = !preview.url || busy || error || !hasFields;
+  const download = () => {
+    if (!outputDisabled && preview.url) {
+      downloadAdmissionForm(preview.url, `${form.name}-${usingSample ? 'sample' : mode}`);
+    }
+  };
+  const updateMode = (next: typeof mode) => {
+    clearPreviewChange();
+    setMode(next);
+  };
+  const openHeaderEditor = () => {
+    if (!editingHeader) {
+      headerTrigger.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      setEditingHeader(true);
+    }
+  };
+  const closeHeaderEditor = () => {
+    setEditingHeader(false);
+    const trigger = headerTrigger.current;
+    if (showSettings && trigger?.isConnected) trigger.focus();
+    else settingsTrigger.current?.focus();
+  };
+  const previewOptions = (
+    <>
+      <CustomSelect
+        size="small"
+        label="Form language"
+        value={language}
+        options={languages.map((value) => ({ value, label: getAdmissionLanguageLabel(value) }))}
+        onChange={(value) => {
+          clearPreviewChange();
+          setLanguage(String(value));
+        }}
+        formControlProps={{ sx: { width: { xs: 1, sm: canEdit ? 1 : 160 }, flexShrink: 0 } }}
+      />
+      {steps.length > 1 && (
+        <CustomSelect
+          size="small"
+          label="Print scope"
+          value={step}
+          options={[
+            { value: 'all', label: 'Full form' },
+            ...steps.map((item) => ({
+              value: item.id,
+              label: item.id === currentStepId ? `Current step: ${item.name}` : item.name,
+            })),
+          ]}
+          onChange={(value) => {
+            clearPreviewChange();
+            setStep(String(value));
+          }}
+          formControlProps={{ sx: { width: { xs: 1, sm: canEdit ? 1 : 200 }, flexShrink: 0 } }}
+        />
+      )}
+    </>
+  );
+
   return (
-    <Stack
-      direction={{ xs: 'column', md: 'row' }}
-      spacing={2}
-      sx={{ p: { xs: 1, sm: 2 }, flex: 1, minHeight: 0, height: 1, overflow: 'hidden', width: 1 }}
+    <Box
+      sx={{
+        display: 'grid',
+        flex: 1,
+        minHeight: 0,
+        height: 1,
+        width: 1,
+        overflow: 'hidden',
+        p: { xs: 1, sm: 2 },
+        gap: { xs: 1, sm: 1.5 },
+        gridTemplateAreas: showSettings
+          ? { xs: '"toolbar" "settings" "preview"', md: '"toolbar settings" "preview settings"' }
+          : '"toolbar" "preview"',
+        gridTemplateRows: showSettings
+          ? { xs: 'auto minmax(0, 0.9fr) minmax(0, 1fr)', md: 'auto minmax(0, 1fr)' }
+          : 'auto minmax(0, 1fr)',
+        gridTemplateColumns: showSettings
+          ? {
+              xs: 'minmax(0, 1fr)',
+              md: `minmax(0, 1fr) ${settingsView === 'advanced' ? 'clamp(360px, 40%, 520px)' : '336px'}`,
+            }
+          : 'minmax(0, 1fr)',
+      }}
     >
-      {onSettingsChange && !readOnly && (
+      <Stack
+        direction="row"
+        gap={1}
+        alignItems="center"
+        flexWrap="wrap"
+        sx={{
+          gridArea: 'toolbar',
+          minWidth: 0,
+          ...(canEdit && {
+            px: 1.5,
+            py: 1,
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1.5,
+            bgcolor: 'background.paper',
+          }),
+        }}
+      >
+        <Typography variant="subtitle1" sx={{ mr: canEdit ? 0.5 : 'auto' }}>
+          Print Preview
+        </Typography>
+        {canEdit ? (
+          <>
+            <CustomSelect
+              label="Print content"
+              size="small"
+              value={mode}
+              options={[
+                { value: 'blank', label: 'Blank form' },
+                { value: 'filled', label: 'With details' },
+              ]}
+              onChange={(value) => updateMode(value === 'filled' ? 'filled' : 'blank')}
+              formControlProps={{ sx: { width: 132, flexShrink: 0 } }}
+            />
+            <Button
+              size="small"
+              color="inherit"
+              endIcon={<Iconify icon={GlobalIcons.expandMore} />}
+              aria-haspopup="dialog"
+              aria-expanded={optionsPopover.open}
+              aria-controls={optionsPopover.open ? previewOptionsId : undefined}
+              onClick={optionsPopover.onOpen}
+            >
+              Preview options
+            </Button>
+            <CustomPopover
+              open={optionsPopover.open}
+              anchorEl={optionsPopover.anchorEl}
+              onClose={optionsPopover.onClose}
+              slotProps={{
+                arrow: { placement: 'top-left' },
+                paper: { id: previewOptionsId, role: 'dialog', 'aria-label': 'Preview options' },
+              }}
+            >
+              <Stack gap={2} sx={{ p: 2, width: 252, maxWidth: 'calc(100vw - 32px)' }}>
+                {previewOptions}
+              </Stack>
+            </CustomPopover>
+          </>
+        ) : (
+          <>
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={mode}
+              onChange={(_, value: typeof mode | null) => {
+                if (value) updateMode(value);
+              }}
+              aria-label="Print content"
+            >
+              <ToggleButton value="blank">Blank form</ToggleButton>
+              <ToggleButton value="filled">With details</ToggleButton>
+            </ToggleButtonGroup>
+            {previewOptions}
+          </>
+        )}
         <Stack
-          spacing={1}
+          direction="row"
+          alignItems="center"
+          flexWrap="wrap"
+          gap={0.75}
+          sx={{ ml: 'auto', minWidth: 0 }}
+        >
+          {!canEdit && (
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={outputDisabled}
+              startIcon={<Iconify icon={GlobalIcons.download} />}
+              onClick={download}
+            >
+              Download PDF
+            </Button>
+          )}
+          <Button
+            size="small"
+            variant={canEdit ? 'outlined' : 'contained'}
+            color={canEdit ? 'inherit' : 'primary'}
+            disabled={outputDisabled}
+            startIcon={<Iconify icon={GlobalIcons.printer} />}
+            onClick={() => preview.url && printAdmissionForm(preview.url)}
+          >
+            Print
+          </Button>
+          {canEdit && (
+            <>
+              <AdaptiveThreeDotsActions
+                moreLabel="More print actions"
+                directActionLimit={0}
+                actions={[
+                  {
+                    id: 'download-pdf',
+                    label: 'Download PDF',
+                    icon: GlobalIcons.download,
+                    disabled: outputDisabled,
+                    onClick: download,
+                  },
+                ]}
+              />
+              <Button
+                ref={settingsTrigger}
+                size="small"
+                variant={showSettings ? 'soft' : 'outlined'}
+                color="inherit"
+                startIcon={<Iconify icon="solar:settings-linear" />}
+                aria-expanded={showSettings}
+                aria-controls={settingsId}
+                onClick={() => setSettingsOpen((open) => !open)}
+              >
+                Layout settings
+              </Button>
+            </>
+          )}
+        </Stack>
+      </Stack>
+      {canEdit && (
+        <Stack
+          component="aside"
+          id={settingsId}
+          aria-labelledby={settingsTitleId}
           sx={{
-            width: { xs: 1, md: settingsView === 'advanced' ? '56%' : 300 },
-            maxHeight: { xs: '44%', md: 'none' },
-            flexShrink: 0,
+            display: showSettings ? 'flex' : 'none',
+            gridArea: 'settings',
             minWidth: 0,
             minHeight: 0,
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1.5,
           }}
         >
           <Stack
             direction="row"
             alignItems="center"
-            flexWrap="wrap"
-            gap={1}
-            justifyContent="space-between"
+            gap={0.5}
+            sx={{ px: 1.5, py: 0.75, flexShrink: 0 }}
           >
-            <Typography variant="subtitle1">Print Layout</Typography>
+            <Typography id={settingsTitleId} variant="subtitle1" sx={{ flex: 1, minWidth: 0 }}>
+              Layout Settings
+            </Typography>
             <ToggleButtonGroup
               exclusive
               size="small"
@@ -240,137 +467,62 @@ export function AdmissionFormPrintWorkspace({
               onChange={(_, next: typeof settingsView | null) => {
                 if (next) setSettingsView(next);
               }}
+              sx={{ flexShrink: 0 }}
             >
               <ToggleButton value="basic">Basic</ToggleButton>
               <ToggleButton value="advanced">Advanced</ToggleButton>
             </ToggleButtonGroup>
+            <IconButton
+              aria-label="Close layout settings"
+              sx={{ flexShrink: 0 }}
+              onClick={() => {
+                setSettingsOpen(false);
+                settingsTrigger.current?.focus();
+              }}
+            >
+              <Iconify icon="mingcute:close-line" width={18} />
+            </IconButton>
           </Stack>
-          <Scrollbar sx={{ minHeight: 0, pr: 0.5 }}>
-            {settingsView === 'advanced' ? (
-              <AdmissionPrintAdvancedSettings
-                settings={effectiveSettings}
-                onChange={handleSettingsChange}
-                form={definition}
-                branding={brand.branding}
-              />
-            ) : (
-              <AdmissionPrintSettingsPanel
-                settings={effectiveSettings}
-                onChange={handleSettingsChange}
-                branding={brand.branding}
-                defaultLanguage={form.defaultLanguage}
-                pageCount={
-                  previewPages?.context === previewContext ? previewPages.count : undefined
-                }
-              />
-            )}
+          <Scrollbar key={settingsView} sx={{ minHeight: 0, flex: 1 }}>
+            <Box sx={{ px: 1.5, pb: 1.5 }}>
+              {settingsView === 'advanced' ? (
+                <AdmissionPrintAdvancedSettings
+                  settings={effectiveSettings}
+                  onChange={handleSettingsChange}
+                  form={definition}
+                  branding={brand.branding}
+                  onEditHeader={openHeaderEditor}
+                />
+              ) : (
+                <AdmissionPrintSettingsPanel
+                  settings={effectiveSettings}
+                  onChange={handleSettingsChange}
+                  branding={brand.branding}
+                  defaultLanguage={form.defaultLanguage}
+                  hasPhotoField={hasAdmissionPrintPhotoField(definition.sections)}
+                  onEditHeader={openHeaderEditor}
+                  pageCount={
+                    previewPages?.context === previewContext ? previewPages.count : undefined
+                  }
+                />
+              )}
+            </Box>
           </Scrollbar>
         </Stack>
       )}
-      <Stack spacing={1.5} sx={{ flex: 1, minWidth: 0, minHeight: 0 }}>
-        <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-          <Typography variant="subtitle1" sx={{ mr: 'auto' }}>
-            Print Preview
-          </Typography>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={mode}
-            onChange={(_, value) => {
-              if (value) {
-                clearPreviewChange();
-                setMode(value);
-              }
-            }}
-            aria-label="Print content"
-          >
-            <ToggleButton value="blank">Blank form</ToggleButton>
-            <ToggleButton value="filled">With details</ToggleButton>
-          </ToggleButtonGroup>
-          <CustomSelect
-            size="small"
-            label="Form language"
-            value={language}
-            options={languages.map((value) => ({ value, label: getAdmissionLanguageLabel(value) }))}
-            onChange={(value) => {
-              clearPreviewChange();
-              setLanguage(String(value));
-            }}
-            formControlProps={{ sx: { width: { xs: 1, sm: 160 }, flexShrink: 0 } }}
-          />
-          {steps.length > 1 && (
-            <CustomSelect
-              size="small"
-              label="Print scope"
-              value={step}
-              options={[
-                { value: 'all', label: 'Full form' },
-                ...steps.map((item) => ({
-                  value: item.id,
-                  label: item.id === currentStepId ? `Current step: ${item.name}` : item.name,
-                })),
-              ]}
-              onChange={(value) => {
-                clearPreviewChange();
-                setStep(String(value));
-              }}
-              formControlProps={{ sx: { width: { xs: 1, sm: 200 }, flexShrink: 0 } }}
-            />
-          )}
-          {canEditBranding && (
-            <Button
-              size="small"
-              variant="outlined"
-              aria-pressed={showBrandingEditor}
-              aria-controls={showBrandingEditor ? brandingEditorId : undefined}
-              startIcon={<Iconify icon={GlobalIcons.image} />}
-              onClick={() => setEditingBranding((value) => !value)}
-            >
-              {showBrandingEditor ? 'Done editing branding' : 'Edit branding'}
-            </Button>
-          )}
-          <Button
-            size="small"
-            variant="outlined"
-            disabled={!preview.url || busy || error}
-            startIcon={<Iconify icon={GlobalIcons.download} />}
-            onClick={() =>
-              preview.url &&
-              downloadAdmissionForm(preview.url, `${form.name}-${usingSample ? 'sample' : mode}`)
-            }
-          >
-            Download PDF
-          </Button>
-          <Button
-            size="small"
-            variant="contained"
-            disabled={!preview.url || busy || error}
-            startIcon={<Iconify icon={GlobalIcons.printer} />}
-            onClick={() => preview.url && printAdmissionForm(preview.url)}
-          >
-            Print
-          </Button>
-        </Stack>
+      <Stack spacing={1} sx={{ gridArea: 'preview', minWidth: 0, minHeight: 0 }}>
         {usingSample && (
           <Typography variant="caption" color="text.secondary">
             Sample answers are used for this preview and its printout.
           </Typography>
         )}
-        {canEdit && (
-          <Box sx={{ minHeight: 20 }}>
-            {currentChange && !updatingPreview && !error && revealedPage && (
-              <Stack direction="row" gap={0.75} alignItems="center" role="status">
-                <Iconify
-                  icon="mdi:check-circle-outline"
-                  width={16}
-                  sx={{ color: 'success.main' }}
-                />
-                <Typography variant="caption" color="text.secondary">
-                  {`Preview updated · ${currentChange.label} · Page ${revealedPage}`}
-                </Typography>
-              </Stack>
-            )}
-          </Box>
+        {canEdit && currentChange && !updatingPreview && !error && revealedPage && (
+          <Stack direction="row" gap={0.75} alignItems="center" role="status">
+            <Iconify icon="mdi:check-circle-outline" width={16} sx={{ color: 'success.main' }} />
+            <Typography variant="caption" color="text.secondary">
+              {`Preview updated · ${currentChange.label} · Page ${revealedPage}`}
+            </Typography>
+          </Stack>
         )}
         {error && (
           <Alert
@@ -414,17 +566,27 @@ export function AdmissionFormPrintWorkspace({
         >
           <Scrollbar
             ref={previewScroller}
-            sx={{ flex: 1, minHeight: 180, bgcolor: 'background.neutral', borderRadius: 1.5 }}
+            sx={{ flex: 1, minHeight: 0, bgcolor: 'background.neutral', borderRadius: 1.5 }}
           >
             <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 850, mx: 'auto' }}>
-              {showBrandingEditor && onSettingsChange && (
-                <Box id={brandingEditorId} ref={revealBrandingEditor} sx={{ mb: 2 }}>
-                  <AdmissionPrintBrandingEditor
-                    settings={effectiveSettings}
+              {showHeaderEditor && (
+                <Stack component="section" id={headerEditorId} gap={1} sx={{ mb: 2 }}>
+                  <Button
+                    ref={revealHeaderEditor}
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    onClick={closeHeaderEditor}
+                    sx={{ alignSelf: 'flex-end' }}
+                  >
+                    Done editing header
+                  </Button>
+                  <AdmissionPrintHeaderEditor
+                    model={model}
                     branding={brand.branding}
                     onChange={handleSettingsChange}
                   />
-                </Box>
+                </Stack>
               )}
               {previewUrl && (
                 <PdfPreview
@@ -443,6 +605,6 @@ export function AdmissionFormPrintWorkspace({
           </Scrollbar>
         </FormBusyRegion>
       </Stack>
-    </Stack>
+    </Box>
   );
 }

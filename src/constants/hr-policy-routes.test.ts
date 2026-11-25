@@ -6,6 +6,7 @@ import { hrPaths } from './hr-menus';
 
 describe('HR policy route links', () => {
   it('uses concrete HR policy route constants instead of the legacy tab route', () => {
+    expect(hrPaths.policies.root).toBe('/hr/policies');
     expect(hrPaths.policies.payroll).toBe('/hr/payrollPolicies');
     expect(hrPaths.policies.attendance).toBe('/hr/attendance');
 

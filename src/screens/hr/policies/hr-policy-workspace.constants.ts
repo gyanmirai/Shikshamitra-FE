@@ -15,13 +15,42 @@ export const HR_POLICY_TABS: Array<{
   value: WorkspaceTab;
   label: string;
   icon: string;
+  description?: string;
   disabled?: boolean;
 }> = [
-  { value: 'calendars', label: 'Work Calendars', icon: 'mdi:calendar-month-outline' },
-  { value: 'attendance', label: 'Attendance Policies', icon: 'mdi:account-clock-outline' },
-  { value: 'leave', label: 'Leave Policies', icon: 'mdi:calendar-text-outline' },
-  { value: 'payroll', label: 'Payroll Policies', icon: 'mdi:cash-sync' },
-  { value: 'assignments', label: 'Policy Assignments', icon: 'mdi:account-switch-outline' },
+  {
+    value: 'calendars',
+    label: 'Work Calendars',
+    icon: 'mdi:calendar-month-outline',
+    description: 'Manage the workweeks and holidays used by attendance and payroll policies.',
+  },
+  {
+    value: 'attendance',
+    label: 'Attendance Policies',
+    icon: 'mdi:account-clock-outline',
+    description:
+      'Set attendance expectations and holiday work rules for each policy’s selected work calendar.',
+  },
+  {
+    value: 'leave',
+    label: 'Leave Policies',
+    icon: 'mdi:calendar-text-outline',
+    description:
+      'Set paid and unpaid leave entitlements and approvals. The staff member’s payroll calendar and workday rules determine the days counted on requests.',
+  },
+  {
+    value: 'payroll',
+    label: 'Payroll Policies',
+    icon: 'mdi:cash-sync',
+    description:
+      'Set how working days, Saturdays, and holidays count for payroll using each policy’s selected work calendar.',
+  },
+  {
+    value: 'assignments',
+    label: 'Policy Assignments',
+    icon: 'mdi:account-switch-outline',
+    description: 'Override school defaults for a staff member or group during a specified period.',
+  },
 ];
 
 export const getHRPolicyTab = (value: WorkspaceTab) => {

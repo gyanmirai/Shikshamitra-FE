@@ -4,7 +4,7 @@ export const IDENTITY_CARD_PREFIX_LIMIT = 150;
 
 export type IdentityCardElement = {
   id: string;
-  type: 'text' | 'photo' | 'logo' | 'image' | 'qr' | 'barcode' | 'shape' | 'line';
+  type: 'text' | 'photo' | 'logo' | 'signature' | 'image' | 'qr' | 'barcode' | 'shape' | 'line';
   rotation?: number;
   opacity?: number;
   groupId?: string;
@@ -79,6 +79,8 @@ export type IdentityCardPreviewProps = {
   fieldTokens?: Readonly<Record<string, string>>;
   logoUrl?: string;
   logoHidden?: boolean;
+  signatureUrl?: string;
+  signaturePlaceholder?: boolean;
   photoUrl?: string;
   qrCodeEnabled?: boolean;
   barcodeEnabled?: boolean;
@@ -90,6 +92,7 @@ export type IdentityCardDesignerProps = IdentityCardPreviewProps & {
   onPhotoEdit?: (edit: IdentityCardPhotoEdit) => void;
   onEditorBusyChange?: (busy: boolean) => void;
   brandingContent?: ReactNode;
+  canPlaceSignature?: boolean;
   onLayoutChange: (layout: IdentityCardLayout) => void;
   printSettings: IdentityCardPrintSettings;
   onPrintSettingsChange: (settings: IdentityCardPrintSettings) => void;

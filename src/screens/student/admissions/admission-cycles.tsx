@@ -520,16 +520,6 @@ export default function AdmissionCyclesScreen() {
                 },
               ]
             : []),
-          ...(canAdd
-            ? [
-                {
-                  id: 'clone',
-                  label: `Clone as Draft`,
-                  icon: GlobalIcons.copy,
-                  onClick: () => openConfiguration('clone', cycle),
-                },
-              ]
-            : []),
           ...(canAdd && canCloseCycle(cycle)
             ? [
                 {

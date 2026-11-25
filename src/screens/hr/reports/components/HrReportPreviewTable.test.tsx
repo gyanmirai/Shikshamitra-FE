@@ -37,7 +37,7 @@ it('shows missing historical amounts as unavailable through the actual shared ta
       />
     </ThemeProvider>
   );
-  const row = screen.getByText('2026-09').closest('tr')!;
+  const row = screen.getByText('Sep 2026').closest('tr')!;
   expect(row).toHaveTextContent('UnavailableUnavailable');
   expect(screen.getByText('0.00')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Sort by Net pay' })).not.toBeInTheDocument();

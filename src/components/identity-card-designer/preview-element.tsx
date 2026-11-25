@@ -8,8 +8,19 @@ export function ElementContent({
   fieldTokens,
   logoUrl,
   photoUrl,
+  signatureUrl,
 }: IdentityCardPreviewProps & { element: IdentityCardElement }) {
   const { style = {} } = element;
+  if (element.type === 'signature' && signatureUrl)
+    return (
+      <img
+        src={signatureUrl}
+        alt="Principal’s signature"
+        style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }}
+      />
+    );
+  if (element.type === 'signature')
+    return <div style={{ font: '9px Arial', padding: 2 }}>Principal’s signature</div>;
   if (element.type === 'photo' || element.type === 'logo' || element.type === 'image') {
     const url =
       element.type === 'image' ? element.imageData : element.type === 'photo' ? photoUrl : logoUrl;

@@ -652,6 +652,16 @@ const hrModule = () => ({
           icon: menuIconView('mdi:source-branch-check'),
           children: [
             {
+              title: 'Overview',
+              path: hrPaths.policies.root,
+              exactMatch: true,
+              _action: 'hr-policies-overview',
+              shortcutKey: 'Alt+H+Y+0',
+              shortcutKeyName: 'Alt+H+Y+0',
+              permissionName: hrPermissions.policies.root,
+              icon: menuIconView('mdi:view-dashboard-edit-outline'),
+            },
+            {
               title: 'Work Calendars',
               path: hrPaths.policies.calendars,
               _action: 'hr-policies-calendars',

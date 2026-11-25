@@ -48,9 +48,7 @@ export default function AdmissionInquiryPipelineScreen() {
   const params = useSearchParams();
   const applicationId = params.get('application');
   const openAssessmentBooking = params.get('assessment') === 'book';
-  const [printRequest, setPrintRequest] = useState<{ id: string; mode: 'blank' | 'filled' } | null>(
-    null
-  );
+  const [printApplicationId, setPrintApplicationId] = useState<string | null>(null);
   const worklistRef = useRef<HTMLDivElement>(null);
   const previousApplication = useRef(applicationId);
   const restoreApplicationFocus = useRef<string | null>(null);
@@ -193,8 +191,8 @@ export default function AdmissionInquiryPipelineScreen() {
         openWorkspace,
         undefined,
         canView
-          ? (id, mode) => {
-              if (!interactionLocked.current) setPrintRequest({ id, mode });
+          ? (id) => {
+              if (!interactionLocked.current) setPrintApplicationId(id);
             }
           : undefined
       ),
@@ -466,12 +464,12 @@ export default function AdmissionInquiryPipelineScreen() {
           </Box>
         </>
       )}
-      {canView && printRequest && (
+      {canView && printApplicationId && (
         <AdmissionApplicationPrintDialog
-          key={printRequest.id}
-          applicationId={printRequest.id}
-          initialMode={printRequest.mode}
-          onClose={() => setPrintRequest(null)}
+          key={printApplicationId}
+          applicationId={printApplicationId}
+          initialMode="auto"
+          onClose={() => setPrintApplicationId(null)}
         />
       )}
       {canView && applicationId && (

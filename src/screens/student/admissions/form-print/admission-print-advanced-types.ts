@@ -12,6 +12,7 @@ export type AdmissionPrintAdvancedTabProps = {
   form: AdmissionPrintDefinition;
   branding: AdmissionPrintBranding;
   onChange: (settings: AdmissionFormPrintSettings) => void;
+  onEditHeader?: () => void;
   update: <K extends keyof AdmissionPrintAdvancedSettings>(
     group: K,
     patch: Partial<NonNullable<AdmissionPrintAdvancedSettings[K]>>

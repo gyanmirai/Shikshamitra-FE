@@ -15,12 +15,12 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useRef, useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useId, useRef, useMemo, useState, useCallback } from 'react';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import { financeNameSchema, sanitizeFinanceName } from 'src/utils/finance-name';
@@ -32,6 +32,7 @@ import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrer
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import { setupOptionsMissing } from 'src/screens/finance/settings/components/financeSetupPrerequisites';
+import { getFinanceSettingErrorMessage } from 'src/screens/finance/settings/components/finance-setting-error';
 import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 import { useRefreshFinancePrerequisites } from 'src/screens/finance/hooks/useRefreshFinancePrerequisites';
 import {
@@ -108,6 +109,10 @@ const FinanceChargeCategory = () => {
   const [deletionUsage, setDeletionUsage] = useState<ChargeCategoryUsage | null>(null);
   const [isCheckingUsage, setIsCheckingUsage] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const deletionDescriptionId = useId();
+  const relatedChargesHeadingId = `${deletionDescriptionId}-related-charges`;
+  const isCategoryInUse = deletionUsage && !deletionUsage.canDelete;
+  const isDeletionBusy = isCheckingUsage || isDeleting;
   const deleteInFlight = useRef(false);
   const [patchChargeCategoryStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -134,7 +139,7 @@ const FinanceChargeCategory = () => {
       setDeletionUsage(usage);
     } catch (error) {
       setDeletionUsage(null);
-      setDeleteError(`Unable to check charge dependencies. ${parseApiProblemDetail(error).detail}`);
+      setDeleteError(`Unable to check charge dependencies. ${getFinanceSettingErrorMessage(error, 'Try again.')}`);
     } finally {
       setIsCheckingUsage(false);
     }
@@ -155,7 +160,13 @@ const FinanceChargeCategory = () => {
       if (problem.errorCode === 'Finance:Charge:010028') {
         await checkDeletionUsage(selectedEntry.id);
       } else {
-        setDeleteError(problem.detail);
+        setDeleteError(
+          getFinanceSettingErrorMessage(
+            error,
+            'Could not delete the charge category. Refresh the list to check it before retrying.',
+            problem
+          )
+        );
       }
     } finally {
       deleteInFlight.current = false;
@@ -173,6 +184,14 @@ const FinanceChargeCategory = () => {
     setDeletionUsage(null);
     confirm.onTrue();
     checkDeletionUsage(item.id);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    if (isDeletionBusy || deleteInFlight.current) return;
+    confirm.onFalse();
+    setSelectedEntry(null);
+    setDeletionUsage(null);
+    setDeleteError('');
   };
 
   // Handle add new item
@@ -422,73 +441,108 @@ const FinanceChargeCategory = () => {
         )}
       </CustomDialog>
 
-      <ConfirmDialog
+      <CustomDialog
         open={confirm.value}
-        onClose={() => {
-          if (isCheckingUsage || isDeleting) return;
-          confirm.onFalse();
-          setSelectedEntry(null);
-          setDeletionUsage(null);
-          setDeleteError('');
-        }}
-        disableCancel={isCheckingUsage || isDeleting}
+        handleClose={handleCloseDeleteDialog}
+        hasForm={false}
+        guardUnsavedChanges={false}
+        disableClose={isDeletionBusy}
+        aria-describedby={deletionDescriptionId}
+        paperProps={{ sx: { backgroundImage: 'none' } }}
         title={
-          deletionUsage && !deletionUsage.canDelete
-            ? 'Charge Category In Use'
-            : 'Delete Charge Category?'
+          <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+            <Iconify
+              aria-hidden="true"
+              icon={isCategoryInUse ? GlobalIcons.warning : GlobalIcons.delete}
+              sx={{ flexShrink: 0, color: isCategoryInUse ? 'warning.main' : 'error.main' }}
+            />
+            {isCategoryInUse ? 'Charge Category In Use' : 'Delete Charge Category?'}
+          </Box>
         }
-        icon={deletionUsage && !deletionUsage.canDelete ? 'warning' : 'error'}
-        content={
-          <Stack spacing={1.5}>
+      >
+        <DialogScrollContent>
+          <Stack spacing={2} sx={{ overflowWrap: 'anywhere' }}>
             {isCheckingUsage ? (
-              <Typography variant="body2" role="status">
+              <Typography id={deletionDescriptionId} variant="body2" role="status">
                 Checking charge dependencies…
               </Typography>
-            ) : deletionUsage && !deletionUsage.canDelete ? (
+            ) : isCategoryInUse ? (
               <>
-                <Typography variant="body2">
-                  <b>{deletionUsage.categoryName}</b> cannot be deleted because it is currently used
-                  by{' '}
-                  <b>
-                    {deletionUsage.chargeCount}{' '}
-                    {deletionUsage.chargeCount === 1 ? 'charge' : 'charges'}
-                  </b>
-                  {deletionUsage.studentAssignmentCount > 0 &&
-                    ` (${deletionUsage.studentAssignmentCount} student assignments)`}
-                  .
-                </Typography>
-                {deletionUsage.chargeNames.length > 0 && (
-                  <Box component="ul" sx={{ my: 0, pl: 2.5 }}>
-                    {deletionUsage.chargeNames.map((name) => (
-                      <li key={name}>{name}</li>
-                    ))}
-                  </Box>
+                <Stack spacing={0.5}>
+                  <Typography id={deletionDescriptionId} variant="body2">
+                    <strong>{deletionUsage.categoryName}</strong> cannot be deleted because it is
+                    linked to existing charges.
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>
+                      {deletionUsage.chargeCount}{' '}
+                      {deletionUsage.chargeCount === 1 ? 'charge' : 'charges'}
+                    </strong>
+                    {deletionUsage.studentAssignmentCount > 0 &&
+                      ` · ${deletionUsage.studentAssignmentCount} student ${deletionUsage.studentAssignmentCount === 1 ? 'assignment' : 'assignments'}`}
+                  </Typography>
+                </Stack>
+                {deletionUsage.chargeNames.length > 0 ? (
+                  <Stack spacing={0.5}>
+                    <Typography id={relatedChargesHeadingId} component="h3" variant="subtitle2">
+                      Related Charges
+                    </Typography>
+                    <Stack
+                      component="ul"
+                      aria-labelledby={relatedChargesHeadingId}
+                      spacing={0.5}
+                      sx={{ m: 0, pl: 2.5, listStyleType: 'disc' }}
+                    >
+                      {deletionUsage.chargeNames.map((name) => (
+                        <Typography key={name} component="li" variant="body2">
+                          {name}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No related charge names are available.
+                  </Typography>
                 )}
-                <Typography variant="body2">
-                  Review the related charges. Archive this category to stop new use while preserving
-                  existing student records.
-                  {deletionUsage.chargeNames.length === 0 &&
-                    ' Charge details may require additional access.'}
+                <Typography variant="body2" color="text.secondary">
+                  Archive this category to stop new use while preserving existing student records.
                 </Typography>
               </>
             ) : deletionUsage ? (
-              <Typography variant="body2">
-                Delete charge category <b>{deletionUsage.categoryName}</b>? This action cannot be
-                undone.
+              <Typography id={deletionDescriptionId} variant="body2">
+                Delete <strong>{deletionUsage.categoryName}</strong>? This action cannot be undone.
               </Typography>
             ) : null}
             {deleteError && (
-              <Typography variant="body2" color="error" role="alert">
+              <Typography
+                id={deletionUsage ? undefined : deletionDescriptionId}
+                variant="body2"
+                color="error"
+                role="alert"
+              >
                 {deleteError}
               </Typography>
             )}
           </Stack>
-        }
-        action={
-          deletionUsage && !deletionUsage.canDelete ? (
+        </DialogScrollContent>
+        <DialogActions sx={{ gap: 1.5, '& > :not(:first-of-type)': { ml: 0 } }}>
+          <Button
+            type="button"
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            disabled={isDeletionBusy}
+            onClick={handleCloseDeleteDialog}
+          >
+            Cancel
+          </Button>
+          {isCategoryInUse ? (
             canReviewCharges ? (
               <Button
                 href={financePaths.fees.charges}
+                size="small"
                 variant="contained"
                 color="inherit"
                 startIcon={<Iconify icon={GlobalIcons.eye} />}
@@ -498,8 +552,11 @@ const FinanceChargeCategory = () => {
             ) : null
           ) : deleteError && !deletionUsage ? (
             <Button
+              type="button"
+              size="small"
               variant="contained"
-              startIcon={<Iconify icon="mdi:refresh" />}
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.refresh} />}
               onClick={() => {
                 if (selectedEntry?.id) checkDeletionUsage(selectedEntry.id);
               }}
@@ -519,9 +576,9 @@ const FinanceChargeCategory = () => {
             >
               Delete
             </LoadingButton>
-          )
-        }
-      />
+          )}
+        </DialogActions>
+      </CustomDialog>
       {/* Status Confirmation Dialog */}
       <ConfirmDialog
         open={statusConfirm.value}

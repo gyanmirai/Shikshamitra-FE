@@ -184,7 +184,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
           </DrawerSelectField>
           <DrawerField
             label="Effective From *"
-            help="The first date this work calendar can be used for attendance and payroll calculations."
+            help="Start of the calendar's configured date range. Use the staff check in Policies & Rules to see what resolves on a date."
           >
             <DatePicker
               minDate={dayjs(`${HR_POLICY_MIN_YEAR}-01-01`)}
@@ -208,7 +208,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
           </DrawerField>
           <DrawerField
             label="Effective To"
-            help="Optional end date. Leave blank when this calendar should remain available until replaced."
+            help="Optional end of the calendar's configured date range."
           >
             <DatePicker
               minDate={dayjs(`${HR_POLICY_MIN_YEAR}-01-01`)}

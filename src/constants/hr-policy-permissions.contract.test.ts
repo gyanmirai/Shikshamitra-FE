@@ -23,6 +23,10 @@ describe('HR policy permission catalogue contract', () => {
     expect(hrLeavePolicyPermissions).toEqual({
       root: 'HR.LeaveManagement.Setting.LeavePolicy',
       view: 'HR.LeaveManagement.Setting.LeavePolicy.View',
+      create: 'HR.LeaveManagement.Setting.LeavePolicy.Add',
+      edit: 'HR.LeaveManagement.Setting.LeavePolicy.Edit',
+      archive: 'HR.LeaveManagement.Setting.LeavePolicy.Delete',
+      setDefault: 'HR.LeaveManagement.Setting.LeavePolicy.SetDefault',
     });
   });
 });

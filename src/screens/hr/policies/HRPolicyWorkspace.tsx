@@ -35,7 +35,6 @@ import { ManualHolidayDialog } from './components/ManualHolidayDialog';
 import { PayrollPolicyDrawer } from './components/PayrollPolicyDrawer';
 import { PolicyOperationOverlay } from './components/HRPolicySharedUI';
 import { CalendarPolicyDrawer } from './components/CalendarPolicyDrawer';
-import { HRSetupReviewChecklist } from './components/HRSetupReviewChecklist';
 import { AttendancePolicyDrawer } from './components/AttendancePolicyDrawer';
 import { AssignmentPolicyDrawer } from './components/AssignmentPolicyDrawer';
 
@@ -122,8 +121,17 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     drawerTransitionDuration,
   } = ctx;
 
-  // Get the current tab label for breadcrumbs
-  const currentTabLabel = HR_POLICY_TABS.find((t) => t.value === tab)?.label || 'Policies';
+  const currentTab = HR_POLICY_TABS.find((t) => t.value === tab);
+  const currentTabLabel = currentTab?.label ?? 'Policies';
+  const defaultWarnings = [
+    { policy: 'leave', state: ctx.leaveSetupState, canOpen: ctx.canOpenLeavePolicies },
+    {
+      policy: 'attendance',
+      state: ctx.attendanceSetupState,
+      canOpen: ctx.canOpenAttendancePolicies,
+    },
+    { policy: 'payroll', state: ctx.payrollSetupState, canOpen: ctx.canOpenPayrollPolicies },
+  ] as const;
 
   return (
     <Box
@@ -140,45 +148,36 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       <CustomBreadcrumbs
         heading={currentTabLabel}
         description={
-          tab === 'leave'
-            ? 'Manage entitlements, accrual, carry-forward, encashment, and approval rules. Each policy contains one Paid bucket and one Unpaid bucket.'
-            : 'Configure staff calendars, policies, and assignments.'
+          currentTab?.description ?? 'Configure staff calendars, policies, and assignments.'
         }
         sx={{ flexShrink: 0 }}
-        links={[{ name: currentTabLabel }]}
+        links={[
+          { name: 'Policies & Rules', href: hrPaths.policies.root },
+          { name: currentTabLabel },
+        ]}
       />
       {!academicYearId ? <Alert severity="warning">Select an academic year</Alert> : null}
       {isLoading ? <LinearProgress /> : null}
-      {academicYearId && !drawer ? (
-        <Box sx={{ flexShrink: 0 }}>
-          <HRSetupReviewChecklist academicYearId={academicYearId} />
-          <PolicySetupAlert
-            state={ctx.leaveSetupState}
-            policy="leave"
-            canOpen={ctx.canOpenLeavePolicies}
-            onOpen={() => router.push(hrPaths.policies.leavePolicies)}
-          />
-          <PolicySetupAlert
-            state={ctx.attendanceSetupState}
-            policy="attendance"
-            canOpen={ctx.canOpenAttendancePolicies}
-            onOpen={() => router.push(hrPaths.policies.attendance)}
-          />
-          <PolicySetupAlert
-            state={ctx.payrollSetupState}
-            policy="payroll"
-            canOpen={ctx.canOpenPayrollPolicies}
-            onOpen={() => router.push(hrPaths.policies.payroll)}
-          />
-        </Box>
-      ) : null}
+      {academicYearId && !drawer
+        ? defaultWarnings
+            .filter(({ policy }) => tab === policy || tab === 'assignments')
+            .map(({ policy, state, canOpen }) => (
+              <PolicySetupAlert
+                key={policy}
+                state={state}
+                policy={policy}
+                canOpen={tab === 'assignments' && canOpen}
+                onOpen={() => router.push(destinations[policy].href)}
+              />
+            ))
+        : null}
 
       {/* Tab content */}
       <Box
         sx={{
           display: 'flex',
           flex: { xs: '1 0 auto', sm: 1 },
-          // Mobile setup warnings may consume the viewport; keep records and the footer reachable.
+          // Keep records and the table footer reachable below contextual warnings on mobile.
           minHeight: { xs: 420, sm: 0 },
           minWidth: 0,
           overflow: 'hidden',

@@ -9,6 +9,7 @@ import type {
   StaffParentRegistrationContext,
   ParentRegistrationEmailHistory,
   ParentRegistrationCopyLinkInput,
+  ParentRegistrationReactivateInput,
   ParentRegistrationCorrectionInput,
 } from './admission-parent-registration-types';
 
@@ -94,6 +95,18 @@ export const admissionParentRegistrationApi = api.injectEndpoints({
       invalidatesTags: (result, error, { input }) =>
         result && input.recipientRelationship ? invalidates(result, error) : [],
     }),
+    reactivateParentRegistration: builder.mutation<
+      StaffParentRegistrationContext,
+      Command<ParentRegistrationReactivateInput>
+    >({
+      query: ({ applicationId, input }) => ({
+        url: `${base(applicationId)}/reactivate`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: unwrap,
+      invalidatesTags: invalidates,
+    }),
     changeParentRegistrationEmail: builder.mutation<
       StaffParentRegistrationContext,
       Command<ParentRegistrationEmailInput>
@@ -165,6 +178,7 @@ export const {
   useGetParentRegistrationEmailHistoryQuery,
   useSendParentRegistrationMutation,
   useCopyParentRegistrationLinkMutation,
+  useReactivateParentRegistrationMutation,
   useChangeParentRegistrationEmailMutation,
   useRevokeParentRegistrationMutation,
   useTakeoverParentRegistrationMutation,

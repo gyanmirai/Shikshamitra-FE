@@ -23,4 +23,32 @@ describe('account setting save feedback', () => {
       message: 'This account number already exists for the academic year.',
     });
   });
+
+  it('keeps validation details from the API', () => {
+    const error = {
+      status: 400,
+      data: {
+        error: {
+          message: 'One or more validation errors occurred.',
+          validationErrors: [
+            { message: 'Enter a name with 2 to 40 characters.', members: ['name'] },
+          ],
+        },
+      },
+    };
+    expect(getAccountSettingSaveError(error, 'category')).toEqual({
+      message: 'Enter a name with 2 to 40 characters.',
+    });
+  });
+
+  it('explains what to check when the server cannot confirm the save', () => {
+    const failed = { status: 500, data: { detail: 'The request failed.' } };
+    const offline = { status: 'FETCH_ERROR', error: 'TypeError: Failed to fetch' };
+    expect(getAccountSettingSaveError(failed, 'category')).toEqual({
+      message: 'Could not save the category. Refresh the list to check it before retrying.',
+    });
+    expect(getAccountSettingSaveError(offline, 'bank')).toEqual({
+      message: 'Could not save the bank account. Refresh the list to check it before retrying.',
+    });
+  });
 });

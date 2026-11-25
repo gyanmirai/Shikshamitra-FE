@@ -38,6 +38,14 @@ describe('student configurable ID-card adapter', () => {
     expect(saved).not.toBe(initial);
   });
 
+  it('uses the PDF default when a saved design omits its cut mark setting', () => {
+    const template = createStudentICardTemplate();
+    expect(getStudentICardPrintSettings(template).showCutMarks).toBe(true);
+    expect(
+      getStudentICardPrintSettings({ ...template, printSettingsJson: '{}' }).showCutMarks
+    ).toBe(false);
+  });
+
   it('swaps saved print dimensions without discarding custom artwork or print settings', () => {
     const template = createStudentICardTemplate();
     const layout = getStudentICardLayout(template);

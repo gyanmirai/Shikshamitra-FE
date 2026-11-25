@@ -29,7 +29,10 @@ vi.mock('src/hooks/use-finance-form-close', () => ({
   useFinanceFormClose: () => ({ handleClose: vi.fn(), confirmation: null }),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-vi.mock('src/components/customDialog', () => ({ default: () => null }));
+vi.mock('src/components/customDialog', () => ({
+  default: () => null,
+  DialogScrollContent: () => null,
+}));
 vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
 vi.mock('src/components/custom-breadcrumbs', () => ({ CustomBreadcrumbs: () => null }));
 vi.mock('src/components/customizabaleTable', () => ({ default: () => null }));

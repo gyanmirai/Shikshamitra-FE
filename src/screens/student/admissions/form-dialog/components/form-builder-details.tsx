@@ -141,7 +141,7 @@ export function FormBuilderDetails({ formik, editing, nameConflictMessage, check
             variant="contained"
             startIcon={<Iconify icon="mdi:swap-horizontal" />}
             size="small"
-            sx={{ minHeight: 44, bgcolor: 'common.black', color: 'common.white' }}
+            sx={{ bgcolor: 'common.black', color: 'common.white' }}
             onClick={() =>
               pendingStarter && applyStarter(pendingStarter.values, pendingStarter.starter)
             }

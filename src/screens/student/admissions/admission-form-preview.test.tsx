@@ -207,38 +207,59 @@ describe('admission form preview return controls', () => {
     ]);
     expect(display.sections[0].fields[0]).toMatchObject({ readOnly: true, required: false });
     expect(display.defaultLanguage).toBe('hi');
-    expect(mocks.sourceQuery).toHaveBeenCalledWith(
+    expect(screen.queryByLabelText('Preview using Inquiry form')).not.toBeInTheDocument();
+    expect(mocks.sourceQuery).toHaveBeenLastCalledWith(
       expect.objectContaining({ id: 'form-1' }),
-      expect.objectContaining({ skip: false })
-    );
-  });
-  it('requires an explicit choice when multiple sources are approved and retains that choice in the URL', async () => {
-    mocks.form!.purpose = 1;
-    mocks.form!.inheritance = {
-      enabled: true,
-      sources: ['source-a', 'source-b'].map((inquiryFormDefinitionId) => ({
-        inquiryFormDefinitionId,
-        requiredFieldIdentities: [],
-        fieldMappings: [],
-        layouts: [],
-      })),
-    };
-    await act(async () => {
-      render(<AdmissionFormPreviewScreen />);
-    });
-    expect(screen.queryByText('Applicant fields')).not.toBeInTheDocument();
-    expect(mocks.previewQuery).toHaveBeenLastCalledWith(
-      expect.anything(),
       expect.objectContaining({ skip: true })
     );
-    fireEvent.change(screen.getByLabelText('Preview using Inquiry form'), {
-      target: { value: 'source-b' },
-    });
-    expect(mocks.replace).toHaveBeenCalledWith(
-      expect.stringContaining('inquiryFormDefinitionId=source-b'),
-      { scroll: false }
-    );
   });
+  it.each(['', 'unapproved-source'])(
+    'opens the first saved approval with multiple sources and URL source %j',
+    async (requestedSource) => {
+      mocks.form!.purpose = 1;
+      mocks.form!.inheritance = {
+        enabled: true,
+        sources: ['source-a', 'source-b'].map((inquiryFormDefinitionId) => ({
+          inquiryFormDefinitionId,
+          requiredFieldIdentities: [],
+          fieldMappings: [],
+          layouts: [],
+        })),
+      };
+      if (requestedSource) {
+        mocks.search = new URLSearchParams({ inquiryFormDefinitionId: requestedSource }).toString();
+      }
+      mocks.preview = {
+        inquiryFormDefinitionId: 'source-a',
+        isValid: true,
+        definition: { ...mocks.form },
+        inquiryContextSections: [],
+      };
+      await act(async () => {
+        render(<AdmissionFormPreviewScreen />);
+      });
+      expect(screen.getByText('Applicant fields')).toBeVisible();
+      expect(mocks.previewQuery).toHaveBeenLastCalledWith(
+        { id: 'form-1', inquiryFormDefinitionId: 'source-a' },
+        expect.objectContaining({ skip: false })
+      );
+      expect(screen.getByLabelText('Preview using Inquiry form')).toHaveValue('source-a');
+      expect(mocks.replace).not.toHaveBeenCalled();
+
+      fireEvent.change(screen.getByLabelText('Preview using Inquiry form'), {
+        target: { value: 'source-b' },
+      });
+      expect(mocks.previewQuery).toHaveBeenLastCalledWith(
+        { id: 'form-1', inquiryFormDefinitionId: 'source-b' },
+        expect.objectContaining({ skip: false })
+      );
+      expect(screen.queryByText('Applicant fields')).not.toBeInTheDocument();
+      expect(mocks.replace).toHaveBeenCalledWith(
+        expect.stringContaining('inquiryFormDefinitionId=source-b'),
+        { scroll: false }
+      );
+    }
+  );
   it('keeps a failed effective preview out of the raw base and exposes Retry', async () => {
     mocks.form!.purpose = 1;
     mocks.form!.inheritance = {

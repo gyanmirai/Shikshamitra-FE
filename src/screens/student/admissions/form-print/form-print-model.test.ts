@@ -37,6 +37,28 @@ const fields = (model: ReturnType<typeof buildAdmissionPrintDocument>) =>
   );
 
 describe('Registration print document', () => {
+  it('prints the flagged single-page Registration and Inquiry questions in one group', () => {
+    const registrationPage = {
+      stepId: 'registration-page',
+      stepCode: 'REGISTRATION_PAGE',
+      stepName: 'Registration',
+      stepDisplayOrder: 0,
+    };
+    const source = section('INQ', [question('INQUIRY_QUESTION')], {
+      ...registrationPage,
+      displayOrder: 1,
+    });
+    const registration = section('REG', [question('REGISTRATION_QUESTION')], registrationPage);
+    const model = buildAdmissionPrintDocument({
+      definition: { ...definition([registration]), layoutType: 0 },
+      inquiryContextSections: [source],
+      values: {},
+      mode: 'blank',
+    });
+    expect(model.steps.map((step) => [step.title, step.sections.map((part) => part.code)])).toEqual(
+      [['Registration', ['INQ', 'REG']]]
+    );
+  });
   it('keeps advanced paper settings, blank repeat rows and filled academic/choice formatting in the common model', () => {
     const input = {
       definition: definition([

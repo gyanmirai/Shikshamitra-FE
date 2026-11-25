@@ -2,7 +2,11 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import { it, expect, describe } from 'vitest';
 
-import { nextStepNumber, getAdmissionFormStepGroups } from './form-step-groups';
+import {
+  nextStepNumber,
+  getAdmissionFormStepGroups,
+  getVisibleAdmissionFormSteps,
+} from './form-step-groups';
 
 const section = (
   id: string,
@@ -37,6 +41,19 @@ describe('admission form step grouping', () => {
 
     expect(groups).toHaveLength(2);
     expect(groups[0].name).toBe('Section 1');
+    expect(getVisibleAdmissionFormSteps([section('1'), section('2')], {}, false)).toHaveLength(2);
+  });
+
+  it('keeps a composed single-page registration together in the guided form', () => {
+    const sections = [section('1', 'registration'), section('2', 'registration')].map((item) => ({
+      ...item,
+      stepCode: 'REGISTRATION_PAGE',
+      stepName: 'Registration',
+    }));
+    const steps = getVisibleAdmissionFormSteps(sections, {}, false);
+    expect(steps).toHaveLength(1);
+    expect(steps[0].name).toBe('Registration');
+    expect(steps[0].sections.map(({ section: item }) => item.id)).toEqual(['1', '2']);
   });
 
   it('keeps a cleared step name empty across all its sections while editing', () => {

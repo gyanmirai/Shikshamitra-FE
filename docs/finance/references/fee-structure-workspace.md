@@ -56,12 +56,15 @@ additional draft was created by a retry.
 
 ## Common components and interaction rules
 
-The picker pairs a searchable policy list with the shared read-only configuration. On narrow
-screens the preview appears below the list. Collection options show late-fee coverage. Refund
-options show applicable fee heads and explain when a policy cannot be selected. Moving between
-previews preserves the search and the draft's current policy. The preview uses the exact saved
-version of the policy, including fee-head rules for Proration. The editable Proration Preview
-calculator is available in the Proration Policy workspace.
+The Refund and Proration policy pickers omit the Fee head coverage column and its mobile
+caption. Refund keeps the Fee Heads list; both retain policy names, versions, selection actions
+and their existing eligibility checks. Collection continues to show its coverage summary.
+
+Proration policy details opened from the Fee Structure policy picker reuse the shared Policy
+details drawer. This context shows saved configuration, fee-head rules, version and audit details
+only; it omits the editable Proration Preview calculator. The calculator remains available in the
+Proration Policy workspace. Viewing details preserves the picker search and does not attach or
+change the policy.
 
 The editor footer uses **Draft** and **Publish** for its save and publication
 buttons. An explicit **Draft** click confirms when the saved draft is already up to date,
