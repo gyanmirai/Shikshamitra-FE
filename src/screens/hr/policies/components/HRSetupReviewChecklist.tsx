@@ -1,15 +1,16 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { HrSetupReviewSection } from 'src/redux/hr/hr-setup-review-api';
 
-import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { useId, useRef, useState } from 'react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Iconify } from 'src/components/iconify';
+import { hrPermissions } from 'src/constants/hr-menus';
 import CustomAccordion from 'src/components/custom-accordian';
-import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
+import { hasNavigationPermission } from 'src/utils/permissions';
+import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
 import {
   useGetHrSetupReviewQuery,
   useRecordHrSetupReviewMutation,
@@ -23,73 +24,24 @@ import {
   Skeleton,
   Typography,
   LinearProgress,
-  Link as MuiLink,
   AccordionSummary,
 } from '@mui/material';
 
-type PolicyGuideItem = { title: string; href: string; description: string };
-
-const assignments: PolicyGuideItem = {
-  title: 'Policy Assignments',
-  href: hrPaths.policies.assignments,
-  description: 'Use optional staff or group assignments when the default policies should differ.',
-};
-
 const sections = [
-  {
-    id: 'calendar',
-    label: 'Calendar and workweek',
-    navigation: hrPermissions.policies.calendars,
-    guide: {
-      title: 'Work Calendars',
-      href: hrPaths.policies.calendars,
-      description:
-        'Start here to review working days, weekly days off, and holidays. Attendance and payroll can use different calendars.',
-    },
-  },
-  {
-    id: 'attendance',
-    label: 'Attendance thresholds and capture',
-    navigation: hrPermissions.policies.attendance,
-    guide: {
-      title: 'Attendance Policies',
-      href: hrPaths.policies.attendance,
-      description: 'Choose a work calendar and set attendance expectations and holiday work rules.',
-    },
-  },
-  {
-    id: 'payroll',
-    label: 'Payroll basis',
-    navigation: hrPermissions.policies.payroll,
-    guide: {
-      title: 'Payroll Policies',
-      href: hrPaths.policies.payroll,
-      description:
-        'Choose a work calendar and set how working days and holidays count for payroll.',
-    },
-  },
-  {
-    id: 'leave',
-    label: 'Leave allocations',
-    navigation: hrPermissions.policies.leavePolicies,
-    guide: {
-      title: 'Leave Policies',
-      href: hrPaths.policies.leavePolicies,
-      description:
-        'Set leave entitlements and approvals. The staff member’s payroll calendar and workday rules determine how many days a request uses.',
-    },
-  },
+  { id: 'calendar', label: 'Work Calendars', navigation: hrPermissions.policies.calendars },
+  { id: 'attendance', label: 'Attendance Policies', navigation: hrPermissions.policies.attendance },
+  { id: 'payroll', label: 'Payroll Policies', navigation: hrPermissions.policies.payroll },
+  { id: 'leave', label: 'Leave Policies', navigation: hrPermissions.policies.leavePolicies },
   {
     id: 'sample',
-    label: 'Sample staff and date check',
+    label: 'Automatic staff and date sample',
     navigation: hrPermissions.policies.assignments,
-    guide: null,
   },
 ] as const;
 
 const reviewLabels = {
-  record_not_present: 'Review needed · no record',
-  stale: 'Review needed · settings changed',
+  record_not_present: 'No review recorded',
+  stale: 'Previous review is out of date',
   reviewed: 'Reviewed for this school',
 };
 const configurationLabels = {
@@ -141,9 +93,12 @@ function ReviewSection({
         employeeId: data.employeeId,
         date: data.date,
       }).unwrap();
+      const sectionHeading = heading.current;
+      if (!sectionHeading) return;
       setSaved(true);
-      heading.current?.focus();
+      if (sectionHeading.parentElement?.contains(document.activeElement)) sectionHeading.focus();
     } catch {
+      if (!heading.current) return;
       setSaveError(true);
       // Never retry a rejected acknowledgement automatically with a new fingerprint.
       refetch();
@@ -164,12 +119,13 @@ function ReviewSection({
         '& .MuiButton-root': { minHeight: 44 },
       }}
     >
-      <Typography ref={heading} tabIndex={-1} id={headingId} variant="subtitle2" component="h4">
+      <Typography ref={heading} tabIndex={-1} id={headingId} variant="subtitle2" component="h3">
         {section.label}
       </Typography>
       {section.id === 'sample' ? (
         <Typography variant="body2" color="text.secondary">
-          See which policies apply to one staff member on the displayed date.
+          This check opens the recorded sample when available or selects an authorized staff member
+          at the start of the academic year.
         </Typography>
       ) : null}
       {isFetching && data ? (
@@ -243,7 +199,7 @@ function ReviewSection({
               Last reviewed {new Date(data.reviewedAt).toLocaleString()} ·{' '}
               {data.reviewedByName || 'School account'}
               {data.reviewState === 'stale'
-                ? ' · Previous review no longer matches current settings.'
+                ? ' · The previous review no longer matches the displayed evidence.'
                 : ''}
             </Typography>
           ) : null}
@@ -299,44 +255,20 @@ function ReviewSection({
   );
 }
 
-/** Mount outside policy drawers. No dependency on the workspace hook or draft state. */
-export function HRSetupReviewChecklist({ academicYearId }: { academicYearId?: string }) {
-  const disclosureId = useId();
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canViewPolicies = hasGrantedPermission(permissions, 'HR.Policies.View');
-  const canViewLeave = hasGrantedPermission(
-    permissions,
-    'HR.LeaveManagement.Setting.LeavePolicy.View'
-  );
-  const canRead = (section: HrSetupReviewSection) =>
-    section === 'leave' ? canViewLeave : canViewPolicies && (section !== 'sample' || canViewLeave);
-  const visible = sections.filter(
-    (section) => canRead(section.id) && hasNavigationPermission(permissions, section.navigation)
-  );
-  if (!academicYearId || !visible.length) return null;
-
-  const guideItems: PolicyGuideItem[] = visible.flatMap(({ guide }) => (guide ? [guide] : []));
-  if (canViewPolicies && hasNavigationPermission(permissions, hrPermissions.policies.assignments)) {
-    guideItems.push(assignments);
-  }
+function ReviewDisclosure({ title, children }: { title: string; children: ReactNode }) {
+  const id = useId();
+  const [opened, setOpened] = useState(false);
 
   return (
-    <Box
-      sx={{
-        mb: 1,
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1,
-        bgcolor: 'background.paper',
-      }}
-    >
+    <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
       <CustomAccordion
-        title="Policy Setup Guide"
+        title={title}
+        onChange={() => setOpened(true)}
         summary={
           <AccordionSummary
-            id={`${disclosureId}-summary`}
-            aria-controls={`${disclosureId}-content`}
-            expandIcon={<ExpandMoreIcon fontSize="small" />}
+            id={`${id}-summary`}
+            aria-controls={`${id}-content`}
+            expandIcon={<Iconify icon="mdi:chevron-down" width={18} aria-hidden />}
             sx={{
               minHeight: 44,
               px: 1.5,
@@ -345,77 +277,51 @@ export function HRSetupReviewChecklist({ academicYearId }: { academicYearId?: st
             }}
           >
             <Typography component="span" variant="subtitle2" color="text.primary">
-              Policy Setup Guide
+              {title}
             </Typography>
           </AccordionSummary>
         }
-        content={
-          <Box
-            role="region"
-            aria-label="Policy guidance and review evidence"
-            tabIndex={0}
-            sx={{ maxHeight: { sm: '45vh' }, overflowY: { sm: 'auto' }, minWidth: 0, px: 1 }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              Optional guidance for the selected academic year. Open any available policy to review
-              or update its settings.
-            </Typography>
-            <Box
-              component="ul"
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { sm: 'repeat(2, minmax(0, 1fr))' },
-                gap: 1,
-                listStyle: 'none',
-                p: 0,
-                mt: 1.5,
-                mb: 2,
-              }}
-            >
-              {guideItems.map((item) => (
-                <Box
-                  component="li"
-                  key={item.href}
-                  sx={{
-                    p: 1.25,
-                    minWidth: 0,
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    gridColumn: item.href === hrPaths.policies.calendars ? '1 / -1' : undefined,
-                  }}
-                >
-                  <MuiLink
-                    component={Link}
-                    href={item.href}
-                    variant="subtitle2"
-                    color="text.primary"
-                    sx={{ textDecoration: 'underline', textUnderlineOffset: '0.2em' }}
-                  >
-                    {item.title}
-                  </MuiLink>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-                    {item.description}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-            <Typography component="h3" variant="subtitle1">
-              Review Evidence
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Recording a review confirms you checked the displayed settings for this year.
-            </Typography>
-            {visible.map((section) => (
-              <ReviewSection
-                key={`${academicYearId}-${section.id}`}
-                academicYearId={academicYearId}
-                section={section}
-              />
-            ))}
-          </Box>
-        }
+        content={opened ? <Box sx={{ px: 1 }}>{children}</Box> : null}
       />
     </Box>
+  );
+}
+
+export function HRSetupReviewChecklist({ academicYearId }: { academicYearId?: string }) {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  if (!academicYearId) return null;
+
+  const visible = sections.filter(({ id, navigation }) =>
+    hasNavigationPermission(
+      permissions,
+      navigation,
+      id === 'sample'
+        ? [hrPermissions.policyActions.view, hrLeavePolicyPermissions.view]
+        : [id === 'leave' ? hrLeavePolicyPermissions.view : hrPermissions.policyActions.view]
+    )
+  );
+  const schoolSections = visible.filter(({ id }) => id !== 'sample');
+  const sampleSection = visible.find(({ id }) => id === 'sample');
+  if (!visible.length) return null;
+
+  return (
+    <Stack key={academicYearId} spacing={1}>
+      {schoolSections.length > 0 && (
+        <ReviewDisclosure title="Review School Policies">
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Recording a review is optional. It confirms you checked the displayed settings for this
+            year.
+          </Typography>
+          {schoolSections.map((section) => (
+            <ReviewSection key={section.id} academicYearId={academicYearId} section={section} />
+          ))}
+        </ReviewDisclosure>
+      )}
+      {sampleSection && (
+        <ReviewDisclosure title="Check Policies for One Staff Member">
+          <ReviewSection academicYearId={academicYearId} section={sampleSection} />
+        </ReviewDisclosure>
+      )}
+    </Stack>
   );
 }

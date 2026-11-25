@@ -43,6 +43,7 @@ The route map is frontend integration truth, not backend product truth:
 | Shift management          | `/hr/attendance-setting/shiftManagement`                                                                | `HR.AttendanceAndLeave.Setting.ShiftManagement`                            |
 | Leave center and requests | `/hr/leave-center`, `/hr/apply-leave`, `/hr/leave-approvals`, `/hr/leave-balance`                       | `HR.LeaveManagement.LeaveCenter`                                           |
 | Leave policies            | `/hr/leave-policies`                                                                                    | `HR.LeaveManagement.Setting.LeavePolicy`                                   |
+| Policies & Rules overview | `/hr/policies` | Existing HR and Policies & Rules group grants. Each destination and review section also checks its owning access. |
 | Policies                  | `/hr/calendars`, `/hr/payrollPolicies`, `/hr/attendance`, `/hr/assignments`    | `HR.Policies.*`                                                            |
 | Professional management   | `/hr/professional-management/**`                                                                        | `HR.ProfessionalManagement.View` and action constants                      |
 | Reports                   | `/hr/reports`                                                                                           | `HR.Reports`                                                               |
@@ -56,7 +57,8 @@ unsaved forms; never expose record IDs, raw route segments, or duplicate destina
 
 | Page family | Breadcrumb pattern |
 | --- | --- |
-| HR dashboard, Staff Directory, onboarding list, policy page | Current page |
+| HR dashboard, Staff Directory, onboarding list, Policies & Rules overview | Current page |
+| Work Calendars, Attendance Policies, Payroll Policies, Leave Policies, Policy Assignments | Policies & Rules → Current page |
 | Staff profile / add / update | Staff Directory → Current page |
 | Staff I-Card list / Document Types | Current page; Staff Directory is a sibling |
 | I-card template editor | Staff I-Card → Create Staff I-Card / Update Staff I-Card (existing Back callback) |
@@ -71,7 +73,7 @@ unsaved forms; never expose record IDs, raw route segments, or duplicate destina
 | Performance setup | Performance Management → Settings → Setup & Readiness |
 | Performance root / overview | Performance Management as current-page text |
 
-Payroll Settings has a task landing page; sidebar-only Policies & Rules has no landing screen.
+Payroll Settings and Policies & Rules each have a task landing page.
 Self-service Dashboard / My Leave breadcrumbs keep their existing non-HR behavior.
 Staff Directory uses exact active-path matching so onboarding does not select both entries.
 Staff Onboarding appears before Staff Directory; routes, grants, and shortcuts are unchanged.
@@ -98,7 +100,9 @@ Compare with `../../../Shikshamitra-BE/docs/modules/hr/references/permissions.md
 
 HR labels use Staff, including Staff Directory, Staff Onboarding, Staff Profile, and Staff Code.
 Technical routes, API fields, and permission keys keep their employee identifiers.
-Policies & Rules contains Work Calendars, Attendance Policies, Leave Policies, Payroll Policies, and Policy Assignments in that order.
+Policies & Rules starts with Overview, followed by Work Calendars, Attendance Policies, Leave Policies, Payroll Policies, and Policy Assignments.
+The Overview shortcut is `Alt+H+Y+0`.
+Existing routes and shortcuts remain available for direct access.
 The standalone `/hr/effective-preview` page is removed and returns the standard not-found response without a redirect.
 Holiday Impact is not a visible workspace tab; holiday services and backend permissions remain available.
 

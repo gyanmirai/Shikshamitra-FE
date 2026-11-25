@@ -1,12 +1,13 @@
-import { useState } from 'react';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { configureStore } from '@reduxjs/toolkit';
 import { createTheme } from 'src/theme/create-theme';
+import { Box, Stack, Button, CssBaseline } from '@mui/material';
 import { ThemeProvider, useColorScheme } from '@mui/material/styles';
-import { Box, Button, CssBaseline, Stack } from '@mui/material';
+import HRPolicyOverview from 'src/screens/hr/policies/HRPolicyOverview';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { HRSetupReviewChecklist } from 'src/screens/hr/policies/components/HRSetupReviewChecklist';
+
 import { FixtureContext } from './api';
 
 const permissions = [
@@ -22,6 +23,7 @@ const permissions = [
 const store = configureStore({
   reducer: {
     auth: () => ({ permissions: permissions.map((name) => ({ name, isGranted: true })) }),
+    globalState: () => ({ currentYear: { id: 'synthetic-year' } }),
   },
 });
 function ThemeSwitch() {
@@ -31,11 +33,12 @@ function ThemeSwitch() {
 function Fixture() {
   const [mode, setMode] = useState('valid');
   const [reviewed, setReviewed] = useState<string[]>([]);
+  const evidence = useMemo(() => ({ mode, setMode, reviewed, setReviewed }), [mode, reviewed]);
   return (
     <ThemeProvider theme={createTheme(defaultSettings)} defaultMode="light">
       <CssBaseline />
       <Box component="main" sx={{ p: 2, minHeight: '100dvh', bgcolor: 'background.default' }}>
-        <h1>Synthetic HR setup review</h1>
+        <h1>Synthetic HR policy workflow</h1>
         <p>Local synthetic fixture. No backend, credentials, school data or live writes.</p>
         <Stack direction="row" useFlexGap flexWrap="wrap" spacing={1}>
           {['valid', 'stale', 'missing', 'no staff', 'loading', 'error', 'conflict', 'saving'].map(
@@ -54,8 +57,8 @@ function Fixture() {
           <ThemeSwitch />
         </Stack>
         <Provider store={store}>
-          <FixtureContext.Provider value={{ mode, setMode, reviewed, setReviewed }}>
-            <HRSetupReviewChecklist academicYearId="synthetic-year" />
+          <FixtureContext.Provider value={evidence}>
+            <HRPolicyOverview />
           </FixtureContext.Provider>
         </Provider>
       </Box>

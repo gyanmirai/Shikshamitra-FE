@@ -37,7 +37,7 @@ The onboarding list (`src/screens/hr/employee-onboarding/index.tsx`) initially r
 TL;DR: use this page to locate RTK Query clients and backend contract ownership for HR screens.
 Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md`.
 
-`hr-setup-review-api.ts` supplies the evidence shown in the advisory Policy Setup Guide.
+`hr-setup-review-api.ts` supplies on-demand evidence for the Policies & Rules overview.
 See [setup review integration](references/setup-review.md) for mounting, cache and API details.
 
 Staff Directory's Academic Permission step passes `employeeId` to `employeeApi` scope queries and mutations. They use GET/PUT `/api/employees/{employeeId}/academic-permission`, preserving the hierarchy response, academic-year payload and cache invalidation. Standalone Security callers omit `employeeId` and continue using the global User Scope APIs. The [backend HR API contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md) owns draft delegation and scope enforcement.

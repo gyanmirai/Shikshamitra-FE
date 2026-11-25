@@ -110,7 +110,14 @@ describe('HR production menu', () => {
       permissionName: 'HR.PayrollManagement.RunPayroll',
     });
     const policyMenu = items.find((item) => item.title === 'Policies & Rules');
+    expect(policyMenu?.children?.[0]).toMatchObject({
+      title: 'Overview',
+      path: hrPaths.policies.root,
+      exactMatch: true,
+      permissionName: hrPermissions.policies.root,
+    });
     expect(policyMenu?.children?.map((item: any) => item.title)).toEqual([
+      'Overview',
       'Work Calendars',
       'Attendance Policies',
       'Leave Policies',
@@ -118,6 +125,7 @@ describe('HR production menu', () => {
       'Policy Assignments',
     ]);
     expect(policyMenu?.children?.map((item: any) => item.shortcutKeyName)).toEqual([
+      'Alt+H+Y+0',
       'Alt+H+Y+1',
       'Alt+H+Y+2',
       'Alt+H+Y+3',

@@ -145,6 +145,31 @@ describe('active navigation ancestors', () => {
     render(<Navigation data={{ title: 'Overview', path: '/hr/payroll', exactMatch: true }} />);
     expect(screen.getByRole('button', { name: 'Overview' })).toHaveAttribute('data-active', 'true');
   });
+  it.each([
+    ['/hr/policies', 'Overview'],
+    ['/hr/calendars', 'Work Calendars'],
+    ['/hr/attendance', 'Attendance Policies'],
+    ['/hr/payrollPolicies', 'Payroll Policies'],
+    ['/hr/leave-policies', 'Leave Policies'],
+    ['/hr/assignments', 'Policy Assignments'],
+  ])('selects the matching Policies & Rules destination on %s', (pathname, selected) => {
+    route.pathname = pathname;
+    const policies = navSubData()
+      ['/hr'].flatMap((group) => group.items)
+      .find((item) => item.title === 'Policies & Rules');
+    render(<Navigation data={policies as NavItemBaseProps} />);
+    expect(screen.getByRole('button', { name: 'Policies & Rules' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    expect(screen.getByRole('button', { name: selected })).toHaveAttribute('data-active', 'true');
+    if (selected !== 'Overview') {
+      expect(screen.getByRole('button', { name: 'Overview' })).toHaveAttribute(
+        'data-active',
+        'false'
+      );
+    }
+  });
   it('opens every ancestor on direct access and allows active groups to collapse and reopen', () => {
     route.pathname = '/finance/settings/fee-category/';
     render(<Navigation />);

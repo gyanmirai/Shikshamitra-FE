@@ -3,48 +3,28 @@ import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, beforeEach } from 'vitest';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { extendTheme, ThemeProvider } from '@mui/material/styles';
+import { render, screen, fireEvent } from '@testing-library/react';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import HRPolicyWorkspace from './HRPolicyWorkspace';
 
 const mocks = vi.hoisted(() => ({
   ctx: {} as any,
   query: vi.fn(),
-  record: vi.fn(),
-  fetching: false,
-  failed: false,
-  canReview: false,
+  push: vi.fn(),
 }));
 vi.mock('./hooks/useHRPolicyWorkspace', () => ({ useHRPolicyWorkspace: () => mocks.ctx }));
 vi.mock('src/redux/hr/hr-setup-review-api', () => ({
-  useGetHrSetupReviewQuery: (args: any) => {
-    mocks.query(args);
-    return {
-      isFetching: mocks.fetching,
-      isError: mocks.failed,
-      refetch: vi.fn(),
-      currentData:
-        mocks.failed || mocks.fetching
-          ? undefined
-          : {
-              ...args,
-              configurationState: 'valid',
-              reviewState: 'record_not_present',
-              canReview: mocks.canReview,
-              fingerprint: 'f'.repeat(64),
-              concurrencyStamp: `stamp-${args.academicYearId}`,
-              starterInitialized: true,
-              details: [`Synthetic ${args.academicYearId} ${args.section}`],
-              notices: [],
-            },
-    };
-  },
-  useRecordHrSetupReviewMutation: () => [mocks.record, { isLoading: false }],
+  useGetHrSetupReviewQuery: mocks.query,
+  useRecordHrSetupReviewMutation: () => [vi.fn(), { isLoading: false }],
 }));
-vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-vi.mock('src/components/custom-breadcrumbs', () => ({ CustomBreadcrumbs: () => null }));
+vi.mock('src/components/custom-breadcrumbs', () => ({
+  CustomBreadcrumbs: ({ links }: { links: { name: string; href?: string }[] }) => (
+    <a href={links[0]?.href}>{links[0]?.name}</a>
+  ),
+}));
 vi.mock('./components/CalendarsTab', () => ({
   CalendarsTab: () => <p>Policy workspace remains available</p>,
 }));
@@ -85,10 +65,6 @@ function setup(grants = readGrants) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.fetching = false;
-  mocks.failed = false;
-  mocks.canReview = false;
-  mocks.record.mockReturnValue({ unwrap: async () => ({}) });
   mocks.ctx = {
     tab: 'calendars',
     drawer: null,
@@ -96,77 +72,65 @@ beforeEach(() => {
     academicYearId: 'year-1',
     closeDrawer: vi.fn(),
     drawerTransitionDuration: 0,
-    leaveSetupState: 'ready',
-    attendanceSetupState: 'ready',
-    payrollSetupState: 'ready',
+    leaveSetupState: 'missing',
+    attendanceSetupState: 'missing',
+    payrollSetupState: 'multiple',
+    canOpenLeavePolicies: true,
+    canOpenAttendancePolicies: true,
+    canOpenPayrollPolicies: true,
   };
 });
 
-it('mounts the advisory guide in the workspace with read-only, year-scoped sections', () => {
+it.each(['calendars', 'attendance', 'payroll', 'leave', 'assignments'])(
+  'keeps school review and its queries off the %s table',
+  (tab) => {
+    mocks.ctx.tab = tab;
+    setup();
+    expect(
+      screen.queryByRole('button', { name: 'Review School Policies' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Check Policies for One Staff Member' })
+    ).not.toBeInTheDocument();
+    expect(mocks.query).not.toHaveBeenCalled();
+    expect(screen.getByRole('link', { name: 'Policies & Rules' })).toHaveAttribute(
+      'href',
+      '/hr/policies'
+    );
+  }
+);
+
+it.each([
+  ['calendars', []],
+  ['attendance', ['Default attendance policy missing']],
+  ['payroll', ['Multiple default payroll policies']],
+  ['leave', ['Default leave policy missing']],
+] as const)('shows only the owning default warning on %s', (tab, warnings) => {
+  mocks.ctx.tab = tab;
   setup();
-  fireEvent.click(screen.getByText('Policy Setup Guide'));
-  expect(screen.getByRole('region', { name: 'Policy guidance and review evidence' })).toBeVisible();
-  expect(mocks.query).toHaveBeenCalledWith(
-    expect.objectContaining({ academicYearId: 'year-1', section: 'calendar' })
-  );
-  expect(mocks.query).toHaveBeenCalledWith(
-    expect.objectContaining({ academicYearId: 'year-1', section: 'sample' })
-  );
-  expect(screen.getByText(/Optional guidance for the selected academic year/)).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /^Record / })).not.toBeInTheDocument();
-  expect(mocks.record).not.toHaveBeenCalled();
+  warnings.forEach((warning) => {
+    expect(screen.getByText(warning)).toBeVisible();
+  });
+  expect(screen.queryAllByRole('alert')).toHaveLength(warnings.length);
+  expect(screen.queryByRole('button', { name: /^Open .* Policies$/ })).not.toBeInTheDocument();
 });
 
-it('makes no review API calls without an academic year or the owning read grants', () => {
-  mocks.ctx.academicYearId = '';
-  const result = setup(navigation);
-  expect(screen.queryByText('Policy Setup Guide')).not.toBeInTheDocument();
-  expect(mocks.query).not.toHaveBeenCalled();
-  mocks.ctx.academicYearId = 'year-1';
-  result.rerenderWorkspace();
-  expect(screen.queryByText('Policy Setup Guide')).not.toBeInTheDocument();
-  expect(mocks.query).not.toHaveBeenCalled();
+it('offers all relevant recovery links on assignments, subject to destination access', () => {
+  mocks.ctx.tab = 'assignments';
+  mocks.ctx.canOpenLeavePolicies = false;
+  setup();
+  expect(screen.getAllByRole('alert')).toHaveLength(3);
+  expect(screen.queryByRole('button', { name: 'Open Leave Policies' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Open Attendance Policies' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Open Payroll Policies' }));
+  expect(mocks.push.mock.calls).toEqual([['/hr/attendance'], ['/hr/payrollPolicies']]);
 });
 
-it('keeps the policy workspace usable when advisory reads load or fail', () => {
-  mocks.fetching = true;
+it('leaves the calendar table and editor available without cross-policy warnings', () => {
   const result = setup();
-  fireEvent.click(screen.getByText('Policy Setup Guide'));
   expect(screen.getByText('Policy workspace remains available')).toBeVisible();
-  expect(screen.queryByText('Defaults available')).not.toBeInTheDocument();
-  mocks.fetching = false;
-  mocks.failed = true;
-  result.rerenderWorkspace();
-  expect(screen.getByText('Policy workspace remains available')).toBeVisible();
-  expect(screen.queryByRole('button', { name: /^Record / })).not.toBeInTheDocument();
-  expect(screen.queryByText('Reviewed for this school')).not.toBeInTheDocument();
-  expect(mocks.record).not.toHaveBeenCalled();
-});
-
-it('records only explicit current-year evidence and hides review controls while a policy editor is open', async () => {
-  mocks.canReview = true;
-  const result = setup();
-  fireEvent.click(screen.getByText('Policy Setup Guide'));
-  fireEvent.click(screen.getByRole('button', { name: 'Record calendar and workweek review' }));
-  await waitFor(() =>
-    expect(mocks.record).toHaveBeenCalledWith(
-      expect.objectContaining({
-        academicYearId: 'year-1',
-        section: 'calendar',
-        fingerprint: 'f'.repeat(64),
-        concurrencyStamp: 'stamp-year-1',
-      })
-    )
-  );
-  mocks.ctx.academicYearId = 'year-2';
-  result.rerenderWorkspace();
-  expect(mocks.query).toHaveBeenCalledWith(
-    expect.objectContaining({ academicYearId: 'year-2', section: 'calendar' })
-  );
-  expect(screen.queryByText('Synthetic year-1 calendar')).not.toBeInTheDocument();
   mocks.ctx.drawer = { kind: 'calendar', mode: 'create' };
   result.rerenderWorkspace();
-  expect(screen.queryByText('Policy Setup Guide')).not.toBeInTheDocument();
   expect(screen.getByText('Unsaved policy editor')).toBeVisible();
-  expect(mocks.record).toHaveBeenCalledOnce();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
