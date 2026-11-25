@@ -349,6 +349,18 @@ const ManualAttendanceScreen = () => {
     [employeeData]
   );
 
+  const dirtyRows = useMemo(
+    () =>
+      normalizeManualAttendanceRowsForSave(
+        getDirtyManualAttendanceRows(employeeData, originalDataRef.current)
+      ),
+    [employeeData]
+  );
+  const timeIssuesByStaff = useMemo(
+    () => new Map(getTimeBasedAttendanceTimeIssues(dirtyRows).map((issue) => [issue.row.id, issue])),
+    [dirtyRows]
+  );
+
   // -------------------------------------------------------------------------
   // Save handler
   // -------------------------------------------------------------------------
@@ -382,17 +394,13 @@ const ManualAttendanceScreen = () => {
     }
 
     try {
-      const dirtyRows = normalizeManualAttendanceRowsForSave(
-        getDirtyManualAttendanceRows(employeeData, originalDataRef.current)
-      );
-      const timeIssues = getTimeBasedAttendanceTimeIssues(dirtyRows);
-      if (timeIssues.length > 0) {
-        const hasShiftIssue = timeIssues.some(
+      if (timeIssuesByStaff.size > 0) {
+        const hasShiftIssue = Array.from(timeIssuesByStaff.values()).some(
           (issue) => issue.missingShiftTime || issue.invalidShiftTime
         );
         shikshaMitraToast.error({
           message: hasShiftIssue
-            ? 'Shift start and end time are required for Present or Half Day time-based attendance. Please fix the staff shift or enter both times.'
+            ? 'Check the Errors column for staff with a missing or invalid shift on this date.'
             : 'In-Time and Out-Time are required for Present or Half Day time-based attendance. Please enter both times.',
         });
         return false;
@@ -740,13 +748,26 @@ const ManualAttendanceScreen = () => {
         label: 'Errors',
         align: 'left',
         minWidth: '3vw',
-        render(value: any) {
-          return value?.length > 0 ? (
+        render(value: string[] | undefined, row: { id: string }) {
+          const timeIssue = timeIssuesByStaff.get(row.id);
+          const savedErrors = value?.length ? (
             <CustomTooltip title={value.join(', ')}>
               <Iconify icon="material-symbols:error-outline" color="error.main" />
             </CustomTooltip>
-          ) : (
-            '-'
+          ) : null;
+          if (!timeIssue) return savedErrors ?? '-';
+
+          let message = 'Enter both attendance times.';
+          if (timeIssue.missingShiftTime) message = 'No work shift for this date.';
+          else if (timeIssue.invalidShiftTime) message = 'Check the assigned shift hours.';
+
+          return (
+            <Stack spacing={0.5}>
+              <Typography variant="caption" color="error.main">
+                {message}
+              </Typography>
+              {savedErrors}
+            </Stack>
           );
         },
       },
@@ -1422,6 +1443,7 @@ const ManualAttendanceScreen = () => {
       isFutureDate,
       isOutsideAcademicYear,
       showTimeColumns,
+      timeIssuesByStaff,
       editingCell,
       updateRow,
       isBulkStatusDisabled,

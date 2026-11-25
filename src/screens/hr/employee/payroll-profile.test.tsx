@@ -11,6 +11,8 @@ import {
 
 const mocks = vi.hoisted(() => ({
   prefetch: vi.fn(),
+  getPolicies: vi.fn(),
+  academicYear: { id: 'year' } as { id: string; startDate?: string; endDate?: string },
   permissions: [] as Array<{ name: string; isGranted: boolean }>,
   details: {
     data: {
@@ -44,7 +46,7 @@ vi.mock('react-redux', () => ({
   useSelector: (selector: any) =>
     selector({
       auth: { permissions: mocks.permissions },
-      globalState: { currentYear: { id: 'year' } },
+      globalState: { currentYear: mocks.academicYear },
     }),
 }));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
@@ -77,7 +79,7 @@ vi.mock('./payroll-profile-policy-editor', () => ({
 }));
 vi.mock('src/redux/hr/employeeApi', () => ({ useGetBankDetailsQuery: () => mocks.details }));
 vi.mock('src/redux/hr/hr-policy-api', () => ({
-  useGetPolicyAssignmentPreviewQuery: () => mocks.policies,
+  useGetPolicyAssignmentPreviewQuery: mocks.getPolicies,
 }));
 vi.mock('src/redux/hr/compensation-revision-api', () => ({
   useGetEffectiveCompensationRevisionQuery: () => mocks.salary,
@@ -116,11 +118,37 @@ beforeEach(() => {
   mocks.policies.isFetching = false;
   mocks.policies.currentData = null;
   mocks.policies.isError = false;
+  mocks.academicYear = { id: 'year' };
+  mocks.getPolicies.mockReturnValue(mocks.policies);
   mocks.revisions.data.items = [];
   mocks.save.mockReturnValue({ unwrap: async () => undefined });
 });
 
 describe('staff payroll overview', () => {
+  it.each([
+    ['before', '2026-04-01'],
+    ['within', '2026-07-15'],
+    ['after', '2027-03-31'],
+  ])('uses a date in the selected academic year when today is %s it', (position, date) => {
+    mocks.academicYear = { id: 'future-year', startDate: '2026-04-01', endDate: '2027-03-31' };
+    const today =
+      position === 'before'
+        ? new Date(2026, 2, 15, 12)
+        : position === 'after'
+          ? new Date(2027, 3, 15, 12)
+          : new Date(2026, 6, 15, 12);
+    vi.setSystemTime(today);
+    try {
+      render(<PayrollProfileWorkspace employeeId="staff-1" />);
+      expect(mocks.getPolicies).toHaveBeenCalledWith(
+        { employeeId: 'staff-1', academicYearId: 'future-year', date },
+        expect.objectContaining({ skip: false })
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps section context and named loading states while payroll requests are pending', () => {
     mocks.salary.isLoading = true;
     mocks.details.isLoading = true;

@@ -9,6 +9,7 @@ export const FixtureContext = createContext({
 });
 export function useGetHrSetupReviewQuery(args: HrSetupReviewArgs) {
   const { mode, reviewed, setMode } = useContext(FixtureContext);
+  const sampleDate = args.date ?? '2026-10-26';
   const data: HrSetupReview = {
     ...args,
     configurationState:
@@ -28,12 +29,14 @@ export function useGetHrSetupReviewQuery(args: HrSetupReviewArgs) {
     canReview: !['missing', 'no staff'].includes(mode),
     starterInitialized: true,
     tenantStarterEnabled: true,
+    employeeId: args.section === 'sample' && mode !== 'no staff' ? 'synthetic-staff' : undefined,
+    date: args.section === 'sample' ? sampleDate : undefined,
     reviewedBy: mode === 'stale' ? 'synthetic-actor' : undefined,
     reviewedByName: 'Synthetic reviewer',
     reviewedAt: mode === 'stale' ? '2026-10-26T10:00:00Z' : undefined,
     details: [
       args.section === 'sample'
-        ? 'Synthetic staff on 2026-10-26: source default'
+        ? `Synthetic staff on ${sampleDate}: source ${sampleDate < '2026-11-01' ? 'default' : 'employee'}`
         : 'Synthetic school settings',
     ],
     notices:

@@ -12,6 +12,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
+import { toDateOnly, formatDateOnly } from 'src/utils/date-only';
 import { useGetBankDetailsQuery } from 'src/redux/hr/employeeApi';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetSalaryTemplateQuery } from 'src/redux/hr/salary-template-api';
@@ -240,7 +241,8 @@ export function PayrollProfileWorkspace({
 }) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const prefetchSalaryEditor = useSalaryEditorPrefetch(employeeId);
-  const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
+  const academicYear = useSelector((state: RootState) => state.globalState.currentYear);
+  const academicYearId = academicYear?.id;
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
   const canManageSalary = can(hrPermissions.payroll.compensationRevisionActions.manage);
   const canReadSalary =
@@ -252,7 +254,13 @@ export function PayrollProfileWorkspace({
     can(`${hrPermissions.employee.list}.Edit`) &&
     can(hrPermissions.payroll.payrollStructureActions.add);
   const [editor, setEditor] = useState<'details' | 'policies' | null>(null);
-  const month = dayjs().format('YYYY-MM');
+  const today = dayjs();
+  const month = today.format('YYYY-MM');
+  const todayDate = today.format('YYYY-MM-DD');
+  const yearStart = toDateOnly(academicYear?.startDate);
+  const yearEnd = toDateOnly(academicYear?.endDate);
+  const policyDate = yearStart && todayDate < yearStart ? yearStart : todayDate;
+  const resolvedPolicyDate = yearEnd && policyDate > yearEnd ? yearEnd : policyDate;
   const queryOptions = { skip: !employeeId, refetchOnMountOrArgChange: true, refetchOnFocus: true };
   const details = useGetBankDetailsQuery(employeeId, queryOptions);
   const salary = useGetEffectiveCompensationRevisionQuery(
@@ -264,7 +272,7 @@ export function PayrollProfileWorkspace({
     skip: !employeeId || !canReadSalary,
   });
   const policies = useGetPolicyAssignmentPreviewQuery(
-    { employeeId, academicYearId, date: dayjs().format('YYYY-MM-DD') },
+    { employeeId, academicYearId, date: resolvedPolicyDate },
     { ...queryOptions, skip: !employeeId || !academicYearId || !canReadPolicies }
   );
   const templateId = salary.data?.sourceSalaryTemplateId || '';
@@ -295,7 +303,11 @@ export function PayrollProfileWorkspace({
   };
   const effective = policies.currentData;
   if (!employeeId)
-    return <HrNotice role="alert" severity="info">Save staff information before setting up payroll.</HrNotice>;
+    return (
+      <HrNotice role="alert" severity="info">
+        Save staff information before setting up payroll.
+      </HrNotice>
+    );
   return (
     <Stack
       spacing={2}
@@ -475,12 +487,15 @@ export function PayrollProfileWorkspace({
             </Typography>
             <DetailRows
               rows={[
-                [
-                  'Effective from',
-                  effective.assignment?.effectiveFrom
-                    ? fDate(effective.assignment.effectiveFrom)
-                    : `Resolved for ${fDate(effective.date)}`,
-                ],
+                ['Resolved for', formatDateOnly(effective.date, 'DD MMM YYYY')],
+                ...(effective.assignment?.effectiveFrom
+                  ? [
+                      [
+                        'Assignment effective from',
+                        formatDateOnly(effective.assignment.effectiveFrom, 'DD MMM YYYY'),
+                      ] satisfies [string, string],
+                    ]
+                  : []),
                 ['Payroll policy', effective.payrollPolicy?.name || 'Not assigned'],
                 ['Attendance policy', effective.attendancePolicy?.name || 'Not assigned'],
                 [

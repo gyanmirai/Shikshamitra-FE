@@ -5,18 +5,12 @@ import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
+import { toDateOnly } from 'src/utils/date-only';
 import { shikshaMitraToast } from 'src/components/toast';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import {
-  useGetPayrollPoliciesQuery,
-  useGetAttendancePoliciesQuery,
-  useUpsertEmployeePolicyOverrideMutation,
-  usePreviewPolicyAssignmentImpactMutation,
-  useDisableEmployeePolicyOverrideMutation,
-} from 'src/redux/hr/hr-policy-api';
 import {
   Box,
   Alert,
@@ -35,6 +29,13 @@ import {
   CircularProgress,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetPayrollPoliciesQuery,
+  useGetAttendancePoliciesQuery,
+  useUpsertEmployeePolicyOverrideMutation,
+  usePreviewPolicyAssignmentImpactMutation,
+  useDisableEmployeePolicyOverrideMutation,
+} from 'src/redux/hr/hr-policy-api';
 
 import { DrawerHeader } from '../policies/components/HRPolicySharedUI';
 import {
@@ -63,10 +64,11 @@ export function PayrollProfilePolicyEditor({
   const payroll = useGetPayrollPoliciesQuery({ academicYearId, maxResultCount: 100 });
   const attendance = useGetAttendancePoliciesQuery({ academicYearId, maxResultCount: 100 });
   const leave = useGetLeavePoliciesQuery({ academicYearId, page: 1, pageSize: 100 });
+  const effectiveDate = toDateOnly(preview.date) || dayjs().format('YYYY-MM-DD');
   const formik = useFormik({
     initialValues: {
-      ...hydrateEmployeePolicyOverrideFromPreview(preview, dayjs().format('YYYY-MM-DD')),
-      policyOverrideEffectiveFrom: dayjs().format('YYYY-MM-DD'),
+      ...hydrateEmployeePolicyOverrideFromPreview(preview, effectiveDate),
+      policyOverrideEffectiveFrom: effectiveDate,
       policyOverrideAssignmentReason: '',
     },
     validationSchema: Yup.object({

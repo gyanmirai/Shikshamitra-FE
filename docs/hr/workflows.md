@@ -221,9 +221,9 @@ Percentage calculation bases load complete metadata through cached, sequential p
 
 ### Policies & Rules navigation
 
-Work Calendars, Attendance Policies, Leave Policies, Payroll Policies, and Policy Assignments use the HR sidebar for navigation.
+Policies & Rules → Overview provides shared guidance and preserves direct access to Work Calendars, Attendance Policies, Leave Policies, Payroll Policies, and Policy Assignments in the HR sidebar.
 Each page shows its current title in the shared header and uses the global academic-year selector without a duplicate year row or navigation tabs.
-The primary table fills the remaining workspace.
+On policy routes, the primary table fills the remaining workspace and the breadcrumb returns to Overview.
 Expanded year-end settlement details scroll within a bounded secondary panel so settlement rows and the main leave-policy table remain reachable on narrow screens.
 On mobile, policy identity and status columns scroll with the table while row actions remain pinned, avoiding overlapping frozen columns.
 
@@ -322,7 +322,11 @@ Leave create/duplicate, edit, set-default and archive/restore controls use their
 Assignment previews show current policies, the server-resolved proposed winner and the selected form values separately. Group previews cover only the selected group unless accessible sample staff are selected; a staff sample includes matching groups and staff override precedence. Loading, denied access and unresolved new-assignment ID ties never borrow selected form values as a winner.
 Blocking impact warnings and all returned assignment conflicts open immediately, with exact returned payroll and attendance-evaluation periods available for review.
 Impact review compares current and proposed rules using readable field values and operational holiday/weekly-off details. Permission-gated links open exact payroll months or attendance-register date ranges in a new tab, preserving the policy draft. Unavailable rule comparison is stated explicitly; these disclosures do not simulate salary or recalculate payroll.
-The advisory School HR setup review checklist appears above policy tables for the selected academic year while no policy editor is open. Its sections require their owning read grants, keep unavailable configuration distinct from reviewed evidence, and record only deliberate server-validated acknowledgments. Review failures do not disable policy editing or add request/payroll gates. See [setup review evidence and limits](references/setup-review.md).
+Open Policies & Rules → Overview to see which policies use work calendars and how payroll workday rules affect leave day counting.
+School defaults cover everyday use, and Policy Assignments supports dated exceptions for staff members or groups.
+Open Review School Policies or Check Policies for One Staff Member to load the corresponding evidence for the selected academic year.
+Review is optional and policy links remain usable if evidence is unavailable.
+See [setup review evidence and limits](references/setup-review.md).
 Policy tables query current and archived records independently with server-side search, count, and pagination.
 The leave-policy workspace can restore an archived policy as a draft, while employee and assignment selectors continue to request active policies only.
 Policy audit entries omit unchanged values and missing editor metadata, render weekly-off numbers as weekday names, and show semantic holiday changes and real holiday-summary counts.
@@ -518,11 +522,12 @@ The disclosure uses a labelled keyboard-accessible button with its expanded stat
 
 ## Policies & Rules setup guidance
 
-The header reads “Configure staff calendars, policies, and assignments.”
-The selected academic year appears separately, and an absent selection shows “Select an academic year”.
+Each policy page describes the rules it owns and uses the global academic-year context.
+An absent selection shows “Select an academic year”.
 Missing and multiple-default warnings are derived only from a successful current-year query containing the complete unfiltered policy population.
 Loading, failed queries, and incomplete pages do not establish missing configuration.
-Recovery actions appear only when the user can access the corresponding policy destination.
+Attendance, Payroll, and Leave show their own default warnings.
+Policy Assignments shows relevant default warnings from all three areas and links to settings the user can access.
 Opening Leave Policies from a modified assignment requires discarding the unsaved draft explicitly and retains the selected academic year.
 Secondary guidance remains available under Details.
 An explicit sole-default archive rejection reads “Choose another default before archiving”; reused missing-default and inactive-reference error codes keep their own meaning.
@@ -629,7 +634,9 @@ Salary uses server compensation revisions for the current month, with scheduled 
 Change salary opens the existing salary workspace with the employee selected.
 Back to staff profile restores Payroll, which refetches compensation on mounting.
 One-time adjustments remain in monthly payroll; profile details never submit earning or deduction components.
-Assigned policies show their source, effective date, and both derived work calendars.
+Assigned policies show their source, the date checked, any assignment start date, and both derived work calendars.
+The profile checks today for the current academic year, the first day for a future year, and the last day for a past year.
+The assignment drawer defaults its editable effective date to the date checked in the profile.
 Change assignment offers organization policies or employee-specific selectors, followed by required date, reason, impact review, warnings, and confirmation.
 Lookup failures display retry states rather than organization defaults.
 The staff profile edits bank details, statutory identifiers, and attendance integration in a drawer that submits only changed groups.

@@ -38,6 +38,7 @@ vi.mock('src/redux/hr/leaveApi', () => ({
 }));
 const assigned = {
   policySource: 'employee',
+  date: '2028-06-01T00:00:00',
   assignment: {
     id: 'assignment',
     payrollPolicyId: 'payroll',
@@ -82,6 +83,11 @@ const review = async () => {
   await screen.findByText('Review assignment impact');
 };
 describe('staff policy assignment drawer', () => {
+  it('defaults the effective date to the profile policy check date', () => {
+    renderEditor();
+    expect(screen.getByLabelText(/Effective from/)).toHaveValue('2028-06-01');
+  });
+
   it('requires impact review before an employee-specific save and forwards confirmation', async () => {
     const close = renderEditor();
     await review();
