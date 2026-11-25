@@ -634,7 +634,9 @@ Salary uses server compensation revisions for the current month, with scheduled 
 Change salary opens the existing salary workspace with the employee selected.
 Back to staff profile restores Payroll, which refetches compensation on mounting.
 One-time adjustments remain in monthly payroll; profile details never submit earning or deduction components.
-Assigned policies show their source, effective date, and both derived work calendars.
+Assigned policies show their source, the date checked, any assignment start date, and both derived work calendars.
+The profile checks today for the current academic year, the first day for a future year, and the last day for a past year.
+The assignment drawer defaults its editable effective date to the date checked in the profile.
 Change assignment offers organization policies or employee-specific selectors, followed by required date, reason, impact review, warnings, and confirmation.
 Lookup failures display retry states rather than organization defaults.
 The staff profile edits bank details, statutory identifiers, and attendance integration in a drawer that submits only changed groups.

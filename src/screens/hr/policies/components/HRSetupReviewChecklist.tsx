@@ -1,15 +1,18 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
-import type { HrSetupReviewSection } from 'src/redux/hr/hr-setup-review-api';
+import type { HrSetupReviewArgs, HrSetupReviewSection } from 'src/redux/hr/hr-setup-review-api';
 
 import { useSelector } from 'react-redux';
 import { useId, useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { DatePicker } from '@mui/x-date-pickers';
 import { hrPermissions } from 'src/constants/hr-menus';
 import CustomAccordion from 'src/components/custom-accordian';
 import { hasNavigationPermission } from 'src/utils/permissions';
+import { toDateOnly, parseDateOnly } from 'src/utils/date-only';
 import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
 import {
   useGetHrSetupReviewQuery,
@@ -56,21 +59,28 @@ const validConfigurationLabels: Partial<Record<HrSetupReviewSection, string>> = 
   sample: 'Sample resolved',
 };
 
+type SampleRequest = Pick<HrSetupReviewArgs, 'employeeId' | 'date' | 'newSample'>;
+
 function ReviewSection({
   academicYearId,
   section,
+  yearStart,
+  yearEnd,
 }: {
   academicYearId: string;
   section: (typeof sections)[number];
+  yearStart?: string;
+  yearEnd?: string;
 }) {
-  const [newSample, setNewSample] = useState(false);
+  const [sampleRequest, setSampleRequest] = useState<SampleRequest>({ newSample: undefined });
+  const [sampleDate, setSampleDate] = useState<Dayjs | null>();
   const {
     currentData: data,
     isFetching,
     isError,
     refetch,
   } = useGetHrSetupReviewQuery(
-    { academicYearId, section: section.id, newSample: newSample || undefined },
+    { academicYearId, section: section.id, ...sampleRequest },
     { refetchOnMountOrArgChange: true }
   );
   const [record, { isLoading: saving }] = useRecordHrSetupReviewMutation();
@@ -79,8 +89,25 @@ function ReviewSection({
   const recording = useRef(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const headingId = `setup-review-${section.id}`;
+  const minDate = parseDateOnly(yearStart);
+  const maxDate = parseDateOnly(yearEnd);
+  const checkedDate = toDateOnly(data?.date ?? sampleRequest.date);
+  const sampleEmployeeId = data?.employeeId ?? sampleRequest.employeeId;
+  const selectedDate = toDateOnly(sampleDate);
+  const dateChanged = sampleDate !== undefined && selectedDate !== checkedDate;
+  const dateError =
+    sampleDate !== undefined &&
+    (!selectedDate ||
+      Boolean(sampleDate?.isBefore(minDate, 'day')) ||
+      Boolean(sampleDate?.isAfter(maxDate, 'day')));
+  const runSample = (request: SampleRequest) => {
+    setSampleDate(undefined);
+    setSaved(false);
+    setSaveError(false);
+    setSampleRequest(request);
+  };
   const acknowledge = async () => {
-    if (!data || saving || isFetching || recording.current) return;
+    if (!data || saving || isFetching || dateChanged || dateError || recording.current) return;
     recording.current = true;
     setSaveError(false);
     setSaved(false);
@@ -125,8 +152,42 @@ function ReviewSection({
       {section.id === 'sample' ? (
         <Typography variant="body2" color="text.secondary">
           This check opens the recorded sample when available or selects an authorized staff member
-          at the start of the academic year.
+          at the start of the academic year. Check another date to see if a scheduled assignment
+          changes which policies apply.
         </Typography>
+      ) : null}
+      {section.id === 'sample' && sampleEmployeeId && minDate && maxDate ? (
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ sm: 'flex-start' }}
+          spacing={1}
+          sx={{ mt: 1.5 }}
+        >
+          <DatePicker
+            label="Sample date"
+            value={sampleDate === undefined ? parseDateOnly(checkedDate) : sampleDate}
+            minDate={minDate}
+            maxDate={maxDate}
+            disabled={saving || isFetching}
+            format="DD/MM/YYYY"
+            onChange={setSampleDate}
+            slotProps={{
+              textField: {
+                size: 'small',
+                error: dateError,
+                helperText: dateError ? 'Enter a valid date within this academic year.' : undefined,
+              },
+            }}
+          />
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={!dateChanged || dateError || saving || isFetching}
+            onClick={() => runSample({ employeeId: sampleEmployeeId, date: selectedDate })}
+          >
+            Check date
+          </Button>
+        </Stack>
       ) : null}
       {isFetching && data ? (
         <LinearProgress aria-label={`Refreshing ${section.label}`} sx={{ my: 1 }} />
@@ -209,19 +270,19 @@ function ReviewSection({
                 size="small"
                 variant="outlined"
                 loading={saving}
-                disabled={saving || isFetching}
+                disabled={saving || isFetching || dateChanged || dateError}
                 onClick={acknowledge}
               >
                 Record {section.label.toLowerCase()} review
               </Button>
             ) : null}
-            {section.id === 'sample' ? (
+            {section.id === 'sample' && (!sampleEmployeeId || !minDate || !maxDate) ? (
               <Button
                 size="small"
                 disabled={saving || isFetching}
                 onClick={() => {
-                  setNewSample(true);
-                  if (newSample) refetch();
+                  if (sampleRequest.newSample) refetch();
+                  else runSample({ newSample: true });
                 }}
               >
                 Run sample again
@@ -246,7 +307,7 @@ function ReviewSection({
           configuration edit may have changed them.
         </Alert>
       ) : null}
-      {saved && !saveError ? (
+      {saved && !saveError && !dateChanged && !dateError ? (
         <Typography role="status" variant="body2" sx={{ mt: 1 }}>
           Review recorded.
         </Typography>
@@ -287,7 +348,15 @@ function ReviewDisclosure({ title, children }: { title: string; children: ReactN
   );
 }
 
-export function HRSetupReviewChecklist({ academicYearId }: { academicYearId?: string }) {
+export function HRSetupReviewChecklist({
+  academicYearId,
+  yearStart,
+  yearEnd,
+}: {
+  academicYearId?: string;
+  yearStart?: string;
+  yearEnd?: string;
+}) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   if (!academicYearId) return null;
 
@@ -319,7 +388,12 @@ export function HRSetupReviewChecklist({ academicYearId }: { academicYearId?: st
       )}
       {sampleSection && (
         <ReviewDisclosure title="Check Policies for One Staff Member">
-          <ReviewSection academicYearId={academicYearId} section={sampleSection} />
+          <ReviewSection
+            academicYearId={academicYearId}
+            section={sampleSection}
+            yearStart={yearStart}
+            yearEnd={yearEnd}
+          />
         </ReviewDisclosure>
       )}
     </Stack>

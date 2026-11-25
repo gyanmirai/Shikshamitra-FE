@@ -7,6 +7,7 @@ import { Box, Stack, Button, CssBaseline } from '@mui/material';
 import { ThemeProvider, useColorScheme } from '@mui/material/styles';
 import HRPolicyOverview from 'src/screens/hr/policies/HRPolicyOverview';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 
 import { FixtureContext } from './api';
 
@@ -23,7 +24,9 @@ const permissions = [
 const store = configureStore({
   reducer: {
     auth: () => ({ permissions: permissions.map((name) => ({ name, isGranted: true })) }),
-    globalState: () => ({ currentYear: { id: 'synthetic-year' } }),
+    globalState: () => ({
+      currentYear: { id: 'synthetic-year', startDate: '2026-06-01', endDate: '2027-05-31' },
+    }),
   },
 });
 function ThemeSwitch() {
@@ -58,7 +61,9 @@ function Fixture() {
         </Stack>
         <Provider store={store}>
           <FixtureContext.Provider value={evidence}>
-            <HRPolicyOverview />
+            <LocalizationProvider>
+              <HRPolicyOverview />
+            </LocalizationProvider>
           </FixtureContext.Provider>
         </Provider>
       </Box>

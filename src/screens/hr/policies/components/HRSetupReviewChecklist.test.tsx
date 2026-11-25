@@ -1,5 +1,6 @@
 import type { HrSetupReview } from 'src/redux/hr/hr-setup-review-api';
 
+import dayjs from 'dayjs';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
@@ -16,6 +17,23 @@ const mocks = vi.hoisted(() => ({
 vi.mock('src/redux/hr/hr-setup-review-api', () => ({
   useGetHrSetupReviewQuery: mocks.query,
   useRecordHrSetupReviewMutation: () => [mocks.record, { isLoading: mocks.saving }],
+}));
+vi.mock('@mui/x-date-pickers', () => ({
+  DatePicker: ({
+    label,
+    onChange,
+    value,
+  }: {
+    label: string;
+    onChange: (date: ReturnType<typeof dayjs> | null) => void;
+    value: ReturnType<typeof dayjs> | null;
+  }) => (
+    <input
+      aria-label={label}
+      value={value?.format('YYYY-MM-DD') ?? ''}
+      onChange={(event) => onChange(event.target.value ? dayjs(event.target.value) : null)}
+    />
+  ),
 }));
 const snapshot: HrSetupReview = {
   academicYearId: 'year-1',
@@ -45,7 +63,7 @@ const mount = (permissions = grants, academicYearId: string | undefined = 'year-
   });
   const ui = (year?: string) => (
     <Provider store={store}>
-      <HRSetupReviewChecklist academicYearId={year} />
+      <HRSetupReviewChecklist academicYearId={year} yearStart="2026-04-01" yearEnd="2027-03-31" />
     </Provider>
   );
   const result = render(ui(academicYearId));
@@ -266,6 +284,53 @@ describe('optional HR policy evidence', () => {
         concurrencyStamp: snapshot.concurrencyStamp,
         employeeId: 'sample-staff',
         date: '2026-04-01',
+      })
+    );
+  });
+
+  it('rechecks the same staff member on a valid date before recording the new result', async () => {
+    const newDate = '2026-07-15';
+    const newFingerprint = 'b'.repeat(64);
+    mocks.query.mockImplementation((args) => ({
+      currentData: {
+        ...snapshot,
+        ...args,
+        employeeId: 'sample-staff',
+        date: args.date ?? '2026-04-01',
+        fingerprint: args.date === newDate ? newFingerprint : snapshot.fingerprint,
+      },
+      refetch: mocks.refetch,
+    }));
+    mount();
+    openSample();
+    const date = screen.getByRole('textbox', { name: 'Sample date' });
+    const check = screen.getByRole('button', { name: 'Check date' });
+    const save = screen.getByRole('button', {
+      name: 'Record automatic staff and date sample review',
+    });
+
+    fireEvent.change(date, { target: { value: '2027-04-01' } });
+    expect(check).toBeDisabled();
+    expect(save).toBeDisabled();
+    expect(mocks.query.mock.calls.map(([args]) => args.date).filter(Boolean)).toEqual([]);
+
+    fireEvent.change(date, { target: { value: newDate } });
+    expect(save).toBeDisabled();
+    fireEvent.click(check);
+    expect(mocks.query).toHaveBeenLastCalledWith(
+      { academicYearId: 'year-1', section: 'sample', employeeId: 'sample-staff', date: newDate },
+      expect.anything()
+    );
+    expect(save).toBeEnabled();
+    fireEvent.click(save);
+    await waitFor(() =>
+      expect(mocks.record).toHaveBeenCalledExactlyOnceWith({
+        academicYearId: 'year-1',
+        section: 'sample',
+        fingerprint: newFingerprint,
+        concurrencyStamp: snapshot.concurrencyStamp,
+        employeeId: 'sample-staff',
+        date: newDate,
       })
     );
   });

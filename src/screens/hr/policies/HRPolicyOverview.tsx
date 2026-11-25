@@ -56,7 +56,7 @@ const policyTasks = [
 
 export default function HRPolicyOverview() {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
+  const academicYear = useSelector((state: RootState) => state.globalState.currentYear);
   const availableTasks = policyTasks.filter(({ permission, view }) =>
     hasNavigationPermission(permissions, permission, [view])
   );
@@ -131,8 +131,12 @@ export default function HRPolicyOverview() {
               actionFullWidthOnMobile
             />
           )}
-          {academicYearId ? (
-            <HRSetupReviewChecklist academicYearId={academicYearId} />
+          {academicYear?.id ? (
+            <HRSetupReviewChecklist
+              academicYearId={academicYear.id}
+              yearStart={academicYear.startDate}
+              yearEnd={academicYear.endDate}
+            />
           ) : (
             <Alert severity="info">
               Select an academic year to see policy records and review settings.

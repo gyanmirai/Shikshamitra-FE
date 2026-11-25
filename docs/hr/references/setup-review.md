@@ -33,7 +33,10 @@ An acknowledgement already submitted for a previous year can finish for that yea
 Zero-allocation notices remain visible after acknowledgement.
 Stale reviews retain the previous reviewer and time.
 No-staff and deferred samples stay incomplete.
-Run sample again requests the current authorized default sample, which can return the same staff member and date.
+When a staff member is available, change the sample date and select Check date to resolve the same staff member on that day.
+The date must be inside the selected academic year.
+Recording is available after the displayed result matches the selected date.
+Run sample again is available when the check has no staff member or the year bounds are unavailable.
 Recording a review is optional and works independently of policy editing, staff activation, leave, and payroll.
 
 ## Validation

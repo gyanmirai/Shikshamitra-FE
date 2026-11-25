@@ -57,7 +57,7 @@ describe('Leave policy impact request feedback', () => {
       screen.queryByText(/Loading leave policy impact|Archiving leave policy/)
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('progressbar', { hidden: true })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /^Close$/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close policy impact' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
@@ -71,13 +71,13 @@ describe('Leave policy impact request feedback', () => {
     expect(screen.getByText('Annual leave')).toBeInTheDocument();
     expect(screen.getByText('Staff: Not calculated')).toBeInTheDocument();
     expect(screen.getAllByRole('progressbar', { hidden: true })).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Close policy impact' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /^Close$/ })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: /^Close$/ }));
+    const close = screen.getByRole('button', { name: 'Close policy impact' });
+    expect(close).toBeDisabled();
+    fireEvent.click(close);
     expect(onClose).not.toHaveBeenCalled();
 
     rerender(<LeavePolicyImpactDrawer open review={review} archiving={false} onClose={onClose} />);
     expect(screen.queryByText('Archiving leave policy...')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^Close$/ })).toBeEnabled();
+    expect(close).toBeEnabled();
   });
 });
