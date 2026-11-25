@@ -162,7 +162,7 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
   const registerKey = JSON.stringify(registerArgs);
   const registerQuery = usePayrollRegisterQuery(
     registerArgs,
-    { skip: !canReadRegister || waitingForOpeningRows, refetchOnFocus: true, refetchOnMountOrArgChange: true }
+    { skip: !canReadRegister, refetchOnFocus: true, refetchOnMountOrArgChange: true }
   );
   const employeesQuery = usePayrollPreviewEmployeesQuery(
     { id: completedId, page, pageSize, search },
