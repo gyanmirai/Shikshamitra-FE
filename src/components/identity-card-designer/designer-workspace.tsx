@@ -68,6 +68,10 @@ export function DesignerWorkspace({
   const layersArea = layers ? ' layers' : '';
   const configurationArea = configuration ? ' configuration' : '';
   const panelCount = Number(layers) + Number(configuration);
+  const configurationWidth =
+    props.configurationPanelSize === 'wide'
+      ? 'clamp(21rem, 30vw, 29rem)'
+      : 'clamp(17rem, 23vw, 20rem)';
   return (
     <Box
       sx={{
@@ -82,7 +86,7 @@ export function DesignerWorkspace({
         },
         gridTemplateColumns: {
           xs: 'minmax(0, 1fr)',
-          md: `auto${layers ? ' clamp(12rem, 17vw, 15rem)' : ''} minmax(0, 1fr)${configuration ? ' clamp(17rem, 23vw, 20rem)' : ''}`,
+          md: `auto${layers ? ' clamp(12rem, 17vw, 15rem)' : ''} minmax(0, 1fr)${configuration ? ` ${configurationWidth}` : ''}`,
         },
         gridTemplateRows: {
           xs: `auto minmax(0, 2fr)${panelCount ? ` repeat(${panelCount}, minmax(0, 1fr))` : ''}`,

@@ -50,6 +50,20 @@ describe('fixed physical identity card geometry', () => {
     expect(layout.widthMm).toBe(85.6);
     expect(layout.heightMm).toBe(53.98);
   });
+
+  it('prints the academic year once on the front of each classic preset orientation', () => {
+    const sizes = [
+      [85.6, 53.98],
+      [53.98, 85.6],
+    ];
+    sizes.forEach(([widthMm, heightMm]) => {
+      const layout = createIdentityCardPreset('classic-identity', { widthMm, heightMm });
+      expect(
+        layout.front.elements.filter((element) => element.fieldKey === 'AcademicYear')
+      ).toHaveLength(1);
+      expect(validateIdentityCardLayout(layout)).toEqual([]);
+    });
+  });
   it('includes bleed and rejects impossible sizes without scaling', () => {
     const layout = createIdentityCardPreset('staff-professional', { widthMm: 200, heightMm: 200 });
     const result = getIdentityCardSheetLayout(layout, {

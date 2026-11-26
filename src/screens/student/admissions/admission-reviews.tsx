@@ -20,7 +20,7 @@ export default function AdmissionReviewsScreen() {
   const academic = useAdmissionAcademicFilters();
   const permissions = useReviewPermissions();
   const [filters, setFilters] = useState({ overdueOnly: false, assignedToMe: false });
-  const [pagination, setPagination] = useState({ page: 0, rowsPerPage: 20 });
+  const [pagination, setPagination] = useState({ page: 0, rowsPerPage: 25 });
   const query = useGetAdmissionReviewQueueQuery(
     {
       ...filters,

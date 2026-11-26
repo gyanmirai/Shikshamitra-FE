@@ -1,4 +1,7 @@
-import type { HouseAssignmentPreview } from 'src/redux/student/house-management/house-management-types';
+import type {
+  House,
+  HouseAssignmentPreview,
+} from 'src/redux/student/house-management/house-management-types';
 
 import { vi, it, expect } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
@@ -10,7 +13,33 @@ import HouseAssignmentDrawer from './house-assignment-drawer';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-vi.mock('./house-pickers', () => ({ HousePicker: () => null }));
+vi.mock('./house-pickers', () => ({
+  HousePicker: ({
+    onChange,
+    disabled,
+  }: {
+    onChange: (house: House) => void;
+    disabled: boolean;
+  }) => (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() =>
+        onChange({
+          id: 'h1',
+          name: 'Falcon',
+          color: '#123456',
+          memberCount: 0,
+          houseLeaderCount: 0,
+          concurrencyStamp: 'h1-v1',
+          canManage: true,
+        })
+      }
+    >
+      Choose Falcon
+    </button>
+  ),
+}));
 const previewResult: HouseAssignmentPreview = {
   previewToken: 'read-token',
   students: [],
@@ -18,6 +47,99 @@ const previewResult: HouseAssignmentPreview = {
   targetHouseId: null,
   targetHouseName: null,
 };
+
+it('defaults division previews to unassigned and requires a new review after choosing to move members', async () => {
+  const student = {
+    enrollmentId: 'e1',
+    studentId: 's1',
+    studentName: 'Riya Shah',
+    standardId: 'c1',
+    standardName: 'Class 6',
+    isHouseLeader: false,
+    isDivisionLeader: false,
+    concurrencyStamp: 'v1',
+  };
+  const onPreview = vi
+    .fn()
+    .mockResolvedValueOnce({ ...previewResult, targetHouseName: 'Falcon', students: [student] })
+    .mockResolvedValueOnce({
+      ...previewResult,
+      previewToken: 'move-token',
+      targetHouseName: 'Falcon',
+      students: [student],
+    });
+  const onCommit = vi.fn().mockResolvedValue(undefined);
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <HouseAssignmentDrawer
+        academicMediumId="m1"
+        divisionId="d1"
+        divisionLabel="Class 6 / A"
+        enrollmentIds={[]}
+        scope="division"
+        onClose={vi.fn()}
+        onPreview={onPreview}
+        onCommit={onCommit}
+      />
+    </ThemeProvider>
+  );
+  expect(screen.getByText('Class 6 / A')).toBeVisible();
+  const includeAssigned = screen.getByRole('checkbox', {
+    name: 'Include students already assigned to a house',
+  });
+  expect(includeAssigned).not.toBeChecked();
+  fireEvent.click(screen.getByRole('button', { name: 'Choose Falcon' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Preview change' }));
+  expect(await screen.findByRole('button', { name: 'Confirm change' })).toBeEnabled();
+  const expected = {
+    academicMediumId: 'm1',
+    divisionId: 'd1',
+    houseId: 'h1',
+    targetScope: 'division',
+  };
+  expect(onPreview).toHaveBeenLastCalledWith({ ...expected, includeAssigned: false });
+  expect(includeAssigned).toBeDisabled();
+  expect(onCommit).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Revise' }));
+  fireEvent.click(includeAssigned);
+  fireEvent.click(screen.getByRole('button', { name: 'Preview change' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Confirm change' }));
+  expect(onPreview).toHaveBeenLastCalledWith({ ...expected, includeAssigned: true });
+  await waitFor(() =>
+    expect(onCommit).toHaveBeenCalledExactlyOnceWith({
+      ...expected,
+      includeAssigned: true,
+      previewToken: 'move-token',
+    })
+  );
+});
+
+it.each([
+  ['NoEligibleStudents', /No unassigned students are available/],
+  ['AssignmentLimitExceeded', /Use Selected students to assign a smaller group/],
+])('keeps the division preview editable when the server returns %s', async (code, guidance) => {
+  const onPreview = vi.fn().mockRejectedValue({
+    data: { errorCode: `Students:HouseManagement:${code}` },
+  });
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <HouseAssignmentDrawer
+        academicMediumId="m1"
+        divisionId="d1"
+        enrollmentIds={[]}
+        scope="division"
+        onClose={vi.fn()}
+        onPreview={onPreview}
+        onCommit={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Choose Falcon' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Preview change' }));
+  expect(await screen.findByText(guidance)).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Preview change' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Confirm change' })).not.toBeInTheDocument();
+});
 
 it.each(['Cancel', 'X', 'Escape'])(
   'allows %s during a pending preview and ignores its late result',

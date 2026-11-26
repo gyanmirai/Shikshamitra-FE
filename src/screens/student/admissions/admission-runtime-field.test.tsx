@@ -83,6 +83,39 @@ it('does not load sibling records while rendering a builder preview', () => {
   expect(siblingQuery).not.toHaveBeenCalled();
 });
 
+it.each([false, true])(
+  'shows applicant help on a campus field without its legacy builder hint (inherited: %s)',
+  (inherited) => {
+    const field = {
+      code: inherited ? 'INQ_CAMPUS_PREFERENCE' : 'CAMPUS_PREFERENCE',
+      label: 'Campus preference',
+      fieldType: 0,
+      required: false,
+      readOnly: false,
+      helpText: 'Remove this field if your school has one campus.',
+      inheritedFrom: inherited
+        ? {
+            inquiryFormDefinitionId: 'inquiry',
+            sourceFieldCode: 'CAMPUS_PREFERENCE',
+            fieldIdentity: 'campus',
+          }
+        : undefined,
+    };
+    const props = { value: '', disabled: false, onChange: vi.fn(), preview: true };
+    const view = render(<AdmissionRuntimeField {...props} field={field} />);
+    expect(screen.getByRole('textbox', { name: 'Campus preference' })).toBeVisible();
+    expect(screen.queryByText(field.helpText)).not.toBeInTheDocument();
+
+    const applicantHelp = 'Enter the campus closest to your home.';
+    view.rerender(
+      <AdmissionRuntimeField {...props} field={{ ...field, helpText: applicantHelp }} />
+    );
+    expect(screen.getByRole('textbox', { name: 'Campus preference' })).toHaveAccessibleDescription(
+      applicantHelp
+    );
+  }
+);
+
 it('renders the saved student surname question as optional for single-name students', () => {
   render(
     <AdmissionRuntimeField

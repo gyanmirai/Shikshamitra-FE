@@ -15,7 +15,7 @@ type Props = ComponentProps<typeof ApplicationStageJourney> & { loading?: boolea
 
 export function ApplicationJourneySidebar({ loading, busy, onChange, ...journey }: Props) {
   const desktop = useResponsive('up', 'md');
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => {
     if (desktop) setMobileOpen(false);

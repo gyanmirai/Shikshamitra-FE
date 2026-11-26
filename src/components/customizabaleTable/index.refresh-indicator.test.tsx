@@ -29,53 +29,33 @@ function table(props: Partial<ICustomizableTableProps> = {}) {
   );
 }
 
-it('overlays the default linear refresh indicator without taking space from the table', () => {
+it('overlays the refresh indicator at the bottom without taking space from the table', () => {
   renderWithProviders(table());
   const progress = screen.getByRole('progressbar', { name: 'Refreshing Admission Inquiries' });
   expect(progress).toBeVisible();
-  expect(progress).toHaveStyle({ position: 'absolute' });
+  expect(progress).toHaveStyle({ position: 'absolute', bottom: '0px' });
+  expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
   expect(screen.getByText('Saved applicant')).toBeVisible();
+  expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
 });
 
-it('uses an accessible skeleton status without replacing safe rows when opted in', () => {
-  renderWithProviders(table({ refreshIndicator: 'skeleton' }));
-  expect(screen.getByRole('status', { name: 'Refreshing Admission Inquiries' })).toHaveAttribute(
-    'aria-busy',
-    'true'
-  );
-  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-  expect(screen.getByText('Saved applicant')).toBeVisible();
-  expect(screen.queryByText('No admission inquiries')).not.toBeInTheDocument();
-});
-
-it('updates the scoped refresh presentation and clears it after the request settles', () => {
+it('clears refresh feedback after the request settles', () => {
   const view = renderWithProviders(table());
-  view.rerender(table({ refreshIndicator: 'skeleton' }));
+  view.rerender(table({ isRefreshing: false }));
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-  expect(screen.getByRole('status', { name: 'Refreshing Admission Inquiries' })).toBeVisible();
-  view.rerender(table({ refreshIndicator: 'skeleton', isRefreshing: false }));
-  expect(
-    screen.queryByRole('status', { name: 'Refreshing Admission Inquiries' })
-  ).not.toBeInTheDocument();
+  expect(screen.getByRole('table')).not.toHaveAttribute('aria-busy');
   expect(screen.getByText('Saved applicant')).toBeVisible();
 });
 
 it('keeps initial table skeleton ownership and avoids an empty-state flash', () => {
-  renderWithProviders(table({ refreshIndicator: 'skeleton', isLoading: true, data: [] }));
-  expect(
-    screen.queryByRole('status', { name: 'Refreshing Admission Inquiries' })
-  ).not.toBeInTheDocument();
+  renderWithProviders(table({ isLoading: true, data: [] }));
+  expect(screen.getByRole('table').querySelector('tbody .MuiSkeleton-root')).toBeVisible();
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   expect(screen.queryByText('No admission inquiries')).not.toBeInTheDocument();
 });
 
 it('does not mask a blocking error with refresh feedback', () => {
-  renderWithProviders(
-    table({ refreshIndicator: 'skeleton', errorContent: 'Unable to load inquiries', data: [] })
-  );
+  renderWithProviders(table({ errorContent: 'Unable to load inquiries', data: [] }));
   expect(screen.getByText('Unable to load inquiries')).toBeVisible();
-  expect(
-    screen.queryByRole('status', { name: 'Refreshing Admission Inquiries' })
-  ).not.toBeInTheDocument();
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
 });

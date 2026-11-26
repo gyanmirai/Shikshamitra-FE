@@ -89,6 +89,27 @@ async function artifact(
 }
 
 describe('Advanced Registration paper settings', () => {
+  it.each([false, true])(
+    'prints the comma-separated address with positioned header %s',
+    async (positioned) => {
+      const model = buildAdmissionPrintDocument({
+        definition: { name: 'Registration', sections: [section('STUDENT')] },
+        values: {},
+        mode: 'blank',
+        settings: {
+          advanced: {
+            header: {
+              addressLayout: 'horizontal',
+              ...(positioned && { layout: { address: { x: 0, y: 14, width: 100, height: 10 } } }),
+            },
+          },
+        },
+      });
+      const output = await artifact('horizontal-address', model);
+      expect(output.text.replace(/\s+/g, ' ')).toContain('Complete campus address, Surat, Gujarat');
+    }
+  );
+
   it('prints independently moved header text at its saved coordinates', async () => {
     const build = (moved: boolean) =>
       buildAdmissionPrintDocument({

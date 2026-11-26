@@ -5,18 +5,15 @@ import type { ReactNode } from 'react';
 import _ from 'lodash';
 import { useTheme } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import React, { useRef, useMemo, useState, useEffect, useContext, useCallback } from 'react';
 import {
   Box,
   Card,
   Paper,
-  Stack,
   Table,
   Button,
   Switch,
-  Skeleton,
   TableRow,
   TableCell,
   TableFooter,
@@ -94,7 +91,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   getRowAction,
   isLoading = false,
   isRefreshing = false,
-  refreshIndicator = 'linear',
   isPagination = true,
   isFilter = true,
   isSearch = true,
@@ -635,28 +631,22 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               isolation: 'isolate',
             }}
           >
-            {isRefreshing &&
-              !isLoading &&
-              !errorContent &&
-              (refreshIndicator === 'skeleton' ? (
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  role="status"
-                  aria-label={`Refreshing ${typeof tableTitle === 'string' ? tableTitle : 'table'}`}
-                  aria-busy
-                  sx={{ px: 2, py: 0.5, flexShrink: 0, ...skeletonReducedMotionSx }}
-                >
-                  <Skeleton variant="text" width="30%" />
-                  <Skeleton variant="text" width="25%" />
-                  <Skeleton variant="text" width="20%" />
-                </Stack>
-              ) : (
-                <LinearProgress
-                  aria-label={`Refreshing ${typeof tableTitle === 'string' ? tableTitle : 'table'}`}
-                  sx={{ position: 'absolute', inset: '0 0 auto', zIndex: 'appBar' }}
-                />
-              ))}
+            {isRefreshing && !isLoading && !errorContent && (
+              <LinearProgress
+                aria-label={`Refreshing ${typeof tableTitle === 'string' ? tableTitle : 'table'}`}
+                sx={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 1,
+                  '@media (prefers-reduced-motion: reduce)': {
+                    '& .MuiLinearProgress-bar1': { animation: 'none', left: 0, width: '30%' },
+                    '& .MuiLinearProgress-bar2': { display: 'none' },
+                  },
+                }}
+              />
+            )}
             <TableContainer
               component={Scrollbar}
               sx={{
@@ -923,7 +913,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       getStickyStyle,
       isLoading,
       isRefreshing,
-      refreshIndicator,
       paginatedData,
       handleRowClick,
       getRowAction,

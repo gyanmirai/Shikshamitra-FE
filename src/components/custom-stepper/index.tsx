@@ -31,6 +31,11 @@ import {
   shouldValidateForwardStepClick,
 } from './formik-validation';
 
+const compactHorizontalSpacing = {
+  '& .MuiStepConnector-root': { mx: 0.5 },
+  '& .MuiStepLabel-iconContainer': { pr: 0.5 },
+};
+
 interface CustomStepperProps {
   steps: string[];
   activeStep: number;
@@ -116,10 +121,7 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
               borderRadius: '50%',
             },
           }),
-          ...(density === 'compact' && {
-            '& .MuiStepConnector-root': { mx: 0.5 },
-            '& .MuiStepLabel-iconContainer': { pr: 0.5 },
-          }),
+          ...(density === 'compact' && compactHorizontalSpacing),
           ...(orientation === 'vertical' && {
             '& .MuiStepConnector-line': { minHeight: 20 },
             ...(iconOnly && { '& .MuiStepConnector-root': { ml: 2.75 } }),
@@ -350,6 +352,7 @@ interface CustomStepperWithFormikProps {
   validateFinalStep?: boolean;
   validateForwardStepClick?: boolean;
   renderProgress?: (state: { busy: boolean; submitCurrentStep: () => void }) => React.ReactNode;
+  progressDensity?: 'standard' | 'compact';
   viewMode?: 'horizontal' | 'vertical'; // Add this line
 }
 
@@ -402,8 +405,8 @@ const ModernStepIcon = (props: StepIconProps) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: 28,
-        height: 28,
+        width: 'var(--form-step-marker-size, 28px)',
+        height: 'var(--form-step-marker-size, 28px)',
         flexShrink: 0,
       }}
     >
@@ -426,8 +429,8 @@ const ModernStepIcon = (props: StepIconProps) => {
       <Box
         sx={{
           zIndex: 1,
-          width: 28,
-          height: 28,
+          width: '100%',
+          height: '100%',
           flexShrink: 0,
           boxSizing: 'border-box',
           display: 'flex',
@@ -544,6 +547,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   validateFinalStep = true,
   validateForwardStepClick = false,
   renderProgress,
+  progressDensity = 'standard',
   viewMode = 'horizontal', // Default to horizontal
   footerPlacement = 'outside',
 }) => {
@@ -575,6 +579,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   }, [activeStep]);
 
   const isVertical = viewMode === 'vertical' && !isMobile;
+  const compactProgress = !isVertical && progressDensity === 'compact';
   const hasExplicitCompletedSteps = Array.isArray(completedSteps);
   const submitCurrentStep = async () => {
     if (isBusy) return;
@@ -646,9 +651,9 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   const renderStepper = () => (
     <Stepper
       activeStep={activeStep}
-      alternativeLabel={isVertical ? undefined : true}
+      alternativeLabel={!isVertical && !compactProgress}
       orientation={isVertical ? 'vertical' : 'horizontal'}
-      connector={isVertical ? <ModernConnector /> : <QontoConnector />}
+      connector={isVertical ? <ModernConnector /> : compactProgress ? undefined : <QontoConnector />}
       sx={
         isVertical
           ? {
@@ -711,21 +716,27 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           : {
               minWidth: 0,
               flexShrink: 0,
-              p: isMobile ? 1 : 0,
-              pt: 1,
-              '& .MuiStep-root': { flex: '1 1 0', minWidth: 0 },
-              '& .MuiStepLabel-label': {
-                display: 'block',
-                fontSize: isMobile ? '10px' : '12px',
-                mt: '4px !important',
-                textAlign: 'center',
-                lineHeight: 1.2,
-                wordBreak: 'break-word',
-              },
-              '& .MuiStepLabel-labelContainer': {
-                width: '100%',
-                minWidth: 0,
-              },
+              ...(compactProgress
+                ? {
+                    ...compactHorizontalSpacing,
+                    '--form-step-marker-size': '20px',
+                    '& .MuiStep-root': { px: 0.5, minWidth: 0 },
+                    '& .MuiStepLabel-label': { typography: 'caption' },
+                  }
+                : {
+                    p: isMobile ? 1 : 0,
+                    pt: 1,
+                    '& .MuiStep-root': { flex: '1 1 0', minWidth: 0 },
+                    '& .MuiStepLabel-label': {
+                      display: 'block',
+                      fontSize: isMobile ? '10px' : '12px',
+                      mt: '4px !important',
+                      textAlign: 'center',
+                      lineHeight: 1.2,
+                      wordBreak: 'break-word',
+                    },
+                    '& .MuiStepLabel-labelContainer': { width: '100%', minWidth: 0 },
+                  }),
             }
       }
     >
@@ -760,7 +771,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               aria-current={index === activeStep ? 'step' : undefined}
               sx={{
                 m: 0,
-                p: 1,
+                p: compactProgress ? 0.25 : 1,
                 width: '100%',
                 boxSizing: 'border-box',
                 minWidth: 0,
@@ -791,7 +802,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               <CustomStepLabel
                 error={errors[index]}
                 sx={{
-                  '& .MuiStepLabel-iconContainer': { display: 'block' },
+                  ...(!compactProgress && { '& .MuiStepLabel-iconContainer': { display: 'block' } }),
                 }}
                 // @ts-ignore
                 isdisabledlabel={`${isLabelDisabled}`}

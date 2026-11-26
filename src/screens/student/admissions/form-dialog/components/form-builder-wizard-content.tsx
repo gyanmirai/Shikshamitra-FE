@@ -15,6 +15,8 @@ import { useFormWizardFocus } from '../hooks/use-form-wizard-focus';
 import { FormBuilderPrintLayout } from './form-builder-print-layout';
 import { FormInheritanceProvider } from '../hooks/use-form-inheritance';
 
+import type { BuilderIssueTarget } from '../form-builder-issue-navigation';
+
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   activeStep: number;
@@ -24,6 +26,8 @@ type Props = {
   nameConflictMessage?: string | null;
   checkingName?: boolean;
   publishMessage?: string | null;
+  publishIssueTarget?: BuilderIssueTarget;
+  onPublishIssueHandled?: () => void;
 };
 
 export function FormBuilderWizardContent({
@@ -35,6 +39,8 @@ export function FormBuilderWizardContent({
   nameConflictMessage,
   checkingName,
   publishMessage,
+  publishIssueTarget,
+  onPublishIssueHandled,
 }: Props) {
   const contentRef = useFormWizardFocus(activeStep);
   return (
@@ -74,7 +80,12 @@ export function FormBuilderWizardContent({
               bgcolor: 'background.neutral',
             }}
           >
-            <FormBuilderSections formik={formik} footer={footer} />
+            <FormBuilderSections
+              formik={formik}
+              footer={footer}
+              publishIssueTarget={publishIssueTarget}
+              onPublishIssueHandled={onPublishIssueHandled}
+            />
           </Box>
         )}
         {activeStep === 2 && <FormBuilderReview formik={formik} />}

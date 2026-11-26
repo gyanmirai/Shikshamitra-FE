@@ -279,10 +279,8 @@ describe('AdmissionFeeSelectionPanel', () => {
     setRead(selected);
     const view = renderPanel({ compact: true });
     fireEvent.click(screen.getByRole('button', { name: 'Change Fee Structure' }));
-    const structureSelect = screen.getByRole('combobox', { name: 'Fee Structure *' });
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional Fee Heads' }));
-    fireEvent.click(screen.getByRole('option', { name: /Transport/ }));
-    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+    const structureSelect = screen.getByRole('combobox', { name: /^fee structure\s*\*?$/i });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Transport' }));
     mocks.candidates.mockReturnValue({
       currentData: [candidate],
       isLoading: false,
@@ -315,10 +313,8 @@ describe('AdmissionFeeSelectionPanel', () => {
     });
     setRead(selected);
     rerender();
-    expect(screen.getByRole('combobox', { name: 'Fee Structure *' })).toBe(structureSelect);
-    expect(screen.getByRole('combobox', { name: 'Optional Fee Heads' })).toHaveTextContent(
-      'Transport'
-    );
+    expect(screen.getByRole('combobox', { name: /^fee structure\s*\*?$/i })).toBe(structureSelect);
+    expect(screen.getByRole('checkbox', { name: 'Transport' })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Fee Structure' }));
     await waitFor(() =>
       expect(mocks.save).toHaveBeenCalledWith({
@@ -343,7 +339,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(mocks.candidates).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
     await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'Fee Structure *' })).toHaveTextContent(
+      expect(screen.getByRole('combobox', { name: /^fee structure\s*\*?$/i })).toHaveTextContent(
         'Class one fees'
       )
     );
@@ -351,9 +347,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(screen.getByLabelText('Selection Summary')).toHaveTextContent(
       'Selected optional heads0'
     );
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional Fee Heads' }));
-    fireEvent.click(screen.getByRole('option', { name: /Transport/ }));
-    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Transport' }));
     expect(screen.getByLabelText('Selection Summary')).toHaveTextContent(
       'Selected optional heads1'
     );
@@ -408,7 +402,7 @@ describe('AdmissionFeeSelectionPanel', () => {
       expect(onReadinessChange).toHaveBeenLastCalledWith(
         expect.objectContaining({ canComplete: false })
       );
-      fireEvent.click(screen.getByRole('button', { name: 'Collect Later in Onboarding' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Collect in Onboarding' }));
       expect(onCollectLater).toHaveBeenCalledOnce();
       expect(mocks.save).not.toHaveBeenCalled();
       expect(mocks.confirm).not.toHaveBeenCalled();
@@ -425,7 +419,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(onReadinessChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ canComplete: false })
     );
-    expect(screen.getByRole('button', { name: 'Collect Later in Onboarding' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Collect in Onboarding' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Change Fee Structure' })).toBeDisabled();
   });
 
@@ -438,7 +432,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(
       screen.queryByRole('button', { name: 'Test collection dialog' })
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Collect Later in Onboarding' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Collect in Onboarding' }));
     expect(onCollectLater).toHaveBeenCalledOnce();
     expect(mocks.save).not.toHaveBeenCalled();
   });
@@ -456,7 +450,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     renderPanel({ readOnly: true, onCollectLater: vi.fn() });
     expect(screen.getByText('Parent will pay after confirmation.')).toBeVisible();
     expect(
-      screen.queryByRole('button', { name: 'Collect Later in Onboarding' })
+      screen.queryByRole('button', { name: 'Collect in Onboarding' })
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Test collection dialog' })
@@ -788,24 +782,27 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(mocks.save).not.toHaveBeenCalled();
     expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false });
   });
-  it('requires at least one head for a structure containing only optional heads', async () => {
-    mocks.candidates.mockReturnValue({
-      currentData: [{ ...candidate, heads: [candidate.heads[1]] }],
-      isLoading: false,
-      isFetching: false,
-    });
-    renderPanel();
-    fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee Structure *' }));
-    fireEvent.click(screen.getByRole('option', { name: 'Class one fees · Revision 2' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm Fee Structure' }));
-    expect(
-      await screen.findByText(
-        'Select at least one optional fee head. This structure has no mandatory heads.'
-      )
-    ).toBeInTheDocument();
-    expect(mocks.save).not.toHaveBeenCalled();
-  });
+  it.each([false, true])(
+    'requires an optional head when it is the only choice (compact=%s)',
+    async (compact) => {
+      mocks.candidates.mockReturnValue({
+        currentData: [{ ...candidate, heads: [candidate.heads[1]] }],
+        isLoading: false,
+        isFetching: false,
+      });
+      renderPanel({ compact });
+      fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
+      fireEvent.mouseDown(screen.getByRole('combobox', { name: /^fee structure\s*\*?$/i }));
+      fireEvent.click(screen.getByRole('option', { name: 'Class one fees · Revision 2' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm Fee Structure' }));
+      expect(
+        await screen.findByText(
+          'Select at least one optional fee head. This structure has no mandatory heads.'
+        )
+      ).toBeInTheDocument();
+      expect(mocks.save).not.toHaveBeenCalled();
+    }
+  );
   it('preserves unsaved choices after a background read failure and saves after query recovery', async () => {
     const { rerender } = renderPanel();
     fireEvent.click(screen.getByRole('button', { name: 'Select Fee Structure' }));
@@ -910,10 +907,28 @@ describe('Payment fee structure confirmation', () => {
     });
     renderPanel({ canContinue: true, onContinue: vi.fn(), onCollectLater: vi.fn() });
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Collect Later in Onboarding' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Collect in Onboarding' })).toBeEnabled();
     expect(
       screen.getByText('Record a confirmed fee payment in Finance before continuing.')
     ).toBeVisible();
+  });
+  it('keeps the structure prerequisite in Payment help without a notice below the cards', async () => {
+    const blocker = 'Select a published Finance fee structure before continuing.';
+    setRead({
+      ...base,
+      paymentCompletion: {
+        canComplete: false,
+        canDeferCollection: false,
+        status: 'feeStructureRequired',
+        blocker,
+      },
+    });
+    renderPanel({ compact: true, canContinue: true, onContinue: vi.fn() });
+    expect(screen.queryByText(blocker)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    expect(screen.getByRole('heading', { name: 'Fee Structure' })).toBeVisible();
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'Fee Structure Information' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(blocker);
   });
   it('allows verified zero-payable clearance without inventing a payment flag', () => {
     setRead({
@@ -935,7 +950,7 @@ describe('Payment fee structure confirmation', () => {
     renderPanel({ canContinue: true, onContinue: vi.fn(), onCollectLater: vi.fn() });
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
     expect(
-      screen.queryByRole('button', { name: 'Collect Later in Onboarding' })
+      screen.queryByRole('button', { name: 'Collect in Onboarding' })
     ).not.toBeInTheDocument();
   });
 });

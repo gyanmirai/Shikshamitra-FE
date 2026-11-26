@@ -4,7 +4,17 @@ import { Box } from '@mui/material';
 
 import { ElementContent } from './preview-element';
 
-import type { IdentityCardPreviewProps } from './types';
+import type { IdentityCardBorderStyle, IdentityCardPreviewProps } from './types';
+
+function borderPattern(style: IdentityCardBorderStyle | undefined, width: number) {
+  if (!Number.isFinite(width) || width <= 0) return {};
+  if (style === 'dashed') return { strokeDasharray: `${4 * width} ${2 * width}` };
+  if (style === 'dotted') {
+    // A short, nonzero dash keeps rounded dots visible in the PDF SVG renderer.
+    return { strokeDasharray: `${0.01 * width} ${2 * width}`, strokeLinecap: 'round' as const };
+  }
+  return {};
+}
 
 export function IdentityCardPreview({
   side = 'front',
@@ -49,6 +59,24 @@ export function IdentityCardPreview({
         {elements.map((element) => {
           const style = element.style ?? {};
           const transform = `rotate(${element.rotation ?? 0} ${element.x + element.w / 2} ${element.y + element.h / 2})`;
+          if (element.type === 'line' && style.borderStyle) {
+            const requestedWidth = style.borderWidth ?? element.h;
+            const width = Number.isFinite(requestedWidth) ? Math.max(0, requestedWidth) : 0;
+            const centerY = element.y + element.h / 2;
+            return (
+              <g key={element.id} transform={transform} opacity={element.opacity ?? 1}>
+                <line
+                  x1={element.x}
+                  y1={centerY}
+                  x2={element.x + element.w}
+                  y2={centerY}
+                  stroke={style.borderColor ?? style.backgroundColor ?? layout.themeColor}
+                  strokeWidth={width}
+                  {...borderPattern(style.borderStyle, width)}
+                />
+              </g>
+            );
+          }
           if (element.type === 'shape' || element.type === 'line')
             return (
               <g key={element.id} transform={transform} opacity={element.opacity ?? 1}>
@@ -59,8 +87,11 @@ export function IdentityCardPreview({
                     rx={element.w / 2}
                     ry={element.h / 2}
                     fill={style.backgroundColor ?? layout.themeColor}
-                    stroke={style.borderColor}
+                    stroke={
+                      style.borderColor ?? (style.borderStyle ? layout.themeColor : undefined)
+                    }
                     strokeWidth={style.borderWidth ?? 0}
+                    {...borderPattern(style.borderStyle, style.borderWidth ?? 0)}
                   />
                 ) : (
                   <rect
@@ -70,8 +101,11 @@ export function IdentityCardPreview({
                     height={element.h}
                     rx={style.borderRadius ?? 0}
                     fill={style.backgroundColor ?? layout.themeColor}
-                    stroke={style.borderColor}
+                    stroke={
+                      style.borderColor ?? (style.borderStyle ? layout.themeColor : undefined)
+                    }
                     strokeWidth={style.borderWidth ?? 0}
+                    {...borderPattern(style.borderStyle, style.borderWidth ?? 0)}
                   />
                 )}
               </g>

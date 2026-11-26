@@ -1,16 +1,18 @@
 import type { ComponentProps } from 'react';
+import type { PendingFrameImage } from 'src/components/image-frame/image-frame';
 
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import { useRef, useState, useEffect } from 'react';
 import { ImageUpload } from 'src/components/upload/image-upload';
+import { loadFrameImage } from 'src/components/image-frame/image-frame';
+import { ImageFrameDialog } from 'src/components/image-frame/image-frame-dialog';
 import { useLazyGetSchoolIdentityAssetQuery } from 'src/redux/InstituteSetup/schoolIdentityApi';
 
-import { IdentityFrameDialog } from './identity-frame-dialog';
-import { loadIdentityImage, validateIdentityDimensions } from '../identity-image-frame';
+import { IDENTITY_LABELS, IDENTITY_LIMITS } from '../types';
+import { IDENTITY_FRAMES, validateIdentityDimensions } from '../identity-image-frame';
 
 import type { IdentityKind, IdentityContext } from '../types';
-import type { PendingIdentityImage } from './identity-frame-dialog';
 
 export function IdentityImageUpload({
   kind,
@@ -24,7 +26,7 @@ export function IdentityImageUpload({
   assetId?: string | null;
   onPreparing?: (busy: boolean) => void;
 }) {
-  const [pending, setPending] = useState<PendingIdentityImage | null>(null);
+  const [pending, setPending] = useState<PendingFrameImage | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const request = useRef(0);
@@ -54,7 +56,7 @@ export function IdentityImageUpload({
     try {
       const file = await getFile();
       url = URL.createObjectURL(file);
-      const image = await loadIdentityImage(url);
+      const image = await loadFrameImage(url);
       validateIdentityDimensions(kind, image.naturalWidth, image.naturalHeight);
       if (sequence === request.current) {
         setPending({ file, image, url });
@@ -94,9 +96,12 @@ export function IdentityImageUpload({
       )}
       {loading && <span role="status">Reading image…</span>}
       {pending && (
-        <IdentityFrameDialog
+        <ImageFrameDialog
           key={pending.url}
-          kind={kind}
+          label={IDENTITY_LABELS[kind]}
+          frame={IDENTITY_FRAMES[kind]}
+          maxBytes={IDENTITY_LIMITS[kind]}
+          previewMaxWidth={kind === 'logo' ? 256 : undefined}
           pending={pending}
           onClose={() => setPending(null)}
           onApply={(file) => {

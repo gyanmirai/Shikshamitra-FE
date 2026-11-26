@@ -42,6 +42,8 @@ vi.mock('src/screens/student/admissions/application-detail/application-runtime-f
     readOnly,
     saveLabel,
     submitLabel,
+    editableFieldCodes,
+    onPhotoReadingChange,
   }: any) => (
     <>
       <input
@@ -56,6 +58,23 @@ vi.mock('src/screens/student/admissions/application-detail/application-runtime-f
       <button type="button" onClick={onSubmit}>
         {submitLabel ?? 'Continue'}
       </button>
+      {editableFieldCodes.includes('PHOTO') && (
+        <>
+          <button type="button" onClick={() => onPhotoReadingChange(true)}>
+            Start framing
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onChange('PHOTO', 'data:image/png;base64,iVBORw0KGgo=');
+              onPhotoReadingChange(false);
+            }}
+          >
+            Confirm framed photo
+          </button>
+          <output aria-label="Photo answer">{values.PHOTO}</output>
+        </>
+      )}
     </>
   ),
 }));
@@ -100,6 +119,55 @@ const context = {
 afterEach(() => {
   vi.unstubAllGlobals();
   responsive.mobile = false;
+});
+
+it('retains the framed photo answer when the photo field completes during its interaction lock', async () => {
+  const section = context.definition.sections[0];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            ...context,
+            editableFieldCodes: ['NAME', 'PHOTO'],
+            definition: {
+              ...context.definition,
+              sections: [
+                {
+                  ...section,
+                  fields: [
+                    ...section.fields,
+                    {
+                      id: 'p',
+                      code: 'PHOTO',
+                      label: 'Student photo',
+                      fieldType: 0,
+                      required: false,
+                      displayOrder: 1,
+                      validationJson: '{"format":"photo"}',
+                    },
+                  ],
+                },
+              ],
+            },
+          })
+        )
+    )
+  );
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <PublicAdmissionRegistrationScreen token="private" />
+    </ThemeProvider>
+  );
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole('checkbox', { name: /I have read these instructions/ }));
+  await user.click(screen.getByRole('button', { name: 'Continue to application form' }));
+  await user.click(await screen.findByRole('button', { name: 'Start framing' }));
+  await user.click(screen.getByRole('button', { name: 'Confirm framed photo' }));
+  expect(screen.getByLabelText('Photo answer')).toHaveTextContent(
+    'data:image/png;base64,iVBORw0KGgo='
+  );
 });
 
 it('gates the application behind the instructions and acknowledgment without losing the existing flow', async () => {

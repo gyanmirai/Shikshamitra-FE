@@ -13,6 +13,7 @@ import { localizeAdmissionSection } from '../form-dialog/form-languages';
 import { parseFieldConfiguration } from '../form-dialog/form-field-presets';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
 import { mergeInquiryContextSections } from '../inquiry-context-presentation';
+import { hasLegacyAdmissionBuilderHint } from '../form-dialog/builder-field-hints';
 import { readRepeatableValues, getRepeatableEntryCount } from '../form-repeatable-values';
 
 export type AdmissionPrintSettings = AdmissionFormPrintSettings;
@@ -388,7 +389,7 @@ function printField(
     value: printed,
     kind,
     required: field.required,
-    ...(field.helpText ? { helpText: field.helpText } : {}),
+    ...(field.helpText && !hasLegacyAdmissionBuilderHint(field) ? { helpText: field.helpText } : {}),
     ...(mode === 'filled' && kind === 'choice'
       ? {
           selectedValues: (Array.isArray(answer) ? answer : [answer])

@@ -25,6 +25,7 @@ import { isOptionalStudentNamePart } from './admission-student-name';
 import { AdmissionBoardClassField } from './admission-board-class-field';
 import { parseFieldConfiguration } from './form-dialog/form-field-presets';
 import { AdmissionProfilePhotoField } from './admission-profile-photo-field';
+import { hasLegacyAdmissionBuilderHint } from './form-dialog/builder-field-hints';
 import { AdmissionMasterDataRuntimeField } from './admission-master-data-runtime-field';
 import { AdmissionSpecializedRuntimeField } from './admission-specialized-runtime-field';
 import { parseRuntimeOptionsSource } from './application-detail/application-runtime-options';
@@ -91,9 +92,19 @@ const GENDER_OPTIONS: ChoiceOption[] = [
 
 export default function AdmissionRuntimeField(input: AdmissionRuntimeFieldProps) {
   const { field: inputField } = input;
-  const props = isOptionalStudentNamePart(inputField)
-    ? { ...input, field: { ...inputField, required: false } }
-    : input;
+  const optionalName = isOptionalStudentNamePart(inputField);
+  const hasLegacyBuilderHint = hasLegacyAdmissionBuilderHint(inputField);
+  const props =
+    optionalName || hasLegacyBuilderHint
+      ? {
+          ...input,
+          field: {
+            ...inputField,
+            required: inputField.required && !optionalName,
+            helpText: hasLegacyBuilderHint ? undefined : inputField.helpText,
+          },
+        }
+      : input;
   const helperId = useId();
   const { field, formValues, optionsResolved } = props;
   const publicSource = optionsResolved ? parseRuntimeOptionsSource(field.optionsSourceJson) : null;

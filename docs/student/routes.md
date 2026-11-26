@@ -22,9 +22,9 @@ TL;DR: use this page to map the implemented Admissions and Onboarding routes to 
 
 ## House Management
 
-Student Records → House Management is registered after Student List in `src/constants/student-menu.ts`. Its route is `/student/records/houses`, sourced from `studentPaths.records.houseManagement`. The page requires `Students.Records.HouseManagement.View`; controls use `manageHouseManagement` (`Add`, displayed as Add/Update) and `deleteHouseManagement` (`Delete`). Existing Student and Student Records visibility flags apply, with no feature-specific visibility flag or role-name exception. The former House Settings URL redirects here; the policy settings workspace remains separate.
+Student Records → House Management is registered after Student List in `src/constants/student-menu.ts`. Its operational route is `/student/records/houses`, sourced from `studentPaths.records.houseManagement`. Student Records → Settings → Create House opens the medium-wide catalogue at `/student/records/settings/create-house`, also available from the Student Setup guide. Both routes require `Students.Records.HouseManagement.View`. Configuration and operational mutations use the existing `Add` or `Delete` grants and server-side academic scope checks. The existing Student and Student Records visibility flags apply.
 
-The route page and permission layout live under `src/app/(auth-route)/student/records/houses/`. The screen is `src/screens/student/house-management/index.tsx`. Its two tabs are Houses and Assign Leaders. Assign Leaders uses `tab=divisions` and also accepts legacy `tab=students` links. `board`, `medium`, `class`, `division`, `search`, `sort`, zero-based `page` and `pageSize` track the current view. Assign Leaders accepts `house` and `assignment=unassigned`. `houseName` is a display label only. The Houses tab opens a house roster drawer from **Visible students**. The drawer owns the House leader action, while student rows in Assign Leaders own the Division leader action. Academic year comes from the shared Student academic scope. Profile links require the separate Student List View grant.
+The shared screen is `src/screens/student/house-management/index.tsx`. House Management opens to **Assign House** (`tab=assign`). **Assign Leaders** uses `tab=divisions` and also accepts legacy `tab=students` links. Explicit `tab=houses` links and the former `/student/studentRecords/setting` route lead to Create House. The operational workspace uses `board`, `medium`, `class`, `division`, `search`, `sort`, zero-based `page` and `pageSize` to track the view, with optional `house` and `assignment=unassigned` filters. `houseName` is a display label only. Academic year comes from the shared Student academic scope. Profile links require the separate Student List View grant.
 
 ## Public app-login email verification
 
@@ -94,17 +94,17 @@ Student Records links to the following workspaces. Record actions and Student Se
 | Submodule        | Route                     | Screen                                                                                       | Permission                              |
 | ---------------- | ------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------- |
 | Student List     | `/student/profile`        | `src/screens/student/studentProfile/index.tsx`                                               | `Students.Records.StudentList.View`     |
+| Birthday         | `/student/records/birthdays` | `src/screens/student/records/student-birthdays.tsx` | `Students.Records.Birthdays.View` |
 | House Management | `/student/records/houses` | `src/screens/student/house-management/index.tsx`                                             | `Students.Records.HouseManagement.View` |
 | I-Card Assignment | `/student/student-i-card` | `src/screens/student/records/student-icard-workspace.tsx`                                   | `Students.Records.StudentICard.View`    |
-| Settings (I-Card Templates) | `/student/records/settings/i-card-templates` | `src/screens/student/records/student-icard-templates.tsx` | `Students.Records.StudentICard.View` |
+| Settings → I-Card Templates | `/student/records/settings/i-card-templates` | `src/screens/student/records/student-icard-templates.tsx` | `Students.Records.StudentICard.View` |
+| Settings → Create House | `/student/records/settings/create-house` | `src/screens/student/house-management/index.tsx` in catalogue mode | `Students.Records.HouseManagement.View` |
 | Certificates     | `/student/certificates`   | `src/screens/student/records/student-certificate-workspace.tsx`, through the document screen | `Students.Records.Certificates.View`    |
 | Reports          | `/student/reports`        | `src/screens/student/reports/index.tsx`                                                      | `Students.Records.Reports.View`         |
 
 App Access opens within Student Profile Overview. Onboarding links to `/student/profile?student={id}&view=overview#student-app-access-{relationship}` for the selected Student, Father or Mother. The profile route uses Student List View and the card uses App Access View.
 
-The former `/student/studentRecords/setting` House Settings URL redirects to House Management. House creation,
-editing and deletion use the current House Management form and its dedicated `Students.Records.HouseManagement.*`
-permissions. The Student Records **Settings** menu opens the standalone I-Card template catalogue. Authorized staff access the policy workspace from Student Setup or `/student/records/settings` and its existing task links under `Students.Records.Settings.View`.
+The Student Records **Settings** group shows each permitted destination independently. Create House opens the existing catalogue, including permitted create, edit and empty-house delete actions. Authorized staff access the separate policy workspace from Student Setup or `/student/records/settings` and its existing task links under `Students.Records.Settings.View`.
 
 I-Card and Certificates use the persisted document APIs rather than the sample rows in the earlier screens. Server permissions and school Records policy still control issuance and record changes.
 

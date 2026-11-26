@@ -317,7 +317,6 @@ function DailyAttendanceWorkspace({
             !!v.year &&
             (v.contextQuery.isFetching || (v.validSelection && v.activeQuery.isFetching))
           }
-          refreshIndicator="skeleton"
           errorContent={
             v.blockingError ? (
               <StudentFeedback

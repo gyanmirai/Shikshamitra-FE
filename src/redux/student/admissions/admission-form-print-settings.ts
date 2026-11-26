@@ -94,6 +94,7 @@ export type AdmissionPrintAdvancedSettings = {
     continuation?: 'compact' | 'full' | 'none';
     schoolName?: boolean;
     address?: boolean;
+    addressLayout?: 'vertical' | 'horizontal';
     phone?: boolean;
     email?: boolean;
     website?: boolean;
@@ -241,6 +242,7 @@ export function resolveAdmissionPrintAdvancedSettings(
       continuation: 'compact' as const,
       schoolName: true,
       address: true,
+      addressLayout: 'vertical',
       phone: false,
       email: false,
       website: false,

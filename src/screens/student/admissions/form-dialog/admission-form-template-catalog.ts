@@ -52,7 +52,6 @@ type FieldInput = {
   required?: boolean;
   bindingKey?: string;
   placeholder?: string;
-  helpText?: string;
   optionsJson?: string;
   validationJson?: string;
   defaultValue?: string;
@@ -106,7 +105,6 @@ function createField(
     readOnly: false,
     displayOrder,
     placeholder: input.placeholder,
-    helpText: input.helpText,
     optionsJson: linked?.optionsJson ?? input.optionsJson,
     validationJson: input.validationJson,
     defaultValue: input.defaultValue,
@@ -292,7 +290,6 @@ const DEFINITIONS: TemplateDefinition[] = [
               {
                 code: 'CAMPUS_PREFERENCE',
                 label: 'Campus preference',
-                helpText: 'Remove this field if your school has one campus.',
               },
             ],
           },

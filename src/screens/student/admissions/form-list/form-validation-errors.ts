@@ -1,6 +1,11 @@
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 import { inquiryFormConfigurationMessages } from '../admission-inquiry-field-bindings';
+import {
+  addressOrderMessage,
+  addressMissingMessage,
+  addressDependencyErrorCodes,
+} from '../form-dialog/form-address-dependencies';
 
 const VERSION_UNCHANGED = 'Admissions.FormVersionUnchanged';
 const VERSION_UNCHANGED_MESSAGE =
@@ -53,18 +58,27 @@ const FIELD_MESSAGES: Record<string, string> = {
   'Admissions.FormInvalidValidationRule': 'has an invalid validation rule',
 };
 
-export function formatAdmissionFormValidationError(error: string) {
+export function formatAdmissionFormValidationError(error: string, ownerLabel?: string) {
   const unchangedVersionMessage = getUnchangedVersionMessage([error]);
   if (unchangedVersionMessage) return unchangedVersionMessage;
   if (Object.values(inquiryFormConfigurationMessages).some((message) => message === error))
     return error;
   const [code, owner] = error.split(':', 2);
-  if (owner && FIELD_MESSAGES[code]) return `${owner} ${FIELD_MESSAGES[code]}.`;
+  if (code === addressDependencyErrorCodes.state) return addressMissingMessage('state', ownerLabel || 'State');
+  if (code === addressDependencyErrorCodes.city) return addressMissingMessage('city', ownerLabel || 'City');
+  if (code === addressDependencyErrorCodes.order) return ownerLabel
+    ? `${addressOrderMessage} Check the position of ${ownerLabel}.`
+    : addressOrderMessage;
+  if (owner && FIELD_MESSAGES[code]) return `${ownerLabel || owner} ${FIELD_MESSAGES[code]}.`;
   return VALIDATION_MESSAGES[error] ?? 'Review the form settings before publishing.';
 }
 
 export function formatAdmissionFormValidationErrors(errors: string[]) {
-  const messages = errors.map(formatAdmissionFormValidationError);
+  return summarizeAdmissionFormIssues(errors.map((error) => formatAdmissionFormValidationError(error)));
+}
+
+export function summarizeAdmissionFormIssues(issues: string[]) {
+  const messages = [...new Set(issues)];
   const visible = messages.slice(0, 3);
   return `${visible.join(' ')}${messages.length > visible.length ? ` ${messages.length - visible.length} more issue(s) need review.` : ''}`;
 }

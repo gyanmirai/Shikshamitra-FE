@@ -13,6 +13,7 @@ import type {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import * as Yup from 'yup';
+import { Formik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { Label } from 'src/components/label';
 import { fDate } from 'src/utils/format-time';
@@ -20,14 +21,14 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { FormSectionCard } from 'src/components/form-section-card';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { FeeStructureSelect } from 'src/components/fee-structure-selection';
 import { DetailGrid, DetailField } from 'src/screens/finance/components/detail-view';
+import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
 import { AssignmentFormSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
 import FinancePrerequisiteState from 'src/screens/finance/components/FinancePrerequisiteState';
 import { isFinancePrerequisiteMissing } from 'src/screens/finance/components/financePrerequisites';
@@ -65,6 +66,7 @@ import { optionalServiceStatus } from './optionalServiceStatus';
 import OptionalFeeServiceRestart from './OptionalFeeServiceRestart';
 import PreparedAssignmentHandoff from './PreparedAssignmentHandoff';
 import { assignmentCurrencyTotals } from './assignmentReviewPresentation';
+import AssignmentCreationForm, { assignmentCreationGrid } from './AssignmentCreationForm';
 import { assignmentEditRequest, assignmentEditReasonError } from './assignmentEditRequest';
 import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
 import AssignmentStepperFrame, {
@@ -90,7 +92,6 @@ interface AssignmentValues {
   requests: AssignmentRequest[];
 }
 const initialValues: AssignmentValues = { structureId: '', requests: [] };
-const steps = ['Structure & policies', 'Fees & dates', 'Review & assign'];
 const studentNameTooltipSlots: TooltipProps['slotProps'] = {
   tooltip: {
     sx: {
@@ -793,43 +794,66 @@ function AssignmentEditor({
     structureId: Yup.string().required('Select a published fee structure.'),
     requests: Yup.array().min(1, 'Select students to assign.'),
   });
+  const loadingLabel =
+    operationPhase === 'commit'
+      ? isBulk
+        ? `Assigning ${selectedPreviewItems.length} student${selectedPreviewItems.length === 1 ? '' : 's'}…`
+        : 'Saving…'
+      : `Previewing ${students.length - committedIds.size} student${students.length - committedIds.size === 1 ? '' : 's'}…`;
 
-  const studentDetails = !isBulk && (viewing || editAssignedStructure) ? (
-    <FormSectionCard
-      title="Student Details"
-      icon="mdi:account-school-outline"
-      descriptionTooltip="Student identity and enrollment context for the selected academic year."
-    >
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
-          gap: 2,
-        }}
+  const runCreationOperation = async (phase: 'preview' | 'commit', values: AssignmentValues) => {
+    if (
+      operation.current ||
+      busy ||
+      missingStructure ||
+      showResults ||
+      (phase === 'preview' && (candidates.isLoading || candidates.isError))
+    )
+      return;
+    operation.current = true;
+    setOperationPhase(phase);
+    try {
+      if (phase === 'preview') await runPreview(values);
+      else await runCommit(values);
+    } finally {
+      operation.current = false;
+      setOperationPhase(undefined);
+    }
+  };
+
+  const studentDetails =
+    !isBulk && (viewing || editAssignedStructure) ? (
+      <FormSectionCard
+        title="Student Details"
+        icon="mdi:account-school-outline"
+        descriptionTooltip="Student identity and enrollment context for the selected academic year."
       >
-        <DetailField label="Student name" value={students[0].studentName} />
-        <DetailField
-          label="Academic year"
-          value={
-            academicYearName || (currentYear?.id === academicYearId ? currentYear?.name : undefined)
-          }
-        />
-        <DetailField label="GR number" value={students[0].grNumber} />
-        <DetailField label="Roll number" value={students[0].rollNumber} />
-        <DetailField label="Class / division" value={students[0].standardDivision} />
-        <DetailField label="Board" value={students[0].boardName} />
-        <DetailField label="Medium" value={students[0].mediumName} />
-        <DetailField label="Academic stage" value={students[0].stageName} />
-      </Box>
-    </FormSectionCard>
-  ) : null;
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
+            gap: 2,
+          }}
+        >
+          <DetailField label="Student name" value={students[0].studentName} />
+          <DetailField
+            label="Academic year"
+            value={
+              academicYearName ||
+              (currentYear?.id === academicYearId ? currentYear?.name : undefined)
+            }
+          />
+          <DetailField label="GR number" value={students[0].grNumber} />
+          <DetailField label="Roll number" value={students[0].rollNumber} />
+          <DetailField label="Class / division" value={students[0].standardDivision} />
+          <DetailField label="Board" value={students[0].boardName} />
+          <DetailField label="Medium" value={students[0].mediumName} />
+          <DetailField label="Academic stage" value={students[0].stageName} />
+        </Box>
+      </FormSectionCard>
+    ) : null;
 
-  if (
-    viewing &&
-    editingPolicies &&
-    !assigned.isError &&
-    assigned.data?.assignment
-  ) {
+  if (viewing && editingPolicies && !assigned.isError && assigned.data?.assignment) {
     return (
       <AssignedPolicyEditor
         data={assigned.data}
@@ -890,9 +914,7 @@ function AssignmentEditor({
                 !assigned.isError &&
                 assigned.data?.assignment &&
                 !editingPolicies && (
-                  <>
-                    <AssignmentReview data={assigned.data.assignment} committed />
-                  </>
+                  <AssignmentReview data={assigned.data.assignment} committed />
                 )}
               {!assigned.isFetching && !assigned.isError && !assigned.data?.assignment && (
                 <Alert severity="info">
@@ -908,21 +930,845 @@ function AssignmentEditor({
       </Stack>
     );
 
+  const renderContent = (formik: FormikProps<AssignmentValues>, creating = false) => {
+    const { values } = formik;
+    if (missingStructure && !showResults)
+      return (
+        <FinancePrerequisiteState
+          requirements={[
+            {
+              key: 'fee-structure',
+              description:
+                'No published fee structure matches this student’s class, board, medium and academic year.',
+            },
+          ]}
+          onRefresh={refreshPrerequisites}
+        />
+      );
+    const candidate = candidates.data?.find((c) => c.id === values.structureId);
+    const structureFields = (
+      <FormSectionCard
+        title="Fee Structure"
+        icon="mdi:file-document-outline"
+        descriptionTooltip="Choose the published fee structure to assign for this academic year."
+      >
+        {candidates.isError && (
+          <Alert
+            severity="error"
+            action={
+              <Button
+                size="small"
+                startIcon={<Iconify icon="mdi:refresh" />}
+                onClick={() => candidates.refetch()}
+              >
+                Retry
+              </Button>
+            }
+          >
+            {assignmentError(candidates.error)}
+          </Alert>
+        )}
+        <FeeStructureSelect
+          name="structureId"
+          label="Fee structure"
+          size="small"
+          required={creating}
+          isSearch={creating}
+          value={values.structureId}
+          isLoading={candidates.isLoading}
+          disabled={
+            busy ||
+            committedIds.size > 0 ||
+            (!editAssignedStructure &&
+              contexts.some(
+                (sourceContext) =>
+                  sourceContext.structureId &&
+                  students.some((student) => student.studentId === sourceContext.studentId)
+              ))
+          }
+          error={!!formik.touched.structureId && !!formik.errors.structureId}
+          helperText={formik.touched.structureId ? formik.errors.structureId : undefined}
+          onBlur={formik.handleBlur}
+          options={(candidates.data ?? []).map((c) => ({
+            value: c.id,
+            label: creating ? `${c.name} · Revision ${c.revisionNumber}` : c.name,
+          }))}
+          noOptionsMessage="No published structure for this student and year"
+          onChange={(value) => {
+            const selectedCandidate = candidates.data?.find((item) => item.id === String(value));
+            invalidate();
+            setReachedStep(0);
+            setStructureValidated(false);
+            setShowInputErrors(false);
+            setOutcomes(undefined);
+            formik.setValues({
+              structureId: String(value),
+              requests: selectedCandidate
+                ? students.map((s) =>
+                    editAssignedStructure
+                      ? {
+                          ...assignmentEditRequest(
+                            contexts.find((item) => item.studentId === s.studentId)!,
+                            selectedCandidate,
+                            academicYearId
+                          ),
+                          editReason:
+                            values.requests.find((item) => item.studentId === s.studentId)
+                              ?.editReason ?? '',
+                        }
+                      : admissionAssignmentRequest(
+                          s.studentId,
+                          academicYearId,
+                          selectedCandidate,
+                          contexts.find((item) => item.studentId === s.studentId)
+                        )
+                  )
+                : [],
+            });
+          }}
+        />
+        {editAssignedStructure && (
+          <TextField
+            size="small"
+            fullWidth
+            required
+            label="Fee structure change reason"
+            name="editReason"
+            value={values.requests[0]?.editReason ?? ''}
+            disabled={busy || complete}
+            onBlur={() => setShowEditReasonError(true)}
+            error={
+              showEditReasonError &&
+              Boolean(values.requests[0] && assignmentEditReasonError(values.requests[0]))
+            }
+            onChange={(event) => {
+              invalidate();
+              setStructureValidated(false);
+              formik.setFieldValue(
+                'requests',
+                values.requests.map((request) =>
+                  committedIds.has(request.studentId)
+                    ? request
+                    : { ...request, editReason: event.target.value }
+                )
+              );
+            }}
+            helperText={
+              (showEditReasonError &&
+                values.requests[0] &&
+                assignmentEditReasonError(values.requests[0])) ||
+              'Explain why the unpaid fee assignment is changing.'
+            }
+          />
+        )}
+        {candidate && (
+          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+            <Stack direction="row" spacing={1}>
+              <Label>{candidate.heads.filter((head) => !head.isOptional).length} required</Label>
+              {candidate.heads.some((head) => head.isOptional) && (
+                <Label>{candidate.heads.filter((head) => head.isOptional).length} optional</Label>
+              )}
+            </Stack>
+            <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+              {candidate.total == null ? '—' : formatNumber(candidate.total, 'INR')}
+            </Typography>
+          </Stack>
+        )}
+      </FormSectionCard>
+    );
+    return (
+      <Stack
+        spacing={2}
+        sx={{
+          p: creating ? 0 : editAssignedStructure && !isBulk ? assignmentEditPadding : 2,
+          minWidth: 0,
+          ...(!creating && isBulk && { flex: 1, minHeight: 0, overflow: 'hidden' }),
+          '& > .MuiAlert-root, & > section': { flexShrink: 0 },
+        }}
+      >
+        {(creating || activeStep === 2) &&
+          !showResults &&
+          !busy &&
+          !retryingConfirmation &&
+          previewExpired && (
+            <Alert
+              severity="warning"
+              action={
+                <Button
+                  size="small"
+                  startIcon={<Iconify icon="mdi:refresh" />}
+                  onClick={() => {
+                    invalidate();
+                    setActiveStep(1);
+                  }}
+                >
+                  Review and refresh
+                </Button>
+              }
+            >
+              This preview has expired. Preview again before assigning fees.
+            </Alert>
+          )}
+        {creating && error && <Alert severity="error">{error}</Alert>}
+        <AssignmentDirtyState dirty={values.requests.some((r) => !committedIds.has(r.studentId))} />
+        <AdmissionDefaults
+          formik={formik}
+          contexts={contexts}
+          students={students}
+          candidates={candidates.data}
+          academicYearId={academicYearId}
+          editingStructure={editAssignedStructure}
+        />
+        {!creating && activeStep === 1 && (
+          <AssignmentAmountValidity
+            invalid={
+              !candidate ||
+              values.requests
+                .filter((request) => !committedIds.has(request.studentId))
+                .some((request) => Boolean(assignmentInputError(candidate, request)))
+            }
+            onChange={setInvalidAmounts}
+          />
+        )}
+        {editAssignedStructure && activeStep === 2 && !showResults && (
+          <DetailField label="Fee structure change reason" value={values.requests[0]?.editReason} />
+        )}
+        {showResults && (
+          <Box>
+            {committedIds.size} assigned
+            {!complete ? ` · ${students.length - committedIds.size} need attention` : ''}.
+          </Box>
+        )}
+
+        {activeStep === 0 && studentDetails}
+        {!creating && activeStep === 0 && structureFields}
+        {(creating || activeStep > 0 || Boolean(candidate)) &&
+          (() => {
+            const configuringBulk =
+              isBulk && (creating ? !preview && !showResults : activeStep < 2);
+            const pendingStudent = students.find((item) => !committedIds.has(item.studentId));
+            const reviewStudent = configuringBulk
+              ? (pendingStudent ?? students[0])
+              : (students.find((item) => item.studentId === selectedStudentId) ?? students[0]);
+            const student = creating && isBulk && pendingStudent ? pendingStudent : reviewStudent;
+            const request = values.requests.find((r) => r.studentId === student.studentId);
+            const admissionContext = contexts.find((item) => item.studentId === student.studentId);
+            const savedServiceAssignment =
+              !isBulk && editAssignedStructure ? admissionContext?.assignedAssignment : undefined;
+            const hasPendingAssignmentChanges =
+              savedServiceAssignment &&
+              candidate &&
+              request &&
+              admissionContext &&
+              (savedServiceAssignment.structureId !== candidate.id ||
+                !isEqual(
+                  { ...request, editReason: '' },
+                  assignmentEditRequest(admissionContext, candidate, academicYearId)
+                ));
+            const prorationPolicy = admissionContext?.prorationPolicy;
+            const joinedBeforeYear =
+              !!admissionContext?.joiningDate &&
+              !!academicYearBounds &&
+              admissionContext.joiningDate.slice(0, 10) <
+                academicYearBounds.start.format('YYYY-MM-DD');
+            const admissionPeriods = candidate
+              ? admissionServicePeriods(
+                  candidate,
+                  admissionContext,
+                  candidate.heads.filter((head) => head.isOptional).map((head) => head.feeHeadId)
+                )
+              : [];
+            const studentCandidate = candidate && {
+              ...candidate,
+              heads: candidate.heads.map((head) => ({
+                ...head,
+                usesSingleServiceMonth:
+                  head.usesSingleServiceMonth && Boolean(admissionContext?.joiningDate),
+                servicePeriod:
+                  admissionPeriods.find((period) => period.feeHeadId === head.feeHeadId) ??
+                  head.servicePeriod,
+              })),
+            };
+            const studentPreview = preview?.results.find(
+              (r) => r.studentId === reviewStudent.studentId
+            );
+            const outcome = outcomes?.results.find((r) => r.studentId === reviewStudent.studentId);
+            const filtered = students.filter((item) =>
+              (item.studentName || '').toLowerCase().includes(studentSearch.toLowerCase())
+            );
+            const page = Math.min(studentPage, Math.max(1, Math.ceil(filtered.length / 20)));
+            const updateRequest = (next: AssignmentRequest) => {
+              invalidate();
+              if (activeStep === 0) setStructureValidated(false);
+              formik.setFieldValue(
+                'requests',
+                values.requests.map((r) => {
+                  if (committedIds.has(r.studentId)) return r;
+                  if (!isBulk)
+                    return r.studentId === next.studentId && candidate
+                      ? mergeAssignmentInputs(next, r, candidate, admissionContext, request)
+                      : r;
+                  // The bulk editor owns one configuration. Keep each student's identity
+                  // and saved result separate while applying changes to all remaining requests.
+                  return candidate
+                    ? mergeAssignmentInputs(
+                        next,
+                        r,
+                        candidate,
+                        contexts.find((item) => item.studentId === r.studentId),
+                        request
+                      )
+                    : r;
+                })
+              );
+            };
+            const bulkSetupHelp = (
+              <Typography variant="body2" color="text.secondary">
+                {editAssignedStructure
+                  ? 'Changes apply to all '
+                  : contexts.some((source) => source.source === 'Admission')
+                    ? 'Finance uses each student’s own joining date for eligible fees. The fee choices apply to all '
+                    : 'The same policies, fees and dates apply to all '}
+                {committedIds.size ? 'remaining' : 'selected'} students.
+                {editAssignedStructure &&
+                  ' Each student keeps their saved service dates unless you change them.'}
+              </Typography>
+            );
+            const reviewHeader = (isBulk || (outcome && (showResults || outcome.result))) && (
+              <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+                {isBulk && (
+                  <Typography
+                    component="h2"
+                    variant="subtitle1"
+                    sx={{ overflowWrap: 'anywhere', minWidth: 0 }}
+                  >
+                    {reviewStudent.studentName || 'Student'}
+                  </Typography>
+                )}
+                {outcome && (showResults || outcome.result) && (
+                  <Label color={outcome.result ? 'success' : 'warning'}>
+                    {outcome.outcome === 'AlreadyAssigned' ? 'Already assigned' : outcome.outcome}
+                  </Label>
+                )}
+              </Stack>
+            );
+            const configurationFields = (
+              <>
+                {(creating || activeStep === 0) &&
+                  !isBulk &&
+                  (admissionContext?.source === 'Admission' || prorationPolicy) && (
+                    <FormSectionCard
+                      title="Fee Proration"
+                      icon="mdi:calendar-range"
+                      descriptionTooltip="Finance uses the joining date recorded in Student Applications, where available, and the same fee-head rules when calculating the preview."
+                    >
+                      <DetailGrid desktopColumns={2}>
+                        <DetailField
+                          label="Joining date"
+                          value={
+                            admissionContext?.joiningDate
+                              ? fDate(admissionContext.joiningDate)
+                              : 'Not recorded'
+                          }
+                          secondary={
+                            admissionContext?.joiningDate ? 'Student Applications' : undefined
+                          }
+                        />
+                        <DetailField
+                          label={
+                            editAssignedStructure ? 'Saved proration policy' : 'Proration policy'
+                          }
+                          value={
+                            prorationPolicy
+                              ? `${prorationPolicy.name} · v${prorationPolicy.version}`
+                              : 'No applicable policy'
+                          }
+                        />
+                      </DetailGrid>
+                      <Typography variant="body2" color="text.secondary">
+                        {joinedBeforeYear
+                          ? 'Full fees apply because the student joined before the academic year started.'
+                          : editAssignedStructure
+                            ? 'Review the policy and recalculated amounts in the assignment preview.'
+                            : 'Review the scheduled fees, reductions and final amounts before assigning.'}
+                      </Typography>
+                    </FormSectionCard>
+                  )}
+                {(creating || activeStep === 0) && candidate && request && (
+                  <AssignmentPolicies
+                    key={request.studentId}
+                    studentId={request.studentId}
+                    academicYearId={academicYearId}
+                    defaults={candidate.policies ?? []}
+                    selections={request.policies ?? []}
+                    reason={request.policyOverrideReason ?? ''}
+                    canOverride={canOverridePolicies}
+                    disabled={busy}
+                    flat
+                    onChange={(policies, policyOverrideReason) =>
+                      updateRequest({ ...request, policies, policyOverrideReason })
+                    }
+                  />
+                )}
+                {(creating || activeStep === 1) &&
+                  candidate &&
+                  request &&
+                  (() => {
+                    const fields = (
+                      <>
+                        {assignmentFeeSelectionError(candidate, request) && (
+                          <Alert severity="info" sx={{ mb: 2 }}>
+                            {admissionContext?.source === 'Admission' &&
+                            admissionContext.structureId
+                              ? 'Select at least one fee in Admission, then refresh this assignment.'
+                              : assignmentFeeSelectionError(candidate, request)}
+                          </Alert>
+                        )}
+                        <AssignmentStudentInputs
+                          key={student.studentId}
+                          candidate={studentCandidate ?? candidate}
+                          request={request}
+                          savedAssignment={admissionContext?.assignedAssignment}
+                          onChange={updateRequest}
+                          canOverrideDates={canOverrideDates}
+                          allowTransportSource={!isBulk}
+                          disabled={busy}
+                          yearBounds={serviceBounds(candidate)}
+                          validationBounds={academicYearBounds}
+                          showErrors={showInputErrors}
+                          flat
+                          optionalServiceAction={(feeHeadId) => {
+                            if (!savedServiceAssignment) return null;
+                            const head = savedServiceAssignment.heads.find(
+                              (item) =>
+                                item.feeHeadId === feeHeadId && item.included && !item.isOneTime
+                            );
+                            if (!head) return null;
+                            const status = optionalServiceStatus(
+                              head,
+                              savedServiceAssignment.lines.some(
+                                (line) =>
+                                  line.feeHeadId === feeHeadId &&
+                                  (line.optionalServiceCancellationAmount ?? 0) > 0
+                              )
+                            );
+                            if (!status.label) return null;
+                            return (
+                              <>
+                                <Label
+                                  color={
+                                    status.stopped || status.label === 'Ended'
+                                      ? 'default'
+                                      : 'success'
+                                  }
+                                >
+                                  {status.label}
+                                </Label>
+                                {status.stopped && canRestartOptionalService && (
+                                  <OptionalFeeServiceRestart
+                                    assignment={savedServiceAssignment}
+                                    head={head}
+                                    disabledReason={
+                                      busy
+                                        ? 'Another fee assignment operation is in progress.'
+                                        : hasPendingAssignmentChanges
+                                          ? 'Save or discard pending assignment changes before enabling this service.'
+                                          : undefined
+                                    }
+                                    onSaved={onOptionalServiceSaved}
+                                    onBusyChange={setServiceBusy}
+                                  />
+                                )}
+                              </>
+                            );
+                          }}
+                        />
+                      </>
+                    );
+                    return editAssignedStructure ? (
+                      fields
+                    ) : (
+                      <FormSectionCard
+                        title="Fees & Dates"
+                        icon="mdi:format-list-checks"
+                        descriptionTooltip="Review included fee heads and enter amounts and service dates where permitted."
+                      >
+                        {fields}
+                      </FormSectionCard>
+                    );
+                  })()}
+              </>
+            );
+            return (
+              <Box
+                sx={
+                  creating
+                    ? assignmentCreationGrid(isBulk, showResults)
+                    : {
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: 'minmax(0, 1fr)',
+                          sm: isBulk ? '240px minmax(0, 1fr)' : 'minmax(0, 1fr)',
+                        },
+                        ...(isBulk && {
+                          flex: '1 1 0',
+                          minHeight: 0,
+                          overflow: 'hidden',
+                          gridTemplateRows: {
+                            xs: 'minmax(0, 0.95fr) minmax(0, 1.05fr)',
+                            sm: 'minmax(0, 1fr)',
+                          },
+                        }),
+                        gap: 2,
+                        alignItems: 'stretch',
+                      }
+                }
+              >
+                {isBulk && (
+                  <FormSectionCard
+                    title="Selected students"
+                    icon="mdi:account-group-outline"
+                    iconSize={16}
+                    iconContainerSize={28}
+                    contentSpacing={1}
+                    sx={{
+                      minWidth: 0,
+                      minHeight: 0,
+                      overflow: 'hidden',
+                      p: 1.5,
+                      ...(creating && { gridArea: 'students' }),
+                    }}
+                    contentSx={{ height: '100%', minHeight: 0 }}
+                  >
+                    <TextField
+                      size="small"
+                      fullWidth
+                      label="Search selected students"
+                      value={studentSearch}
+                      disabled={busy}
+                      onChange={(e) => {
+                        setStudentSearch(e.target.value);
+                        setStudentPage(1);
+                      }}
+                    />
+                    <Typography variant="caption" color="text.secondary" aria-live="polite">
+                      {configuringBulk
+                        ? `${students.length} selected`
+                        : `${committedIds.size} assigned · ${students.length - committedIds.size} remaining`}
+                    </Typography>
+                    {(creating || activeStep === 2) && batchTotals.length > 0 && (
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        spacing={1}
+                        sx={{
+                          borderBottom: 1,
+                          borderColor: 'divider',
+                          pb: 1,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          {showResults ? 'Confirmed total' : 'Ready total'}
+                        </Typography>
+                        {batchTotals.map((item) => (
+                          <Typography
+                            key={item.currency}
+                            variant="subtitle1"
+                            sx={{ fontVariantNumeric: 'tabular-nums' }}
+                          >
+                            {formatNumber(item.total, item.currency)}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    )}
+                    <Scrollbar
+                      sx={{ flex: '1 1 0', minHeight: 0, overscrollBehavior: 'contain' }}
+                      ariaLabel="Selected students list"
+                      scrollableNodeProps={{ tabIndex: 0 }}
+                    >
+                      <List disablePadding aria-label="Selected students">
+                        {filtered.slice((page - 1) * 20, page * 20).map((item) => {
+                          if (configuringBulk) {
+                            return (
+                              <ListItem key={item.studentId} sx={{ px: 1.5 }}>
+                                <Tooltip
+                                  disableInteractive
+                                  title={item.studentName || 'Student'}
+                                  placement="bottom"
+                                  slotProps={studentNameTooltipSlots}
+                                >
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      overflowWrap: 'anywhere',
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: 'vertical',
+                                      overflow: 'hidden',
+                                    }}
+                                  >
+                                    {item.studentName || 'Student'}
+                                  </Typography>
+                                </Tooltip>
+                              </ListItem>
+                            );
+                          }
+                          const saved = outcomes?.results.find(
+                            (r) => r.studentId === item.studentId
+                          );
+                          const checked = preview?.results.find(
+                            (r) => r.studentId === item.studentId
+                          );
+                          const input = values.requests.find((r) => r.studentId === item.studentId);
+                          const needsInput =
+                            !saved?.result &&
+                            candidate &&
+                            input &&
+                            (assignmentInputError(candidate, input) ||
+                              assignmentServiceDateError(candidate, input, academicYearBounds));
+                          const needsAttention =
+                            !saved?.result &&
+                            !checked?.preview &&
+                            (saved?.errorMessage || checked?.errorMessage || needsInput);
+                          return (
+                            <ListItemButton
+                              key={item.studentId}
+                              selected={item.studentId === reviewStudent.studentId}
+                              disabled={busy}
+                              aria-label={`Select ${item.studentName || 'student'}`}
+                              aria-current={
+                                item.studentId === reviewStudent.studentId ? 'true' : undefined
+                              }
+                              onClick={() => setSelectedStudentId(item.studentId)}
+                              sx={{
+                                borderRadius: 1,
+                                mb: 0.5,
+                                px: 1.5,
+                                border: 1,
+                                borderColor:
+                                  item.studentId === reviewStudent.studentId
+                                    ? 'primary.main'
+                                    : 'transparent',
+                                '&.Mui-selected': { bgcolor: 'action.selected' },
+                              }}
+                            >
+                              <Stack spacing={0.5} sx={{ minWidth: 0, width: '100%' }}>
+                                <Tooltip
+                                  disableInteractive
+                                  title={item.studentName || 'Student'}
+                                  placement="bottom"
+                                  slotProps={studentNameTooltipSlots}
+                                >
+                                  <Typography
+                                    variant="subtitle2"
+                                    sx={{
+                                      overflowWrap: 'anywhere',
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: 'vertical',
+                                      overflow: 'hidden',
+                                    }}
+                                  >
+                                    {item.studentName || 'Student'}
+                                  </Typography>
+                                </Tooltip>
+                                {(saved?.result || needsAttention) && (
+                                  <Label color={saved?.result ? 'success' : 'warning'}>
+                                    {saved?.result
+                                      ? saved.outcome === 'AlreadyAssigned'
+                                        ? 'Already assigned'
+                                        : 'Assigned'
+                                      : 'Needs attention'}
+                                  </Label>
+                                )}
+                                {needsAttention && (
+                                  <Typography
+                                    variant="caption"
+                                    color="error.main"
+                                    sx={{ overflowWrap: 'anywhere' }}
+                                  >
+                                    {needsInput || saved?.errorMessage || checked?.errorMessage}
+                                  </Typography>
+                                )}
+                              </Stack>
+                            </ListItemButton>
+                          );
+                        })}
+                      </List>
+                      {!filtered.length && (
+                        <Typography variant="body2" color="text.secondary">
+                          No matching students.
+                        </Typography>
+                      )}
+                    </Scrollbar>
+                    {filtered.length > 20 && (
+                      <Pagination
+                        size="small"
+                        siblingCount={0}
+                        count={Math.ceil(filtered.length / 20)}
+                        page={page}
+                        disabled={busy}
+                        onChange={(_, next) => setStudentPage(next)}
+                      />
+                    )}
+                  </FormSectionCard>
+                )}
+                {creating && !showResults && (
+                  <Stack spacing={2} sx={{ minWidth: 0, gridArea: 'setup' }}>
+                    {structureFields}
+                    {isBulk && bulkSetupHelp}
+                    {configurationFields}
+                  </Stack>
+                )}
+                <AssignmentDetailsRegion bounded={isBulk && !creating}>
+                  <Stack
+                    role={creating ? 'region' : undefined}
+                    aria-label={creating ? 'Student fee details' : undefined}
+                    spacing={2}
+                    sx={{
+                      minWidth: 0,
+                      pr: isBulk && !creating ? 1 : 0,
+                      ...(creating && { gridArea: 'preview' }),
+                    }}
+                  >
+                    {creating && (
+                      <FormSectionHeader
+                        title={showResults ? 'Assignment Results' : 'Assignment Preview'}
+                        icon="mdi:clipboard-check-outline"
+                        descriptionTooltip="Review Finance-calculated amounts and installment details for this assignment."
+                      />
+                    )}
+                    {configuringBulk ? !creating && bulkSetupHelp : reviewHeader}
+                    {!creating && !outcome?.result && configurationFields}
+                    {outcome?.result ? (
+                      <AssignmentReview data={outcome.result.assignment} committed />
+                    ) : (
+                      <>
+                        {creating && !showResults && !preview && (
+                          <Typography variant="body2" color="text.secondary">
+                            Preview the configured fees before assigning them.
+                          </Typography>
+                        )}
+                        {outcome?.errorMessage && !studentPreview?.preview && (
+                          <Alert
+                            severity={outcome.outcome === 'AlreadyAssigned' ? 'info' : 'error'}
+                          >
+                            {reviewStudent.studentName || 'Student'}: {outcome.errorMessage}
+                          </Alert>
+                        )}
+                        {studentPreview?.errorMessage && (
+                          <Alert
+                            severity={
+                              studentPreview.errorCode?.endsWith('AlreadyAssigned')
+                                ? 'info'
+                                : 'error'
+                            }
+                          >
+                            {reviewStudent.studentName || 'Student'}: {studentPreview.errorMessage}
+                          </Alert>
+                        )}
+                        {(creating || activeStep === 2) &&
+                          !showResults &&
+                          studentPreview?.preview && (
+                            <AssignmentReview data={studentPreview.preview} />
+                          )}
+                        {showResults && !outcome && (
+                          <Alert severity="error">
+                            Not assigned. Review this student and preview again.
+                          </Alert>
+                        )}
+                      </>
+                    )}
+                  </Stack>
+                </AssignmentDetailsRegion>
+              </Box>
+            );
+          })()}
+        {!creating && error && <Alert severity="error">{error}</Alert>}
+      </Stack>
+    );
+  };
+
+  if (!editAssignedStructure) {
+    return (
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={(values) => runCreationOperation('preview', values)}
+      >
+        {(formik) => {
+          const candidate = candidates.data?.find((item) => item.id === formik.values.structureId);
+          const invalid =
+            candidate &&
+            formik.values.requests.some(
+              (request) =>
+                !committedIds.has(request.studentId) && assignmentInputError(candidate, request)
+            );
+          const previewDisabled =
+            busy ||
+            missingStructure ||
+            candidates.isLoading ||
+            candidates.isError ||
+            Boolean(invalid);
+          const assignDisabled =
+            busy ||
+            missingStructure ||
+            selectedPreviewItems.length === 0 ||
+            (!retryingConfirmation && previewExpired);
+          return (
+            <AssignmentCreationForm
+              busy={busy || formik.isSubmitting}
+              busyLabel={loadingLabel}
+              onCancel={onClose}
+              onPreview={formik.handleSubmit}
+              onAssign={async () => {
+                if (!assignDisabled) await runCreationOperation('commit', formik.values);
+              }}
+              previewDisabled={previewDisabled}
+              assignDisabled={assignDisabled}
+              assignLabel={
+                isBulk && selectedPreviewItems.length > 0
+                  ? `Assign fees (${selectedPreviewItems.length})`
+                  : 'Assign fees'
+              }
+              resultAction={
+                showResults
+                  ? {
+                      label: complete ? 'Close' : 'Review remaining students',
+                      icon: complete ? 'mdi:close' : 'mdi:refresh',
+                      onClick: () => {
+                        if (complete) onClose();
+                        else {
+                          const pendingStudent = students.find(
+                            (item) => !committedIds.has(item.studentId)
+                          );
+                          invalidate();
+                          if (pendingStudent) setSelectedStudentId(pendingStudent.studentId);
+                        }
+                      },
+                    }
+                  : undefined
+              }
+            >
+              {renderContent(formik, true)}
+            </AssignmentCreationForm>
+          );
+        }}
+      </Formik>
+    );
+  }
+
   return (
     <AssignmentStepperFrame savedAssignment={editAssignedStructure && !isBulk}>
       <CustomStepperWithFormik
         contentScrollMode={isBulk ? 'regions' : 'step'}
         initialValues={initialValues}
-        steps={editAssignedStructure ? assignmentEditSteps : steps}
+        steps={assignmentEditSteps}
         activeStep={activeStep}
         validationSchema={validationSchema}
-        loadingLabel={
-          operationPhase === 'commit'
-            ? isBulk
-              ? `Assigning ${selectedPreviewItems.length} student${selectedPreviewItems.length === 1 ? '' : 's'}…`
-              : 'Saving…'
-            : `Previewing ${students.length - committedIds.size} student${students.length - committedIds.size === 1 ? '' : 's'}…`
-        }
+        loadingLabel={loadingLabel}
         showSaveButton={false}
         onCancel={onClose}
         validateForwardStepClick
@@ -1152,763 +1998,7 @@ function AssignmentEditor({
             setLoading(false);
           }
         }}
-        renderItem={(context) => {
-          const formik = context.formik as FormikProps<AssignmentValues>;
-          const { values } = formik;
-          if (missingStructure && !showResults)
-            return (
-              <FinancePrerequisiteState
-                requirements={[
-                  {
-                    key: 'fee-structure',
-                    description:
-                      'No published fee structure matches this student’s class, board, medium and academic year.',
-                  },
-                ]}
-                onRefresh={refreshPrerequisites}
-              />
-            );
-          const candidate = candidates.data?.find((c) => c.id === values.structureId);
-          return (
-            <Stack
-              spacing={2}
-              sx={{
-                p: editAssignedStructure && !isBulk ? assignmentEditPadding : 2,
-                minWidth: 0,
-                ...(isBulk && { flex: 1, minHeight: 0, overflow: 'hidden' }),
-                '& > .MuiAlert-root, & > section': { flexShrink: 0 },
-              }}
-            >
-              {activeStep === 2 &&
-                !showResults &&
-                !busy &&
-                !retryingConfirmation &&
-                previewExpired && (
-                  <Alert
-                    severity="warning"
-                    action={
-                      <Button
-                        size="small"
-                        startIcon={<Iconify icon="mdi:refresh" />}
-                        onClick={() => {
-                          invalidate();
-                          setActiveStep(1);
-                        }}
-                      >
-                        Review and refresh
-                      </Button>
-                    }
-                  >
-                    This preview has expired. Preview again before assigning fees.
-                  </Alert>
-                )}
-              <AssignmentDirtyState
-                dirty={values.requests.some((r) => !committedIds.has(r.studentId))}
-              />
-              <AdmissionDefaults
-                formik={formik}
-                contexts={contexts}
-                students={students}
-                candidates={candidates.data}
-                academicYearId={academicYearId}
-                editingStructure={editAssignedStructure}
-              />
-              {activeStep === 1 && (
-                <AssignmentAmountValidity
-                  invalid={
-                    !candidate ||
-                    values.requests
-                      .filter((request) => !committedIds.has(request.studentId))
-                      .some((request) => Boolean(assignmentInputError(candidate, request)))
-                  }
-                  onChange={setInvalidAmounts}
-                />
-              )}
-              {editAssignedStructure && activeStep === 2 && !showResults && (
-                <DetailField
-                  label="Fee structure change reason"
-                  value={values.requests[0]?.editReason}
-                />
-              )}
-              {showResults && (
-                <Box>
-                  {committedIds.size} assigned
-                  {!complete ? ` · ${students.length - committedIds.size} need attention` : ''}.
-                </Box>
-              )}
-
-              {activeStep === 0 && studentDetails}
-              {activeStep === 0 && (
-                <FormSectionCard
-                  title="Fee Structure"
-                  icon="mdi:file-document-outline"
-                  descriptionTooltip="Choose the published fee structure to assign for this academic year."
-                >
-                  {candidates.isError && (
-                    <Alert
-                      severity="error"
-                      action={
-                        <Button
-                          size="small"
-                          startIcon={<Iconify icon="mdi:refresh" />}
-                          onClick={() => candidates.refetch()}
-                        >
-                          Retry
-                        </Button>
-                      }
-                    >
-                      {assignmentError(candidates.error)}
-                    </Alert>
-                  )}
-                  <CustomSelect
-                    name="structureId"
-                    label="Fee structure"
-                    size="small"
-                    value={values.structureId}
-                    isLoading={candidates.isLoading}
-                    disabled={
-                      busy ||
-                      committedIds.size > 0 ||
-                      (!editAssignedStructure &&
-                        contexts.some(
-                          (sourceContext) =>
-                            sourceContext.structureId &&
-                            students.some(
-                              (student) => student.studentId === sourceContext.studentId
-                            )
-                        ))
-                    }
-                    error={!!formik.touched.structureId && !!formik.errors.structureId}
-                    helperText={formik.touched.structureId ? formik.errors.structureId : undefined}
-                    onBlur={formik.handleBlur}
-                    options={(candidates.data ?? []).map((c) => ({
-                      value: c.id,
-                      label: c.name,
-                    }))}
-                    noOptionsMessage="No published structure for this student and year"
-                    onChange={(value) => {
-                      const selectedCandidate = candidates.data?.find(
-                        (item) => item.id === String(value)
-                      );
-                      invalidate();
-                      setReachedStep(0);
-                      setStructureValidated(false);
-                      setShowInputErrors(false);
-                      setOutcomes(undefined);
-                      formik.setValues({
-                        structureId: String(value),
-                        requests: selectedCandidate
-                          ? students.map((s) =>
-                              editAssignedStructure
-                                ? {
-                                    ...assignmentEditRequest(
-                                      contexts.find((item) => item.studentId === s.studentId)!,
-                                      selectedCandidate,
-                                      academicYearId
-                                    ),
-                                    editReason:
-                                      values.requests.find((item) => item.studentId === s.studentId)
-                                        ?.editReason ?? '',
-                                  }
-                                : admissionAssignmentRequest(
-                                    s.studentId,
-                                    academicYearId,
-                                    selectedCandidate,
-                                    contexts.find((item) => item.studentId === s.studentId)
-                                  )
-                            )
-                          : [],
-                      });
-                    }}
-                  />
-                  {editAssignedStructure && (
-                    <TextField
-                      size="small"
-                      fullWidth
-                      required
-                      label="Fee structure change reason"
-                      name="editReason"
-                      value={values.requests[0]?.editReason ?? ''}
-                      disabled={busy || complete}
-                      onBlur={() => setShowEditReasonError(true)}
-                      error={
-                        showEditReasonError &&
-                        Boolean(values.requests[0] && assignmentEditReasonError(values.requests[0]))
-                      }
-                      onChange={(event) => {
-                        invalidate();
-                        setStructureValidated(false);
-                        formik.setFieldValue(
-                          'requests',
-                          values.requests.map((request) =>
-                            committedIds.has(request.studentId)
-                              ? request
-                              : { ...request, editReason: event.target.value }
-                          )
-                        );
-                      }}
-                      helperText={
-                        (showEditReasonError &&
-                          values.requests[0] &&
-                          assignmentEditReasonError(values.requests[0])) ||
-                        'Explain why the unpaid fee assignment is changing.'
-                      }
-                    />
-                  )}
-                  {candidate && (
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      alignItems="center"
-                      useFlexGap
-                      flexWrap="wrap"
-                    >
-                      <Stack direction="row" spacing={1}>
-                        <Label>
-                          {candidate.heads.filter((head) => !head.isOptional).length} required
-                        </Label>
-                        {candidate.heads.some((head) => head.isOptional) && (
-                          <Label>
-                            {candidate.heads.filter((head) => head.isOptional).length} optional
-                          </Label>
-                        )}
-                      </Stack>
-                      <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {candidate.total == null ? '—' : formatNumber(candidate.total, 'INR')}
-                      </Typography>
-                    </Stack>
-                  )}
-                </FormSectionCard>
-              )}
-              {(activeStep > 0 || Boolean(candidate)) &&
-                (() => {
-                  const configuringBulk = isBulk && activeStep < 2;
-                  const student = configuringBulk
-                    ? (students.find((item) => !committedIds.has(item.studentId)) ?? students[0])
-                    : (students.find((item) => item.studentId === selectedStudentId) ??
-                      students[0]);
-                  const request = values.requests.find((r) => r.studentId === student.studentId);
-                  const admissionContext = contexts.find(
-                    (item) => item.studentId === student.studentId
-                  );
-                  const savedServiceAssignment =
-                    !isBulk && editAssignedStructure
-                      ? admissionContext?.assignedAssignment
-                      : undefined;
-                  const hasPendingAssignmentChanges =
-                    savedServiceAssignment &&
-                    candidate &&
-                    request &&
-                    admissionContext &&
-                    (savedServiceAssignment.structureId !== candidate.id ||
-                      !isEqual(
-                        { ...request, editReason: '' },
-                        assignmentEditRequest(admissionContext, candidate, academicYearId)
-                      ));
-                  const prorationPolicy = admissionContext?.prorationPolicy;
-                  const joinedBeforeYear =
-                    !!admissionContext?.joiningDate &&
-                    !!academicYearBounds &&
-                    admissionContext.joiningDate.slice(0, 10) <
-                      academicYearBounds.start.format('YYYY-MM-DD');
-                  const admissionPeriods = candidate
-                    ? admissionServicePeriods(
-                        candidate,
-                        admissionContext,
-                        candidate.heads
-                          .filter((head) => head.isOptional)
-                          .map((head) => head.feeHeadId)
-                      )
-                    : [];
-                  const studentCandidate = candidate && {
-                    ...candidate,
-                    heads: candidate.heads.map((head) => ({
-                      ...head,
-                      usesSingleServiceMonth:
-                        head.usesSingleServiceMonth && Boolean(admissionContext?.joiningDate),
-                      servicePeriod:
-                        admissionPeriods.find((period) => period.feeHeadId === head.feeHeadId) ??
-                        head.servicePeriod,
-                    })),
-                  };
-                  const studentPreview = preview?.results.find(
-                    (r) => r.studentId === student.studentId
-                  );
-                  const outcome = outcomes?.results.find((r) => r.studentId === student.studentId);
-                  const filtered = students.filter((item) =>
-                    (item.studentName || '').toLowerCase().includes(studentSearch.toLowerCase())
-                  );
-                  const page = Math.min(studentPage, Math.max(1, Math.ceil(filtered.length / 20)));
-                  const updateRequest = (next: AssignmentRequest) => {
-                    invalidate();
-                    if (activeStep === 0) setStructureValidated(false);
-                    formik.setFieldValue(
-                      'requests',
-                      values.requests.map((r) => {
-                        if (committedIds.has(r.studentId)) return r;
-                        if (!isBulk)
-                          return r.studentId === next.studentId && candidate
-                            ? mergeAssignmentInputs(next, r, candidate, admissionContext, request)
-                            : r;
-                        // The bulk editor owns one configuration. Keep each student's identity
-                        // and saved result separate while applying changes to all remaining requests.
-                        return candidate
-                          ? mergeAssignmentInputs(
-                              next,
-                              r,
-                              candidate,
-                              contexts.find((item) => item.studentId === r.studentId),
-                              request
-                            )
-                          : r;
-                      })
-                    );
-                  };
-                  return (
-                    <Box
-                      sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                          xs: 'minmax(0, 1fr)',
-                          sm: isBulk ? '240px minmax(0, 1fr)' : 'minmax(0, 1fr)',
-                        },
-                        ...(isBulk && {
-                          flex: '1 1 0',
-                          minHeight: 0,
-                          overflow: 'hidden',
-                          gridTemplateRows: {
-                            xs: 'minmax(0, 0.95fr) minmax(0, 1.05fr)',
-                            sm: 'minmax(0, 1fr)',
-                          },
-                        }),
-                        gap: 2,
-                        alignItems: 'stretch',
-                      }}
-                    >
-                      {isBulk && (
-                        <FormSectionCard
-                          title="Selected students"
-                          icon="mdi:account-group-outline"
-                          iconSize={16}
-                          iconContainerSize={28}
-                          contentSpacing={1}
-                          sx={{ minWidth: 0, minHeight: 0, overflow: 'hidden', p: 1.5 }}
-                          contentSx={{ height: '100%', minHeight: 0 }}
-                        >
-                          <TextField
-                            size="small"
-                            fullWidth
-                            label="Search selected students"
-                            value={studentSearch}
-                            disabled={busy}
-                            onChange={(e) => {
-                              setStudentSearch(e.target.value);
-                              setStudentPage(1);
-                            }}
-                          />
-                          <Typography variant="caption" color="text.secondary" aria-live="polite">
-                            {configuringBulk
-                              ? `${students.length} selected`
-                              : `${committedIds.size} assigned · ${students.length - committedIds.size} remaining`}
-                          </Typography>
-                          {activeStep === 2 && batchTotals.length > 0 && (
-                            <Stack
-                              direction="row"
-                              alignItems="center"
-                              justifyContent="space-between"
-                              spacing={1}
-                              sx={{
-                                borderBottom: 1,
-                                borderColor: 'divider',
-                                pb: 1,
-                                flexWrap: 'wrap',
-                              }}
-                            >
-                              <Typography variant="caption" color="text.secondary">
-                                {showResults ? 'Confirmed total' : 'Ready total'}
-                              </Typography>
-                              {batchTotals.map((item) => (
-                                <Typography
-                                  key={item.currency}
-                                  variant="subtitle1"
-                                  sx={{ fontVariantNumeric: 'tabular-nums' }}
-                                >
-                                  {formatNumber(item.total, item.currency)}
-                                </Typography>
-                              ))}
-                            </Stack>
-                          )}
-                          <Scrollbar
-                            sx={{ flex: '1 1 0', minHeight: 0, overscrollBehavior: 'contain' }}
-                            ariaLabel="Selected students list"
-                            scrollableNodeProps={{ tabIndex: 0 }}
-                          >
-                            <List disablePadding aria-label="Selected students">
-                              {filtered.slice((page - 1) * 20, page * 20).map((item) => {
-                                if (configuringBulk) {
-                                  return (
-                                    <ListItem key={item.studentId} sx={{ px: 1.5 }}>
-                                      <Tooltip
-                                        disableInteractive
-                                        title={item.studentName || 'Student'}
-                                        placement="bottom"
-                                        slotProps={studentNameTooltipSlots}
-                                      >
-                                        <Typography
-                                          variant="body2"
-                                          sx={{
-                                            overflowWrap: 'anywhere',
-                                            display: '-webkit-box',
-                                            WebkitLineClamp: 2,
-                                            WebkitBoxOrient: 'vertical',
-                                            overflow: 'hidden',
-                                          }}
-                                        >
-                                          {item.studentName || 'Student'}
-                                        </Typography>
-                                      </Tooltip>
-                                    </ListItem>
-                                  );
-                                }
-                                const saved = outcomes?.results.find(
-                                  (r) => r.studentId === item.studentId
-                                );
-                                const checked = preview?.results.find(
-                                  (r) => r.studentId === item.studentId
-                                );
-                                const input = values.requests.find(
-                                  (r) => r.studentId === item.studentId
-                                );
-                                const needsInput =
-                                  !saved?.result &&
-                                  candidate &&
-                                  input &&
-                                  (assignmentInputError(candidate, input) ||
-                                    assignmentServiceDateError(
-                                      candidate,
-                                      input,
-                                      academicYearBounds
-                                    ));
-                                const needsAttention =
-                                  !saved?.result &&
-                                  !checked?.preview &&
-                                  (saved?.errorMessage || checked?.errorMessage || needsInput);
-                                return (
-                                  <ListItemButton
-                                    key={item.studentId}
-                                    selected={item.studentId === student.studentId}
-                                    disabled={busy}
-                                    aria-label={`Select ${item.studentName || 'student'}`}
-                                    aria-current={
-                                      item.studentId === student.studentId ? 'true' : undefined
-                                    }
-                                    onClick={() => setSelectedStudentId(item.studentId)}
-                                    sx={{
-                                      borderRadius: 1,
-                                      mb: 0.5,
-                                      px: 1.5,
-                                      border: 1,
-                                      borderColor:
-                                        item.studentId === student.studentId
-                                          ? 'primary.main'
-                                          : 'transparent',
-                                      '&.Mui-selected': { bgcolor: 'action.selected' },
-                                    }}
-                                  >
-                                    <Stack spacing={0.5} sx={{ minWidth: 0, width: '100%' }}>
-                                      <Tooltip
-                                        disableInteractive
-                                        title={item.studentName || 'Student'}
-                                        placement="bottom"
-                                        slotProps={studentNameTooltipSlots}
-                                      >
-                                        <Typography
-                                          variant="subtitle2"
-                                          sx={{
-                                            overflowWrap: 'anywhere',
-                                            display: '-webkit-box',
-                                            WebkitLineClamp: 2,
-                                            WebkitBoxOrient: 'vertical',
-                                            overflow: 'hidden',
-                                          }}
-                                        >
-                                          {item.studentName || 'Student'}
-                                        </Typography>
-                                      </Tooltip>
-                                      {(saved?.result || needsAttention) && (
-                                        <Label color={saved?.result ? 'success' : 'warning'}>
-                                          {saved?.result
-                                            ? saved.outcome === 'AlreadyAssigned'
-                                              ? 'Already assigned'
-                                              : 'Assigned'
-                                            : 'Needs attention'}
-                                        </Label>
-                                      )}
-                                      {needsAttention && (
-                                        <Typography
-                                          variant="caption"
-                                          color="error.main"
-                                          sx={{ overflowWrap: 'anywhere' }}
-                                        >
-                                          {needsInput ||
-                                            saved?.errorMessage ||
-                                            checked?.errorMessage}
-                                        </Typography>
-                                      )}
-                                    </Stack>
-                                  </ListItemButton>
-                                );
-                              })}
-                            </List>
-                            {!filtered.length && (
-                              <Typography variant="body2" color="text.secondary">
-                                No matching students.
-                              </Typography>
-                            )}
-                          </Scrollbar>
-                          {filtered.length > 20 && (
-                            <Pagination
-                              size="small"
-                              siblingCount={0}
-                              count={Math.ceil(filtered.length / 20)}
-                              page={page}
-                              disabled={busy}
-                              onChange={(_, next) => setStudentPage(next)}
-                            />
-                          )}
-                        </FormSectionCard>
-                      )}
-                      <AssignmentDetailsRegion bounded={isBulk}>
-                        <Stack spacing={2} sx={{ minWidth: 0, pr: isBulk ? 1 : 0 }}>
-                          {configuringBulk ? (
-                            <Typography variant="body2" color="text.secondary">
-                              {editAssignedStructure
-                                ? 'Changes apply to all '
-                                : contexts.some((source) => source.source === 'Admission')
-                                  ? 'Finance uses each student’s own joining date for eligible fees. The fee choices apply to all '
-                                  : 'The same policies, fees and dates apply to all '}
-                              {committedIds.size ? 'remaining' : 'selected'} students.
-                              {editAssignedStructure &&
-                                ' Each student keeps their saved service dates unless you change them.'}
-                            </Typography>
-                          ) : (
-                            (isBulk || (outcome && (showResults || outcome.result))) && (
-                              <Stack
-                                direction="row"
-                                justifyContent="space-between"
-                                alignItems="center"
-                                spacing={1}
-                              >
-                                {isBulk && (
-                                  <Typography
-                                    component="h2"
-                                    variant="subtitle1"
-                                    sx={{ overflowWrap: 'anywhere', minWidth: 0 }}
-                                  >
-                                    {student.studentName || 'Student'}
-                                  </Typography>
-                                )}
-                                {outcome && (showResults || outcome.result) && (
-                                  <Label color={outcome.result ? 'success' : 'warning'}>
-                                    {outcome.outcome === 'AlreadyAssigned'
-                                      ? 'Already assigned'
-                                      : outcome.outcome}
-                                  </Label>
-                                )}
-                              </Stack>
-                            )
-                          )}
-                          {outcome?.result ? (
-                            <AssignmentReview data={outcome.result.assignment} committed />
-                          ) : (
-                            <>
-                              {activeStep === 0 &&
-                                !configuringBulk &&
-                                (admissionContext?.source === 'Admission' || prorationPolicy) && (
-                                  <FormSectionCard
-                                    title="Fee Proration"
-                                    icon="mdi:calendar-range"
-                                    descriptionTooltip="Finance uses the joining date recorded in Student Applications, where available, and the same fee-head rules when calculating the preview."
-                                  >
-                                    <DetailGrid desktopColumns={2}>
-                                      <DetailField
-                                        label="Joining date"
-                                        value={
-                                          admissionContext?.joiningDate
-                                            ? fDate(admissionContext.joiningDate)
-                                            : 'Not recorded'
-                                        }
-                                        secondary={
-                                          admissionContext?.joiningDate
-                                            ? 'Student Applications'
-                                            : undefined
-                                        }
-                                      />
-                                      <DetailField
-                                        label={
-                                          editAssignedStructure
-                                            ? 'Saved proration policy'
-                                            : 'Proration policy'
-                                        }
-                                        value={
-                                          prorationPolicy
-                                            ? `${prorationPolicy.name} · v${prorationPolicy.version}`
-                                            : 'No applicable policy'
-                                        }
-                                      />
-                                    </DetailGrid>
-                                    <Typography variant="body2" color="text.secondary">
-                                      {joinedBeforeYear
-                                        ? 'Full fees apply because the student joined before the academic year started.'
-                                        : editAssignedStructure
-                                          ? 'Review the policy and recalculated amounts in the assignment preview.'
-                                          : 'Review the scheduled fees, reductions and final amounts before assigning.'}
-                                    </Typography>
-                                  </FormSectionCard>
-                                )}
-                              {activeStep === 0 && candidate && request && (
-                                <AssignmentPolicies
-                                  key={request.studentId}
-                                  studentId={request.studentId}
-                                  academicYearId={academicYearId}
-                                  defaults={candidate.policies ?? []}
-                                  selections={request.policies ?? []}
-                                  reason={request.policyOverrideReason ?? ''}
-                                  canOverride={canOverridePolicies}
-                                  disabled={busy}
-                                  flat
-                                  onChange={(policies, policyOverrideReason) =>
-                                    updateRequest({ ...request, policies, policyOverrideReason })
-                                  }
-                                />
-                              )}
-                              {activeStep === 1 &&
-                                candidate &&
-                                request &&
-                                (() => {
-                                  const fields = (
-                                    <>
-                                      {assignmentFeeSelectionError(candidate, request) && (
-                                        <Alert severity="info" sx={{ mb: 2 }}>
-                                          {admissionContext?.source === 'Admission' &&
-                                          admissionContext.structureId
-                                            ? 'Select at least one fee in Admission, then refresh this assignment.'
-                                            : assignmentFeeSelectionError(candidate, request)}
-                                        </Alert>
-                                      )}
-                                      <AssignmentStudentInputs
-                                        key={student.studentId}
-                                        candidate={studentCandidate ?? candidate}
-                                        request={request}
-                                        savedAssignment={admissionContext?.assignedAssignment}
-                                        onChange={updateRequest}
-                                        canOverrideDates={canOverrideDates}
-                                        allowTransportSource={!isBulk}
-                                        disabled={busy}
-                                        yearBounds={serviceBounds(candidate)}
-                                        validationBounds={academicYearBounds}
-                                        showErrors={showInputErrors}
-                                        flat
-                                        optionalServiceAction={(feeHeadId) => {
-                                          if (!savedServiceAssignment) return null;
-                                          const head = savedServiceAssignment.heads.find(
-                                            (item) =>
-                                              item.feeHeadId === feeHeadId &&
-                                              item.included &&
-                                              !item.isOneTime
-                                          );
-                                          if (!head) return null;
-                                          const status = optionalServiceStatus(
-                                            head,
-                                            savedServiceAssignment.lines.some(
-                                              (line) =>
-                                                line.feeHeadId === feeHeadId &&
-                                                (line.optionalServiceCancellationAmount ?? 0) > 0
-                                            )
-                                          );
-                                          if (!status.label) return null;
-                                          return (
-                                            <>
-                                              <Label
-                                                color={
-                                                  status.stopped || status.label === 'Ended'
-                                                    ? 'default'
-                                                    : 'success'
-                                                }
-                                              >
-                                                {status.label}
-                                              </Label>
-                                              {status.stopped && canRestartOptionalService && (
-                                                <OptionalFeeServiceRestart
-                                                  assignment={savedServiceAssignment}
-                                                  head={head}
-                                                  disabledReason={
-                                                    busy
-                                                      ? 'Another fee assignment operation is in progress.'
-                                                      : hasPendingAssignmentChanges
-                                                        ? 'Save or discard pending assignment changes before enabling this service.'
-                                                        : undefined
-                                                  }
-                                                  onSaved={onOptionalServiceSaved}
-                                                  onBusyChange={setServiceBusy}
-                                                />
-                                              )}
-                                            </>
-                                          );
-                                        }}
-                                      />
-                                    </>
-                                  );
-                                  return editAssignedStructure ? (
-                                    fields
-                                  ) : (
-                                    <FormSectionCard
-                                      title="Fees & Dates"
-                                      icon="mdi:format-list-checks"
-                                    >
-                                      {fields}
-                                    </FormSectionCard>
-                                  );
-                                })()}
-                              {outcome?.errorMessage && !studentPreview?.preview && (
-                                <Alert
-                                  severity={
-                                    outcome.outcome === 'AlreadyAssigned' ? 'info' : 'error'
-                                  }
-                                >
-                                  {student.studentName || 'Student'}: {outcome.errorMessage}
-                                </Alert>
-                              )}
-                              {studentPreview?.errorMessage && (
-                                <Alert
-                                  severity={
-                                    studentPreview.errorCode?.endsWith('AlreadyAssigned')
-                                      ? 'info'
-                                      : 'error'
-                                  }
-                                >
-                                  {student.studentName || 'Student'}: {studentPreview.errorMessage}
-                                </Alert>
-                              )}
-                              {activeStep === 2 && !showResults && studentPreview?.preview && (
-                                <AssignmentReview data={studentPreview.preview} />
-                              )}
-                              {showResults && !outcome && (
-                                <Alert severity="error">
-                                  Not assigned. Review this student and preview again.
-                                </Alert>
-                              )}
-                            </>
-                          )}
-                        </Stack>
-                      </AssignmentDetailsRegion>
-                    </Box>
-                  );
-                })()}
-              {error && <Alert severity="error">{error}</Alert>}
-            </Stack>
-          );
-        }}
+        renderItem={({ formik }) => renderContent(formik as FormikProps<AssignmentValues>)}
       />
     </AssignmentStepperFrame>
   );

@@ -3,7 +3,7 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 
 import { FormPreviewContent } from './form-preview-content';
 
@@ -88,6 +88,23 @@ function previewFormik(values: Record<string, string>) {
 }
 
 describe('embedded admission form preview', () => {
+  it('places the language selector with the form title and switches the preview language', async () => {
+    const user = userEvent.setup();
+    const form = photoPreviewForm();
+    form.supportedLanguages = ['en', 'hi'];
+    form.sections[0].fields[0].translations = { hi: { label: 'विद्यार्थी का नाम' } };
+    render(<FormPreviewContent form={form} formik={previewFormik({})} resolvedOptions={{}} />);
+
+    const title = screen.getByRole('heading', { name: 'Student form · v1' });
+    const language = within(title.closest('header')!).getByRole('combobox', {
+      name: 'Form Language',
+    });
+    expect(language).toHaveTextContent('English');
+    await user.click(language);
+    await user.click(screen.getByRole('option', { name: 'Hindi' }));
+    expect(screen.getByRole('textbox', { name: 'विद्यार्थी का नाम' })).toBeVisible();
+  });
+
   it('renders a later photo first while preserving answer values and saved field order', async () => {
     const user = userEvent.setup();
     const form = photoPreviewForm();

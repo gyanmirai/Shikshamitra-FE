@@ -16,6 +16,8 @@ const fixture = vi.hoisted(() => ({
   param: '',
   push: vi.fn(),
   preview: vi.fn(),
+  export: vi.fn(),
+  downloadPdf: vi.fn(),
   saveTemplate: vi.fn(),
   issue: vi.fn(),
   refresh: vi.fn(),
@@ -74,7 +76,7 @@ vi.mock('src/redux/student/records/student-record-documents-api', () => ({
     refetch: fixture.refresh,
   }),
   useGetRecordIdPhotoQuery: () => ({}),
-  downloadRecordPdf: vi.fn(),
+  downloadRecordPdf: fixture.downloadPdf,
 }));
 
 vi.mock('src/redux/student/records/student-icard-assignment-api', () => ({
@@ -116,7 +118,7 @@ vi.mock('src/redux/student/records/student-icard-assignment-api', () => ({
   usePutICardAssignmentMutation: () => [fixture.saveTemplate, {}],
   useDeleteICardAssignmentMutation: () => [vi.fn(), {}],
   usePreviewAssignedICardsMutation: () => [fixture.preview, {}],
-  useExportAssignedICardsMutation: () => [vi.fn(), {}],
+  useExportAssignedICardsMutation: () => [fixture.export, {}],
   useIssueAssignedICardsMutation: () => [fixture.issue, {}],
 }));
 
@@ -175,7 +177,9 @@ it('shows students directly for the selected division without a class-rule write
   expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent('Class 5');
   expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent('A');
   expect(screen.getByRole('row', { name: /Asha Patel/ })).toBeVisible();
-  expect(screen.getByText('Blue')).toBeVisible();
+  expect(
+    within(screen.getByRole('region', { name: 'I-Card selection' })).getByText('Blue')
+  ).toBeVisible();
   expect(
     screen.queryByRole('button', { name: /Change template for Class 5/ })
   ).not.toBeInTheDocument();
@@ -190,23 +194,20 @@ it('keeps the selected students after saving a template and previews them with t
   fixture.param = 'class=class-5&division=division-a';
   const { rerender } = renderAssignment();
 
-  const assign = screen.getByRole('button', { name: 'Assign template for Class 5' });
   const student = screen.getByRole('checkbox', { name: 'Select Asha Patel' });
   const summary = screen.getByRole('region', { name: 'I-Card selection' });
+  const assign = within(summary).getByRole('button', { name: 'Assign template for Class 5' });
   expect(assign).toBeDisabled();
   expect(summary.nextElementSibling).toContainElement(screen.getByRole('table'));
-  const clear = within(summary).getByRole('button', { name: 'Clear selection' });
   const previewButton = within(summary).getByRole('button', { name: 'Preview cards' });
-  expect(clear).toBeDisabled();
 
   fireEvent.click(student);
   expect(assign).toBeEnabled();
   expect(within(summary).getByText('1 of 100 selected')).toBeVisible();
   expect(within(summary).getByRole('button', { name: 'Preview cards' })).toBeDisabled();
-  expect(clear).toBeEnabled();
-  fireEvent.click(clear);
+  expect(within(summary).queryByRole('button', { name: 'Clear selection' })).toBeNull();
+  fireEvent.click(student);
   expect(assign).toBeDisabled();
-  expect(clear).toBeDisabled();
 
   fireEvent.click(student);
   fireEvent.click(assign);
@@ -290,22 +291,47 @@ it('closes an outdated preview when the template changes but keeps the student s
   expect(await screen.findByRole('dialog', { name: 'Preview I-Cards for Class 5' })).toBeVisible();
 });
 
-it('waits for a class before loading students and rejects a division from another class', () => {
+it('loads the first available class with all divisions when the URL omits the class', () => {
+  renderAssignment();
+
+  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent('Class 5');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent('All divisions');
+  expect(fixture.rosterQuery).toHaveBeenCalledWith(
+    expect.objectContaining({ standardId: 'class-5', divisionId: undefined })
+  );
+
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Division' }));
+  fireEvent.click(screen.getByRole('option', { name: 'A' }));
+  expect(fixture.push).toHaveBeenLastCalledWith(
+    '/student/student-i-card?class=class-5&division=division-a',
+    { scroll: false }
+  );
+});
+
+it('keeps a valid explicit class and rejects a division from another class', () => {
+  fixture.param = 'class=class-6';
   const { rerender } = renderAssignment();
-  expect(screen.getByRole('button', { name: 'Assign template' })).toBeDisabled();
-  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveAttribute(
-    'aria-disabled',
-    'true'
-  );
-  expect(fixture.rosterQuery).not.toHaveBeenCalled();
+
+  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent('Class 6');
+  fixture.rosterQuery.mockClear();
   fixture.param = 'class=class-5&division=division-b';
-  rerender(
-    <ThemeProvider theme={createTheme(defaultSettings)}>
-      <StudentICardAssignment />
-    </ThemeProvider>
-  );
+  rerender(assignmentPage());
   expect(fixture.rosterQuery).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: 'Reset filters' })).toBeVisible();
+});
+
+it('keeps class rule actions with Preview and requires confirmation to remove a rule', () => {
+  fixture.param = 'class=class-5';
+  renderAssignment();
+
+  const summary = screen.getByRole('region', { name: 'I-Card selection' });
+  const remove = within(summary).getByRole('button', { name: 'Remove' });
+  expect(
+    within(summary).getByRole('button', { name: 'Change template for Class 5' })
+  ).toBeDisabled();
+  expect(within(summary).getByRole('button', { name: 'Preview cards' })).toBeDisabled();
+  fireEvent.click(remove);
+  expect(screen.getByRole('dialog', { name: 'Remove I-Card Assignment?' })).toBeVisible();
 });
 
 it('clears the current batch and paging when the division changes', () => {
@@ -390,4 +416,69 @@ it('keeps the same idempotency key when retrying a submitted batch', async () =>
 
   await waitFor(() => expect(fixture.issue).toHaveBeenCalledTimes(2));
   expect(fixture.issue.mock.calls[1][0]).toEqual(fixture.issue.mock.calls[0][0]);
+});
+
+it('browses the selected preview response one at a time or as a scrollable list', async () => {
+  fixture.param = 'class=class-5';
+  renderAssignment();
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Select Asha Patel' }));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Select Diya Patel' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Preview cards' }));
+
+  const drawer = await screen.findByRole('dialog', { name: 'Preview I-Cards for Class 5' });
+  const preview = within(drawer);
+  expect(preview.getByRole('button', { name: 'Previous student' })).toBeDisabled();
+  expect(preview.getByRole('img', { name: 'I-Card preview for Asha Patel' })).toBeVisible();
+  fireEvent.click(preview.getByRole('button', { name: 'Next student' }));
+  expect(preview.getByRole('img', { name: 'I-Card preview for Diya Patel' })).toBeVisible();
+  expect(preview.getByRole('button', { name: 'Next student' })).toBeDisabled();
+
+  fireEvent.mouseDown(preview.getByRole('combobox', { name: 'Student to preview' }));
+  fireEvent.click(screen.getByRole('option', { name: 'Asha Patel' }));
+  expect(preview.getByRole('img', { name: 'I-Card preview for Asha Patel' })).toBeVisible();
+
+  const showAll = preview.getByRole('button', { name: 'Show all' });
+  fireEvent.click(showAll);
+  expect(showAll).toHaveAttribute('aria-pressed', 'true');
+  expect(preview.getByRole('img', { name: 'I-Card preview for Asha Patel' })).toBeVisible();
+  expect(preview.getByRole('img', { name: 'I-Card preview for Diya Patel' })).toBeVisible();
+  expect(fixture.preview).toHaveBeenCalledTimes(1);
+  expect(preview.getByRole('button', { name: 'Print Sheet' })).toBeVisible();
+  expect(preview.queryByRole('button', { name: /^Close$/ })).toBeNull();
+
+  fireEvent.click(showAll);
+  expect(preview.queryByRole('img', { name: 'I-Card preview for Diya Patel' })).toBeNull();
+  expect(preview.getByRole('img', { name: 'I-Card preview for Asha Patel' })).toBeVisible();
+});
+
+it('keeps the print configuration error visible and allows retrying the same selection', async () => {
+  fixture.param = 'class=class-5';
+  const detail = "Text in 'Name' does not fit. Enlarge the element or reduce its font size.";
+  const pdf = new Blob(['%PDF-test'], { type: 'application/pdf' });
+  fixture.export
+    .mockReturnValueOnce({
+      unwrap: () =>
+        Promise.reject(
+          Object.assign(new Error(detail), {
+            status: 400,
+            data: { errorCode: 'ShikshaMitra:IdentityCard:InvalidConfiguration', detail },
+          })
+        ),
+    })
+    .mockReturnValueOnce({ unwrap: () => Promise.resolve(pdf) });
+
+  renderAssignment();
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Select Asha Patel' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Preview cards' }));
+  const preview = within(await screen.findByRole('dialog', { name: 'Preview I-Cards for Class 5' }));
+  const print = preview.getByRole('button', { name: 'Print Sheet' });
+  fireEvent.click(print);
+
+  expect(await preview.findByRole('alert')).toHaveTextContent(detail);
+  expect(fixture.downloadPdf).not.toHaveBeenCalled();
+  fireEvent.click(print);
+
+  await waitFor(() => expect(fixture.downloadPdf).toHaveBeenCalledWith(pdf, 'Student-I-Cards.pdf'));
+  expect(preview.queryByRole('alert')).toBeNull();
+  expect(fixture.export.mock.calls[1][0]).toEqual(fixture.export.mock.calls[0][0]);
 });

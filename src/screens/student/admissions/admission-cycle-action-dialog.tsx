@@ -49,6 +49,14 @@ const actionLabels: Record<CycleGuardedAction, string> = {
   delete: 'Delete',
 };
 
+const actionIcons: Record<CycleGuardedAction, string> = {
+  publish: GlobalIcons.publish,
+  close: GlobalIcons.lockIcon,
+  reopen: 'mdi:lock-open-outline',
+  archive: GlobalIcons.archive,
+  delete: GlobalIcons.delete,
+};
+
 export function AdmissionCycleActionDialog({
   action,
   cycle,
@@ -136,17 +144,7 @@ export function AdmissionCycleActionDialog({
       disableEscapeKeyDown={busy}
       disableCancel={busy}
       lockOnActionLoading={!checking}
-      icon={
-        action === 'publish' ? (
-          <Iconify icon={GlobalIcons.info} width={24} sx={{ color: 'info.main' }} aria-hidden />
-        ) : action === 'delete' ? (
-          'error'
-        ) : action === 'reopen' ? (
-          'info'
-        ) : (
-          'warning'
-        )
-      }
+      icon={action === 'delete' ? 'error' : action === 'reopen' ? 'success' : 'warning'}
       title={titles[action]}
       content={
         <Stack spacing={1.5}>
@@ -267,27 +265,12 @@ export function AdmissionCycleActionDialog({
         <LoadingButton
           variant="contained"
           size="small"
-          color={
-            action === 'publish' || action === 'close'
-              ? 'inherit'
-              : action === 'delete' || action === 'archive'
-                ? 'error'
-                : 'primary'
-          }
+          color={action === 'delete' ? 'error' : 'inherit'}
           loading={busy || checking}
           loadingPosition="start"
           disabled={retryPublish ? busy : disabled}
           startIcon={
-            <Iconify
-              icon={
-                retryPublish
-                  ? GlobalIcons.refresh
-                  : action === 'delete'
-                    ? GlobalIcons.delete
-                    : GlobalIcons.submit
-              }
-              width={18}
-            />
+            <Iconify icon={retryPublish ? GlobalIcons.refresh : actionIcons[action]} width={18} />
           }
           onClick={retryPublish ?? confirm}
         >

@@ -31,6 +31,8 @@ describe('Student guide scope and navigation', () => {
     expect(getStudentConfigurationSetting('/student/onboarding/settings', '')).toBe('gr-number');
     expect(getStudentConfigurationSetting('/student/admissions/settings/workflows/id', '')).toBe('admission-stages');
     expect(getStudentConfigurationSetting('/student/records/settings/access', '')).toBe('records-policy');
+    expect(getStudentConfigurationSetting('/student/records/settings/create-house', '')).toBe('houses');
+    expect(getStudentConfigurationSetting('/student/records/houses', 'tab=assign')).toBeNull();
     expect(getStudentConfigurationSetting('/student/admissions/settings/forms-copy', '')).toBeNull();
     expect(getStudentConfigurationSetting('/student/attendance/setting', '')).toBeNull();
   });

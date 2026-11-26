@@ -24,16 +24,19 @@ function Fixture({
   branding = false,
   photoRecords,
   studentBindings = false,
+  borderStylesEnabled = false,
 }: {
   branding?: boolean;
   photoRecords?: IdentityCardPhotoRecord[];
   studentBindings?: boolean;
+  borderStylesEnabled?: boolean;
 }) {
   const [layout, setLayout] = useState(createIdentityCardPreset('classic-identity'));
   const [print, setPrint] = useState(DEFAULT_IDENTITY_CARD_PRINT_SETTINGS);
   const [school, setSchool] = useState('School');
   return (
     <IdentityCardDesigner
+      borderStylesEnabled={borderStylesEnabled}
       photoRecords={photoRecords}
       onPhotoEdit={vi.fn()}
       layout={layout}
@@ -70,6 +73,27 @@ function Fixture({
 }
 
 describe('identity card designer', () => {
+  it('changes the stroke style of a student divider from Position & Style', () => {
+    const { container } = render(<Fixture borderStylesEnabled />);
+    fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
+    const configuration = screen.getByRole('tabpanel', { name: 'Elements' });
+    const choice = within(configuration).getByRole('combobox', { name: 'Border style' });
+    expect(choice).toHaveTextContent('Solid');
+    fireEvent.mouseDown(choice);
+    fireEvent.click(screen.getByRole('option', { name: 'Dashed' }));
+    expect(choice).toHaveTextContent('Dashed');
+    fireEvent.change(within(configuration).getByLabelText('Border colour'), {
+      target: { value: '#234567' },
+    });
+    fireEvent.change(within(configuration).getByRole('spinbutton', { name: 'Border width (canvas)' }), {
+      target: { value: '2' },
+    });
+    const line = container.querySelector('svg[role="img"] line');
+    expect(line).toHaveAttribute('stroke', '#234567');
+    expect(line).toHaveAttribute('stroke-width', '2');
+    expect(line).toHaveAttribute('stroke-dasharray', '8 4');
+  });
+
   it('dismisses a source photo error without changing the design', async () => {
     const store = configureStore({ reducer: { confirmPopup: () => ({ isChanges: false }) } });
     render(
@@ -110,12 +134,21 @@ describe('identity card designer', () => {
     fireEvent.change(within(configuration).getByRole('textbox', { name: 'School name' }), {
       target: { value: 'Greenwood School' },
     });
+    fireEvent.click(screen.getByRole('tab', { name: 'Elements' }));
+    expect(
+      within(screen.getByRole('tabpanel', { name: 'Elements' })).getByText(
+        /Select an element on the card or in the layer list/
+      )
+    ).toBeVisible();
     fireEvent.click(screen.getByRole('tab', { name: 'Print' }));
     expect(
       within(screen.getByRole('region', { name: 'Card configuration' })).getByRole('spinbutton', {
         name: 'Margin (mm)',
       })
     ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('tabpanel', { name: 'Print' })).getByText(/Print at actual size/)
+    ).toBeVisible();
     expect(preview).toContainElement(
       screen.getByRole('img', { name: 'Front identity card preview' })
     );

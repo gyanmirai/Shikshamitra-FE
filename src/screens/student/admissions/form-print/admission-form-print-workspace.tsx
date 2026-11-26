@@ -6,11 +6,11 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { useId, useRef, useState, useCallback } from 'react';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 import {
   Box,
@@ -81,7 +81,7 @@ export function AdmissionFormPrintWorkspace({
     ...(settings ?? form.printSettings),
   };
   const [mode, setMode] = useState(initialMode);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(true);
   const [settingsView, setSettingsView] = useState<'basic' | 'advanced'>('basic');
   const [editingHeader, setEditingHeader] = useState(false);
   const optionsPopover = usePopover();
@@ -155,7 +155,8 @@ export function AdmissionFormPrintWorkspace({
   const hasFields = model.steps.some((item) =>
     item.sections.some((section) => section.entries.some((entry) => entry.fields.length))
   );
-  const canEdit = Boolean(onSettingsChange && !readOnly);
+  const inLayoutEditor = Boolean(onSettingsChange);
+  const canEdit = inLayoutEditor && !readOnly;
   const previewContext = JSON.stringify([mode, language, step]);
   const updatePreviewPageCount = useCallback(
     (count: number) => setPreviewPages({ context: previewContext, count }),
@@ -282,10 +283,10 @@ export function AdmissionFormPrintWorkspace({
         height: 1,
         width: 1,
         overflow: 'hidden',
-        p: { xs: 1, sm: 2 },
-        gap: { xs: 1, sm: 1.5 },
+        p: { xs: 1, sm: inLayoutEditor ? 1 : 2 },
+        gap: { xs: 1, sm: inLayoutEditor ? 1 : 1.5 },
         gridTemplateAreas: showSettings
-          ? { xs: '"toolbar" "settings" "preview"', md: '"toolbar settings" "preview settings"' }
+          ? { xs: '"toolbar" "settings" "preview"', md: '"toolbar toolbar" "preview settings"' }
           : '"toolbar" "preview"',
         gridTemplateRows: showSettings
           ? { xs: 'auto minmax(0, 0.9fr) minmax(0, 1fr)', md: 'auto minmax(0, 1fr)' }
@@ -306,9 +307,11 @@ export function AdmissionFormPrintWorkspace({
         sx={{
           gridArea: 'toolbar',
           minWidth: 0,
-          ...(canEdit && {
-            px: 1.5,
-            py: 1,
+          ...(inLayoutEditor && {
+            px: 1,
+            py: 0.5,
+            columnGap: { xs: 0.5, sm: 1 },
+            rowGap: 0.5,
             border: 1,
             borderColor: 'divider',
             borderRadius: 1.5,
@@ -330,7 +333,7 @@ export function AdmissionFormPrintWorkspace({
                 { value: 'filled', label: 'With details' },
               ]}
               onChange={(value) => updateMode(value === 'filled' ? 'filled' : 'blank')}
-              formControlProps={{ sx: { width: 132, flexShrink: 0 } }}
+              formControlProps={{ sx: { width: { xs: 116, sm: 132 }, flexShrink: 0 } }}
             />
             <Button
               size="small"
@@ -404,19 +407,6 @@ export function AdmissionFormPrintWorkspace({
           </Button>
           {canEdit && (
             <>
-              <AdaptiveThreeDotsActions
-                moreLabel="More print actions"
-                directActionLimit={0}
-                actions={[
-                  {
-                    id: 'download-pdf',
-                    label: 'Download PDF',
-                    icon: GlobalIcons.download,
-                    disabled: outputDisabled,
-                    onClick: download,
-                  },
-                ]}
-              />
               <Button
                 ref={settingsTrigger}
                 size="small"
@@ -429,6 +419,19 @@ export function AdmissionFormPrintWorkspace({
               >
                 Layout settings
               </Button>
+              <CustomTooltip title="Download PDF">
+                <span>
+                  <IconButton
+                    aria-label="Download PDF"
+                    size="small"
+                    disabled={outputDisabled}
+                    onClick={download}
+                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 0.75 }}
+                  >
+                    <Iconify icon={GlobalIcons.download} width={18} />
+                  </IconButton>
+                </span>
+              </CustomTooltip>
             </>
           )}
         </Stack>
@@ -568,7 +571,14 @@ export function AdmissionFormPrintWorkspace({
             ref={previewScroller}
             sx={{ flex: 1, minHeight: 0, bgcolor: 'background.neutral', borderRadius: 1.5 }}
           >
-            <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 850, mx: 'auto' }}>
+            <Box
+              sx={{
+                p: { xs: 1, sm: 2 },
+                ...(inLayoutEditor && { pt: 1 }),
+                maxWidth: 850,
+                mx: 'auto',
+              }}
+            >
               {showHeaderEditor && (
                 <Stack component="section" id={headerEditorId} gap={1} sx={{ mb: 2 }}>
                   <Button

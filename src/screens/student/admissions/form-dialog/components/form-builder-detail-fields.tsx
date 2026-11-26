@@ -6,7 +6,15 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Grid, Button, MenuItem, TextField, Autocomplete } from '@mui/material';
+import {
+  Grid,
+  Button,
+  MenuItem,
+  TextField,
+  Autocomplete,
+  InputAdornment,
+  CircularProgress,
+} from '@mui/material';
 
 import { getAdmissionFormStepGroups } from '../form-step-groups';
 import { ADMISSION_FORM_LANGUAGES, AVAILABLE_ADMISSION_FORM_LANGUAGES } from '../form-languages';
@@ -34,11 +42,16 @@ export function FormBuilderDetailFields({
             label="Form Name *"
             {...formik.getFieldProps('name')}
             error={Boolean(nameConflictMessage || (formik.touched.name && formik.errors.name))}
-            helperText={
-              nameConflictMessage ||
-              (formik.touched.name && formik.errors.name) ||
-              (checkingName ? 'Checking name availability…' : undefined)
-            }
+            helperText={nameConflictMessage || (formik.touched.name && formik.errors.name)}
+            slotProps={{
+              input: {
+                endAdornment: checkingName && (
+                  <InputAdornment position="end">
+                    <CircularProgress size={16} aria-label="Checking form name availability" />
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
         </ShakingTextField>
       </Grid>

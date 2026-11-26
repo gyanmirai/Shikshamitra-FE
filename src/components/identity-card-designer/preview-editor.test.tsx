@@ -6,6 +6,51 @@ import { createIdentityCardPreset } from './presets';
 import { validateIdentityCardLayout } from './validation';
 
 describe('studio print-compatible preview', () => {
+  it('round-trips line strokes and bordered shapes while retaining legacy dividers', () => {
+    const layout = createIdentityCardPreset('classic-identity');
+    const line = {
+      id: 'divider',
+      type: 'line',
+      x: 10,
+      y: 10,
+      w: 40,
+      h: 3,
+      z: 0,
+      visible: true,
+    } as const;
+    layout.front.elements = [
+      { ...line, style: { backgroundColor: '#112233' } },
+      {
+        ...line,
+        id: 'dashed',
+        y: 20,
+        style: { borderStyle: 'dashed', borderColor: '#234567', borderWidth: 2 },
+      },
+      { ...line, id: 'dotted', y: 30, style: { borderStyle: 'dotted' } },
+      { ...line, id: 'explicit-solid', y: 40, style: { borderStyle: 'solid', borderWidth: 0 } },
+      {
+        ...line,
+        id: 'outline',
+        type: 'shape',
+        y: 50,
+        style: { shape: 'ellipse', borderStyle: 'dashed', borderColor: '#234567', borderWidth: 1 },
+      },
+    ];
+    const saved = JSON.parse(JSON.stringify(layout)) as typeof layout;
+    const { container } = render(<IdentityCardPreview layout={saved} />);
+    const [dashed, dotted, solid] = container.querySelectorAll('line');
+    expect(container.querySelector('rect[fill="#112233"]')).toHaveAttribute('height', '3');
+    expect(dashed).toHaveAttribute('stroke', '#234567');
+    expect(dashed).toHaveAttribute('stroke-width', '2');
+    expect(dashed).toHaveAttribute('stroke-dasharray', '8 4');
+    expect(dotted).toHaveAttribute('stroke-dasharray', '0.03 6');
+    expect(dotted).toHaveAttribute('stroke-linecap', 'round');
+    expect(solid).toHaveAttribute('stroke-width', '0');
+    expect(solid).not.toHaveAttribute('stroke-dasharray');
+    expect(container.querySelector('ellipse')).toHaveAttribute('stroke-dasharray', '4 2');
+    expect(validateIdentityCardLayout(saved)).toEqual([]);
+  });
+
   it('keeps design tokens out of a student card preview and ignores stale static text', () => {
     const layout = createIdentityCardPreset('classic-identity');
     const name = layout.front.elements.find((element) => element.fieldKey === 'StudentName')!;

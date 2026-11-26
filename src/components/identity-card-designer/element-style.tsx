@@ -2,23 +2,45 @@ import { Box, TextField } from '@mui/material';
 
 import { designerGrid, DesignerNumber, DesignerSelect, DesignerSwitch } from './controls';
 
-import type { IdentityCardElement } from './types';
+import type { IdentityCardElement, IdentityCardBorderStyle } from './types';
+
+const borderStyleOptions = [
+  { value: 'solid', label: 'Solid' },
+  { value: 'dashed', label: 'Dashed' },
+  { value: 'dotted', label: 'Dotted' },
+];
 
 export function ElementStyle({
   element,
   onChange,
   disabled,
+  borderStylesEnabled,
+  themeColor,
 }: {
   element: IdentityCardElement;
   onChange: (element: IdentityCardElement) => void;
   disabled?: boolean;
+  borderStylesEnabled?: boolean;
+  themeColor?: string;
 }) {
   const style = element.style ?? {};
   const dynamic = Boolean(element.fieldKey && element.fieldKey !== 'static');
+  const lineStrokeEnabled = borderStylesEnabled && element.type === 'line';
+  const showBorderStyle = lineStrokeEnabled || (borderStylesEnabled && element.type === 'shape');
+  const borderColor =
+    (lineStrokeEnabled ? style.backgroundColor : undefined) ??
+    (showBorderStyle ? themeColor : undefined) ??
+    '#FFFFFF';
   const update = (next: Partial<NonNullable<IdentityCardElement['style']>>) =>
     onChange({
       ...element,
-      style: { ...style, ...next },
+      style: {
+        ...style,
+        ...(showBorderStyle && (next.borderColor !== undefined || next.borderWidth !== undefined)
+          ? { borderStyle: style.borderStyle ?? 'solid' }
+          : {}),
+        ...next,
+      },
       paletteBindings: {
         ...element.paletteBindings,
         ...Object.fromEntries(
@@ -110,19 +132,31 @@ export function ElementStyle({
                 borderColor: 'Border colour',
               }[key]
             }
-            value={style[key] ?? (key === 'color' ? '#1C252E' : '#FFFFFF')}
+            value={style[key] ?? { color: '#1C252E', backgroundColor: '#FFFFFF', borderColor }[key]}
             onChange={(event) => update({ [key]: event.target.value })}
             disabled={disabled}
           />
         ))}
         <DesignerNumber
           label="Border width (canvas)"
-          value={style.borderWidth ?? 0}
+          value={style.borderWidth ?? (lineStrokeEnabled ? element.h : 0)}
           min={0}
+          max={showBorderStyle ? 20 : undefined}
           onChange={(borderWidth) => update({ borderWidth })}
           disabled={disabled}
         />
       </Box>
+      {showBorderStyle && (
+        <DesignerSelect
+          label="Border style"
+          value={style.borderStyle ?? 'solid'}
+          options={borderStyleOptions}
+          onChange={(borderStyle) =>
+            update({ borderStyle: borderStyle as IdentityCardBorderStyle })
+          }
+          disabled={disabled}
+        />
+      )}
       {element.type === 'photo' && (
         <DesignerSelect
           label="Photo shape"
@@ -134,13 +168,15 @@ export function ElementStyle({
           disabled={disabled}
         />
       )}
-      <DesignerNumber
-        label="Corner radius (canvas)"
-        value={style.borderRadius ?? 0}
-        min={0}
-        onChange={(borderRadius) => update({ borderRadius })}
-        disabled={disabled}
-      />
+      {(!lineStrokeEnabled || !style.borderStyle) && (
+        <DesignerNumber
+          label="Corner radius (canvas)"
+          value={style.borderRadius ?? 0}
+          min={0}
+          onChange={(borderRadius) => update({ borderRadius })}
+          disabled={disabled}
+        />
+      )}
     </>
   );
 }

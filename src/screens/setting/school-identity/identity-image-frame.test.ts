@@ -1,10 +1,7 @@
 import { it, expect, describe } from 'vitest';
+import { frameRectangle, DEFAULT_PLACEMENT } from 'src/components/image-frame/image-frame';
 
-import {
-  frameRectangle,
-  DEFAULT_PLACEMENT,
-  validateIdentityDimensions,
-} from './identity-image-frame';
+import { validateIdentityDimensions } from './identity-image-frame';
 
 describe('School Identity image dimensions and framing', () => {
   it.each([

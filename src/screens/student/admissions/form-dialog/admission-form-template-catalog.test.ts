@@ -14,6 +14,15 @@ import {
 } from './admission-form-template-catalog';
 
 describe('admission form template catalogue', () => {
+  it('creates the Inquiry campus question without persisting a builder instruction as help', () => {
+    const field = getSystemAdmissionFormTemplate('admission-inquiry')
+      .sections.flatMap((section) => section.fields)
+      .find((question) => question.code === 'CAMPUS_PREFERENCE');
+
+    expect(field?.label).toBe('Campus preference');
+    expect(field?.helpText).toBeUndefined();
+  });
+
   it('retains print settings when using a saved school form as a starter', () => {
     const source = {
       ...getAdmissionFormInitialValues(),

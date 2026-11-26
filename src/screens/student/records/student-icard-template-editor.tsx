@@ -2,6 +2,8 @@
 
 import type { IdCardTemplate } from 'src/redux/student/records/student-record-documents-api';
 
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomStepper from 'src/components/custom-stepper';
@@ -14,6 +16,7 @@ import {
   useUpdateRecordIdTemplateMutation,
 } from 'src/redux/student/records/student-record-documents-api';
 
+import { readStudentICardLayout } from './student-icard-json';
 import { StudentCardPreview } from './components/student-card-preview';
 import { StudentICardDesigner } from './components/student-icard-designer';
 import { StudentICardTemplateStep } from './components/student-icard-template-step';
@@ -57,6 +60,17 @@ export default function StudentICardTemplateEditor({
   const busy = brandingBusy || saveBusy;
   const nameError = nameTouched && !draft.name.trim();
   const dirty = JSON.stringify(draft) !== JSON.stringify(initialDraft);
+  const layout = designerOpen ? null : readStudentICardLayout(draft);
+  const portrait = (layout?.orientation ?? draft.orientation) === 'Vertical';
+  // The legacy PDF renderer uses 54 mm for the card's short edge.
+  const size =
+    draft.schemaVersion === 2
+      ? layout
+      : { widthMm: portrait ? 54 : 85.6, heightMm: portrait ? 85.6 : 54 };
+  const finishedSize =
+    size && [size.widthMm, size.heightMm].every((value) => Number.isFinite(value) && value > 0)
+      ? `${size.widthMm} × ${size.heightMm} mm`
+      : 'Finished size unavailable';
 
   useEffect(() => {
     onBusyChange(busy);
@@ -173,7 +187,7 @@ export default function StudentICardTemplateEditor({
             onChange={patchDraft}
           />
         ) : (
-          <Grid container spacing={2}>
+          <Grid container spacing={2} sx={{ maxWidth: 1200, mx: 'auto' }}>
             <Grid size={{ xs: 12, md: 7 }} sx={{ minWidth: 0 }}>
               <StudentICardTemplateStep
                 template={draft}
@@ -183,16 +197,30 @@ export default function StudentICardTemplateEditor({
               />
             </Grid>
             <Grid size={{ xs: 12, md: 5 }} sx={{ minWidth: 0 }}>
-              <FormSectionCard title="Template Preview">
-                <Box
-                  sx={{
-                    mx: 'auto',
-                    width: 1,
-                    maxWidth: draft.orientation === 'Vertical' ? 205 : 420,
-                  }}
-                >
-                  <StudentCardPreview template={draft} previewLegacyBack />
-                </Box>
+              <FormSectionCard
+                title="Template Preview"
+                aria-label="Template Preview"
+                icon={GlobalIcons.fullPreview}
+                descriptionTooltip="The preview uses sample fields. The size shown is the finished print size."
+              >
+                <Stack spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
+                  <Box sx={{ width: 1, maxWidth: portrait ? 176 : 320 }}>
+                    <StudentCardPreview template={draft} previewLegacyBack />
+                  </Box>
+                  <Stack
+                    direction="row"
+                    gap={1}
+                    alignItems="center"
+                    justifyContent="center"
+                    flexWrap="wrap"
+                    aria-live="polite"
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      {finishedSize}
+                    </Typography>
+                    <Label>{portrait ? 'Portrait' : 'Landscape'}</Label>
+                  </Stack>
+                </Stack>
               </FormSectionCard>
             </Grid>
           </Grid>

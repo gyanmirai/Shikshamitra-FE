@@ -11,7 +11,7 @@ import { FormBuilderField, FormBuilderFieldDragPreview } from './form-builder-fi
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 
-function mountField(format?: string, placeholder?: string) {
+function mountField(format?: string, placeholder?: string, code?: string) {
   const form = getBlankAdmissionFormInitialValues(1);
   const section = form.sections[0];
   const field = {
@@ -19,6 +19,7 @@ function mountField(format?: string, placeholder?: string) {
     label: format ? format[0].toUpperCase() + format.slice(1) : 'Country',
     validationJson: format ? JSON.stringify({ format }) : undefined,
     placeholder,
+    ...(code && { code }),
   };
   section.fields = [field];
   const onSelect = vi.fn();
@@ -48,6 +49,15 @@ function mountField(format?: string, placeholder?: string) {
 }
 
 describe('form builder location summaries', () => {
+  it('shows the Campus preference hint only as editor guidance', () => {
+    const { original } = mountField(undefined, undefined, 'CAMPUS_PREFERENCE');
+    const hint = 'Remove this field if your school has one campus.';
+
+    expect(screen.getByText(hint)).toBeVisible();
+    expect(original).not.toContain(hint);
+    expect(screen.getByTestId('form-values').textContent).toBe(original);
+  });
+
   it.each(['country', 'state', 'city'])(
     'shows the existing %s selector while retaining the field editor trigger',
     (format) => {

@@ -379,7 +379,6 @@ describe('Applications decision workspace', () => {
     expect(state.tableProps?.isRefreshing).toBe(true);
     expect(screen.getByText('Parth Patel')).toBeInTheDocument();
     expect(state.tableProps?.isLoading).toBe(false);
-    expect(state.tableProps?.refreshIndicator).not.toBe('skeleton');
   });
   it('uses the table body loader for the first fetch in a scope', () => {
     state.queryResult = { currentData: undefined, isLoading: true, isFetching: true };

@@ -25,6 +25,7 @@ import {
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { getAdmissionInquiryAccess } from './inquiry-access';
+import { ADMISSION_PAGE_SIZES } from './admission-page-sizes';
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import { InquiryTimeline } from './inquiry-management/inquiry-timeline';
@@ -435,7 +436,6 @@ export default function AdmissionInquiriesScreen() {
           isRefreshing={
             Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving
           }
-          refreshIndicator="linear"
           errorContent={
             isError && !skipList && !scopeLoading && !data?.items.length ? (
               <AdmissionQueryError onRetry={() => refetch()} />
@@ -475,7 +475,7 @@ export default function AdmissionInquiriesScreen() {
           page={page}
           rowsPerPage={rowsPerPage}
           defaultRowsPerPage={25}
-          rowsPerPageOptions={[10, 25, 100]}
+          rowsPerPageOptions={ADMISSION_PAGE_SIZES}
           onServerPagination={(nextPage, nextRowsPerPage) => {
             setPage(nextPage - 1);
             setRowsPerPage(nextRowsPerPage);

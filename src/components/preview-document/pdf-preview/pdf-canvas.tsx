@@ -13,6 +13,21 @@ const revealIn = keyframes({
   to: { opacity: 1 },
 });
 
+const pageButtonSx = {
+  border: 1,
+  borderColor: 'divider',
+  borderRadius: 1,
+  p: 0.75,
+  color: 'text.primary',
+  '&:hover': { bgcolor: 'action.hover' },
+  '&.Mui-disabled': {
+    color: 'action.disabled',
+    pointerEvents: 'auto',
+    cursor: 'not-allowed',
+    '&:hover': { bgcolor: 'transparent' },
+  },
+};
+
 export default function PdfCanvas({
   url,
   title,
@@ -102,7 +117,7 @@ export default function PdfCanvas({
       <IconButton
         size="small"
         aria-label="Previous page"
-        sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 0.75 }}
+        sx={pageButtonSx}
         disabled={pdf.loading || pdf.error || currentPage === 1}
         onClick={() => changePage(currentPage - 1)}
       >
@@ -129,7 +144,7 @@ export default function PdfCanvas({
       <IconButton
         size="small"
         aria-label="Next page"
-        sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 0.75 }}
+        sx={pageButtonSx}
         disabled={pdf.loading || pdf.error || currentPage >= pdf.pageCount}
         onClick={() => changePage(currentPage + 1)}
       >

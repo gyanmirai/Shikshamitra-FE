@@ -17,10 +17,19 @@ vi.mock('@mui/icons-material', async () => ({
   Close: (await import('@mui/icons-material/Close')).default,
 }));
 
-const renderDialog = (onSubmit = vi.fn().mockResolvedValue(true), onClose = vi.fn()) => {
+const renderDialog = (
+  onSubmit = vi.fn().mockResolvedValue(true),
+  onClose = vi.fn(),
+  beforeSubmit?: () => Promise<void>
+) => {
   render(
     <Provider store={configureStore({ reducer: { confirmPopup: () => ({ isChanges: false }) } })}>
-      <CollectLaterDialog busy={false} onClose={onClose} onSubmit={onSubmit} />
+      <CollectLaterDialog
+        busy={false}
+        onClose={onClose}
+        onSubmit={onSubmit}
+        beforeSubmit={beforeSubmit}
+      />
     </Provider>
   );
   return { onSubmit, onClose };
@@ -101,4 +110,34 @@ it('preserves the reason and permits retry after failure', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   expect(callback).toHaveBeenCalledTimes(2);
+});
+
+it('waits for the joining date save and keeps deferral open when it fails', async () => {
+  let fail!: (error: Error) => void;
+  const beforeSubmit = vi
+    .fn<() => Promise<void>>()
+    .mockImplementationOnce(
+      () =>
+        new Promise((_, reject) => {
+          fail = reject;
+        })
+    )
+    .mockResolvedValueOnce(undefined);
+  const { onClose, onSubmit } = renderDialog(undefined, undefined, beforeSubmit);
+  fireEvent.change(screen.getByRole('textbox', { name: /Reason/ }), {
+    target: { value: 'Pay during Onboarding.' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(beforeSubmit).toHaveBeenCalledOnce());
+  expect(onSubmit).not.toHaveBeenCalled();
+
+  await act(async () => fail(new Error('The joining date could not be saved. Try again.')));
+  expect(await screen.findByText('The joining date could not be saved. Try again.')).toBeVisible();
+  expect(screen.getByRole('textbox', { name: /Reason/ })).toHaveValue('Pay during Onboarding.');
+  expect(onSubmit).not.toHaveBeenCalled();
+  expect(onClose).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+  expect(beforeSubmit).toHaveBeenCalledTimes(2);
 });

@@ -4,11 +4,13 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useRef, useState } from 'react';
+import Button from '@mui/material/Button';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useRef, useState, createElement } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
+import { SavedAdmissionFormValidationError } from '../form-publish-validation';
 import { UnchangedAdmissionFormError } from '../../form-list/form-validation-errors';
 import { getAdmissionWizardSteps, getAdmissionWizardSchema } from '../form-wizard-model';
 import { getInquiryFormConfigurationIssues } from '../../admission-inquiry-field-bindings';
@@ -17,6 +19,8 @@ import {
   getAdmissionFormPrintSettings,
   getBlankAdmissionFormInitialValues,
 } from '../form-dialog-model';
+
+import type { BuilderIssueTarget } from '../form-builder-issue-navigation';
 
 type Props = {
   editing?: AdmissionForm | null;
@@ -36,6 +40,7 @@ export function useAdmissionFormWizard({
   canContinue,
 }: Props) {
   const [activeStep, setActiveStep] = useState(0);
+  const [publishIssueTarget, setPublishIssueTarget] = useState<BuilderIssueTarget>();
   const [publishBlock, setPublishBlock] = useState<{
     message: string;
     values: CreateUpdateAdmissionForm;
@@ -71,6 +76,22 @@ export function useAdmissionFormWizard({
     } catch (error) {
       if (error instanceof UnchangedAdmissionFormError) {
         setPublishBlock({ values, message: error.message });
+      } else if (error instanceof SavedAdmissionFormValidationError && error.target) {
+        const { target } = error;
+        shikshaMitraToast.error({
+          message: error.message,
+          alertProps: (toastId) => ({
+            action: createElement(Button, {
+              size: 'small',
+              color: 'inherit',
+              onClick: () => {
+                shikshaMitraToast.dismiss(toastId);
+                setPublishIssueTarget(target);
+                setActiveStep(1);
+              },
+            }, 'Go to field'),
+          }),
+        });
       } else {
         shikshaMitraToast.error({
           message: parseApiProblemDetail(error).detail || 'Failed to save form',
@@ -133,6 +154,8 @@ export function useAdmissionFormWizard({
   };
   return {
     activeStep,
+    publishIssueTarget,
+    clearPublishIssueTarget: () => setPublishIssueTarget(undefined),
     publishBlock,
     initialValues,
     validationSchema: getAdmissionWizardSchema(activeStep),

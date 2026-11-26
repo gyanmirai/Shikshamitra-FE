@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import type { Theme, SxProps } from '@mui/material/styles';
 import type { PaperProps, DialogProps, DialogContentProps } from '@mui/material';
 
 import { CONFIG } from 'src/config-global';
@@ -23,6 +24,7 @@ type CustomDialogProps = Omit<DialogProps, 'title'> & {
   titleInfo?: string;
   titleInfoPlacement?: 'bottom' | 'right';
   headerContent?: React.ReactNode;
+  headerSx?: SxProps<Theme>;
   children: React.ReactNode;
   paperProps?: PaperProps;
   hasForm?: boolean;
@@ -42,6 +44,7 @@ const CustomDialog = ({
   titleInfo,
   titleInfoPlacement = 'bottom',
   headerContent,
+  headerSx = [],
   children,
   paperProps,
   hasForm = true,
@@ -135,12 +138,15 @@ const CustomDialog = ({
             display="flex"
             alignItems="center"
             justifyContent="space-between"
-            sx={{
-              flexShrink: 0,
-              py: 2.1,
-              px: 2,
-              ...(!headerContent && { boxShadow: 'var(--shadows-3)' }),
-            }} // Increased padding for header
+            sx={[
+              {
+                flexShrink: 0,
+                py: 2.1,
+                px: 2,
+                ...(!headerContent && { boxShadow: 'var(--shadows-3)' }),
+              },
+              ...(Array.isArray(headerSx) ? headerSx : [headerSx]),
+            ]}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
               <Typography id={titleId} variant="h6" sx={{ fontWeight: 700 }}>

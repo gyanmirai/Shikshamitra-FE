@@ -52,7 +52,7 @@ function renderLockedCanvas(stepper = false, settings = false, purpose: 0 | 1 = 
   );
 }
 
-it('shows Inquiry field locks and keeps ordinary field actions', () => {
+it('shows Inquiry field locks and keeps ordinary field actions', async () => {
   renderLockedCanvas();
   expect(screen.getByRole('button', { name: 'Locked First name Field' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Locked Parent name Field' })).toBeVisible();
@@ -63,6 +63,9 @@ it('shows Inquiry field locks and keeps ordinary field actions', () => {
   expect(screen.getByRole('button', { name: 'Reorder First name' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Edit First name Field' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Edit School notes Field' })).toBeEnabled();
+  await userEvent
+    .setup()
+    .click(screen.getByRole('button', { name: 'More Actions For Student Details Section' }));
   expect(screen.getByRole('button', { name: 'Delete Student Details Section' })).toBeDisabled();
 });
 
@@ -100,10 +103,13 @@ it('edits core labels and translations while its structure and required state st
   });
 });
 
-it('protects Registration core fields and their containing section', () => {
+it('protects Registration core fields and their containing section', async () => {
   renderLockedCanvas(false, false, 1);
   expect(screen.getByRole('button', { name: 'Locked First name Field' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Edit First name Field' })).toBeEnabled();
+  await userEvent
+    .setup()
+    .click(screen.getByRole('button', { name: 'More Actions For Student Details Section' }));
   expect(screen.getByRole('button', { name: 'Delete Student Details Section' })).toBeDisabled();
 });
 
@@ -122,5 +128,6 @@ it('retains core ownership after a renamed label is saved and reopened', async (
   expect(screen.getByRole('button', { name: 'Locked Child given name Field' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Edit Child given name Field' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Reorder Child given name' })).toBeEnabled();
+  await user.click(screen.getByRole('button', { name: 'More Actions For Student Details Section' }));
   expect(screen.getByRole('button', { name: 'Delete Student Details Section' })).toBeDisabled();
 });

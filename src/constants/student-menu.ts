@@ -57,6 +57,7 @@ export const studentPaths = {
   records: {
     root: '/student/profile',
     directory: '/student/records/directory',
+    birthdays: '/student/records/birthdays',
     houseManagement: '/student/records/houses',
     changes: '/student/records/changes',
     documents: '/student/records/documents',
@@ -69,6 +70,7 @@ export const studentPaths = {
       transitions: '/student/records/settings/transitions',
       access: '/student/records/settings/access',
       iCardTemplates: '/student/records/settings/i-card-templates',
+      createHouse: '/student/records/settings/create-house',
     },
     studentList: '/student/profile',
     studentICard: '/student/student-i-card',
@@ -132,6 +134,7 @@ export const studentPermissions = {
   records: {
     root: [
       `${defaultStudentPermissionName}Records.StudentList.View`,
+      `${defaultStudentPermissionName}Records.Birthdays.View`,
       `${defaultStudentPermissionName}Records.HouseManagement.View`,
       `${defaultStudentPermissionName}Records.StudentICard.View`,
       `${defaultStudentPermissionName}Records.Certificates.View`,
@@ -139,6 +142,8 @@ export const studentPermissions = {
     ],
     studentList: `${defaultStudentPermissionName}Records.StudentList.View`,
     manageStudent: `${defaultStudentPermissionName}Records.StudentList.Add`,
+    birthdays: `${defaultStudentPermissionName}Records.Birthdays.View`,
+    birthdayOfficeScope: `${defaultStudentPermissionName}Records.Birthdays.OfficeScope.View`,
     houseManagement: `${defaultStudentPermissionName}Records.HouseManagement.View`,
     manageHouseManagement: `${defaultStudentPermissionName}Records.HouseManagement.Add`,
     deleteHouseManagement: `${defaultStudentPermissionName}Records.HouseManagement.Delete`,
@@ -149,6 +154,7 @@ export const studentPermissions = {
     settingsWorkspace: [
       `${defaultStudentPermissionName}Records.Settings.View`,
       `${defaultStudentPermissionName}Records.StudentICard.View`,
+      `${defaultStudentPermissionName}Records.HouseManagement.View`,
     ],
     changes: `${defaultStudentPermissionName}Records.Changes.View`,
     transitions: `${defaultStudentPermissionName}Records.Transitions.View`,
@@ -354,6 +360,11 @@ const studentModule = () => ({
           icon: menuIconView('mdi:folder-account-outline'),
           permissionChildren: [
             { title: 'Student List', permissionName: studentPermissions.records.studentList },
+            { title: 'Birthday', permissionName: studentPermissions.records.birthdays },
+            {
+              title: 'Birthday office scope',
+              permissionName: studentPermissions.records.birthdayOfficeScope,
+            },
             {
               title: 'House Management',
               permissionName: studentPermissions.records.houseManagement,
@@ -379,6 +390,13 @@ const studentModule = () => ({
               shortcutKeyName: 'Alt+S+R+2',
               permissionName: studentPermissions.records.studentList,
               icon: menuIconView('mdi:format-list-bulleted'),
+            },
+            {
+              title: 'Birthday',
+              path: studentPaths.records.birthdays,
+              _action: 'student-birthdays',
+              permissionName: studentPermissions.records.birthdays,
+              icon: menuIconView('mdi:cake-variant-outline'),
             },
             {
               title: 'House Management',
@@ -420,10 +438,29 @@ const studentModule = () => ({
             },
             {
               title: 'Settings',
-              path: studentPaths.records.settingsSections.iCardTemplates,
+              path: studentPaths.records.settingsWorkspace,
               _action: 'student-records-settings',
-              permissionName: studentPermissions.records.studentICard,
+              permissionName: [
+                studentPermissions.records.studentICard,
+                studentPermissions.records.houseManagement,
+              ],
               icon: menuIconView('mdi:cog-outline'),
+              children: [
+                {
+                  title: 'I-Card Templates',
+                  path: studentPaths.records.settingsSections.iCardTemplates,
+                  _action: 'student-i-card-templates',
+                  permissionName: studentPermissions.records.studentICard,
+                  icon: menuIconView('mdi:card-account-details-outline'),
+                },
+                {
+                  title: 'Create House',
+                  path: studentPaths.records.settingsSections.createHouse,
+                  _action: 'student-create-house',
+                  permissionName: studentPermissions.records.houseManagement,
+                  icon: menuIconView('mdi:home-plus-outline'),
+                },
+              ],
             },
           ],
         },

@@ -3,6 +3,7 @@ import type { IdentityCardPhotoEdit } from 'src/components/identity-card-designe
 import { api } from 'src/redux/service';
 
 import { unwrapRecordsResult } from './student-records-api';
+import { studentDirectoryQueryParams } from './student-directory-query';
 import { documentTags, iCardRosterTag, iCardAssignmentTag } from './student-record-documents-api';
 
 import type { RecordsPage } from './student-records-types';
@@ -24,7 +25,18 @@ export type ICardAssignmentStudent = {
   studentName: string;
   grNumber?: string | null;
   divisionName?: string | null;
+  rollNumber?: number | null;
+  hasPhoto?: boolean;
   hasValidIssuedCard: boolean;
+};
+
+export type ICardRosterFilter = {
+  column: 'studentName' | 'grNumber' | 'rollNumber' | 'hasValidIssuedCard';
+  operator:
+    'contains' | 'equals' | 'startsWith' | 'endsWith' | 'greaterThan' | 'lessThan' | 'between';
+  value?: string;
+  min?: number;
+  max?: number;
 };
 
 type PageRequest = { skipCount: number; maxResultCount: number; search?: string };
@@ -35,7 +47,11 @@ type ClassListRequest = PageRequest & {
   mediumId: string;
   standardId?: string;
 };
-type RosterRequest = PageRequest & ClassContext & { divisionId?: string };
+export type ICardAssignmentRosterRequest = PageRequest &
+  ClassContext & {
+    divisionId?: string;
+    columnFilters?: ICardRosterFilter[];
+  };
 type AssignmentWrite = ClassContext & { templateId: string; concurrencyStamp?: string };
 type AssignmentDelete = ClassContext & { concurrencyStamp: string };
 export type AssignedICardRequest = ClassContext & {
@@ -52,17 +68,20 @@ export function isICardAssignmentConflict(error: unknown) {
   return typeof error === 'object' && error !== null && 'status' in error && error.status === 409;
 }
 
-const studentICardAssignmentApi = api.injectEndpoints({
+export const studentICardAssignmentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getICardAssignmentClasses: builder.query<RecordsPage<ICardAssignmentClass>, ClassListRequest>({
       query: (params) => ({ url: assignmentsUrl, params }),
       transformResponse: unwrapRecordsResult<RecordsPage<ICardAssignmentClass>>,
       providesTags: [iCardAssignmentTag],
     }),
-    getICardAssignmentRoster: builder.query<RecordsPage<ICardAssignmentStudent>, RosterRequest>({
+    getICardAssignmentRoster: builder.query<
+      RecordsPage<ICardAssignmentStudent>,
+      ICardAssignmentRosterRequest
+    >({
       query: ({ academicYearId, standardId, ...params }) => ({
         url: `${classUrl(academicYearId, standardId)}/roster`,
-        params,
+        params: studentDirectoryQueryParams(params),
       }),
       transformResponse: unwrapRecordsResult<RecordsPage<ICardAssignmentStudent>>,
       providesTags: [iCardRosterTag],

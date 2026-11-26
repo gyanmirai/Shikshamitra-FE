@@ -11,10 +11,16 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { FormBuilderDeleteUnit } from './form-builder-delete-unit';
 import { FormBuilderUnitSettings } from './form-builder-unit-settings';
+
+const sectionActionButtonSx = {
+  p: 0,
+  width: { xs: 44, sm: 30 },
+  height: { xs: 44, sm: 30 },
+};
 
 type Props = {
   section: AdmissionFormSection;
@@ -57,12 +63,15 @@ export function FormBuilderSectionHeader({
 }: Props) {
   const name = section.name || `Section ${sectionIndex + 1}`;
   const confirmDelete = useBoolean();
-  const actionsRef = useRef<HTMLDivElement>(null);
-  const wasEditing = useRef(settingsOpen);
+  const actions = usePopover();
+  const actionsId = `${contentId}-actions`;
+  const actionsRef = useRef<HTMLButtonElement>(null);
+  const managingSection = settingsOpen || confirmDelete.value;
+  const wasManagingSection = useRef(managingSection);
   useEffect(() => {
-    if (wasEditing.current && !settingsOpen) actionsRef.current?.querySelector('button')?.focus();
-    wasEditing.current = settingsOpen;
-  }, [settingsOpen]);
+    if (wasManagingSection.current && !managingSection) actionsRef.current?.focus();
+    wasManagingSection.current = managingSection;
+  }, [managingSection]);
   const finishEditing = () => {
     onToggleSettings();
   };
@@ -160,39 +169,67 @@ export function FormBuilderSectionHeader({
           </IconButton>
         </CustomTooltip>
       ) : (
-        <Box ref={actionsRef}>
-          <AdaptiveThreeDotsActions
-            directActionLimit={2}
-            collapseOnOverflow={false}
-            moreLabel={`More Actions For ${name} Section`}
-            sx={{ flexShrink: 0, gap: 0.5, '& .MuiIconButton-root': { width: 44, height: 44 } }}
-            actions={[
-              {
-                id: 'edit',
-                label: `Edit ${name} Section`,
-                icon: GlobalIcons.edit,
-                onClick: () => {
-                  onSelect();
-                  onToggleSettings();
-                },
-              },
-              {
-                id: 'delete',
-                label: `Delete ${name} Section`,
-                disabled: deleteDisabled,
-                tooltip: deleteDisabled
-                  ? 'This Section Contains Protected Core Fields.'
-                  : undefined,
-                icon: GlobalIcons.delete,
-                color: 'error.main',
-                onClick: () => {
-                  if (!deleteDisabled) confirmDelete.onTrue();
-                },
-              },
-            ]}
-          />
-        </Box>
+        <CustomTooltip title="More Actions">
+          <IconButton
+            ref={actionsRef}
+            size="small"
+            aria-label={`More Actions For ${name} Section`}
+            aria-haspopup="dialog"
+            aria-expanded={actions.open}
+            aria-controls={actions.open ? actionsId : undefined}
+            onClick={actions.onOpen}
+            sx={{ width: 44, height: 44, flexShrink: 0 }}
+          >
+            <Iconify icon="eva:more-vertical-fill" width={18} />
+          </IconButton>
+        </CustomTooltip>
       )}
+      <CustomPopover
+        open={actions.open && !readOnly && !settingsOpen}
+        onClose={actions.onClose}
+        anchorEl={actions.anchorEl}
+        slotProps={{
+          arrow: { placement: 'top-right' },
+          paper: { id: actionsId, role: 'dialog', 'aria-label': `Actions for ${name} section` },
+        }}
+      >
+        <Stack direction="row" spacing={0.5} sx={{ p: 0.5 }}>
+          <CustomTooltip title="Edit">
+            <IconButton
+              autoFocus
+              size="small"
+              aria-label={`Edit ${name} Section`}
+              sx={sectionActionButtonSx}
+              onClick={() => {
+                actions.onClose();
+                onSelect();
+                onToggleSettings();
+              }}
+            >
+              <Iconify icon={GlobalIcons.edit} width={16} />
+            </IconButton>
+          </CustomTooltip>
+          <CustomTooltip
+            title={deleteDisabled ? 'This Section Contains Protected Core Fields.' : 'Delete'}
+          >
+            <span>
+              <IconButton
+                size="small"
+                aria-label={`Delete ${name} Section`}
+                color="error"
+                disabled={deleteDisabled}
+                sx={sectionActionButtonSx}
+                onClick={() => {
+                  actions.onClose();
+                  confirmDelete.onTrue();
+                }}
+              >
+                <Iconify icon={GlobalIcons.delete} width={16} />
+              </IconButton>
+            </span>
+          </CustomTooltip>
+        </Stack>
+      </CustomPopover>
       <FormBuilderDeleteUnit
         name={name}
         unit="section"

@@ -298,6 +298,30 @@ export function AdmissionPrintHeaderEditor({
           formControlProps={{ fullWidth: true }}
         />
       </Stack>
+      {active.key === 'address' && (
+        <CustomSelect
+          label="Address layout"
+          size="small"
+          value={header.addressLayout}
+          options={[
+            { value: 'vertical', label: 'Vertical (stacked)' },
+            { value: 'horizontal', label: 'Horizontal (single line)' },
+          ]}
+          formControlProps={{ sx: { width: { xs: 1, sm: 240 } } }}
+          onChange={(value) =>
+            onChange({
+              ...settings,
+              advanced: {
+                ...settings.advanced,
+                header: {
+                  ...settings.advanced?.header,
+                  addressLayout: value === 'horizontal' ? 'horizontal' : 'vertical',
+                },
+              },
+            })
+          }
+        />
+      )}
       <Box
         ref={band}
         aria-label="Printable header"
@@ -323,7 +347,11 @@ export function AdmissionPrintHeaderEditor({
           const position = preview?.element === key ? preview.placement : element.placement;
           const isActive = active.key === key;
           const prominent = key === 'title' || key === 'schoolName';
-          const fontSize = prominent ? style.titleSize : style.baseSize;
+          const fontSize = prominent
+            ? style.titleSize
+            : key === 'address'
+              ? style.baseSize - 1
+              : style.baseSize;
           const photoUrl = key === 'photo' && photo.useSaved ? field?.imageUrl : undefined;
           return (
             <Box

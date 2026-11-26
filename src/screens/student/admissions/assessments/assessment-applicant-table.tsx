@@ -8,6 +8,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Checkbox, Typography, IconButton } from '@mui/material';
 
+import { ADMISSION_PAGE_SIZES } from '../admission-page-sizes';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { getPrimaryAssessmentAction } from './assessment-workbench-model';
 import { assessmentActionLabels, latestAssessmentAttempt } from './assessment-action-model';
@@ -326,6 +327,7 @@ export function AssessmentApplicantTable({
       tableContainerProps={{ sx: { height: 1 } }}
       isSearch
       isPagination
+      rowsPerPageOptions={ADMISSION_PAGE_SIZES}
       serverSidePagination
       serverSideSearch
       serverSideFilter

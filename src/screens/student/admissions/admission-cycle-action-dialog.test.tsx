@@ -38,7 +38,9 @@ vi.mock('src/redux/student/admissions/admission-cycles-api', () => ({
   useLazyGetAdmissionCycleImpactQuery: () => [impactHook.trigger, impactHook.state],
 }));
 
-vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} aria-hidden="true" />,
+}));
 
 const cycle: AdmissionCycle = {
   id: 'cycle-1',
@@ -67,6 +69,37 @@ const renderDelete = (onConfirm = vi.fn(), onClose = vi.fn()) =>
       onConfirm={onConfirm}
     />
   );
+
+it.each([
+  ['publish', 'Publish', 'Warning', 'mdi:publish'],
+  ['close', 'Close Cycle', 'Warning', 'mdi:lock-outline'],
+  ['reopen', 'Reopen Cycle', 'Success', 'mdi:lock-open-outline'],
+  ['archive', 'Archive', 'Warning', 'mdi:archive'],
+  ['delete', 'Delete', 'Error', 'solar:trash-bin-trash-bold'],
+] as const)('uses the standard title and action icon for %s', (action, name, severity, icon) => {
+  impactHook.state.isFetching = false;
+  impactHook.state.data = {
+    admissionCycleId: cycle.id,
+    linkedOfferingCount: 0,
+    activeOfferingCount: 0,
+    applicationCount: 0,
+  };
+  render(
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <AdmissionCycleActionDialog
+        action={action}
+        cycle={cycle}
+        validation={{ isValid: true, errors: [], warnings: [] }}
+        busy={false}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    </LocalizationProvider>
+  );
+
+  expect(screen.getByRole('dialog').querySelector(`.MuiSvgIcon-color${severity}`)).toBeVisible();
+  expect(screen.getByRole('button', { name }).querySelector(`[data-icon="${icon}"]`)).toBeVisible();
+});
 
 describe('admission cycle publish confirmation', () => {
   it('shows readiness checking in the unavailable Publish button and allows cancellation', () => {

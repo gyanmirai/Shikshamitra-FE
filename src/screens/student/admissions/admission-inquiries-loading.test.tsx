@@ -408,7 +408,6 @@ it('uses thin refresh progress and leaves handoff feedback to the affected row',
   expect(state.table.isLoading).toBe(false);
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
   expect(state.table.isRefreshing).toBe(true);
-  expect(state.table.refreshIndicator).toBe('linear');
   state.moving = true;
   view.rerender(<AdmissionInquiriesScreen />);
   expect(screen.getByText('QA Loading')).toBeInTheDocument();

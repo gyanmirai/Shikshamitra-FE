@@ -18,6 +18,7 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
+import { parseFieldConfiguration } from 'src/screens/student/admissions/form-dialog/form-field-presets';
 import { Box, Stack, Paper, Button, Divider, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { getVisibleAdmissionFormSteps } from 'src/screens/student/admissions/form-dialog/form-step-groups';
 import { getAdmissionSubmissionValidationErrors } from 'src/screens/student/admissions/admission-form-validation';
@@ -699,7 +700,23 @@ function ParentRegistration({ token }: { token: string }) {
                   saving={busy === 'save'}
                   submitting={false}
                   onChange={(code, value) => {
-                    if (editable && !locked && context.editableFieldCodes.includes(code)) {
+                    // The framed photo completes while its field still holds the interaction lock.
+                    const photoReady =
+                      readingPhoto &&
+                      form.definition.sections.some((section) =>
+                        section.fields.some(
+                          (field) =>
+                            field.code === code &&
+                            parseFieldConfiguration(field.validationJson).format === 'photo'
+                        )
+                      );
+                    if (
+                      editable &&
+                      !busy &&
+                      !validatingStep &&
+                      (!readingPhoto || photoReady) &&
+                      context.editableFieldCodes.includes(code)
+                    ) {
                       values.current = { ...values.current, [code]: value };
                       formik.setFieldValue(code, value, false);
                       setFieldErrors((previous) => ({ ...previous, [code]: '' }));

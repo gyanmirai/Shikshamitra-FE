@@ -57,12 +57,23 @@ export type SaveHouse = {
   logoUrl?: string | null;
   description?: string | null;
 };
-export type HouseAssignment = {
+export type SelectedHouseAssignment = {
   academicMediumId: string;
   divisionId: string;
   houseId: string | null;
   enrollmentIds: string[];
+  targetScope?: never;
+  includeAssigned?: never;
 };
+export type DivisionHouseAssignment = {
+  academicMediumId: string;
+  divisionId: string;
+  houseId: string;
+  targetScope: 'division';
+  includeAssigned?: boolean;
+  enrollmentIds?: never;
+};
+export type HouseAssignment = SelectedHouseAssignment | DivisionHouseAssignment;
 export type HouseAssignmentPreview = {
   previewToken: string;
   students: HouseStudent[];

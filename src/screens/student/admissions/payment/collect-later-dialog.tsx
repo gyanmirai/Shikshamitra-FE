@@ -18,10 +18,11 @@ import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-
 type Props = {
   busy: boolean;
   onClose: () => void;
+  beforeSubmit?: () => Promise<void>;
   onSubmit: (reason: string) => Promise<boolean>;
 };
 
-export function CollectLaterDialog({ busy, onClose, onSubmit }: Props) {
+export function CollectLaterDialog({ busy, onClose, beforeSubmit, onSubmit }: Props) {
   const router = useRouter();
   const submitting = useRef(false);
   const [error, setError] = useState<string>();
@@ -38,6 +39,7 @@ export function CollectLaterDialog({ busy, onClose, onSubmit }: Props) {
       submitting.current = true;
       setError(undefined);
       try {
+        if (beforeSubmit) await beforeSubmit();
         if (await onSubmit(reason.trim())) {
           helpers.resetForm();
           onClose();
@@ -46,8 +48,12 @@ export function CollectLaterDialog({ busy, onClose, onSubmit }: Props) {
             'Fee collection could not be deferred. Your reason is preserved. Review the application and try again.'
           );
         }
-      } catch {
-        setError('Fee collection could not be deferred. Your reason is preserved. Try again.');
+      } catch (failure) {
+        setError(
+          failure instanceof Error
+            ? failure.message
+            : 'Fee collection could not be deferred. Your reason is preserved. Try again.'
+        );
       } finally {
         submitting.current = false;
       }

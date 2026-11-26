@@ -7,6 +7,7 @@ import type { IdCardTemplate } from 'src/redux/student/records/student-record-do
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'src/routes/hooks';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
@@ -14,9 +15,9 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Alert, Button, Typography } from '@mui/material';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Link, Alert, Button, Typography } from '@mui/material';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
@@ -98,7 +99,33 @@ export default function StudentICardTemplates() {
   };
 
   const columns: IColumn[] = [
-    { id: 'name', label: 'Template', align: 'left', sticky: true, width: 260, minWidth: 220 },
+    {
+      id: 'name',
+      label: 'Template',
+      align: 'left',
+      rowHeader: true,
+      sticky: true,
+      stickyPosition: 'left',
+      stickyOnMobile: false,
+      width: 260,
+      minWidth: 220,
+      render: (_value, data) => {
+        const row = data as IdCardTemplate;
+        return (
+          <Link
+            component="button"
+            type="button"
+            color="inherit"
+            underline="hover"
+            aria-label={`Preview ${row.name}`}
+            onClick={() => openPreview(row)}
+            sx={{ typography: 'body2', textAlign: 'left', overflowWrap: 'anywhere' }}
+          >
+            {row.name}
+          </Link>
+        );
+      },
+    },
     { id: 'schoolName', label: 'School', align: 'left', width: 220, minWidth: 180 },
     { id: 'orientation', label: 'Orientation', align: 'left', width: 132, minWidth: 120 },
     {
@@ -112,8 +139,9 @@ export default function StudentICardTemplates() {
     {
       id: 'actions',
       label: 'Actions',
-      align: 'right',
+      align: 'left',
       sticky: true,
+      stickyPosition: 'right',
       width: 108,
       minWidth: 96,
       isSort: false,
@@ -124,20 +152,13 @@ export default function StudentICardTemplates() {
         return (
           <AdaptiveThreeDotsActions
             actions={[
-              {
-                id: 'view',
-                label: 'View',
-                ariaLabel: `View ${row.name}`,
-                icon: 'mdi:eye-outline',
-                onClick: () => openPreview(row),
-              },
               ...(canEdit
                 ? [
                     {
                       id: 'edit',
                       label: 'Edit',
                       ariaLabel: `Edit ${row.name}`,
-                      icon: 'mdi:pencil-outline',
+                      icon: GlobalIcons.edit,
                       onClick: () => openEdit(row),
                     },
                   ]
@@ -148,7 +169,7 @@ export default function StudentICardTemplates() {
                       id: 'delete',
                       label: 'Delete',
                       ariaLabel: `Delete ${row.name}`,
-                      icon: 'mdi:trash-can-outline',
+                      icon: GlobalIcons.delete,
                       color: 'error.main',
                       disabled: row.selectionRestricted,
                       tooltip: row.selectionRestricted
@@ -165,7 +186,7 @@ export default function StudentICardTemplates() {
             collapseOnOverflow={false}
             placement="right-top"
             moreLabel={`More actions for ${row.name}`}
-            sx={{ justifyContent: 'flex-end' }}
+            sx={{ justifyContent: 'flex-start' }}
           />
         );
       },
@@ -198,9 +219,10 @@ export default function StudentICardTemplates() {
               variant="contained"
               size="small"
               startIcon={<Iconify icon="mdi:plus" />}
+              aria-label="Create I-Card template"
               onClick={openCreate}
             >
-              Create I-Card template
+              I-Card template
             </Button>
           )
         }
@@ -210,13 +232,18 @@ export default function StudentICardTemplates() {
       ) : (
         <CustomizableTable
           tableId="student-icard-templates"
+          tableTitle="I-Card Templates"
           columns={columns}
           data={templates.isError ? [] : (templates.currentData ?? [])}
+          getRowAction={(data) => {
+            const row = data as IdCardTemplate;
+            return { label: `Preview ${row.name}`, onClick: () => openPreview(row) };
+          }}
           isLoading={templates.isLoading}
           isRefreshing={
             templates.isFetching && Boolean(templates.currentData) && !templates.isError
           }
-          showExport={false}
+          showExport
           isPagination
           isSearch
           noDataText="No I-Card templates found."

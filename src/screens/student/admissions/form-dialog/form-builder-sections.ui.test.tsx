@@ -5,13 +5,15 @@ import { it, vi, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { FormBuilderSections } from './form-builder-sections';
 import { getBlankAdmissionFormInitialValues } from './form-dialog-model';
 
-vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <svg aria-hidden="true" data-icon={icon} />,
+}));
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   useGetAdmissionFormSystemFieldsQuery: () => ({
     data: [],
@@ -128,7 +130,7 @@ it('keeps earlier sections visible when adding and selecting another section in 
 }, 15000);
 
 it.each([0, 1] as const)(
-  'edits the section heading directly for purpose %s while preserving existing repeatable and conditional metadata',
+  'edits the section heading for purpose %s from the icon menu while preserving existing metadata',
   async (purpose) => {
     const user = userEvent.setup({ delay: null });
     const values = getBlankAdmissionFormInitialValues();
@@ -141,7 +143,20 @@ it.each([0, 1] as const)(
       visibilityRuleJson: '{"field":"HAS_SIBLING","equals":true}',
     });
     renderBuilder(values);
-    await user.click(screen.getByRole('button', { name: 'Edit Student Details Section' }));
+    const actions = screen.getByRole('button', {
+      name: 'More Actions For Student Details Section',
+    });
+    actions.focus();
+    await user.keyboard('{Enter}');
+    const popover = screen.getByRole('dialog', { name: 'Actions for Student Details section' });
+    const edit = within(popover).getByRole('button', { name: 'Edit Student Details Section' });
+    const remove = within(popover).getByRole('button', { name: 'Delete Student Details Section' });
+    expect(within(popover).getAllByRole('button')).toHaveLength(2);
+    expect(popover).not.toHaveTextContent(/Edit|Delete/);
+    expect(edit.querySelector('svg')).toHaveAttribute('data-icon', 'solar:pen-bold');
+    expect(remove.querySelector('svg')).toHaveAttribute('data-icon', 'solar:trash-bin-trash-bold');
+    await waitFor(() => expect(edit).toHaveFocus());
+    await user.keyboard('{Enter}');
     expect(screen.queryByRole('textbox', { name: 'Section name *' })).not.toBeInTheDocument();
     expect(screen.queryByText('Advanced Settings')).not.toBeInTheDocument();
     expect(screen.queryByText('Allow multiple entries')).not.toBeInTheDocument();
@@ -150,7 +165,9 @@ it.each([0, 1] as const)(
     await user.paste('Student information');
     await user.keyboard('{Enter}');
     expect(screen.getByRole('heading', { name: 'Student information' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Edit Student information Section' })).toHaveFocus();
+    expect(
+      screen.getByRole('button', { name: 'More Actions For Student information Section' })
+    ).toHaveFocus();
     expect(savedForm().sections[0]).toMatchObject({
       name: 'Student information',
       code: values.sections[0].code,
@@ -181,7 +198,7 @@ it('keeps a core section protected when composition has moved its fields into an
 });
 
 it.each([0, 1] as const)(
-  'confirms direct section deletion for purpose %s and preserves the draft on cancel',
+  'confirms section deletion for purpose %s and preserves the draft on cancel',
   async (purpose) => {
     const user = userEvent.setup({ delay: null });
     const values = { ...getBlankAdmissionFormInitialValues(), purpose };
@@ -191,15 +208,24 @@ it.each([0, 1] as const)(
     expect(
       screen.queryByRole('button', { name: 'Actions For Student Details section' })
     ).not.toBeInTheDocument();
-    const remove = screen.getByRole('button', { name: 'Delete Student Details Section' });
-    await user.click(remove);
+    const actions = screen.getByRole('button', {
+      name: 'More Actions For Student Details Section',
+    });
+    const openDelete = async () => {
+      await user.click(actions);
+      await user.click(screen.getByRole('button', { name: 'Delete Student Details Section' }));
+    };
+    expect(
+      screen.queryByRole('button', { name: 'Delete Student Details Section' })
+    ).not.toBeInTheDocument();
+    await openDelete();
     expect(screen.getByRole('dialog', { name: 'Delete section?' })).toBeVisible();
     expect(savedForm()).toEqual(values);
     expect(screen.getByTestId('form-dirty')).toHaveTextContent('false');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    await waitFor(() => expect(remove).toHaveFocus());
+    await waitFor(() => expect(actions).toHaveFocus());
     expect(savedForm()).toEqual(values);
-    await user.click(remove);
+    await openDelete();
     await user.click(screen.getByRole('button', { name: 'Delete section' }));
     expect(savedForm().sections).toEqual([]);
     expect(screen.getByTestId('form-dirty')).toHaveTextContent('true');

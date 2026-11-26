@@ -20,6 +20,7 @@ import {
   useGetAdmissionPipelineOptionsQuery,
 } from 'src/redux/student/admissions/admission-pipeline-api';
 
+import { ADMISSION_PAGE_SIZES } from './admission-page-sizes';
 import { AdmissionQueryError } from './admission-query-error';
 import { getAdmissionApplicationStatusLabel } from './application-status';
 import AdmissionApplicationDetailScreen from './admission-application-detail';
@@ -410,7 +411,7 @@ export default function AdmissionInquiryPipelineScreen() {
               page={state.page}
               rowsPerPage={state.rowsPerPage}
               defaultRowsPerPage={25}
-              rowsPerPageOptions={[10, 25, 100]}
+              rowsPerPageOptions={ADMISSION_PAGE_SIZES}
               isPagination
               onServerPagination={(page, size) =>
                 updateInteractive(

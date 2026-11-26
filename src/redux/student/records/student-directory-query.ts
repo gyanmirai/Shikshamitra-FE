@@ -1,6 +1,4 @@
-import type { StudentDirectoryInput } from './student-records-types';
-
-export function studentDirectoryQueryParams(input: StudentDirectoryInput): URLSearchParams {
+export function studentDirectoryQueryParams(input: object): URLSearchParams {
   const params = new URLSearchParams();
   Object.entries(input).forEach(([key, value]) => {
     if (key === 'columnFilters' && Array.isArray(value)) {

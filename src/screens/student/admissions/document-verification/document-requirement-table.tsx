@@ -10,6 +10,7 @@ import { Stack, Typography } from '@mui/material';
 import { useResponsive } from 'src/hooks/use-responsive';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { ADMISSION_PAGE_SIZES } from '../admission-page-sizes';
 import { DocumentTableActions } from './document-table-actions';
 import { DocumentStatusLabel, documentStatusLabels } from './document-status';
 import { getDocumentTableFile, getDocumentTableFormat } from './document-table-model';
@@ -139,7 +140,7 @@ export function DocumentRequirementTable({
       isLoading={isLoading}
       isPagination
       defaultRowsPerPage={25}
-      rowsPerPageOptions={[10, 25, 100]}
+      rowsPerPageOptions={ADMISSION_PAGE_SIZES}
       isFilter
       searchFieldProps={{
         placeholder: 'Search Documents...',

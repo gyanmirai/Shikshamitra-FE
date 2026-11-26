@@ -261,7 +261,6 @@ export function AssessmentSessionsPanel({
           columns={columns}
           isLoading={isLoading}
           isRefreshing={isFetching && !isLoading}
-          refreshIndicator="linear"
           isSearch
           showColumns
           showExport

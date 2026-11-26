@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
+import type { IdCardTemplate } from 'src/redux/student/records/student-record-documents-api';
 
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -10,9 +11,16 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { screen, within, waitFor, fireEvent, render as testingRender } from '@testing-library/react';
 
 import StudentICardBuilder from './student-icard-builder';
+import { createStudentICardTemplate } from './student-icard-design';
 import { StudentCardPreview } from './components/student-card-preview';
+import StudentICardTemplateEditor from './student-icard-template-editor';
 
-const store = configureStore({ reducer: { confirmPopup: () => ({ isChanges: false }) } });
+const store = configureStore({
+  reducer: {
+    auth: () => ({ permissions: [], permissionsInitialized: true }),
+    confirmPopup: () => ({ isChanges: false }),
+  },
+});
 const render = (ui: ReactNode) => testingRender(ui, {
   wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
 });
@@ -174,6 +182,19 @@ const nextStep = () =>
       .getAllByRole('button', { name: 'Next' })
       .find((button) => !button.hasAttribute('disabled'))!
   );
+const renderTemplateEditor = (initialTemplate: IdCardTemplate | null = null) =>
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <StudentICardTemplateEditor
+        initialTemplate={initialTemplate}
+        canEdit
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+        onBusyChange={vi.fn()}
+        onDirtyChange={vi.fn()}
+      />
+    </ThemeProvider>
+  );
 const preparePreviews = () =>
   mocks.preview.mockResolvedValue(
     selectedStudents.map((student) => ({
@@ -257,9 +278,9 @@ it('measures the legacy preview when switching from Classic Identity', async () 
   });
 });
 
-it('updates the live preview name and Classic Identity orientation from Template Settings', () => {
+it('updates the live preview name and Classic Identity orientation from Template Details', () => {
   renderDirectory({ initialStudents: undefined, initialTemplate: null });
-  const settings = within(screen.getByRole('region', { name: 'Template Settings' }));
+  const settings = within(screen.getByRole('region', { name: 'Template Details' }));
   const preview = within(screen.getByRole('region', { name: 'Live Preview' }));
   fireEvent.change(settings.getByRole('textbox', { name: /Template name/ }), {
     target: { value: 'Student cards 2026' },
@@ -272,6 +293,45 @@ it('updates the live preview name and Classic Identity orientation from Template
     'viewBox',
     '0 0 270 428'
   );
+});
+
+it('puts the template name and orientation before the base templates', () => {
+  renderTemplateEditor();
+  const details = screen.getByRole('region', { name: 'Template Details' });
+  const presets = screen.getByRole('region', { name: 'Choose a Base Template' });
+  expect(details.compareDocumentPosition(presets)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  expect(within(details).getByRole('textbox', { name: /Template name/ })).toBeRequired();
+  expect(within(details).getByRole('group', { name: 'Card orientation' })).toBeVisible();
+  expect(within(presets).getAllByRole('button', { pressed: true })).toHaveLength(1);
+  expect(within(presets).getByRole('button', { name: /Classic Identity/ })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+});
+
+it('displays saved physical dimensions and follows presets and orientation in the template preview', () => {
+  const configured = createStudentICardTemplate();
+  const layout = JSON.parse(configured.layoutJson!);
+  renderTemplateEditor({
+    ...configured,
+    name: 'Custom student card',
+    layoutJson: JSON.stringify({ ...layout, widthMm: 84.75, heightMm: 55.25 }),
+  });
+  const preview = within(screen.getByRole('region', { name: 'Template Preview' }));
+  expect(preview.getByText('84.75 × 55.25 mm')).toBeVisible();
+  expect(preview.getByText('Landscape')).toBeVisible();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Vertical' }));
+  expect(preview.getByText('55.25 × 84.75 mm')).toBeVisible();
+  expect(preview.getByText('Portrait')).toBeVisible();
+
+  fireEvent.click(screen.getByRole('button', { name: /Formal Student/ }));
+  expect(preview.getByText('85.6 × 54 mm')).toBeVisible();
+  expect(preview.getByText('Landscape')).toBeVisible();
+
+  fireEvent.click(screen.getByRole('button', { name: /Vertical Badge/ }));
+  expect(preview.getByText('54 × 85.6 mm')).toBeVisible();
+  expect(preview.getByText('Portrait')).toBeVisible();
 });
 
 it('shows both sides of each preset and previews orientation while a blank name blocks Next and Save', () => {
@@ -535,12 +595,15 @@ it('shows a required field error instead of crashing when a template has no name
     </ThemeProvider>
   );
 
-  expect(await screen.findByRole('textbox', { name: /Template name/ })).toHaveValue('');
-  expect(screen.getByText('Name this design so you can find and reuse it.')).toBeVisible();
+  const name = await screen.findByRole('textbox', { name: /Template name/ });
+  expect(name).toHaveValue('');
+  expect(name).toBeRequired();
+  expect(name).not.toHaveAttribute('aria-invalid', 'true');
 
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
   expect(screen.getByText('Template name is required.')).toBeVisible();
+  expect(name).toHaveAttribute('aria-invalid', 'true');
   expect(mocks.save).not.toHaveBeenCalled();
 });
 

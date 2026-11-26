@@ -14,6 +14,12 @@ import {
   getFormikBuilderIssueTarget,
 } from './form-builder-issue-navigation';
 import {
+  addressOrderMessage,
+  addressMissingMessage,
+  getAddressLocationField,
+  getAddressDependencyChecks,
+} from './form-address-dependencies';
+import {
   isClassInterestQuestion,
   duplicateClassInterestMessage,
   classInterestConfigurationValid,
@@ -26,6 +32,27 @@ type StudentFieldCatalogue = {
   isLoading?: boolean;
   isError?: boolean;
 };
+
+export function getAddressBuilderIssues(form: CreateUpdateAdmissionForm): BuilderIssue[] {
+  const { missing, order } = getAddressDependencyChecks(form);
+  const missingIds = new Set(missing.map(({ field }) => field.id));
+  const fields = form.sections.flatMap((section) => section.fields);
+  const issues = missing.map(({ field, kind }) => ({
+    message: addressMissingMessage(kind, field.label.trim() || (kind === 'city' ? 'City' : 'State')),
+    fieldId: field.id,
+    target: getBuilderIssueTarget(form, { fieldId: field.id, settingPath: '.validationJson' }),
+  }));
+  new Set(order.map((issue) => issue.fieldId)).forEach((fieldId) => {
+    if (missingIds.has(fieldId)) return;
+    const label = fields.find((field) => field.id === fieldId)?.label.trim();
+    issues.push({
+      message: label ? `${addressOrderMessage} Check the position of ${label}.` : addressOrderMessage,
+      fieldId,
+      target: getBuilderIssueTarget(form, { fieldId }),
+    });
+  });
+  return issues;
+}
 
 export function getBuilderIssues(
   form: CreateUpdateAdmissionForm,
@@ -271,22 +298,8 @@ export function getBuilderIssues(
       )
   );
   fields.forEach((field) => {
+    if (field.fieldType === 12 || getAddressLocationField(field)) return;
     const configuration = parseFieldConfiguration(field.validationJson);
-    if (configuration.format === 'state' && !configuration.countryField)
-      issues.push({
-        message: `${field.label} needs a Country field.`,
-        fieldId: field.id,
-        target: targetForField(field.id, 'validationJson'),
-      });
-    if (
-      configuration.format === 'city' &&
-      (!configuration.countryField || !configuration.stateField)
-    )
-      issues.push({
-        message: `${field.label} needs Country and State fields.`,
-        fieldId: field.id,
-        target: targetForField(field.id, 'validationJson'),
-      });
     [configuration.countryField, configuration.stateField]
       .filter((reference): reference is string => Boolean(reference))
       .filter((reference) => !knownCodes.has(reference.toUpperCase()))
@@ -298,6 +311,7 @@ export function getBuilderIssues(
         })
       );
   });
+  issues.push(...getAddressBuilderIssues(form));
   return issues.map((issue) => ({
     ...issue,
     target: issue.target ?? getBuilderIssueTarget(form, { fieldId: issue.fieldId }),

@@ -1,11 +1,15 @@
-import { useId } from 'react';
+import type { Dayjs } from 'dayjs';
+
+import { useId, useRef } from 'react';
 import { parseDateOnly } from 'src/utils/date-only';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { skeletonReducedMotionSx } from 'src/theme/styles/skeleton';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { renderDateViewCalendar } from '@mui/x-date-pickers/dateViewRenderers';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
+import DatePickerCalendarHeader from 'src/components/date-picker-calendar-header';
 import { Stack, Button, Skeleton, FormLabel, TextField, Typography } from '@mui/material';
 
 import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
@@ -15,11 +19,17 @@ import type { useAdmissionJoiningDate } from './use-admission-joining-date';
 export function AdmissionJoiningDateField({
   controller,
   disabled,
+  compact = false,
+  onDateCommit,
 }: {
   controller: ReturnType<typeof useAdmissionJoiningDate>;
   disabled: boolean;
+  compact?: boolean;
+  onDateCommit?: (value: Dayjs | null) => void;
 }) {
   const fieldId = useId();
+  const typedDate = useRef<Dayjs | null | undefined>(undefined);
+  const calendarOpen = useRef(false);
   const { state, query, value, error, stale, previewPending, previewQuery } = controller;
   if (!state && (query.isLoading || query.isFetching))
     return (
@@ -55,9 +65,11 @@ export function AdmissionJoiningDateField({
       </Stack>
     );
   const readOnly = state.isLocked || !state.canEdit;
+  const purpose = 'Used to calculate fees and any proration.';
+  const readOnlyReason = state.lockReason || 'This joining date is read-only.';
   return (
-    <Stack spacing={1} sx={skeletonReducedMotionSx}>
-      <Stack direction="row" alignItems="center">
+    <Stack spacing={compact ? 0.5 : 1} sx={skeletonReducedMotionSx}>
+      <Stack direction="row" alignItems="center" spacing={compact ? 0.5 : 0}>
         <FormLabel
           id={`${fieldId}-label`}
           htmlFor={fieldId}
@@ -70,14 +82,16 @@ export function AdmissionJoiningDateField({
         <InfoTooltipIcon
           label="About Actual Joining Date"
           title={
-            readOnly
-              ? state.lockReason ||
-                'Registration and Onboarding share this saved joining date. An authorized user can confirm it before fees are prepared.'
-              : 'Registration and Onboarding share this date. Finance uses it to calculate fees. The payment date is separate.'
+            compact
+              ? 'Use the date the student started attending school. This can differ from the day you collect payment.'
+              : readOnly
+                ? state.lockReason ||
+                  'Registration and Onboarding share this saved joining date. An authorized user can confirm it before fees are prepared.'
+                : 'Registration and Onboarding share this date. Finance uses it to calculate fees. The payment date is separate.'
           }
         />
       </Stack>
-      {readOnly ? (
+      {readOnly && !compact ? (
         <TextField
           id={fieldId}
           value={value?.isValid() ? value.format(ADMISSION_DATE_FORMAT) : '—'}
@@ -89,26 +103,73 @@ export function AdmissionJoiningDateField({
         <ShakingTextField
           error={Boolean(error)}
           onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) controller.blur();
+            if (calendarOpen.current || event.currentTarget.contains(event.relatedTarget)) return;
+            controller.blur();
+            if (typedDate.current !== undefined) {
+              const next = typedDate.current;
+              typedDate.current = undefined;
+              onDateCommit?.(next);
+            }
           }}
         >
           <DatePicker
             format="DD/MM/YYYY"
+            views={compact ? ['year', 'month', 'day'] : undefined}
+            openTo={compact ? 'day' : undefined}
+            slots={compact ? { calendarHeader: DatePickerCalendarHeader } : undefined}
             value={value}
             maxDate={parseDateOnly(state.academicYearEndDate) ?? undefined}
-            onChange={controller.change}
+            onChange={(next, context) => {
+              // The field can publish changes without a source in its event context.
+              typedDate.current =
+                !calendarOpen.current && context.source !== 'view' ? next : undefined;
+              controller.change(next);
+            }}
+            onOpen={() => {
+              calendarOpen.current = true;
+            }}
+            onClose={() => {
+              calendarOpen.current = false;
+            }}
+            closeOnSelect={onDateCommit ? true : undefined}
+            viewRenderers={
+              onDateCommit
+                ? {
+                    day: (props) =>
+                      renderDateViewCalendar({
+                        ...props,
+                        onChange: (next, selectionState, view) => {
+                          props.onChange?.(next, selectionState, view);
+                          if (view === 'day' && selectionState === 'finish') {
+                            typedDate.current = undefined;
+                            onDateCommit(next);
+                          }
+                        },
+                      }),
+                  }
+                : undefined
+            }
+            readOnly={readOnly}
             disabled={disabled || query.isFetching || controller.saving}
             slotProps={{
+              ...(onDateCommit && { actionBar: { actions: [] } }),
               textField: {
                 id: fieldId,
                 InputProps: { 'aria-labelledby': `${fieldId}-label` },
                 name: 'actualJoiningDate',
-                required: true,
+                required: !readOnly,
                 fullWidth: true,
                 size: 'small',
                 error: Boolean(error),
                 helperText:
-                  error || (value === null ? 'Required before collecting fees.' : undefined),
+                  error ||
+                  (compact
+                    ? readOnly
+                      ? readOnlyReason
+                      : purpose
+                    : value === null
+                      ? 'Required before collecting fees.'
+                      : undefined),
               },
             }}
           />

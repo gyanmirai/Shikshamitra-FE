@@ -37,6 +37,25 @@ const fields = (model: ReturnType<typeof buildAdmissionPrintDocument>) =>
   );
 
 describe('Registration print document', () => {
+  it('keeps builder hints out of the PDF model while preserving applicant help', () => {
+    const model = buildAdmissionPrintDocument({
+      definition: definition([
+        section('MAIN', [
+          question('CAMPUS_PREFERENCE', {
+            helpText: 'Remove this field if your school has one campus.',
+          }),
+          question('ALTERNATE_CAMPUS', { helpText: 'Choose your preferred campus.' }),
+        ]),
+      ]),
+      values: {},
+      mode: 'blank',
+    });
+    expect(fields(model).map((field) => field.helpText)).toEqual([
+      undefined,
+      'Choose your preferred campus.',
+    ]);
+  });
+
   it('prints the flagged single-page Registration and Inquiry questions in one group', () => {
     const registrationPage = {
       stepId: 'registration-page',

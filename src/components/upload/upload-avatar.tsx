@@ -2,10 +2,12 @@ import Webcam from 'react-webcam';
 import Box from '@mui/material/Box';
 import { varAlpha } from 'src/theme/styles';
 import { useDropzone } from 'react-dropzone';
+import base64ToFile from 'src/utils/base64ToFile';
 import Typography from '@mui/material/Typography';
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Menu,
+  Alert,
   Stack,
   Dialog,
   Button,
@@ -18,7 +20,6 @@ import {
   ListItemText,
   DialogActions,
   DialogContent,
-  CircularProgress,
 } from '@mui/material';
 
 import { Image } from '../image';
@@ -53,9 +54,9 @@ export function UploadAvatar({
 
   const [preview, setPreview] = useState('');
   const [webcamOpen, setWebcamOpen] = useState(false);
-  const [capturing, setCapturing] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [webcamReady, setWebcamReady] = useState(false);
+  const [webcamError, setWebcamError] = useState('');
   const [viewOpen, setViewOpen] = useState(false);
   const webcamRef = useRef<Webcam>(null);
 
@@ -71,26 +72,28 @@ export function UploadAvatar({
   useEffect(() => {
     if (typeof value === 'string') {
       setPreview(value);
-    } else if (value instanceof File) {
-      setPreview(URL.createObjectURL(value));
+      return undefined;
     }
+    if (value instanceof File) {
+      const url = URL.createObjectURL(value);
+      setPreview(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreview('');
+    return undefined;
   }, [value]);
 
-  const handleCapture = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot();
-    if (imageSrc && other.onDrop) {
-      setCapturing(true);
-      // Convert base64 data URL to a File object so onDrop works as expected
-      fetch(imageSrc)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const file = new File([blob], `webcam-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
-          other.onDrop?.([file], [], null as any);
-          setWebcamOpen(false);
-        })
-        .finally(() => setCapturing(false));
+  const handleCapture = () => {
+    try {
+      const imageSrc = webcamRef.current?.getScreenshot();
+      if (!imageSrc) throw new Error('No camera image available.');
+      const file = base64ToFile(imageSrc, `webcam-photo-${Date.now()}`);
+      other.onDrop?.([file], [], null as any);
+      setWebcamOpen(false);
+    } catch {
+      setWebcamError('The photo could not be captured. Select a photo from your gallery.');
     }
-  }, [other]);
+  };
 
   const renderPreview = hasFile && (
     <Image alt="avatar" src={preview} sx={{ width: 1, height: 1, borderRadius: '50%' }} />
@@ -137,26 +140,6 @@ export function UploadAvatar({
     </Box>
   );
 
-  const renderLoading = capturing && (
-    <Box
-      sx={{
-        top: 0,
-        left: 0,
-        width: 1,
-        height: 1,
-        zIndex: 10,
-        display: 'flex',
-        borderRadius: '50%',
-        position: 'absolute',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['900Channel'], 0.48),
-      }}
-    >
-      <CircularProgress size={32} sx={{ color: 'common.white' }} />
-    </Box>
-  );
-
   const renderContent = (
     <Box
       sx={{
@@ -169,7 +152,6 @@ export function UploadAvatar({
     >
       {renderPreview}
       {renderPlaceholder}
-      {renderLoading}
     </Box>
   );
 
@@ -265,6 +247,7 @@ export function UploadAvatar({
           onClick={() => {
             handleCloseOptions();
             setWebcamReady(false);
+            setWebcamError('');
             setWebcamOpen(true);
           }}
         >
@@ -287,7 +270,12 @@ export function UploadAvatar({
       </Menu>
 
       {/* Webcam capture dialog */}
-      <Dialog open={webcamOpen} onClose={() => setWebcamOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={webcamOpen}
+        onClose={() => setWebcamOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Take a Photo</DialogTitle>
         <DialogContent
           sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pt: 2 }}
@@ -301,7 +289,7 @@ export function UploadAvatar({
               minHeight: 300,
             }}
           >
-            {!webcamReady && (
+            {!webcamReady && !webcamError && (
               <Skeleton
                 variant="rectangular"
                 width="100%"
@@ -309,39 +297,56 @@ export function UploadAvatar({
                 sx={{ position: 'absolute', top: 0, left: 0, zIndex: 2 }}
               />
             )}
-            <Webcam
-              ref={webcamRef}
-              audio={false}
-              screenshotFormat="image/jpeg"
-              mirrored
-              videoConstraints={{ facingMode: 'user' }}
-              onUserMedia={() => setWebcamReady(true)}
-              style={{ width: '100%', display: 'block' }}
-            />
+            {webcamError ? (
+              <Alert severity="warning">{webcamError}</Alert>
+            ) : (
+              <Webcam
+                ref={webcamRef}
+                audio={false}
+                screenshotFormat="image/jpeg"
+                mirrored
+                videoConstraints={{ facingMode: 'user' }}
+                onUserMedia={() => setWebcamReady(true)}
+                onUserMediaError={() =>
+                  setWebcamError('The camera is unavailable. Select a photo from your gallery.')
+                }
+                style={{ width: '100%', display: 'block' }}
+              />
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
           <Button
+            size="small"
             variant="outlined"
             startIcon={<Iconify icon="mingcute:close-line" width={16} />}
             onClick={() => setWebcamOpen(false)}
           >
             Cancel
           </Button>
-          <Button
-            variant="contained"
-            onClick={handleCapture}
-            disabled={capturing}
-            startIcon={
-              capturing ? (
-                <CircularProgress size={18} color="inherit" />
-              ) : (
-                <Iconify icon="solar:camera-bold" />
-              )
-            }
-          >
-            {capturing ? 'Capturing...' : 'Capture'}
-          </Button>
+          {webcamError ? (
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon="solar:gallery-bold" />}
+              onClick={() => {
+                setWebcamOpen(false);
+                open();
+              }}
+            >
+              Select from Gallery
+            </Button>
+          ) : (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={handleCapture}
+              disabled={!webcamReady}
+              startIcon={<Iconify icon="solar:camera-bold" />}
+            >
+              Capture
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 

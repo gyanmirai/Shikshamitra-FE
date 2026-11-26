@@ -137,7 +137,7 @@ it('reloads leader choices for a changed division and includes only permitted GR
   await act(async () => {});
   const input = screen.getByRole('combobox', { name: 'Leader' });
   fireEvent.focus(input);
-  fireEvent.mouseDown(input);
+  fireEvent.keyDown(input, { key: 'ArrowDown' });
   expect(screen.getByRole('option', { name: 'Riya · 6 / A · GR GR001' })).toBeVisible();
   expect(screen.getByRole('option', { name: 'Riya · 6 / A' })).toBeVisible();
   fireEvent.change(input, { target: { value: 'Ri' } });

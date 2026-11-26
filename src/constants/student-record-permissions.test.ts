@@ -25,6 +25,8 @@ const actions = (feature: string, names = ['View', 'Add', 'Delete']) =>
 const catalogue = [
   ...actions('StudentList'),
   ...actions('HouseManagement'),
+  ...actions('Birthdays', ['View']),
+  ...actions('Birthdays.OfficeScope', ['View']),
   ...actions('StudentICard'),
   ...actions('Certificates'),
   ...actions('Reports'),
@@ -52,15 +54,16 @@ function submodule(title: string): PermissionNode {
 }
 
 describe('Student Records security navigation', () => {
-  it('uses the six current Student Records submodules and their routes', () => {
+  it('uses the current Student Records submodules and their routes', () => {
     const records = recordsNavigation();
     expect(records.children?.map((node) => [node.title, node.path])).toEqual([
       ['Student List', '/student/profile'],
+      ['Birthday', '/student/records/birthdays'],
       ['House Management', '/student/records/houses'],
       ['I-Card Assignment', '/student/student-i-card'],
       ['Certificates', '/student/certificates'],
       ['Reports', '/student/reports'],
-      ['Settings', '/student/records/settings/i-card-templates'],
+      ['Settings', '/student/records/settings'],
     ]);
     expect(
       records.permissionChildren?.find((node) => node.title === 'Policy Settings')?.permissionName
@@ -74,6 +77,18 @@ describe('Student Records security navigation', () => {
     ['Reports', 'Reports'],
   ])('maps %s to its exact backend action bundle', (title, feature) => {
     expect(getNodeActionPermissionNames(submodule(title), catalogue)).toEqual(actions(feature));
+  });
+
+  it('maps Birthday and its office scope to independent read-only grants', () => {
+    const features = recordsNavigation().permissionChildren;
+    const birthday = features?.find((node) => node.title === 'Birthday');
+    const office = features?.find((node) => node.title === 'Birthday office scope');
+    expect(birthday).toBeDefined();
+    expect(office).toBeDefined();
+    expect(getNodeActionPermissionNames(birthday!, catalogue)).toEqual(actions('Birthdays', ['View']));
+    expect(getNodeActionPermissionNames(office!, catalogue)).toEqual(
+      actions('Birthdays.OfficeScope', ['View'])
+    );
   });
 
   it('keeps policy Settings permissions manageable without exposing the legacy house menu', () => {

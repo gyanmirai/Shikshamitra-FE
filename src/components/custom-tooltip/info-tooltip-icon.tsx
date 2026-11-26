@@ -14,10 +14,12 @@ export function InfoTooltipIcon({
   title,
   label,
   disabled = false,
+  keepSidePlacement = false,
 }: {
   title: ReactNode;
   label: string;
   disabled?: boolean;
+  keepSidePlacement?: boolean;
 }) {
   const anchorRef = useRef<HTMLSpanElement>(null);
   const [open, setOpen] = useState(false);
@@ -40,7 +42,12 @@ export function InfoTooltipIcon({
             modifiers: [
               {
                 name: 'flip',
-                options: { boundary, padding: 8, fallbackPlacements: ['left', 'top', 'bottom'] },
+                options: {
+                  boundary,
+                  padding: 8,
+                  fallbackPlacements: ['left', 'top', 'bottom'],
+                  ...(keepSidePlacement && { altAxis: false }),
+                },
               },
               { name: 'preventOverflow', options: { boundary, padding: 8, altAxis: true } },
             ],

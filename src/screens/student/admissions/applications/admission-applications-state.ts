@@ -1,5 +1,6 @@
 import type { IParams } from 'src/components/customizabaleTable/types';
 
+import { ADMISSION_PAGE_SIZES } from '../admission-page-sizes';
 import { readQueueColumnFilters } from '../admission-queue-column-filters';
 
 export const APPLICATION_SORT_COLUMNS = [
@@ -32,7 +33,7 @@ export function readAdmissionApplicationsState(params: Pick<URLSearchParams, 'ge
     filters: readQueueColumnFilters(params.get('filters') ?? '', 'applications'),
     search: params.get('search') ?? '',
     page: Number.isSafeInteger(page) && page > 0 ? page - 1 : 0,
-    rowsPerPage: [10, 25, 100].includes(size) ? size : 25,
+    rowsPerPage: ADMISSION_PAGE_SIZES.includes(size) ? size : 25,
     sorts,
     status:
       /^\d+$/.test(params.get('status') ?? '') && Number(params.get('status')) <= 11

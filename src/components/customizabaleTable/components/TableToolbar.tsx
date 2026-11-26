@@ -168,7 +168,8 @@ export const TableToolbar = memo(
                   <Button
                     size="small"
                     color="inherit"
-                    sx={{ alignSelf: 'flex-end' }}
+                    variant="outlined"
+                    sx={{ alignSelf: 'flex-start' }}
                     onClick={() => {
                       setColumnSearch('');
                       onResetColumns();

@@ -40,6 +40,7 @@ vi.mock('src/components/custom-select', () => ({
   ),
 }));
 vi.mock('src/components/upload', () => ({ UploadAvatar: () => <span>Photo upload</span> }));
+vi.mock('../components/student-photo-avatar', () => ({ default: () => null }));
 vi.mock('src/components/studentProfile/form-fields/components/AddressSection', () => ({
   default: () => null,
 }));

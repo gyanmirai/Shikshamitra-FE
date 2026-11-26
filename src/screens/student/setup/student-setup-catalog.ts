@@ -33,7 +33,7 @@ export const studentSetupSettings = [
     path: studentPaths.onboarding.settingsSections.rollNumber, permission: studentPermissions.onboarding.settings },
   { key: 'houses', stage: 'records', title: 'Houses',
     description: 'Create medium-wise houses if your school uses them. Assign students and leaders later.',
-    path: studentPaths.records.houseManagement, permission: studentPermissions.records.houseManagement },
+    path: studentPaths.records.settingsSections.createHouse, permission: studentPermissions.records.houseManagement },
   { key: 'records-policy', stage: 'records', title: 'Records Policies',
     description: 'Review the effective school defaults or published year override. Custom changes are optional.',
     path: studentPaths.records.settingsWorkspace, permission: studentPermissions.records.setting },

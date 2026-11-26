@@ -211,6 +211,8 @@ function AdmissionFormEditor({
   });
   const formType = editorFormik.values.purpose === 0 ? 'Inquiry' : 'Registration';
   const steps = getAdmissionWizardSteps(editorFormik.values.purpose);
+  const useCompactProgress = formType === 'Registration';
+  const isPrintLayout = steps.length === 4 && wizard.activeStep === 3;
   return (
     <>
       <CustomDialog
@@ -219,6 +221,7 @@ function AdmissionFormEditor({
         guardUnsavedChanges={false}
         disableClose={busy}
         hasForm={false}
+        headerSx={isPrintLayout ? { py: 0.5 } : undefined}
         title={
           <Box component="span" sx={{ display: 'block' }}>
             <Stack component="span" direction="row" spacing={1.25} alignItems="center">
@@ -236,7 +239,7 @@ function AdmissionFormEditor({
               value={((wizard.activeStep + 1) / steps.length) * 100}
               aria-label={`Step ${wizard.activeStep + 1} of ${steps.length}`}
               sx={{
-                mt: 1,
+                mt: isPrintLayout ? 0.5 : 1,
                 height: 4,
                 borderRadius: 1,
                 display: { xs: 'block', md: 'none' },
@@ -276,11 +279,12 @@ function AdmissionFormEditor({
             },
           }}
         >
-          <Box sx={getFormWizardLayout(wizard.activeStep)}>
+          <Box sx={getFormWizardLayout(wizard.activeStep, useCompactProgress)}>
             <CustomStepperWithFormik
               initialValues={wizard.initialValues}
               formikInstance={editorFormik}
               steps={steps}
+              progressDensity={useCompactProgress ? 'compact' : 'standard'}
               activeStep={wizard.activeStep}
               footerPlacement={wizard.activeStep === 1 ? 'content' : 'outside'}
               validationSchema={wizard.validationSchema}
@@ -348,6 +352,8 @@ function AdmissionFormEditor({
                   nameConflictMessage={nameConflictMessage}
                   checkingName={checkingName}
                   publishMessage={publishMessage}
+                  publishIssueTarget={wizard.publishIssueTarget}
+                  onPublishIssueHandled={wizard.clearPublishIssueTarget}
                 />
               )}
             />

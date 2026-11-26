@@ -9,7 +9,7 @@ const stepperScrollWrapper =
 const stepperHorizontalTrack =
   '& > div > form > [data-simplebar] > .simplebar-track.simplebar-horizontal';
 
-export const getFormWizardLayout = (activeStep: number): SxProps<Theme> => ({
+export const getFormWizardLayout = (activeStep: number, compactProgress: boolean): SxProps<Theme> => ({
   height: 1,
   minHeight: 0,
   minWidth: 0,
@@ -18,9 +18,9 @@ export const getFormWizardLayout = (activeStep: number): SxProps<Theme> => ({
   bgcolor: 'background.neutral',
   '& > div': {
     width: { sm: 'calc(100% - 16px)' },
-    height: { sm: 'calc(100% - 16px)' },
+    height: { sm: activeStep === 3 ? 'calc(100% - 8px)' : 'calc(100% - 16px)' },
     mx: { sm: 1 },
-    my: { sm: 1 },
+    my: { sm: activeStep === 3 ? 0.5 : 1 },
     minWidth: 0,
     minHeight: 0,
     overflow: 'hidden',
@@ -30,9 +30,8 @@ export const getFormWizardLayout = (activeStep: number): SxProps<Theme> => ({
   },
   '& > div > .MuiStepper-root': {
     width: 1,
-    px: { md: 2 },
-    pt: { md: 1 },
-    pb: { md: 1 },
+    px: { md: compactProgress ? 1 : 2 },
+    py: { md: compactProgress ? 0 : 1 },
     flexShrink: 0,
     display: { xs: 'none', md: 'flex' },
     '& .MuiStepConnector-root.MuiStepConnector-alternativeLabel': {

@@ -104,7 +104,7 @@ Backend Admissions rules, contracts, permissions, errors, and data integrity rem
 
 ## House Management
 
-Student Records → House Management opens the medium-wise Houses, Students and Assign Leaders workspace. See [routes](./routes.md#house-management), [client integration](./clients.md#house-management-client), [workflow](./workflows.md#house-management) and [checks](./testing.md#house-management-checks). Backend product rules and permissions remain owned by the [Student backend](../../../Shikshamitra-BE/docs/modules/student/product.md#house-management).
+Student Records → House Management opens Assign House and Assign Leaders. Manage the medium's house catalogue under Student Records → Settings → Create House. See [routes](./routes.md#house-management), [client integration](./clients.md#house-management-client), [workflow](./workflows.md#house-management) and [checks](./testing.md#house-management-checks). Backend product rules and permissions remain owned by the [Student backend](../../../Shikshamitra-BE/docs/modules/student/product.md#house-management).
 
 ## Student dashboard
 

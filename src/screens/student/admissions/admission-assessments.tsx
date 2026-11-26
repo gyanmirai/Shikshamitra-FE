@@ -561,7 +561,6 @@ export default function AdmissionAssessmentsScreen() {
                     ) : undefined
                   }
                   isRefreshing={applicants.isFetching && !!applicants.currentData}
-                  refreshIndicator="linear"
                   filters={tableFilters}
                   onServerFilter={(next) =>
                     updateWorkbench({
@@ -579,7 +578,6 @@ export default function AdmissionAssessmentsScreen() {
                   page={state.page}
                   rowsPerPage={state.size}
                   defaultRowsPerPage={25}
-                  rowsPerPageOptions={[10, 25, 100]}
                   totalCount={applicants.currentData?.totalCount ?? 0}
                   searchTerm={state.search}
                   sorts={[{ column: state.sort, direction: state.direction }]}

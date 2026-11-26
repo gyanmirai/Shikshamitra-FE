@@ -14,9 +14,21 @@ import { useIdentityPermissions } from '../hooks/use-identity-permissions';
 
 import type { IdentityKind, IdentitySelection } from '../types';
 
-export function TemplateIdentityAsset({ kind, value, legacy, disabled = false, onChange, onBusy, showInheritanceHelp = true }: {
-  kind: IdentityKind; value?: IdentitySelection | null; legacy?: string | null; disabled?: boolean;
-  onChange: (next: IdentitySelection) => void; onBusy?: (busy: boolean) => void;
+export function TemplateIdentityAsset({
+  kind,
+  value,
+  legacy,
+  disabled = false,
+  onChange,
+  onBusy,
+  showInheritanceHelp = true,
+}: {
+  kind: IdentityKind;
+  value?: IdentitySelection | null;
+  legacy?: string | null;
+  disabled?: boolean;
+  onChange: (next: IdentitySelection) => void;
+  onBusy?: (busy: boolean) => void;
   showInheritanceHelp?: boolean;
 }) {
   const permissions = useIdentityPermissions();
@@ -34,7 +46,9 @@ export function TemplateIdentityAsset({ kind, value, legacy, disabled = false, o
   </TextField>;
   return <Stack spacing={1}>
     {showInheritanceHelp && (
-      <Typography variant="body2" color="text.secondary">Inherited assets use School Identity for each document’s board and medium.</Typography>
+      <Typography variant="body2" color="text.secondary">
+        Inherited assets use School Identity for each document’s board and medium.
+      </Typography>
     )}
     <IdentityAssetField kind={kind} value={value ?? { mode: 0 }} context={{}} inheritLabel="Use School Identity" allowCustom={canUpload} disabled={disabled || uploading.isLoading}
       onChange={(next) => {

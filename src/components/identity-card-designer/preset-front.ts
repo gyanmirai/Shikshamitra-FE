@@ -42,9 +42,9 @@ export function presetFront(staff: boolean, themeColor: string): IdentityCardEle
       'person-role',
       staff ? 'designation' : 'Class',
       staff ? 'Designation' : 'Class',
-      132,
+      staff ? 132 : 120,
       134,
-      277,
+      staff ? 277 : 289,
       18,
       12,
       { color: themeColor }
@@ -53,40 +53,40 @@ export function presetFront(staff: boolean, themeColor: string): IdentityCardEle
       'record-number',
       staff ? 'employeeCode' : 'GRNumber',
       staff ? 'Employee code' : 'GR number',
-      132,
-      159,
-      277,
+      staff ? 132 : 120,
+      staff ? 159 : 156,
+      staff ? 277 : 289,
       18,
-      11,
+      staff ? 11 : 12.5,
       { showLabel: true, separator: ': ' }
     ),
     text(
       'division',
       staff ? 'department' : 'Division',
       staff ? 'Department' : 'Division',
-      132,
-      179,
-      277,
+      staff ? 132 : 120,
+      staff ? 179 : 176,
+      staff ? 277 : 289,
       18,
-      11,
+      staff ? 11 : 12.5,
       { showLabel: true, separator: ': ' }
     ),
     text(
       'additional-record',
       staff ? 'organization' : 'AcademicYear',
       staff ? 'Organization' : 'Academic year',
-      132,
-      195,
-      277,
-      12,
-      10,
+      staff ? 132 : 120,
+      staff ? 195 : 196,
+      staff ? 277 : 289,
+      staff ? 12 : 16,
+      staff ? 10 : 12.5,
       { showLabel: true, separator: ': ' }
     ),
     {
       id: 'footer-divider',
       type: 'line',
       x: 19,
-      y: 207,
+      y: staff ? 207 : 216,
       w: 390,
       h: 1,
       z: 1,
@@ -104,17 +104,14 @@ export function presetFront(staff: boolean, themeColor: string): IdentityCardEle
       12,
       { fontWeight: 700 }
     ),
-    text(
-      'validity',
-      staff ? 'validityYear' : 'AcademicYear',
-      staff ? 'Validity' : 'Academic year',
-      19,
-      242,
-      307,
-      14,
-      10,
-      { showLabel: true, separator: ': ' }
-    ),
+    ...(staff
+      ? [
+          text('validity', 'validityYear', 'Validity', 19, 242, 307, 14, 10, {
+            showLabel: true,
+            separator: ': ',
+          }),
+        ]
+      : []),
     {
       id: 'qr',
       type: 'qr',
