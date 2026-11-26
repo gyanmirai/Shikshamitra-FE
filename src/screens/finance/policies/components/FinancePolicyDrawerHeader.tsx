@@ -15,6 +15,7 @@ export default function FinancePolicyDrawerHeader({
   onClose,
   disabled = false,
   titleId,
+  titleAdornment,
 }: {
   title: string;
   description?: ReactNode;
@@ -24,6 +25,7 @@ export default function FinancePolicyDrawerHeader({
   onClose?: () => void;
   disabled?: boolean;
   titleId: string;
+  titleAdornment?: ReactNode;
 }) {
   return (
     <Stack
@@ -37,6 +39,7 @@ export default function FinancePolicyDrawerHeader({
           <Typography id={titleId} variant="h6" component="h2" sx={{ overflowWrap: 'anywhere' }}>
             {title}
           </Typography>
+          {titleAdornment}
           {(descriptionDisplay === 'tooltip' || helpText) && (
             <InfoTooltipIcon
               title={helpText || description}
@@ -59,7 +62,12 @@ export default function FinancePolicyDrawerHeader({
         </Stack>
       )}
       {onClose && (
-        <IconButton size="small" aria-label={`Close ${title}`} disabled={disabled} onClick={onClose}>
+        <IconButton
+          size="small"
+          aria-label={`Close ${title}`}
+          disabled={disabled}
+          onClick={onClose}
+        >
           <Iconify icon="mingcute:close-line" width={20} />
         </IconButton>
       )}

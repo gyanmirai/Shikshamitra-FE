@@ -125,7 +125,11 @@ export default function FeeStructureHeadsStep({
       .reduce((sum, line) => sum + Math.round((line.amount ?? 0) * 100), 0) / 100;
   const nameInvalid = Boolean((touched.name || submitted || showNameError) && nameError);
   const addHeadDisabled =
-    busy || headsLoading || headsError || !settings.permissions.headsRead || prerequisites.length > 0;
+    busy ||
+    headsLoading ||
+    headsError ||
+    !settings.permissions.headsRead ||
+    prerequisites.length > 0;
   const feeHeadsErrorId = `${validationId}-fee-heads-error`;
   return (
     <Stack ref={formRef} spacing={2} sx={fillHeight ? { flex: 1, minHeight: 0 } : undefined}>
@@ -261,9 +265,7 @@ export default function FeeStructureHeadsStep({
                   : undefined
               }
               noDataText={
-                writable
-                  ? 'No fee heads added.'
-                  : 'No fee heads are configured for this structure.'
+                writable ? 'No fee heads added.' : 'No fee heads are configured for this structure.'
               }
               columns={[
                 {
@@ -397,10 +399,9 @@ export default function FeeStructureHeadsStep({
                           ? row.paymentTermName || 'Attached payment frequency'
                           : 'Not selected'}
                       </Typography>
-                      {row.paymentTermVersionId && (
+                      {row.scheduleMode === 'Customized' && (
                         <Typography variant="caption" color="text.secondary">
-                          v{row.paymentTermVersionNumber ?? '?'}
-                          {row.scheduleMode === 'Customized' ? ' · Customized installments' : ''}
+                          Customized installments
                         </Typography>
                       )}
                       {row.termError && (

@@ -7,18 +7,20 @@ import type {
 } from 'src/redux/finance/feeStructureWorkspace';
 
 export type StructurePolicyFamily = Exclude<PolicyFamily, 'concession'>;
-export const structurePolicyFamilies: StructurePolicyFamily[] = ['collection', 'refund', 'proration'];
+export const structurePolicyFamilies: StructurePolicyFamily[] = [
+  'collection',
+  'refund',
+  'proration',
+];
 
 /** Setup completion requires a policy and its pinned version; drafts may remain incomplete. */
 export const structurePolicyError = (
   candidate: StructureCandidate,
   family: StructurePolicyFamily
 ) =>
-  family === 'proration'
-    ? ''
-    : !candidate[`${family}PolicyId`]?.trim() || !candidate[`${family}PolicyVersionId`]?.trim()
-      ? `${family === 'collection' ? 'Collection' : 'Refund'} Policy is required`
-      : '';
+  !candidate[`${family}PolicyId`]?.trim() || !candidate[`${family}PolicyVersionId`]?.trim()
+    ? `${family[0].toUpperCase()}${family.slice(1)} Policy is required`
+    : '';
 
 /** Exact server contract: do not refill explicit nulls with a previous/default attachment. */
 export const structureCandidate = (source?: Partial<StructureRecord>): StructureCandidate => ({
@@ -117,7 +119,10 @@ export function buildStructureChanges(
   structurePolicyFamilies.forEach((family) => {
     const id = `${family}PolicyId` as const;
     const version = `${family}PolicyVersionId` as const;
-    if ((before[id] ?? null) !== (after[id] ?? null) || (before[version] ?? null) !== (after[version] ?? null))
+    if (
+      (before[id] ?? null) !== (after[id] ?? null) ||
+      (before[version] ?? null) !== (after[version] ?? null)
+    )
       policies[family] = after[id]
         ? {
             policyId: after[id],

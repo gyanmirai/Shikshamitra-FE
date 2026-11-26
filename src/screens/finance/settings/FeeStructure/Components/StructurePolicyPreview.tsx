@@ -28,11 +28,7 @@ interface Props {
   onVersionChanged: () => void;
 }
 
-export default function StructurePolicyPreview({
-  option,
-  settings,
-  onVersionChanged,
-}: Props) {
+export default function StructurePolicyPreview({ option, settings, onVersionChanged }: Props) {
   const collection = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCollectionPolicyByIdQuery,
@@ -54,7 +50,12 @@ export default function StructurePolicyPreview({
     options: { skip: option.family !== 'proration' || !settings.permissions.prorationRead },
     popupConfig: { error: false },
   });
-  const query = option.family === 'proration' ? proration : option.family === 'collection' ? collection : refund;
+  const query =
+    option.family === 'proration'
+      ? proration
+      : option.family === 'collection'
+        ? collection
+        : refund;
   const detail = query.currentData;
   const verified = detail?.currentVersionId === option.versionId && detail?.id === option.id;
   const versionChanged = !!detail && !verified;
@@ -90,9 +91,12 @@ export default function StructurePolicyPreview({
     },
     popupConfig: { error: false },
   });
-  const versionQuery = option.family === 'proration'
-    ? prorationVersion
-    : option.family === 'collection' ? collectionVersion : refundVersion;
+  const versionQuery =
+    option.family === 'proration'
+      ? prorationVersion
+      : option.family === 'collection'
+        ? collectionVersion
+        : refundVersion;
   const exactRecord = versionQuery.currentData?.items.find(
     (item: { id: string }) => item.id === option.versionId
   );
@@ -103,7 +107,7 @@ export default function StructurePolicyPreview({
     query.isLoading || query.isFetching || versionQuery.isLoading || versionQuery.isFetching;
   return (
     <FinancePolicyDetails
-      showVersionBadge
+      presentation="feeStructure"
       policy={{
         id: option.id,
         policyName: option.name,
@@ -114,7 +118,8 @@ export default function StructurePolicyPreview({
         status: 'Active',
         version: option.versionNumber,
         isDefault: !!option.isDefault,
-        effectiveFrom: verified && 'effectiveFrom' in detail ? (detail.effectiveFrom ?? null) : null,
+        effectiveFrom:
+          verified && 'effectiveFrom' in detail ? (detail.effectiveFrom ?? null) : null,
         effectiveTo: verified && 'effectiveTo' in detail ? (detail.effectiveTo ?? null) : null,
         updatedAt: verified ? (detail.updatedAt ?? '') : '',
         updatedBy: verified ? (detail.updatedBy ?? '') : '',

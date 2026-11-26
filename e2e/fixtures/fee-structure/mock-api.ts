@@ -15,6 +15,8 @@ export const useGetCollectionPolicyByIdQuery = 'collection-detail';
 export const useGetRefundPolicyByIdQuery = 'refund-detail';
 export const useGetCollectionPolicyVersionsQuery = 'collection-version';
 export const useGetRefundPolicyVersionsQuery = 'refund-version';
+export const useGetProrationPolicyByIdQuery = 'proration-detail';
+export const useGetProrationPolicyVersionsQuery = 'proration-version';
 export const usePreviewStructureMutation = 'preview';
 export const copyMode = new URLSearchParams(window.location.search).get('copyPolicy') ?? 'current';
 let copyCurrentVersion = ['stale', 'race'].includes(copyMode) ? 2 : 1;
@@ -183,7 +185,7 @@ const settings: StructureSettings = {
       installments,
     },
   ],
-  policies: (['collection', 'concession', 'refund'] as const).flatMap((family) =>
+  policies: (['collection', 'concession', 'refund', 'proration'] as const).flatMap((family) =>
     [true, false].map((isDefault): StructureSettings['policies'][number] => ({
       id: isDefault ? family : `${family}-alternate`,
       versionId: isDefault ? `${family}-v1` : `${family}-alternate-v2`,
@@ -211,9 +213,11 @@ const settings: StructureSettings = {
       'collection',
       'concession',
       'refund',
+      'proration',
       'collectionRead',
       'concessionRead',
       'refundRead',
+      'prorationRead',
       'headsRead',
       'termsRead',
     ].map((key) => [key, true])
@@ -234,6 +238,8 @@ export const readyFixture = {
   concessionPolicyVersionId: 'concession-v1',
   refundPolicyId: 'refund',
   refundPolicyVersionId: 'refund-v1',
+  prorationPolicyId: 'proration',
+  prorationPolicyVersionId: 'proration-v1',
   concessionFeeHeadScope: 'EntireFeeStructure' as const,
   concessionApplicableFeeHeadIds: ['tuition'],
   feeHeads: [
@@ -389,9 +395,13 @@ export default function useFixtureApi({
         ? fixtureCatalogue
         : action === 'term-schedule'
           ? settings.terms.find((term) => term.versionId === params?.versionId)
-          : action === 'collection-detail' || action === 'refund-detail'
+          : action === 'collection-detail' ||
+              action === 'refund-detail' ||
+              action === 'proration-detail'
             ? policyCatalogItems.find((item) => item.id === params)
-            : action === 'collection-version' || action === 'refund-version'
+            : action === 'collection-version' ||
+                action === 'refund-version' ||
+                action === 'proration-version'
               ? {
                   items: policyCatalogItems
                     .filter(
@@ -530,7 +540,7 @@ export function useFixtureLookups(_scope: any, _enabled: any, scheduleLine: any)
     context: { isLoading: false, isFetching: false, isError: false, refetch: () => {} },
     heads: { isFetching: false, isError: false, refetch: () => {} },
     terms: catalog,
-    catalogs: { collection: catalog, concession: catalog, refund: catalog },
+    catalogs: { collection: catalog, concession: catalog, refund: catalog, proration: catalog },
     scheduleTerm: settings.terms.find(
       (term) => term.versionId === scheduleLine?.paymentTermVersionId
     ),

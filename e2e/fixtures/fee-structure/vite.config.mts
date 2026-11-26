@@ -11,7 +11,7 @@ export default defineConfig({
       { find: /^@mui\/icons-material$/, replacement: `${here}/icon-barrel.ts` },
       { find: /^src\/redux\/feeHeadManage\/feeHeadManageApi$/, replacement: `${here}/mock-api.ts` },
       {
-        find: /^src\/redux\/finance\/(collectionPolicy|refundPolicy)$/,
+        find: /^src\/redux\/finance\/(collectionPolicy|refundPolicy|prorationPolicy)$/,
         replacement: `${here}/mock-api.ts`,
       },
       {

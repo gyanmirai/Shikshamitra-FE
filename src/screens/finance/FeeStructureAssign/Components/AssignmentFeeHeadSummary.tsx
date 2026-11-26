@@ -6,14 +6,9 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Box, Stack, Checkbox, Typography } from '@mui/material';
 import { DetailField } from 'src/screens/finance/components/detail-view';
 
-import AssignmentProrationDetails from './AssignmentProrationDetails';
-
-import type { FeeHeadProration } from './assignmentReviewPresentation';
-
 export default function AssignmentFeeHeadSummary({
   head,
   currency,
-  calculation,
   serviceDetails,
   selection,
   amountInput,
@@ -23,7 +18,6 @@ export default function AssignmentFeeHeadSummary({
 }: {
   head: AssignmentHead;
   currency: string;
-  calculation?: FeeHeadProration;
   serviceDetails?: ReactNode;
   selection?: {
     id: string;
@@ -57,13 +51,15 @@ export default function AssignmentFeeHeadSummary({
           display: 'grid',
           gridTemplateAreas: amountInput
             ? '"name" "details" "amount"'
-            : '"name amount" "details details"',
-          gridTemplateColumns: amountInput ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) auto',
+            : '"name amount" "details amount"',
+          gridTemplateColumns: amountInput
+            ? 'minmax(0, 1fr)'
+            : 'minmax(0, 1fr) minmax(7.25rem, 30%)',
           alignItems: 'start',
           columnGap: 2,
           '@container (min-width: 520px)': {
-            gridTemplateAreas: '"name details amount"',
-            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.65fr) minmax(9rem, 1fr)',
+            gridTemplateAreas: '"name amount" "details amount"',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(9rem, 36%)',
           },
         }}
       >
@@ -105,18 +101,17 @@ export default function AssignmentFeeHeadSummary({
             {displayedAmount}
           </Box>
         )}
-        {(serviceDetails || calculation) && (
+        {serviceDetails && (
           <Stack
             spacing={1}
             sx={{
               gridArea: 'details',
               minWidth: 0,
-              mt: 1.5,
-              '@container (min-width: 520px)': { mt: 0 },
+              mt: 0.75,
+              pl: head.isOptional ? 3 : 0,
             }}
           >
             {serviceDetails}
-            <AssignmentProrationDetails head={head} calculation={calculation} currency={currency} />
           </Stack>
         )}
       </Box>

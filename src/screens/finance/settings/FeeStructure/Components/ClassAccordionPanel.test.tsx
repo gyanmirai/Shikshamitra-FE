@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { it, vi, expect, afterEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
@@ -7,7 +8,12 @@ import { render, screen, within, cleanup, fireEvent } from '@testing-library/rea
 
 import ClassAccordionPanel from './ClassAccordionPanel';
 
-const state = vi.hoisted(() => ({ records: [] as any[], loading: false, revision: null as any }));
+const state = vi.hoisted(() => ({
+  records: [] as any[],
+  loading: false,
+  revision: null as any,
+  showActions: false,
+}));
 vi.mock('../hooks/useClassWiseFeeStructureHooks', () => ({
   useFetchStandardFeeStructures: () => ({
     data: state.records,
@@ -31,12 +37,22 @@ vi.mock('./FeeStructureWorkspaceCard', () => ({
     onNameChange,
     onSaved,
     onRevisionReady,
+    actionsContainer,
+    onDeleted,
   }: any) {
     const [name, setName] = React.useState(initialData.name || '');
     const fieldId = React.useId();
     const [step, setStep] = React.useState(0);
     return (
       <div>
+        {state.showActions &&
+          actionsContainer &&
+          createPortal(
+            <button type="button" onClick={onDeleted} aria-label={`Delete ${initialData.name}`}>
+              Delete
+            </button>,
+            actionsContainer
+          )}
         {initialData.status === 0 && (
           <button type="button" onClick={() => onRevisionReady?.(state.revision)}>
             Open revision response
@@ -85,6 +101,7 @@ vi.mock('./FeeStructureWorkspaceCard', () => ({
 
 afterEach(() => {
   state.loading = false;
+  state.showActions = false;
   cleanup();
 });
 const ui = (canAdd = true) => (
@@ -99,6 +116,60 @@ function setup(canAdd = true) {
   ];
   return render(ui(canAdd));
 }
+
+it('selects a structure by its status and sequence badge', () => {
+  setup();
+  fireEvent.click(screen.getByText('Published'));
+  expect(screen.getByRole('button', { name: 'Activity fees' })).toHaveAttribute(
+    'aria-current',
+    'true'
+  );
+  fireEvent.click(within(screen.getByRole('button', { name: 'General fees' })).getByText('1'));
+  expect(screen.getByRole('button', { name: 'General fees' })).toHaveAttribute(
+    'aria-current',
+    'true'
+  );
+});
+
+it('guards status selection when dirty and prevents it while busy', () => {
+  setup();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Unsaved fees' },
+  });
+  fireEvent.click(screen.getByText('Published'));
+  expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Begin Save' }));
+  fireEvent.click(screen.getByText('Published'));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Unsaved fees');
+});
+
+it('keeps independent row deletion separate from selecting another structure', () => {
+  state.showActions = true;
+  setup();
+  fireEvent.click(screen.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.click(screen.getByRole('button', { name: 'General fees' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Unsaved fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Delete Activity fees' }));
+  expect(screen.queryByRole('button', { name: 'Activity fees' })).toBeNull();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Unsaved fees');
+});
+
+it('selects structures with Enter and Space through the row button', () => {
+  setup();
+  const activity = screen.getByRole('button', { name: 'Activity fees' });
+  activity.focus();
+  fireEvent.keyDown(activity, { key: 'Enter' });
+  expect(activity).toHaveAttribute('aria-current', 'true');
+  const general = screen.getByRole('button', { name: 'General fees' });
+  general.focus();
+  fireEvent.keyUp(general, { key: ' ' });
+  expect(general).toHaveAttribute('aria-current', 'true');
+});
 
 it('opens the returned revision before a list refresh and keeps one editor after refetch', () => {
   const view = setup();
@@ -307,7 +378,7 @@ it('does not prompt for clean, saved or currently selected structures', () => {
 
 it('removes an unsaved new structure only after confirming discard', () => {
   setup();
-  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Structure' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'Never saved' },
   });
@@ -317,12 +388,12 @@ it('removes an unsaved new structure only after confirming discard', () => {
   expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('General fees');
 });
 
-it('also guards Add Structure so a dirty editor cannot be bypassed', () => {
+it('also guards structure creation so a dirty editor cannot be bypassed', () => {
   setup();
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'Unsaved fees' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Structure' }));
   expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('');
@@ -426,7 +497,7 @@ it('filters structures without losing edits and clears the filter when adding a 
   expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Updated general fees');
   fireEvent.change(search, { target: { value: 'no matching structure' } });
   expect(screen.getByText('No structures match your search.')).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Structure' }));
   fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(search).toHaveValue('');
   const newStructure = navigation.getByRole('button', { name: /New fee structure/ });
@@ -439,7 +510,7 @@ it('filters structures without losing edits and clears the filter when adding a 
 
 it('selects a new local draft and preserves its saved name after visiting another structure', () => {
   setup();
-  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Structure' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'Bus fees' },
   });
@@ -456,17 +527,17 @@ it('locks structure navigation and creation while a save is running', () => {
     'aria-disabled',
     'true'
   );
-  expect(screen.getByRole('button', { name: 'Add Structure' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Structure' })).toBeDisabled();
 });
 
 it('does not offer structure creation without its permission', () => {
   setup(false);
-  expect(screen.queryByRole('button', { name: 'Add Structure' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Structure' })).toBeNull();
 });
 
 it('keeps a new editor mounted and selected after saving and list refetch', () => {
   const view = setup();
-  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Structure' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'New fees' },
   });

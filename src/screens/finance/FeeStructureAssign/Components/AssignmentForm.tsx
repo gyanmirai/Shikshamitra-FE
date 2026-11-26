@@ -2,44 +2,31 @@ import type { ReactNode, FormEventHandler } from 'react';
 import type { Theme, SxProps } from '@mui/material/styles';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Stack, Button } from '@mui/material';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { Box, Stack, Button, DialogActions } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
-export function assignmentCreationGrid(bulk: boolean, results: boolean): SxProps<Theme> {
-  const regions = [bulk && 'students', !results && 'setup', 'preview'].filter(Boolean);
-
+export function assignmentBatchGrid(results: boolean): SxProps<Theme> {
   return {
     display: 'grid',
     gap: 2,
     alignItems: 'start',
     gridTemplateColumns: 'minmax(0, 1fr)',
-    gridTemplateAreas: regions.map((region) => `"${region}"`).join(' '),
-    ...(bulk || !results
-      ? {
-          '@container (min-width: 760px)': bulk
-            ? {
-                gridTemplateColumns: 'minmax(180px, 1fr) minmax(0, 3fr)',
-                gridTemplateAreas: results
-                  ? '"students preview"'
-                  : '"students setup" "students preview"',
-              }
-            : {
-                gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)',
-                gridTemplateAreas: '"setup preview"',
-              },
-        }
-      : {}),
-    ...(bulk &&
-      !results && {
-        '@container (min-width: 1056px)': {
-          gridTemplateColumns: 'minmax(180px, 0.6fr) minmax(0, 1.4fr) minmax(0, 1fr)',
-          gridTemplateAreas: '"students setup preview"',
-        },
-      }),
+    gridTemplateAreas: results ? '"students" "preview"' : '"students" "setup" "preview"',
+    '@container (min-width: 760px)': {
+      gridTemplateColumns: 'minmax(180px, 1fr) minmax(0, 3fr)',
+      gridTemplateAreas: results ? '"students preview"' : '"students setup" "students preview"',
+    },
+    ...(!results && {
+      '@container (min-width: 1056px)': {
+        gridTemplateColumns: 'minmax(180px, 0.6fr) minmax(0, 1.4fr) minmax(0, 1fr)',
+        gridTemplateAreas: '"students setup preview"',
+      },
+    }),
   };
 }
 
-export default function AssignmentCreationForm({
+export default function AssignmentForm({
   busy,
   busyLabel,
   onPreview,
@@ -54,11 +41,11 @@ export default function AssignmentCreationForm({
   busy: boolean;
   busyLabel: string;
   onPreview: FormEventHandler<HTMLFormElement>;
-  onAssign: () => void;
+  onAssign?: () => void;
   onCancel: () => void;
   previewDisabled: boolean;
-  assignDisabled: boolean;
-  assignLabel: string;
+  assignDisabled?: boolean;
+  assignLabel?: string;
   resultAction?: { label: string; icon: string; onClick: () => void };
   children: ReactNode;
 }) {
@@ -66,7 +53,9 @@ export default function AssignmentCreationForm({
     <Box
       component="form"
       noValidate
-      onSubmit={onPreview}
+      onSubmit={(event) => {
+        if (event.target === event.currentTarget) onPreview(event);
+      }}
       sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, minWidth: 0 }}
     >
       <FormBusyRegion busy={busy} label={busyLabel} fillContent flattenFieldset>
@@ -134,21 +123,79 @@ export default function AssignmentCreationForm({
                 >
                   Preview
                 </Button>
-                <Button
-                  type="button"
-                  variant="contained"
-                  size="small"
-                  disabled={assignDisabled}
-                  onClick={onAssign}
-                  startIcon={<Iconify icon="mdi:check" />}
-                >
-                  {assignLabel}
-                </Button>
+                {onAssign && (
+                  <Button
+                    type="button"
+                    variant="contained"
+                    size="small"
+                    disabled={assignDisabled}
+                    onClick={onAssign}
+                    startIcon={<Iconify icon="mdi:check" />}
+                  >
+                    {assignLabel}
+                  </Button>
+                )}
               </Stack>
             </>
           )}
         </Stack>
       </FormBusyRegion>
     </Box>
+  );
+}
+
+export function AssignmentPreviewDialog({
+  title = 'Assignment Preview',
+  busy,
+  children,
+  onClose,
+  action,
+}: {
+  title?: string;
+  busy: boolean;
+  children: ReactNode;
+  onClose: () => void;
+  action?: { label: string; disabled?: boolean; onClick: () => void };
+}) {
+  return (
+    <CustomDialog
+      open
+      hasForm={false}
+      title={title}
+      titleInfo="Review the fee breakdown, policies and installment schedule."
+      maxWidth="md"
+      handleClose={onClose}
+      disableClose={busy}
+      guardUnsavedChanges={false}
+    >
+      <DialogScrollContent>
+        <FormBusyRegion busy={busy} label="Saving…">
+          <Stack spacing={2}>{children}</Stack>
+        </FormBusyRegion>
+      </DialogScrollContent>
+      <DialogActions>
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          disabled={busy}
+          onClick={onClose}
+          startIcon={<Iconify icon={action ? 'mdi:arrow-left' : 'mdi:close'} />}
+        >
+          {action ? 'Back to form' : 'Close'}
+        </Button>
+        {action && (
+          <Button
+            size="small"
+            variant="contained"
+            disabled={busy || action.disabled}
+            onClick={action.onClick}
+            startIcon={<Iconify icon="mdi:check" />}
+          >
+            {action.label}
+          </Button>
+        )}
+      </DialogActions>
+    </CustomDialog>
   );
 }

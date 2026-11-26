@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-26
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -139,8 +139,9 @@ version error; **Refresh and select current versions** reloads the selection wit
 the target name. Retries retain the existing idempotency behavior.
 
 Refund Policy details anchor header/section help to the visible info icon while retaining
-the keyboard/touch target and panel collision handling. The drawer shows saved eligibility,
-refund calculation, payout channels, expense category, and default paying bank account.
+the keyboard/touch target and panel collision handling. The header shows the policy status,
+and the drawer shows saved eligibility, payout channels, expense category, and default
+paying bank account.
 
 Demand Draft reconciliation displays **DD Issue Date** and **Payment Date** independently.
 Missing issue dates remain unavailable. See the [backend date contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#demand-draft-collection-dates)
@@ -728,7 +729,13 @@ The shared vertical navigation keeps every ancestor of the active page expanded,
 
 ### Fee Structure policy defaults
 
-When a new Fee Structure opens, the Policies form loads the academic year's Active Collection and Refund policies. It fills an untouched empty selection with that type's Default before the Policies tab is opened. Staff can choose a different policy; saved structures keep their explicit selections, including intentionally absent optional policies.
+When a new Fee Structure opens, the Policies form loads the academic year's active Collection, Refund and Proration policies. It fills an untouched empty selection only when that family has one eligible current default. Staff can choose a different policy; saved structures keep their explicit version pins. Proration is required for setup completion and publication, while incomplete drafts remain savable. Missing or ambiguous defaults require explicit selection.
+
+The selected class uses a primary underline. The selected structure alone has a left accent and filled sequence badge; clicking its name, number or status uses the same unsaved-change guard. Delete remains independent. Fee Structure hides version captions in headings, payment-frequency rows and policy choosers without changing saved version IDs. Default policies use a star. The chooser's preview styling covers the whole row, including its separate Select action; its read-only details keep the standard policy module presentation unchanged.
+
+Policy match indicators require known coverage of every structure fee head. Readiness starts collapsed before a check and when there are no errors or warnings; issue results reopen it, with warnings expanded. A fresh clean result collapses it again. Unchanged-revision save validation uses a toast while preserving the editor. The Copy dialog keeps actions at the bottom and its current-version refresh action compact. Summary policies use the same responsive columns as the metrics above them.
+
+The policy chooser shows name, detail and Select-action skeletons during initial loading. Cached choices remain visible during refresh. Structure sequence badges use the same small dimensions and typography in selected and unselected rows.
 
 All four policy editors use the same Default control. A current Default explains why it cannot
 be cleared or moved to Draft, and the archive action requires staff to designate a replacement
@@ -943,13 +950,13 @@ Finance forms share `FormPrerequisiteState` through the Finance route/permission
 | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Refund, Proration and Collection policies       | Refund/proration fee-head setup; expense or income mapping when activating; non-cash refund bank. Collection late fees use a common rule without fee-head selection or setup. |
 | Fee heads, Fee Categories and Charge Categories | Fee category and income mappings                                                                                                                                              |
-| Payment Terms and Fee Structures                | Board/calendar; active heads; published board/year terms; active collection policy for publication                                                                            |
+| Payment Terms and Fee Structures                | Board/calendar; active heads; published board/year terms; required policy selections for publication                                                                            |
 | Fee Assignment and Concession Requests          | Matching published structure; student assignment; active concession type and policy                                                                                           |
 | Charges and Collections                         | Charge category; assigned obligations; bank for non-cash collection                                                                                                           |
 | Refund Requests, payouts and Adjustments        | Assigned refund policy; eligible paid sources; explicit pending-verification responses; payout category and bank                                                              |
 | Manual Income/Expense and Cash Management       | Category; non-cash bank; available cash; deposit/approval bank                                                                                                                |
 
-Draft and optional choices retain their existing rules: all-head refund drafts, disabled late fees, cash collection without a bank, approved charge-only collection and optional structure policies remain available. Historical mappings and saved version pins remain visible. Cash command retries retain their original uncertain-outcome payload; the server remains authoritative for balances, eligibility and publication.
+Draft and optional choices retain their existing rules: all-head refund drafts, disabled late fees, cash collection without a bank, approved charge-only collection and incomplete fee-structure drafts remain available. Historical mappings and saved version pins remain visible. Cash command retries retain their original uncertain-outcome payload; the server remains authoritative for balances, eligibility and publication.
 
 ## Receipt and reconciliation list criteria
 

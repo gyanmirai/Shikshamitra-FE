@@ -106,6 +106,9 @@ describe('assignment review evidence', () => {
     expect(screen.getByText('Total to assign').nextElementSibling).toHaveTextContent('₹ 1,000');
     expect(screen.getByText('Scheduled fees').nextElementSibling).toHaveTextContent('₹ 1,200');
     expect(screen.getByText('Proration reduction').nextElementSibling).toHaveTextContent('₹ 200');
+    expect(
+      screen.getByText('Proration reduction').parentElement?.nextElementSibling
+    ).toHaveTextContent('Total to assign');
     expect(screen.queryByText('Before service adjustment')).not.toBeInTheDocument();
     expect(screen.queryByText('Service reduction')).not.toBeInTheDocument();
     const heads = within(

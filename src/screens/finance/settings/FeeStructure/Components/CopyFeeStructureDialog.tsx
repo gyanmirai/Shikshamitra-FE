@@ -163,7 +163,15 @@ export default function CopyFeeStructureDialog({
         paperProps={{
           sx: {
             height: formik.values.sourceId ? 'min(760px, calc(100dvh - 64px))' : undefined,
-            '& > #dialog-form': { overflow: 'hidden' },
+            display: 'flex',
+            flexDirection: 'column',
+            '& > #dialog-form': {
+              display: 'flex',
+              flexDirection: 'column',
+              flex: '1 1 auto',
+              minHeight: 0,
+              overflow: 'hidden',
+            },
             '& > #dialog-form > :first-child': { flexShrink: 0 },
           },
         }}
@@ -341,7 +349,10 @@ export default function CopyFeeStructureDialog({
                       type="button"
                       size="small"
                       variant="outlined"
+                      color="inherit"
                       disabled={busy || policies.isFetching}
+                      startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                      sx={{ alignSelf: 'flex-start' }}
                       onClick={() => {
                         setError('');
                         policies.refetch();
@@ -354,7 +365,7 @@ export default function CopyFeeStructureDialog({
               </Stack>
             </FormBusyRegion>
           </DialogScrollContent>
-          <DialogActions sx={{ flexShrink: 0 }}>
+          <DialogActions sx={{ flexShrink: 0, mt: 'auto' }}>
             <Button
               type="button"
               size="small"

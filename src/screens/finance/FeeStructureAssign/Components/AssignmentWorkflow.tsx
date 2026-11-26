@@ -66,13 +66,9 @@ import { optionalServiceStatus } from './optionalServiceStatus';
 import OptionalFeeServiceRestart from './OptionalFeeServiceRestart';
 import PreparedAssignmentHandoff from './PreparedAssignmentHandoff';
 import { assignmentCurrencyTotals } from './assignmentReviewPresentation';
-import AssignmentCreationForm, { assignmentCreationGrid } from './AssignmentCreationForm';
 import { assignmentEditRequest, assignmentEditReasonError } from './assignmentEditRequest';
 import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
-import AssignmentStepperFrame, {
-  assignmentEditSteps,
-  assignmentEditPadding,
-} from './AssignmentStepperFrame';
+import AssignmentForm, { assignmentBatchGrid, AssignmentPreviewDialog } from './AssignmentForm';
 import {
   assignmentInputError,
   assignmentPolicyError,
@@ -91,6 +87,7 @@ interface AssignmentValues {
   structureId: string;
   requests: AssignmentRequest[];
 }
+const assignmentEditSteps = ['Structure & policies', 'Fees & dates', 'Review & save'];
 const initialValues: AssignmentValues = { structureId: '', requests: [] };
 const studentNameTooltipSlots: TooltipProps['slotProps'] = {
   tooltip: {
@@ -487,6 +484,7 @@ function AssignmentEditor({
   const [reachedStep, setReachedStep] = useState(0);
   const [structureValidated, setStructureValidated] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.studentId ?? '');
   const [studentSearch, setStudentSearch] = useState('');
   const [studentPage, setStudentPage] = useState(1);
@@ -570,6 +568,7 @@ function AssignmentEditor({
     generation.current += 1;
     reviewedValues.current = undefined;
     setPreview(undefined);
+    setPreviewDialogOpen(false);
     setShowResults(false);
     setError('');
     setRetryingConfirmation(false);
@@ -598,6 +597,12 @@ function AssignmentEditor({
     setPreview(undefined);
     const items = values.requests.filter((r) => !committedIds.has(r.studentId));
     if (!items.length) return;
+    const editReasonError = items.map(assignmentEditReasonError).find(Boolean);
+    if (editReasonError) {
+      setShowEditReasonError(true);
+      setError(editReasonError);
+      return;
+    }
     const candidate = candidates.data?.find((item) => item.id === values.structureId);
     if (!candidate) {
       setStructureValidated(false);
@@ -685,6 +690,7 @@ function AssignmentEditor({
         reviewedValues.current = JSON.stringify(values);
         setStructureValidated(true);
         setPreview(result);
+        if (!isBulk) setPreviewDialogOpen(true);
         setReachedStep(2);
         setActiveStep(2);
       }
@@ -810,6 +816,10 @@ function AssignmentEditor({
       (phase === 'preview' && (candidates.isLoading || candidates.isError))
     )
       return;
+    if (phase === 'preview' && !isBulk && retryingConfirmation) {
+      setPreviewDialogOpen(true);
+      return;
+    }
     operation.current = true;
     setOperationPhase(phase);
     try {
@@ -821,6 +831,7 @@ function AssignmentEditor({
     }
   };
 
+  const compactStudentDetails = editingPolicies || editAssignedStructure;
   const studentDetails =
     !isBulk && (viewing || editAssignedStructure) ? (
       <FormSectionCard
@@ -831,11 +842,16 @@ function AssignmentEditor({
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
+            gridTemplateColumns: {
+              xs: compactStudentDetails ? 'repeat(2, minmax(0, 1fr))' : 'minmax(0, 1fr)',
+              sm: 'repeat(3, minmax(0, 1fr))',
+            },
             gap: 2,
           }}
         >
-          <DetailField label="Student name" value={students[0].studentName} />
+          {!compactStudentDetails && (
+            <DetailField label="Student name" value={students[0].studentName} />
+          )}
           <DetailField
             label="Academic year"
             value={
@@ -844,11 +860,17 @@ function AssignmentEditor({
             }
           />
           <DetailField label="GR number" value={students[0].grNumber} />
-          <DetailField label="Roll number" value={students[0].rollNumber} />
+          {!compactStudentDetails && (
+            <DetailField label="Roll number" value={students[0].rollNumber} />
+          )}
           <DetailField label="Class / division" value={students[0].standardDivision} />
-          <DetailField label="Board" value={students[0].boardName} />
-          <DetailField label="Medium" value={students[0].mediumName} />
-          <DetailField label="Academic stage" value={students[0].stageName} />
+          {!compactStudentDetails && (
+            <>
+              <DetailField label="Board" value={students[0].boardName} />
+              <DetailField label="Medium" value={students[0].mediumName} />
+              <DetailField label="Academic stage" value={students[0].stageName} />
+            </>
+          )}
         </Box>
       </FormSectionCard>
     ) : null;
@@ -991,7 +1013,10 @@ function AssignmentEditor({
           onBlur={formik.handleBlur}
           options={(candidates.data ?? []).map((c) => ({
             value: c.id,
-            label: creating ? `${c.name} · Revision ${c.revisionNumber}` : c.name,
+            label:
+              creating && !editAssignedStructure
+                ? `${c.name} · Revision ${c.revisionNumber}`
+                : c.name,
           }))}
           noOptionsMessage="No published structure for this student and year"
           onChange={(value) => {
@@ -1080,13 +1105,14 @@ function AssignmentEditor({
       <Stack
         spacing={2}
         sx={{
-          p: creating ? 0 : editAssignedStructure && !isBulk ? assignmentEditPadding : 2,
+          p: creating ? 0 : 2,
           minWidth: 0,
           ...(!creating && isBulk && { flex: 1, minHeight: 0, overflow: 'hidden' }),
           '& > .MuiAlert-root, & > section': { flexShrink: 0 },
         }}
       >
-        {(creating || activeStep === 2) &&
+        {isBulk &&
+          (creating || activeStep === 2) &&
           !showResults &&
           !busy &&
           !retryingConfirmation &&
@@ -1109,7 +1135,7 @@ function AssignmentEditor({
               This preview has expired. Preview again before assigning fees.
             </Alert>
           )}
-        {creating && error && <Alert severity="error">{error}</Alert>}
+        {creating && error && !previewDialogOpen && <Alert severity="error">{error}</Alert>}
         <AssignmentDirtyState dirty={values.requests.some((r) => !committedIds.has(r.studentId))} />
         <AdmissionDefaults
           formik={formik}
@@ -1130,17 +1156,17 @@ function AssignmentEditor({
             onChange={setInvalidAmounts}
           />
         )}
-        {editAssignedStructure && activeStep === 2 && !showResults && (
+        {!creating && editAssignedStructure && activeStep === 2 && !showResults && (
           <DetailField label="Fee structure change reason" value={values.requests[0]?.editReason} />
         )}
-        {showResults && (
+        {showResults && isBulk && (
           <Box>
             {committedIds.size} assigned
             {!complete ? ` · ${students.length - committedIds.size} need attention` : ''}.
           </Box>
         )}
 
-        {activeStep === 0 && studentDetails}
+        {(creating || activeStep === 0) && studentDetails}
         {!creating && activeStep === 0 && structureFields}
         {(creating || activeStep > 0 || Boolean(candidate)) &&
           (() => {
@@ -1399,11 +1425,18 @@ function AssignmentEditor({
                   })()}
               </>
             );
+            if (creating && !isBulk)
+              return (
+                <Stack spacing={2} sx={{ minWidth: 0 }}>
+                  {structureFields}
+                  {configurationFields}
+                </Stack>
+              );
             return (
               <Box
                 sx={
                   creating
-                    ? assignmentCreationGrid(isBulk, showResults)
+                    ? assignmentBatchGrid(showResults)
                     : {
                         display: 'grid',
                         gridTemplateColumns: {
@@ -1691,7 +1724,7 @@ function AssignmentEditor({
     );
   };
 
-  if (!editAssignedStructure) {
+  if (!editAssignedStructure || !isBulk) {
     return (
       <Formik
         initialValues={initialValues}
@@ -1717,43 +1750,110 @@ function AssignmentEditor({
             missingStructure ||
             selectedPreviewItems.length === 0 ||
             (!retryingConfirmation && previewExpired);
+          const singlePreview = selectedPreviewItems[0]?.preview;
+          const singleOutcome = outcomes?.results[0];
+          const confirmLabel = editAssignedStructure ? 'Save fee changes' : 'Assign fees';
           return (
-            <AssignmentCreationForm
-              busy={busy || formik.isSubmitting}
-              busyLabel={loadingLabel}
-              onCancel={onClose}
-              onPreview={formik.handleSubmit}
-              onAssign={async () => {
-                if (!assignDisabled) await runCreationOperation('commit', formik.values);
-              }}
-              previewDisabled={previewDisabled}
-              assignDisabled={assignDisabled}
-              assignLabel={
-                isBulk && selectedPreviewItems.length > 0
-                  ? `Assign fees (${selectedPreviewItems.length})`
-                  : 'Assign fees'
-              }
-              resultAction={
-                showResults
-                  ? {
-                      label: complete ? 'Close' : 'Review remaining students',
-                      icon: complete ? 'mdi:close' : 'mdi:refresh',
-                      onClick: () => {
-                        if (complete) onClose();
-                        else {
-                          const pendingStudent = students.find(
-                            (item) => !committedIds.has(item.studentId)
-                          );
-                          invalidate();
-                          if (pendingStudent) setSelectedStudentId(pendingStudent.studentId);
+            <>
+              <AssignmentForm
+                busy={busy || formik.isSubmitting}
+                busyLabel={loadingLabel}
+                onCancel={onClose}
+                onPreview={formik.handleSubmit}
+                onAssign={
+                  isBulk
+                    ? async () => {
+                        if (!assignDisabled) await runCreationOperation('commit', formik.values);
+                      }
+                    : undefined
+                }
+                previewDisabled={previewDisabled}
+                assignDisabled={assignDisabled}
+                assignLabel={
+                  isBulk && selectedPreviewItems.length > 0
+                    ? `Assign fees (${selectedPreviewItems.length})`
+                    : 'Assign fees'
+                }
+                resultAction={
+                  isBulk && showResults
+                    ? {
+                        label: complete ? 'Close' : 'Review remaining students',
+                        icon: complete ? 'mdi:close' : 'mdi:refresh',
+                        onClick: () => {
+                          if (complete) onClose();
+                          else {
+                            const pendingStudent = students.find(
+                              (item) => !committedIds.has(item.studentId)
+                            );
+                            invalidate();
+                            if (pendingStudent) setSelectedStudentId(pendingStudent.studentId);
+                          }
+                        },
+                      }
+                    : undefined
+                }
+              >
+                {renderContent(formik, true)}
+              </AssignmentForm>
+              {!isBulk && previewDialogOpen && (
+                <AssignmentPreviewDialog
+                  title={showResults ? 'Assignment Results' : undefined}
+                  busy={busy}
+                  onClose={showResults ? onClose : () => setPreviewDialogOpen(false)}
+                  action={
+                    !showResults && singlePreview
+                      ? {
+                          label: retryingConfirmation ? 'Retry confirmation' : confirmLabel,
+                          disabled: assignDisabled,
+                          onClick: async () => {
+                            if (!assignDisabled)
+                              await runCreationOperation('commit', formik.values);
+                          },
                         }
-                      },
-                    }
-                  : undefined
-              }
-            >
-              {renderContent(formik, true)}
-            </AssignmentCreationForm>
+                      : undefined
+                  }
+                >
+                  {error && <Alert severity="error">{error}</Alert>}
+                  {!showResults && previewExpired && !retryingConfirmation && (
+                    <Alert
+                      severity="warning"
+                      action={
+                        <Button
+                          size="small"
+                          disabled={busy}
+                          startIcon={<Iconify icon="mdi:refresh" />}
+                          onClick={() => runCreationOperation('preview', formik.values)}
+                        >
+                          Review and refresh
+                        </Button>
+                      }
+                    >
+                      This preview has expired. Preview again before saving.
+                    </Alert>
+                  )}
+                  {editAssignedStructure && !showResults && (
+                    <DetailField
+                      label="Fee structure change reason"
+                      value={formik.values.requests[0]?.editReason}
+                    />
+                  )}
+                  {singleOutcome?.result && showResults ? (
+                    <>
+                      {singleOutcome.outcome === 'AlreadyAssigned' && (
+                        <Box>
+                          <Label color="success">Already assigned</Label>
+                        </Box>
+                      )}
+                      <AssignmentReview data={singleOutcome.result.assignment} committed />
+                    </>
+                  ) : showResults ? (
+                    <Alert severity="info">{singleOutcome?.errorMessage}</Alert>
+                  ) : (
+                    singlePreview && <AssignmentReview data={singlePreview} />
+                  )}
+                </AssignmentPreviewDialog>
+              )}
+            </>
           );
         }}
       </Formik>
@@ -1761,7 +1861,7 @@ function AssignmentEditor({
   }
 
   return (
-    <AssignmentStepperFrame savedAssignment={editAssignedStructure && !isBulk}>
+    <Box sx={{ display: 'flex', flex: 1, minHeight: 0, pt: 2, bgcolor: 'background.paper' }}>
       <CustomStepperWithFormik
         contentScrollMode={isBulk ? 'regions' : 'step'}
         initialValues={initialValues}
@@ -2000,6 +2100,6 @@ function AssignmentEditor({
         }}
         renderItem={({ formik }) => renderContent(formik as FormikProps<AssignmentValues>)}
       />
-    </AssignmentStepperFrame>
+    </Box>
   );
 }

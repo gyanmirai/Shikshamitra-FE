@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
 import { Iconify } from 'src/components/iconify';
-import { stylesMode } from 'src/theme/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { tabsClasses } from '@mui/material/Tabs';
 import { useDispatch, useSelector } from 'react-redux';
@@ -80,7 +79,7 @@ export default function FeeStructureEditForm({
           flexShrink: 0,
         }}
       >
-        <Scrollbar autoHide={false} sx={{ pb: 0.5 }}>
+        <Scrollbar autoHide={false}>
           <CustomTabs
             value={selectedClassId || false}
             onChange={(_, value) => handleClassClick(String(value))}
@@ -92,7 +91,12 @@ export default function FeeStructureEditForm({
               width: 'max-content',
               minWidth: 0,
               [`& .${tabsClasses.indicator}`]: {
-                display: 'none',
+                top: 'auto',
+                bottom: 0,
+                height: 2,
+                p: 0,
+                bgcolor: 'primary.main',
+                '& > span': { display: 'none' },
               },
             }}
             slotProps={{
@@ -101,9 +105,8 @@ export default function FeeStructureEditForm({
                 py: 1,
                 minWidth: 64,
                 minHeight: 44,
-                borderRadius: 1,
-                border: 1,
-                borderColor: 'divider',
+                borderRadius: 0,
+                border: 0,
                 typography: 'body2',
                 color: 'text.primary',
                 fontWeight: 500,
@@ -115,13 +118,12 @@ export default function FeeStructureEditForm({
                 },
               },
               selected: {
-                bgcolor: 'action.selected',
-                borderColor: 'common.black',
-                [stylesMode.dark]: { borderColor: 'text.primary' },
+                bgcolor: 'transparent',
                 color: 'text.primary',
                 fontWeight: 500,
-                '&:hover': { bgcolor: 'action.selected', color: 'text.primary' },
+                '&:hover': { bgcolor: 'transparent', color: 'text.primary' },
               },
+              scroller: { py: 0 },
               flexContainer: { flexWrap: 'nowrap', gap: 1 },
             }}
           >

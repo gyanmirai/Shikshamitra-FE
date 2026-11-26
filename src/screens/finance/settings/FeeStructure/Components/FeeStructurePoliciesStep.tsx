@@ -8,6 +8,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { FormSectionHeader } from 'src/components/form-section-card';
+import { DefaultIndicator } from 'src/screens/finance/components/DefaultIndicator';
 import {
   Box,
   Card,
@@ -41,10 +42,7 @@ interface Props {
   candidate: StructureCandidate;
   settings: StructureSettings;
   impacts: StructurePolicyImpact[];
-  catalogs: Record<
-    Exclude<StructurePolicyFamily, 'proration'>,
-    StructurePolicyCatalog
-  > & {
+  catalogs: Record<Exclude<StructurePolicyFamily, 'proration'>, StructurePolicyCatalog> & {
     proration?: StructurePolicyCatalog;
   };
   writable: boolean;
@@ -67,9 +65,13 @@ export default function FeeStructurePoliciesStep({
 }: Props) {
   const [choosing, setChoosing] = useState<StructurePolicyFamily>();
   const selectedFamily = impacts.find((impact) => impact.key === choosing);
-  const catalogFor = (family: StructurePolicyFamily) => catalogs[family] ?? {
-    items: [], loading: false, error: false, retry: () => {},
-  };
+  const catalogFor = (family: StructurePolicyFamily) =>
+    catalogs[family] ?? {
+      items: [],
+      loading: false,
+      error: false,
+      retry: () => {},
+    };
   return (
     <>
       <Stack spacing={2} sx={{ width: 1, maxWidth: 'md', mx: 'auto', py: 1, minWidth: 0 }}>
@@ -84,27 +86,47 @@ export default function FeeStructurePoliciesStep({
               {impacts.map((impact) => {
                 const { key } = impact;
                 const version = candidate[`${key}PolicyVersionId`];
-                const prorationUnavailable = key === 'proration' &&
-                  (settings.permissions.proration === undefined || settings.permissions.prorationRead === undefined);
+                const prorationUnavailable =
+                  key === 'proration' &&
+                  (settings.permissions.proration === undefined ||
+                    settings.permissions.prorationRead === undefined);
                 const requiredError = locked ? '' : structurePolicyError(candidate, key);
                 const requiredErrorId = `structure-${key}-policy-required`;
                 const allowed =
                   writable && !!settings.permissions[key] && !!settings.permissions[`${key}Read`];
-                const policy = locked
-                  ? undefined
-                  : settings.policies.find(
-                      (item) => item.family === key && item.versionId === version
-                    );
+                const policyMetadata = settings.policies.find(
+                  (item) =>
+                    item.family === key &&
+                    item.id === candidate[`${key}PolicyId`] &&
+                    item.versionId === version
+                );
+                const policy = locked ? undefined : policyMetadata;
                 const mismatched = !!impact.incompatible;
-                const matchedHeads =
-                  impact.rows?.filter((row) =>
-                    key === 'collection'
-                      ? row.treatment === 'Late fee applies'
-                      : row.treatment !== 'Excluded'
-                  ).length ?? 0;
-                const versionNumber =
-                  policy?.versionNumber ??
-                  / · v(\d+)(?: · Default)?$/.exec(impact.policyLabel)?.[1];
+                const matchTreatment =
+                  key === 'collection' ? 'Late fee applies' : 'Policy eligible';
+                const excludedTreatment = key === 'collection' ? 'No late fee' : 'Excluded';
+                const coverageRows = candidate.feeHeads.map((head) =>
+                  impact.rows?.find((row) => row.id === head.feeHeadId)
+                );
+                const coverageKnown =
+                  !!impact.rows &&
+                  coverageRows.every(
+                    (row) =>
+                      row &&
+                      (row.treatment === matchTreatment || row.treatment === excludedTreatment)
+                  );
+                const matchedHeads = coverageRows.filter(
+                  (row) => row?.treatment === matchTreatment
+                ).length;
+                const allHeadsMatch =
+                  !!version &&
+                  !mismatched &&
+                  key !== 'proration' &&
+                  candidate.feeHeads.length > 0 &&
+                  coverageKnown &&
+                  matchedHeads === candidate.feeHeads.length;
+                const policyName =
+                  policy?.name || impact.policyLabel.replace(/ · v\d+(?: · Default)?$/, '');
                 return (
                   <Box
                     component="section"
@@ -119,7 +141,7 @@ export default function FeeStructurePoliciesStep({
                     <FormSectionHeader
                       descriptionTooltip={impact.description}
                       descriptionTooltipLabel={`${impact.label} information`}
-                      icon={version ? GlobalIcons.approvedIcon : GlobalIcons.documentIcon}
+                      icon={allHeadsMatch ? GlobalIcons.approvedIcon : GlobalIcons.documentIcon}
                       title={
                         <Stack
                           component="span"
@@ -131,7 +153,7 @@ export default function FeeStructurePoliciesStep({
                         >
                           <span>{impact.label}</span>
                           <Typography component="span" variant="caption" color="text.secondary">
-                            {key === 'proration' ? 'Optional' : 'Required'}
+                            Required
                           </Typography>
                         </Stack>
                       }
@@ -192,35 +214,30 @@ export default function FeeStructurePoliciesStep({
                       }
                     />
                     <Stack spacing={0.5} sx={{ pl: { xs: 0, sm: 5.5 }, mt: 0.5 }}>
-                      <Typography
-                        variant="body2"
-                        sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
-                      >
-                        {version
-                          ? policy?.name || impact.policyLabel
-                          : key === 'proration'
-                            ? 'Use academic-year default'
-                            : `Choose a ${key} policy before review.`}
-                      </Typography>
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
+                        >
+                          {version ? policyName : `Choose a ${key} policy before review.`}
+                        </Typography>
+                        {version && policyMetadata?.isDefault === true && (
+                          <DefaultIndicator label="Default policy" />
+                        )}
+                      </Stack>
                       {requiredError && (
                         <FormHelperText id={requiredErrorId} error sx={{ m: 0 }}>
                           {requiredError}
                         </FormHelperText>
                       )}
-                      {version && (
-                        <Typography variant="caption" color="text.secondary">
-                          {versionNumber ? `Version ${versionNumber}` : 'Attached version'}
-                          {policy?.isDefault ? ' · Default' : ''}
-                        </Typography>
-                      )}
                       {version && !mismatched && key !== 'proration' && (
                         <Typography variant="caption" color="text.secondary">
-                          {impact.rows
-                            ? !impact.rows.length
+                          {coverageKnown
+                            ? !candidate.feeHeads.length
                               ? 'No fee heads have been added to this structure.'
                               : key === 'collection'
-                                ? `${matchedHeads} of ${impact.rows.length} fee head${impact.rows.length === 1 ? '' : 's'} ${matchedHeads === 1 ? 'has' : 'have'} late fees`
-                                : `${matchedHeads} of ${impact.rows.length} fee head${impact.rows.length === 1 ? '' : 's'} ${matchedHeads === 1 ? 'matches' : 'match'} refund rules`
+                                ? `${matchedHeads} of ${candidate.feeHeads.length} fee head${candidate.feeHeads.length === 1 ? '' : 's'} ${matchedHeads === 1 ? 'has' : 'have'} late fees`
+                                : `${matchedHeads} of ${candidate.feeHeads.length} fee head${candidate.feeHeads.length === 1 ? '' : 's'} ${matchedHeads === 1 ? 'matches' : 'match'} refund rules`
                             : catalogFor(key).loading
                               ? 'Loading coverage…'
                               : 'Coverage details unavailable'}
@@ -235,10 +252,12 @@ export default function FeeStructurePoliciesStep({
                         <Typography variant="body2" color="text.secondary">
                           The running Finance API does not support fee structure proration yet.
                         </Typography>
-                      ) : !settings.permissions[`${key}Read`] && (
-                        <Typography variant="body2" color="text.secondary">
-                          You do not have permission to browse this policy family.
-                        </Typography>
+                      ) : (
+                        !settings.permissions[`${key}Read`] && (
+                          <Typography variant="body2" color="text.secondary">
+                            You do not have permission to browse this policy family.
+                          </Typography>
+                        )
                       )}
                       {catalogFor(key).error && (
                         <Alert

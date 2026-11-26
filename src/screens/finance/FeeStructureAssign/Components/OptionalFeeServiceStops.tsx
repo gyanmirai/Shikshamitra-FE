@@ -29,15 +29,12 @@ import { optionalServiceStatus } from './optionalServiceStatus';
 import AssignmentFeeHeadSummary from './AssignmentFeeHeadSummary';
 import OptionalFeeServiceRestart from './OptionalFeeServiceRestart';
 
-import type { FeeHeadProration } from './assignmentReviewPresentation';
-
 export default function OptionalFeeServiceStops({
   assignment,
   disabled,
   onSaved,
   onBusyChange,
   disabledReason,
-  feeHeadProration,
   canRestart,
 }: {
   assignment: AssignmentPreview;
@@ -45,7 +42,6 @@ export default function OptionalFeeServiceStops({
   onSaved?: () => void;
   onBusyChange?: (busy: boolean) => void;
   disabledReason?: string;
-  feeHeadProration?: Map<string, FeeHeadProration>;
   canRestart?: boolean;
 }) {
   const [head, setHead] = useState<AssignmentHead>();
@@ -150,7 +146,6 @@ export default function OptionalFeeServiceStops({
               key={item.feeHeadId}
               head={item}
               currency={assignment.currency}
-              calculation={feeHeadProration?.get(item.feeHeadId)}
               status={
                 label ? (
                   <Label color={stopped || label === 'Ended' ? 'default' : 'success'}>
