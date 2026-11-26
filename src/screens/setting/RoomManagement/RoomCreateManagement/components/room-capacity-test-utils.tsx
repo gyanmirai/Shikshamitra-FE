@@ -96,23 +96,28 @@ export async function openBuildingEditor() {
   return screen.findByRole('dialog', { name: 'Edit Building' });
 }
 
-export async function saveBuildingCapacity(editor: HTMLElement, totalRoom: number) {
-  fireEvent.change(within(editor).getByLabelText(/^Total rooms/), {
-    target: { value: String(totalRoom) },
-  });
+export async function saveBuilding(editor: HTMLElement) {
   fireEvent.click(within(editor).getByRole('button', { name: 'Submit' }));
   await waitFor(() =>
     expect(screen.queryByRole('dialog', { name: 'Edit Building' })).not.toBeInTheDocument()
   );
 }
 
-export function expectRoomDraft() {
+export async function saveBuildingWithNewFloor(editor: HTMLElement) {
+  fireEvent.click(within(editor).getByRole('button', { name: 'Add floor' }));
+  const newFloor = within(within(editor).getByRole('listitem', { name: 'Floor 2' }));
+  fireEvent.change(newFloor.getByLabelText(/^Floor name/), { target: { value: 'Second' } });
+  fireEvent.change(newFloor.getByLabelText(/^Total rooms/), { target: { value: '2' } });
+  await saveBuilding(editor);
+}
+
+export function expectRoomDraft(floor = 'First') {
   expect(screen.getByLabelText(/^Room name/)).toHaveValue('A102');
   expect(screen.getByLabelText(/^Column 1 rows/)).toHaveValue(3);
   expect(screen.getByLabelText(/^Column 2 rows/)).toHaveValue(2);
   expect(screen.getByLabelText(/^Students per bench/)).toHaveValue(2);
   expect(screen.getByRole('checkbox', { name: 'Whiteboard' })).toBeChecked();
   expect(screen.getByRole('combobox', { name: /^Building/ })).toHaveTextContent('Main');
-  expect(screen.getByRole('combobox', { name: /^Floor/ })).toHaveTextContent('First');
+  expect(screen.getByRole('combobox', { name: /^Floor/ })).toHaveTextContent(floor);
   expect(screen.getByRole('combobox', { name: /^Room type/ })).toHaveTextContent('Classroom');
 }

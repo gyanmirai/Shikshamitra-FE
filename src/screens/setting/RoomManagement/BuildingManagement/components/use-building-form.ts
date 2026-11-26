@@ -9,8 +9,8 @@ import {
 } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 
 import { createBuildingValidationSchema } from './validationSchema';
-import { getFloorRoomLimitFailure } from '../services/floor-room-capacity';
 import { buildingPayload, getBuildingInitialValues } from './initialValues';
+import { floorInUseCode, getFloorRoomLimitFailure } from '../services/floor-room-capacity';
 
 import type { IBuilding, IBuildingFormProps } from '../types';
 
@@ -55,10 +55,11 @@ export function useBuildingForm({ editData, onClose, onBusyChange }: IBuildingFo
           helpers.setFieldTouched(`floors.${conflict.index}.totalRoom`, true, false);
           return;
         }
-        const message =
-          parseApiProblemDetail(error).detail || 'Unable to save the building. Try again.';
+        const problem = parseApiProblemDetail(error);
+        const message = problem.detail || 'Unable to save the building. Try again.';
         helpers.setStatus(message);
         shikshaMitraToast.error({ message });
+        if (editData && problem.errorCode === floorInUseCode) await usage.refetch();
       } finally {
         saving.current = false;
         onBusyChange?.(false);
@@ -91,6 +92,7 @@ export function useBuildingForm({ editData, onClose, onBusyChange }: IBuildingFo
 
   return {
     ...formik,
+    occupiedFloorIds: new Set(floors.filter((floor) => (floor.roomCount ?? 0) > 0).map((floor) => floor.id)),
     loadingUsage: Boolean(editData && usage.isFetching),
     usageError: Boolean(editData && usage.isError),
     refreshUsage,

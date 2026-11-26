@@ -11,15 +11,31 @@ import { useInstituteFieldPreview } from 'src/components/institute-field-formatt
 
 import type { IBuildingFormValues } from '../types';
 
-type Props = {
+export type BuildingFloorRowProps = {
   formik: FormikProps<IBuildingFormValues>;
   index: number;
+  occupied: boolean;
+  readOnly: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  canRemove: boolean;
   onMove: (destination: number) => void;
   onRemove: () => void;
   dragHandle: ReactNode;
 };
 
-export function BuildingFloorRow({ formik, index, onMove, onRemove, dragHandle }: Props) {
+export function BuildingFloorRow({
+  formik,
+  index,
+  occupied,
+  readOnly,
+  canMoveUp,
+  canMoveDown,
+  canRemove,
+  onMove,
+  onRemove,
+  dragHandle,
+}: BuildingFloorRowProps) {
   const floor = formik.values.floors[index];
   const namePreview = useInstituteFieldPreview(
     'buildings',
@@ -38,19 +54,19 @@ export function BuildingFloorRow({ formik, index, onMove, onRemove, dragHandle }
     {
       label: `Move floor ${number} up`,
       icon: GlobalIcons.moveUp,
-      disabled: index === 0,
+      disabled: !canMoveUp,
       onClick: () => onMove(index - 1),
     },
     {
       label: `Move floor ${number} down`,
       icon: GlobalIcons.moveDown,
-      disabled: index === formik.values.floors.length - 1,
+      disabled: !canMoveDown,
       onClick: () => onMove(index + 1),
     },
     {
       label: `Remove floor ${number}`,
       icon: GlobalIcons.delete,
-      disabled: false,
+      disabled: !canRemove,
       onClick: onRemove,
     },
   ];
@@ -86,6 +102,11 @@ export function BuildingFloorRow({ formik, index, onMove, onRemove, dragHandle }
           ))}
         </Stack>
       </Stack>
+      {occupied && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          Move or delete the assigned rooms to edit this floor.
+        </Typography>
+      )}
       <Box
         sx={{
           display: 'grid',
@@ -102,6 +123,7 @@ export function BuildingFloorRow({ formik, index, onMove, onRemove, dragHandle }
             label="Floor name"
             name={namePath}
             value={floor.floorName}
+            slotProps={{ input: { readOnly } }}
             onChange={(event) =>
               formik.setFieldValue(namePath, event.target.value.replace(/[^a-zA-Z0-9\s]/g, ''))
             }
@@ -125,6 +147,7 @@ export function BuildingFloorRow({ formik, index, onMove, onRemove, dragHandle }
             allowNegative={false}
             valueIsNumericString
             roundToWholeRupees={false}
+            slotProps={{ input: { readOnly } }}
             onValueChange={(values, source) => {
               if (source.source === 'event') formik.setFieldValue(roomsPath, values.value);
             }}

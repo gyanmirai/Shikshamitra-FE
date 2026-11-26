@@ -16,7 +16,7 @@ const building = {
   buildingName: 'Main Block',
   totalFloors: 1,
   description: '',
-  floors: [{ id: 'floor-a', floorNo: 1, floorName: 'First Floor', totalRoom: 5, roomCount: 2 }],
+  floors: [{ id: 'floor-a', floorNo: 1, floorName: 'First Floor', totalRoom: 5, roomCount: 0 }],
 };
 const onClose = vi.fn();
 
@@ -46,9 +46,9 @@ it('blocks an invalid decrease next to the floor field without submitting', asyn
   );
   renderBuildingForm(createBuildingFormStore(), onClose, building, null, false);
   await waitFor(() => expect(screen.getByRole('button', { name: /Update|Submit/ })).toBeEnabled());
-  fireEvent.change(screen.getByLabelText(/^Total rooms/i), { target: { value: '1' } });
+  fireEvent.change(screen.getByLabelText(/^Total rooms/i), { target: { value: '0' } });
   fireEvent.click(screen.getByRole('button', { name: /Update|Submit/ }));
-  expect(await screen.findByText(/First Floor already has 2 rooms/)).toBeInTheDocument();
+  expect(await screen.findByText('Floor must have at least 1 room')).toBeInTheDocument();
   expect(writes).toBe(0);
   expect(onClose).not.toHaveBeenCalled();
 });
@@ -58,7 +58,7 @@ it('allows editing another field after focusing an invalid submission', async ()
   renderBuildingForm(createBuildingFormStore(), onClose, building, null, false);
   await waitFor(() => expect(screen.getByRole('button', { name: /Update|Submit/ })).toBeEnabled());
   const capacity = screen.getByLabelText(/^Total rooms/i);
-  fireEvent.change(capacity, { target: { value: '1' } });
+  fireEvent.change(capacity, { target: { value: '0' } });
   fireEvent.click(screen.getByRole('button', { name: /Update|Submit/ }));
   await waitFor(() => expect(capacity).toHaveFocus());
   const name = screen.getByLabelText(/^Building name/i);
@@ -67,7 +67,7 @@ it('allows editing another field after focusing an invalid submission', async ()
   await user.type(name, 'Main Block Revised');
   expect(name).toHaveFocus();
   expect(name).toHaveValue('Main Block Revised');
-  expect(screen.getByText(/First Floor already has 2 rooms/)).toBeInTheDocument();
+  expect(screen.getByText('Floor must have at least 1 room')).toBeInTheDocument();
 });
 
 it('retains the draft on a rejected save and closes only after a successful retry', async () => {
@@ -98,7 +98,7 @@ it('retains the draft on a rejected save and closes only after a successful retr
 });
 
 it('refreshes usage after a capacity conflict and permits recovery without discarding the draft', async () => {
-  let count = 2;
+  let count = 0;
   let writes = 0;
   let failRefresh = false;
   mswServer.use(
@@ -127,7 +127,7 @@ it('refreshes usage after a capacity conflict and permits recovery without disca
   fireEvent.click(screen.getByRole('button', { name: /Update|Submit/ }));
   expect(await screen.findByText(/First Floor already has 3 rooms/)).toBeInTheDocument();
   expect(onClose).not.toHaveBeenCalled();
-  count = 1;
+  count = 0;
   failRefresh = true;
   fireEvent.click(screen.getByRole('button', { name: 'Refresh room counts' }));
   await screen.findByText('Room counts could not be loaded. Retry before updating this building.');

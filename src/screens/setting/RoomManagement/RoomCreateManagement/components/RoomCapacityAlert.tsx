@@ -33,7 +33,7 @@ export function RoomCapacityAlert({ building, floor, disabled, onEdit, onRefresh
           {hasCounts
             ? `already has ${floor.roomCount} ${floor.roomCount === 1 ? 'room' : 'rooms'}, with a limit of ${floor.totalRoom}.`
             : 'has reached its room limit.'}{' '}
-          Increase Total rooms for this floor to add another room, or choose a different floor.
+          Choose another floor or move an existing room to free a place.
         </span>
         <Button type="button" size="small" color="inherit" disabled={disabled} onClick={onRefresh}>
           Refresh capacity
@@ -52,7 +52,7 @@ export function RoomCapacityAlert({ building, floor, disabled, onEdit, onRefresh
           </Button>
         ) : (
           <span>
-            Ask a user with building management access to increase this floor&apos;s limit.
+            Ask a user with building management access if you need to add a floor.
           </span>
         )}
       </Stack>

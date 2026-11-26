@@ -10,7 +10,7 @@ import {
   selectRoomOption,
   openBuildingEditor,
   renderCapacityForm,
-  saveBuildingCapacity,
+  saveBuildingWithNewFloor,
 } from './room-capacity-test-utils';
 
 vi.hoisted(() => {
@@ -62,15 +62,16 @@ it.each([
     expect(onClose).not.toHaveBeenCalled();
     expect(network.roomWrites).toHaveLength(1);
     const editor = await openBuildingEditor();
-    await saveBuildingCapacity(editor, 2);
+    await saveBuildingWithNewFloor(editor);
+    await selectRoomOption('Floor', 'Second');
     await waitFor(() => expect(screen.queryByText('Room Limit Reached')).not.toBeInTheDocument());
-    expectRoomDraft();
+    expectRoomDraft('Second');
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(network.roomWrites).toHaveLength(2);
     expect(network.roomWrites[1]).toMatchObject({
       roomName: 'A102',
-      floorId: 'floor-a',
+      floorId: 'floor-b',
       columnRows: [3, 2],
       features: ['Whiteboard'],
     });

@@ -71,7 +71,7 @@ export function DeleteBuildingDialog({ open, building, onClose }: Props) {
             onClose();
           }}
         >
-          Delete building
+          Delete
         </LoadingButton>
       }
     />

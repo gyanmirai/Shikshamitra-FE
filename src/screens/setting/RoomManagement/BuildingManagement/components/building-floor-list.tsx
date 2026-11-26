@@ -24,14 +24,36 @@ const restrictToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 
 
 type Props = {
   formik: FormikProps<IBuildingFormValues>;
+  occupiedFloorIds?: ReadonlySet<string>;
+  usagePending: boolean;
   error?: string;
   onMove: (from: number, to: number) => void;
   onRemove: (floor: IBuildingFloorValue, index: number) => void;
   onDraggingChange?: (dragging: boolean) => void;
 };
 
-export function BuildingFloorList({ formik, error, onMove, onRemove, onDraggingChange }: Props) {
+export function BuildingFloorList({
+  formik,
+  occupiedFloorIds,
+  usagePending,
+  error,
+  onMove,
+  onRemove,
+  onDraggingChange,
+}: Props) {
   const { floors } = formik.values;
+  const firstSavedFloorId = formik.initialValues.floors[0]?.id;
+  const isOccupied = (floor: IBuildingFloorValue) =>
+    occupiedFloorIds?.has(floor.id) ?? (floor.roomCount ?? 0) > 0;
+  const isLocked = (floor: IBuildingFloorValue) =>
+    isOccupied(floor) || (usagePending && Boolean(floor.id));
+  const canMove = (from: number, to: number) =>
+    !formik.isSubmitting &&
+    from >= 0 &&
+    to >= 0 &&
+    to < floors.length &&
+    from !== to &&
+    !floors.slice(Math.min(from, to), Math.max(from, to) + 1).some(isLocked);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -42,9 +64,7 @@ export function BuildingFloorList({ formik, error, onMove, onRemove, onDraggingC
     return floors[index]?.floorName || `Floor ${index + 1}`;
   };
   const move = (from: number, to: number) => {
-    if (!formik.isSubmitting && from >= 0 && to >= 0 && to < floors.length && from !== to) {
-      onMove(from, to);
-    }
+    if (canMove(from, to)) onMove(from, to);
   };
   return (
     <DndContext
@@ -59,9 +79,11 @@ export function BuildingFloorList({ formik, error, onMove, onRemove, onDraggingC
         announcements: {
           onDragStart: ({ active }) => `${label(active.id)} picked up.`,
           onDragOver: ({ active, over }) =>
-            over ? `${label(active.id)} is at position ${position(over.id) + 1}.` : undefined,
+            over && canMove(position(active.id), position(over.id))
+              ? `${label(active.id)} is at position ${position(over.id) + 1}.`
+              : undefined,
           onDragEnd: ({ active, over }) =>
-            over
+            over && canMove(position(active.id), position(over.id))
               ? `${label(active.id)} dropped at position ${position(over.id) + 1}.`
               : `${label(active.id)} was not moved.`,
           onDragCancel: ({ active }) => `${label(active.id)} was not moved.`,
@@ -89,6 +111,13 @@ export function BuildingFloorList({ formik, error, onMove, onRemove, onDraggingC
               key={floor.rowKey}
               formik={formik}
               index={index}
+              occupied={isOccupied(floor)}
+              readOnly={isLocked(floor)}
+              canMoveUp={canMove(index, index - 1)}
+              canMoveDown={canMove(index, index + 1)}
+              canRemove={
+                !isLocked(floor) && index > 0 && (!firstSavedFloorId || floor.id !== firstSavedFloorId)
+              }
               onMove={(destination) => move(index, destination)}
               onRemove={() => onRemove(floor, index)}
             />

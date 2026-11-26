@@ -46,6 +46,7 @@ it.each([false, true])(
       });
     }
     const handle = screen.getByRole('button', { name: 'Drag floor 1 to reorder' });
+    await waitFor(() => expect(handle).toBeEnabled());
     act(() => handle.focus());
     fireEvent.keyDown(handle, { code: 'Space', key: ' ' });
     await waitFor(() => expect(handle).toHaveAttribute('aria-pressed', 'true'));

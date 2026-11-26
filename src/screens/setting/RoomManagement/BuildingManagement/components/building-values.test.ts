@@ -37,37 +37,43 @@ it('requires an individual floor and rejects fractional room capacity', async ()
   ).toBe(false);
 });
 
-it('separates new, updated, and removed floors while preserving zero-based numbering', () => {
+it('leaves an occupied floor number intact when removing a preceding unused floor', () => {
   const building = {
     id: 7,
     buildingName: 'North',
     description: '',
-    totalFloors: 2,
+    totalFloors: 3,
     floors: [
       { id: 'ground', floorNo: 0, floorName: 'Ground', totalRoom: 5 },
       { id: 'first', floorNo: 1, floorName: 'First', totalRoom: 8 },
+      { id: 'second', floorNo: 2, floorName: 'Second', totalRoom: 5, roomCount: 1 },
     ],
   };
   const values = getBuildingInitialValues(building);
   values.floors = [
-    values.floors[1],
-    { rowKey: 'new-row', id: '', floorNo: 9, floorName: 'Second', totalRoom: '4' },
+    values.floors[0],
+    values.floors[2],
+    { rowKey: 'new-row', id: '', floorNo: 9, floorName: 'Third', totalRoom: '4' },
   ];
   expect(buildingPayload(values, building)).toEqual({
     buildingName: 'North',
     description: '',
-    totalFloors: 2,
-    floorsToUpdate: [{ id: 'first', floorNo: 0, floorName: 'First', totalRoom: 8 }],
-    floorsToAdd: [{ floorNo: 1, floorName: 'Second', totalRoom: 4 }],
-    floorIdsToDelete: ['ground'],
+    totalFloors: 3,
+    floorsToUpdate: [
+      { id: 'ground', floorNo: 0, floorName: 'Ground', totalRoom: 5 },
+      { id: 'second', floorNo: 2, floorName: 'Second', totalRoom: 5 },
+    ],
+    floorsToAdd: [{ floorNo: 3, floorName: 'Third', totalRoom: 4 }],
+    floorIdsToDelete: ['first'],
   });
   expect(buildingPayload(values)).toEqual({
     buildingName: 'North',
     description: '',
-    totalFloors: 2,
+    totalFloors: 3,
     floors: [
-      { floorNo: 1, floorName: 'First', totalRoom: 8 },
-      { floorNo: 2, floorName: 'Second', totalRoom: 4 },
+      { floorNo: 1, floorName: 'Ground', totalRoom: 5 },
+      { floorNo: 2, floorName: 'Second', totalRoom: 5 },
+      { floorNo: 3, floorName: 'Third', totalRoom: 4 },
     ],
   });
 });

@@ -26,9 +26,6 @@ const BuildingForm = (props: IBuildingFormProps) => {
       onClose(null, false);
     }
   );
-  const hasRemovedFloors = editData?.floors.some(
-    (floor) => !formik.values.floors.some((current) => current.id === floor.id)
-  );
   return (
     <>
       <CustomDialog
@@ -66,7 +63,12 @@ const BuildingForm = (props: IBuildingFormProps) => {
                     </Alert>
                   )}
                   <BuildingDetailsSection formik={formik} isEditing={Boolean(editData)} />
-                  <BuildingFloorsSection formik={formik} onDraggingChange={setIsDragging} />
+                  <BuildingFloorsSection
+                    formik={formik}
+                    occupiedFloorIds={formik.occupiedFloorIds}
+                    usagePending={formik.loadingUsage || formik.usageError}
+                    onDraggingChange={setIsDragging}
+                  />
                   {editData && (
                     <Box>
                       <Button
@@ -80,13 +82,7 @@ const BuildingForm = (props: IBuildingFormProps) => {
                       </Button>
                     </Box>
                   )}
-                  {formik.status && (
-                    <Alert severity="error">
-                      {formik.status}
-                      {hasRemovedFloors &&
-                        ' A floor with assigned rooms cannot be removed. Restore that floor or move its rooms before trying again.'}
-                    </Alert>
-                  )}
+                  {formik.status && <Alert severity="error">{formik.status}</Alert>}
                 </Stack>
               </FormBusyRegion>
             </DialogScrollContent>

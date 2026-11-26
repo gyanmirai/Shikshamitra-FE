@@ -3,11 +3,13 @@ import { act, screen, within, waitFor, fireEvent } from '@testing-library/react'
 
 import { capacityNetwork } from './room-capacity-test-network';
 import {
+  saveBuilding,
   fillRoomDraft,
   expectRoomDraft,
+  selectRoomOption,
   openBuildingEditor,
   renderCapacityForm,
-  saveBuildingCapacity,
+  saveBuildingWithNewFloor,
 } from './room-capacity-test-utils';
 
 vi.hoisted(() => {
@@ -34,18 +36,22 @@ it('warns as soon as a full floor is selected and prevents creating another room
   expect(onClose).not.toHaveBeenCalled();
 });
 
-it('edits the existing building and refreshes capacity without losing the room draft', async () => {
+it('adds a floor to the building and assigns the retained room draft to it', async () => {
   renderCapacityForm(onClose);
   await fillRoomDraft();
   const editor = await openBuildingEditor();
   expect(within(editor).getByLabelText(/^Building name/)).toHaveValue('Main');
   expect(within(editor).getByLabelText(/^Floor name/)).toHaveValue('First');
-  await saveBuildingCapacity(editor, 2);
-  await waitFor(() => expect(screen.queryByText('Room Limit Reached')).not.toBeInTheDocument());
+  expect(within(editor).getByLabelText(/^Total rooms/)).toHaveAttribute('readonly');
+  await saveBuildingWithNewFloor(editor);
   expectRoomDraft();
+  await selectRoomOption('Floor', 'Second');
+  await waitFor(() => expect(screen.queryByText('Room Limit Reached')).not.toBeInTheDocument());
+  expectRoomDraft('Second');
   expect(network.buildingWrites).toEqual([
     expect.objectContaining({
-      floorsToUpdate: [{ id: 'floor-a', floorNo: 1, floorName: 'First', totalRoom: 2 }],
+      floorsToUpdate: [{ id: 'floor-a', floorNo: 1, floorName: 'First', totalRoom: 1 }],
+      floorsToAdd: [{ floorNo: 2, floorName: 'Second', totalRoom: 2 }],
     }),
   ]);
   const {buildingReads} = network;
@@ -56,7 +62,7 @@ it('edits the existing building and refreshes capacity without losing the room d
     expect.objectContaining({
       roomName: 'A102',
       buildingId: 'building-a',
-      floorId: 'floor-a',
+      floorId: 'floor-b',
       roomTypeId: 'type-a',
       columnRows: [3, 2],
       benchCapacity: 2,
@@ -84,7 +90,7 @@ it('retains the warning and room draft after a failed building update', async ()
   renderCapacityForm(onClose);
   await fillRoomDraft();
   const editor = await openBuildingEditor();
-  fireEvent.change(within(editor).getByLabelText(/^Total rooms/), { target: { value: '2' } });
+  fireEvent.change(within(editor).getByLabelText(/^Building name/), { target: { value: 'New name' } });
   fireEvent.click(within(editor).getByRole('button', { name: 'Submit' }));
   expect(await within(editor).findByText('Building save failed.')).toBeInTheDocument();
   fireEvent.click(within(editor).getByRole('button', { name: 'Cancel' }));
@@ -114,7 +120,7 @@ it('allows editing a room that already occupies its full floor', async () => {
 it('keeps the warning when saving the building does not create a free slot', async () => {
   renderCapacityForm(onClose);
   await fillRoomDraft();
-  await saveBuildingCapacity(await openBuildingEditor(), 1);
+  await saveBuilding(await openBuildingEditor());
   expect(screen.getByText('Room Limit Reached')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   expectRoomDraft();
@@ -126,18 +132,20 @@ it('retries a failed capacity refresh after building save without discarding the
   await fillRoomDraft();
   const editor = await openBuildingEditor();
   network.failBuildings = true;
-  await saveBuildingCapacity(editor, 2);
+  await saveBuildingWithNewFloor(editor);
   expect(await screen.findByText(/Room options could not be loaded/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   expectRoomDraft();
   network.failBuildings = false;
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+  await waitFor(() => expect(screen.queryByText(/Room options could not be loaded/)).not.toBeInTheDocument());
+  await selectRoomOption('Floor', 'Second');
   await waitFor(() => expect(screen.queryByText('Room Limit Reached')).not.toBeInTheDocument());
   await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
-  expectRoomDraft();
+  expectRoomDraft('Second');
 });
 
-it('explains who can raise capacity when the user cannot edit buildings', async () => {
+it('explains who can add a floor when the user cannot edit buildings', async () => {
   renderCapacityForm(onClose, false, false);
   await fillRoomDraft();
   expect(await screen.findByText('Room Limit Reached')).toBeInTheDocument();

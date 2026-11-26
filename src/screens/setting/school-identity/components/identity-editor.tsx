@@ -43,6 +43,7 @@ export function IdentityEditor({
     uploadedAssets,
   } = useIdentityEditor(profile, context, onClose);
   const busy = saving || preparingImage;
+  const canPreviewDraft = Boolean(context.organizationId || context.boardId);
   const router = useRouter();
   const discardTitle = 'Discard School Identity Changes?';
   const navigation = useUnsavedNavigation(formik.dirty, {
@@ -63,7 +64,11 @@ export function IdentityEditor({
               ? 'Edit School Identity Override'
               : 'Edit School Defaults'
         }
-        titleInfo="Upload school assets, review the draft PDF, then submit to apply these choices."
+        titleInfo={
+          canPreviewDraft
+            ? 'Upload school assets, review the draft PDF, then submit to apply these choices.'
+            : 'Upload school assets and submit to apply these choices.'
+        }
         handleClose={() => navigation.requestNavigation(onClose)}
         guardUnsavedChanges={false}
         maxWidth="md"
@@ -119,7 +124,9 @@ export function IdentityEditor({
           </Box>
         </DialogScrollContent>
         <DialogActions>
-          <IdentityPreviewButton context={context} choices={formik.values} disabled={busy} />
+          {canPreviewDraft && (
+            <IdentityPreviewButton context={context} choices={formik.values} disabled={busy} />
+          )}
           <Button
             variant="outlined"
             disabled={busy}

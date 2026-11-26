@@ -4,7 +4,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { renderWithProviders } from 'src/test/test-utils';
 import { it, vi, expect, afterEach, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { act, screen, within, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import { IdentityEditor } from './identity-editor';
 
@@ -17,7 +17,9 @@ vi.mock('src/redux/InstituteSetup/schoolIdentityApi', () => ({
   useUpdateSchoolIdentityMutation: () => [mocks.save, { isLoading: mocks.busy }],
   useUploadSchoolIdentityAssetMutation: () => [mocks.upload, { isLoading: false }],
 }));
-vi.mock('./identity-preview', () => ({ IdentityPreviewButton: () => null }));
+vi.mock('./identity-preview', () => ({
+  IdentityPreviewButton: () => <button type="button">Preview document</button>,
+}));
 vi.mock('./identity-asset-field', () => ({
   IdentityAssetField: ({
     kind,
@@ -74,6 +76,12 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+});
+
+it('omits the document preview action from Edit School Defaults', () => {
+  setup();
+  const dialog = within(screen.getByRole('dialog', { name: 'Edit School Defaults' }));
+  expect(dialog.queryByRole('button', { name: 'Preview document' })).not.toBeInTheDocument();
 });
 
 it.each(['Cancel', 'close', 'Escape'])(
