@@ -17,6 +17,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { setCurrentYear } from 'src/redux/globalState/globalSlice';
+import { HrLoadingNotice } from 'src/screens/hr/components/hr-notice';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -288,7 +289,7 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
               steps={hrSetupSteps.map((item) => item.label)}
               activeStep={activeStep}
               ariaLabel="HR setup steps"
-              disabled={busy}
+              disabled={busy || !readiness}
               stepStates={stepStates}
               stepCaptions={stepStates.map((state) => {
                 if (state === 'completed') return <Label color="success">Completed</Label>;
@@ -328,6 +329,7 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
                 </Typography>
               )}
             </Stack>
+            {!readiness && !error && <HrLoadingNotice>Checking HR setup…</HrLoadingNotice>}
             {(error || failure) && (
               <Alert
                 severity="error"
@@ -483,7 +485,7 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
           <Button
             size="small"
             variant="outlined"
-            disabled={busy || (!task && activeStep === 0)}
+            disabled={busy || !readiness || (!task && activeStep === 0)}
             startIcon={<Iconify icon="mdi:arrow-left" />}
             onClick={() =>
               navigate(
@@ -534,7 +536,7 @@ export default function HrSetupWizard({ readiness, error, refreshing, refresh, o
             <Button
               size="small"
               variant="contained"
-              disabled={busy || Boolean(task)}
+              disabled={busy || !readiness || Boolean(task)}
               endIcon={<Iconify icon="mdi:arrow-right" />}
               data-testid="hr-setup-next"
               onClick={() => setActiveStep((value) => value + 1)}

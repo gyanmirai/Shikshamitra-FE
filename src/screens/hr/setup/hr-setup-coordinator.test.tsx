@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 import { HrSetupCoordinator } from './hr-setup-coordinator';
-import { HrSetupSessionProvider } from './hr-setup-session';
 
 const mocks = vi.hoisted(() => ({
   state: {
@@ -47,96 +45,77 @@ vi.mock('next/dynamic', () => ({
     },
 }));
 
-function Workspace({ onDashboard = false }: { onDashboard?: boolean }) {
-  const [hr, setHr] = useState(true);
-  return (
-    <HrSetupSessionProvider>
-      <button type="button" onClick={() => setHr((value) => !value)}>
-        Navigate
-      </button>
-      {hr && <HrSetupCoordinator onDashboard={onDashboard} />}
-    </HrSetupSessionProvider>
-  );
-}
-
-describe('HR setup reminder lifetime', () => {
+describe('On-demand HR setup checks', () => {
   beforeEach(() => {
     cleanup();
     mocks.read.mockClear();
     mocks.state.auth.permissions = [{ name: 'HR.Employee.EmployeeList.Add', isGranted: true }];
     mocks.state.auth.user = { sub: 'operator', tenantid: 'school' };
     mocks.state.globalState.currentYear.id = 'year';
-    mocks.query.currentData.isReady = false;
     mocks.query.isError = false;
   });
-  it('shows on a direct HR entry and remains dismissed across HR re-entry', () => {
-    render(<Workspace />);
-    expect(screen.getByRole('dialog')).toBeTruthy();
-    fireEvent.click(screen.getByText('Close for now'));
-    fireEvent.click(screen.getByText('Navigate'));
-    fireEvent.click(screen.getByText('Navigate'));
+
+  it.each([
+    [true, 'HR setup is complete.'],
+    [false, 'Your school has HR setup items remaining.'],
+    [null, 'No current HR setup result for this academic year.'],
+  ] as const)('uses the dashboard flag %s without fetching details', (savedReady, message) => {
+    render(<HrSetupCoordinator savedReady={savedReady} />);
+    expect(screen.getByText(message)).toBeTruthy();
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(mocks.read.mock.calls.at(-1)?.[1].skip).toBe(true);
+    expect(mocks.read.mock.lastCall?.[1].skip).toBe(true);
   });
-  it('offers dashboard resume after dismissal without relaunching automatically', () => {
-    const view = render(<Workspace />);
-    fireEvent.click(screen.getByText('Close for now'));
-    expect(screen.queryByRole('button', { name: 'Continue HR setup' })).toBeNull();
-    view.rerender(<Workspace onDashboard />);
+
+  it('checks on click and refreshes the saved status when closing', () => {
+    const onChecked = vi.fn();
+    render(<HrSetupCoordinator onChecked={onChecked} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Check HR setup' }));
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(mocks.read.mock.lastCall?.[1].skip).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Close for now' }));
     expect(screen.queryByRole('dialog')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Continue HR setup' }));
-    expect(screen.getByRole('dialog')).toBeTruthy();
-    mocks.query.currentData.isReady = true;
-    fireEvent.click(screen.getByText('Close for now'));
-    expect(screen.queryByRole('button', { name: 'Continue HR setup' })).toBeNull();
+    expect(mocks.read.mock.lastCall?.[1].skip).toBe(true);
+    expect(onChecked).toHaveBeenCalledOnce();
   });
-  it('returns after a new document lifetime', () => {
-    const view = render(<Workspace />);
-    fireEvent.click(screen.getByText('Close for now'));
-    view.unmount();
-    render(<Workspace />);
-    expect(screen.getByRole('dialog')).toBeTruthy();
-  });
-  it.each(['user', 'tenant', 'year'])('does not carry dismissal into another %s', (change) => {
-    const view = render(<Workspace />);
-    fireEvent.click(screen.getByText('Close for now'));
+
+  it.each(['user', 'tenant', 'year'])('closes the check when the %s changes', (change) => {
+    const view = render(<HrSetupCoordinator />);
+    fireEvent.click(screen.getByRole('button', { name: 'Check HR setup' }));
     if (change === 'user') mocks.state.auth.user.sub = 'another-operator';
     if (change === 'tenant') mocks.state.auth.user.tenantid = 'another-school';
     if (change === 'year') mocks.state.globalState.currentYear.id = 'another-year';
-    view.rerender(<Workspace />);
-    expect(screen.getByRole('dialog')).toBeTruthy();
+    view.rerender(<HrSetupCoordinator />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(mocks.read.mock.lastCall?.[1].skip).toBe(true);
   });
-  it('excludes employee self-service and never queries its setup', () => {
+
+  it('continues an explicit check when the first academic year is selected', () => {
+    mocks.state.globalState.currentYear.id = '';
+    const view = render(<HrSetupCoordinator />);
+    fireEvent.click(screen.getByRole('button', { name: 'Check HR setup' }));
+    mocks.state.globalState.currentYear.id = 'year';
+    view.rerender(<HrSetupCoordinator />);
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(mocks.read.mock.lastCall).toEqual([
+      expect.objectContaining({ academicYearId: 'year' }),
+      expect.objectContaining({ skip: false }),
+    ]);
+  });
+
+  it('excludes employee self-service and skips its setup query', () => {
     mocks.state.auth.permissions = [
       { name: 'HR.LeaveManagement.LeaveCenter.Add', isGranted: true },
     ];
-    render(<Workspace />);
-    expect(screen.queryByRole('dialog')).toBeNull();
-    expect(mocks.read.mock.calls.at(-1)?.[1].skip).toBe(true);
+    render(<HrSetupCoordinator />);
+    expect(screen.queryByRole('button', { name: 'Check HR setup' })).toBeNull();
+    expect(mocks.read.mock.lastCall?.[1].skip).toBe(true);
   });
-  it('does not show the popup for a ready school', () => {
-    mocks.query.currentData.isReady = true;
-    render(<Workspace />);
-    expect(screen.queryByRole('dialog')).toBeNull();
-  });
-  it('waits for an existing form dialog to close before opening setup', async () => {
-    const existing = document.createElement('div');
-    existing.setAttribute('role', 'dialog');
-    existing.setAttribute('aria-modal', 'true');
-    existing.setAttribute('aria-label', 'Existing staff form');
-    document.body.appendChild(existing);
-    render(<Workspace />);
-    expect(screen.queryByRole('dialog', { name: 'Let’s Complete Your HR Setup' })).toBeNull();
-    existing.remove();
-    expect(
-      await screen.findByRole('dialog', { name: 'Let’s Complete Your HR Setup' })
-    ).toBeTruthy();
-  });
-  it('reports a failed check without claiming configuration is missing', () => {
+
+  it('reports a failed check after the operator opens it', () => {
     mocks.query.isError = true;
-    render(<Workspace />);
+    render(<HrSetupCoordinator />);
+    expect(screen.queryByText('Unable to check HR setup')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Check HR setup' }));
     expect(screen.getByText('Unable to check HR setup')).toBeTruthy();
-    fireEvent.click(screen.getByText('Close for now'));
-    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

@@ -59,6 +59,7 @@ export type OperationalOverview = {
   asOfDate: string;
   generatedAt: string;
   scopeLabel: string;
+  hrSetupReady?: boolean | null;
   capabilities: DashboardCapabilities;
   attendanceState: DashboardSectionState;
   workforceState: DashboardSectionState;
@@ -89,6 +90,7 @@ export type OperationalOverview = {
 };
 export type OverviewQuery = {
   date: string;
+  setupAcademicYearId?: string;
   isTeaching?: boolean;
   educationMediumStageId?: string;
   department?: string;

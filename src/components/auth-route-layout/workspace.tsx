@@ -8,7 +8,6 @@ import SubLayout from 'src/components/sub-layout';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import PageTransition from 'src/components/page-transition';
 import OnboardingProvider from 'src/components/onboarding/onboarding-provider';
-import { HrSetupSessionProvider } from 'src/screens/hr/setup/hr-setup-session';
 
 export default function AuthenticatedWorkspace({ children }: { children: ReactNode }) {
   const isHost = useSelector(
@@ -21,14 +20,12 @@ export default function AuthenticatedWorkspace({ children }: { children: ReactNo
       </DashboardLayout>
     );
   return (
-    <HrSetupSessionProvider>
-      <OnboardingProvider>
-        <DashboardLayout>
-          <SubLayout>
-            <PageTransition>{children}</PageTransition>
-          </SubLayout>
-        </DashboardLayout>
-      </OnboardingProvider>
-    </HrSetupSessionProvider>
+    <OnboardingProvider>
+      <DashboardLayout>
+        <SubLayout>
+          <PageTransition>{children}</PageTransition>
+        </SubLayout>
+      </DashboardLayout>
+    </OnboardingProvider>
   );
 }

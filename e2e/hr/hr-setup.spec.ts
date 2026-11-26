@@ -8,6 +8,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
 
   test('lists missing PF coverage as required salary setup', async ({ page }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Check HR setup', exact: true }).click();
     const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
     await wizard.getByRole('button', { name: 'Salary Template', exact: true }).click();
     await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Needs setup');
@@ -31,16 +32,31 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await confirmation.getByRole('button', { name: 'Discard Changes', exact: true }).click();
     await expect(wizard.getByTestId('hr-setup-check-pf-coverage')).toContainText('Needs setup');
   });
-  test('dismissal survives HR navigation and resets on refresh', async ({ page }) => {
-    await page.goto('/');
+  test('only requests the setup checklist after an explicit check, including after reload', async ({ page }) => {
+    const requests: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname === '/api/hr/setup-readiness') requests.push(request.url());
+    });
+    await page.goto('/hr/dashboard');
     const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
-    await expect(wizard).toBeVisible();
+    const launcher = page.getByRole('button', { name: 'Check HR setup', exact: true });
+    await expect(launcher).toBeVisible();
+    await expect(wizard).toHaveCount(0);
+    expect(requests).toHaveLength(0);
+    await launcher.click();
+    await expect(wizard.getByTestId('hr-setup-check-shift')).toBeVisible();
     await wizard.getByRole('button', { name: 'Close for now' }).click();
-    await page.getByRole('button', { name: 'Leave HR', exact: true }).click();
-    await page.getByRole('button', { name: 'Return to HR', exact: true }).click();
+    await expect(page.getByText('Your school has HR setup items remaining.')).toBeVisible();
     await expect(wizard).toHaveCount(0);
     await page.reload();
-    await expect(wizard).toBeVisible();
+    await expect(launcher).toBeVisible();
+    await expect(page.getByText('Your school has HR setup items remaining.')).toBeVisible();
+    await expect(wizard).toHaveCount(0);
+    await page.goto('/hr/payroll/run-payroll');
+    await expect(page.getByRole('heading', { name: 'Run Payroll', exact: true })).toBeVisible();
+    await expect(launcher).toHaveCount(0);
+    await expect(wizard).toHaveCount(0);
+    expect(requests).toHaveLength(1);
   });
 
   test('self-service users do not receive the reminder or request setup', async ({ page }) => {
@@ -59,6 +75,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
       route.fulfill({ status: 503, json: { error: { message: 'Synthetic service outage' } } })
     );
     await page.goto('/');
+    await page.getByRole('button', { name: 'Check HR setup', exact: true }).click();
     await expect(
       page.getByText('Unable to check HR setup. Retry or close this window and continue working.')
     ).toBeVisible();
@@ -78,6 +95,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
         await page.setViewportSize(viewport);
         await page.emulateMedia({ colorScheme: theme as 'light' | 'dark' });
         await page.goto(`/?theme=${theme}`);
+        await page.getByRole('button', { name: 'Check HR setup', exact: true }).click();
         const wizard = page.getByRole('dialog', {
           name: 'Let’s Complete Your HR Setup',
           exact: true,
@@ -115,6 +133,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
 
   test('protects an unsaved step and preserves saved setup when dismissed', async ({ page }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Check HR setup', exact: true }).click();
     const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
     await wizard
       .getByTestId('hr-setup-check-shift')
@@ -129,6 +148,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     await confirmation.getByRole('button', { name: 'Discard Changes' }).click();
     await expect(wizard).toHaveCount(0);
     await page.reload();
+    await page.getByRole('button', { name: 'Check HR setup', exact: true }).click();
     await expect(
       wizard.getByTestId('hr-setup-check-shift').getByText('Needs setup', { exact: true })
     ).toBeVisible();
@@ -136,6 +156,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
 
   test('protects an unsaved setup step during browser Back navigation', async ({ page }) => {
     await page.goto('/?entry=before-hr');
+    await page.getByRole('button', { name: 'Check HR setup', exact: true }).click();
     await expect(
       page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true })
     ).toBeVisible();
@@ -163,6 +184,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     page,
   }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Check HR setup', exact: true }).click();
     const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
     await wizard.getByRole('button', { name: 'Policies and Calendar', exact: true }).click();
     await wizard.getByText(/^View completed setup/).click();
@@ -178,6 +200,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
       'Starter School Calendar (editable)'
     );
     await wizard.getByRole('button', { name: 'Back', exact: true }).click();
+    await wizard.getByText(/^View completed setup/).click();
     await expect(wizard.getByTestId('hr-setup-check-calendar')).toBeVisible();
     await expect(page.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toHaveCount(0);
   });
@@ -186,6 +209,7 @@ test.describe.serial('HR setup wizard with disposable SQLite and real backend AP
     page,
   }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Check HR setup', exact: true }).click();
     const wizard = page.getByRole('dialog', { name: 'Let’s Complete Your HR Setup', exact: true });
     await wizard.getByRole('button', { name: /^Configure / }).click();
     await wizard.getByLabel('Shift Name *', { exact: true }).fill('Browser Morning Shift');
