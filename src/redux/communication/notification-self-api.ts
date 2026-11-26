@@ -11,6 +11,8 @@ export interface NotificationInboxItem {
   creationTime: string;
   readAt: string | null;
   acknowledgedAt: string | null;
+  requiresReview?: boolean;
+  requiresAcknowledgement?: boolean;
 }
 
 export interface NotificationPreference {
@@ -29,17 +31,30 @@ export interface NotificationPreferenceOptions {
   students: { studentId: string; displayName: string }[];
 }
 
-type InboxQuery = { owner: string; unreadOnly: boolean; skipCount: number; maxResultCount: number };
+type InboxQuery = { owner: string; unreadOnly: boolean };
 type InboxCommand = { owner: string; id: string; action: 'read' | 'acknowledge' };
 
 const root = '/communication/notifications/me';
 const inboxTag = 'PersonalNotificationInbox' as const;
 const preferencesTag = 'PersonalNotificationPreferences' as const;
+const inboxPageSize = 10;
 
 export const notificationSelfApi = api.enhanceEndpoints({ addTagTypes: [inboxTag, preferencesTag] }).injectEndpoints({
   endpoints: (builder) => ({
-    personalNotificationInbox: builder.query<PagedResultDto<NotificationInboxItem>, InboxQuery>({
-      query: ({ owner, ...params }) => ({ url: `${root}/inbox`, params, cache: 'no-store', expectedSessionOwner: owner }),
+    personalNotificationInbox: builder.infiniteQuery<PagedResultDto<NotificationInboxItem>, InboxQuery, number>({
+      infiniteQueryOptions: {
+        initialPageParam: 0,
+        getNextPageParam: (page, _, offset) => {
+          const nextOffset = offset + page.items.length;
+          return page.items.length && nextOffset < page.totalCount ? nextOffset : undefined;
+        },
+      },
+      query: ({ queryArg: { owner, unreadOnly }, pageParam }) => ({
+        url: `${root}/inbox`,
+        params: { unreadOnly, skipCount: pageParam, maxResultCount: inboxPageSize, prioritizeActions: true },
+        cache: 'no-store',
+        expectedSessionOwner: owner,
+      }),
       providesTags: (_, __, { owner }) => [{ type: inboxTag, id: owner }],
       keepUnusedDataFor: 0,
     }),
@@ -74,7 +89,7 @@ export const notificationSelfApi = api.enhanceEndpoints({ addTagTypes: [inboxTag
 });
 
 export const {
-  usePersonalNotificationInboxQuery,
+  usePersonalNotificationInboxInfiniteQuery,
   usePersonalNotificationUnreadCountQuery,
   useChangePersonalNotificationItemMutation,
   usePersonalNotificationPreferencesQuery,

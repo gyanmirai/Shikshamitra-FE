@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { useState } from 'react';
 import { Alert, Stack, Button, Skeleton } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -9,7 +11,7 @@ import {
 import { NotificationPreferenceForm } from './notification-preference-form';
 
 type Selection = { category: string; studentId: string | null };
-type Props = { owner: string; onClose: () => void };
+type Props = { owner: string; onClose: () => void; deviceSettings?: ReactNode };
 
 function categoryLabel(category: string) {
   const name = category.split('.').at(-1) ?? category;
@@ -17,11 +19,11 @@ function categoryLabel(category: string) {
   return name.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
-export function NotificationPreferences({ owner, onClose }: Props) {
-  return <OwnedNotificationPreferences key={owner} owner={owner} onClose={onClose} />;
+export function NotificationPreferences({ owner, onClose, deviceSettings }: Props) {
+  return <OwnedNotificationPreferences key={owner} owner={owner} onClose={onClose} deviceSettings={deviceSettings} />;
 }
 
-function OwnedNotificationPreferences({ owner, onClose }: Props) {
+function OwnedNotificationPreferences({ owner, onClose, deviceSettings }: Props) {
   const [selection, setSelection] = useState<Selection>();
   const options = usePersonalNotificationPreferenceOptionsQuery(owner, { refetchOnFocus: true });
   const preferences = usePersonalNotificationPreferencesQuery(owner);
@@ -36,6 +38,7 @@ function OwnedNotificationPreferences({ owner, onClose }: Props) {
       <CustomDialog open hasForm={false} guardUnsavedChanges={false}
         title="Notification Preferences" handleClose={onClose}>
         <DialogScrollContent>
+          {deviceSettings}
           {failed ? (
             <Alert severity="error" action={<Button size="small" onClick={() => {
               options.refetch();
@@ -61,7 +64,7 @@ function OwnedNotificationPreferences({ owner, onClose }: Props) {
   return (
     <NotificationPreferenceForm key={`${current.category}:${studentId ?? ''}`}
       owner={owner} selection={current} availableChannels={category.channels} options={data}
-      categoryLabel={categoryLabel} onSelect={setSelection} onClose={onClose}
+      categoryLabel={categoryLabel} onSelect={setSelection} onClose={onClose} deviceSettings={deviceSettings}
       saved={preferences.currentData.find(matchesSelection)}
       onReload={async () => (await preferences.refetch().unwrap()).find(matchesSelection)}
       onAccessChanged={() => { options.refetch(); }} />
