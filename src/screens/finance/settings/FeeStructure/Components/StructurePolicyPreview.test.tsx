@@ -61,6 +61,7 @@ it('opens saved proration details from Fee Structure without editable preview co
         versionId: 'version-1',
         versionNumber: 1,
         isCurrent: true,
+        isDefault: true,
       }}
       settings={
         {
@@ -75,7 +76,10 @@ it('opens saved proration details from Fee Structure without editable preview co
   expect(screen.getByRole('heading', { name: 'Fee Head Configuration' })).toBeVisible();
   expect(screen.getByRole('rowheader', { name: 'Tuition Fee' })).toBeVisible();
   expect(screen.getByText('Monthly proration')).toBeVisible();
-  expect(screen.getByText('v1')).toBeVisible();
+  expect(screen.queryByText('v1')).toBeNull();
+  expect(screen.queryByText('Version 1')).toBeNull();
+  expect(screen.queryByText('Default selection')).toBeNull();
+  expect(screen.getAllByRole('img', { name: 'Default policy' })).toHaveLength(2);
   expect(screen.queryByRole('heading', { name: 'Version & Audit Trail' })).toBeNull();
   expect(screen.queryByRole('heading', { name: 'Proration Preview' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Calculate proration preview' })).toBeNull();

@@ -3,7 +3,7 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-11-04
+updated_on: 2026-11-26
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -30,6 +30,14 @@ The fixture blocks provider transport and displays the rendered-icon/request cou
 Finish with project TypeScript, focused ESLint and the Finance docs check.
 
 ## Fee settings performance regressions
+
+For Fee Structure UI consistency, run the model, fields, ClassAccordionPanel,
+FeeStructurePoliciesStep, FeeStructureReviewStep, StructurePolicyPreview, Copy dialog,
+workspace dialog and FinancePolicyDetailsDrawer tests. Cover status/badge selection with
+dirty and busy guards, independent Delete, required Proration with incomplete draft saving,
+preserved policy pins, full/partial/unknown coverage and warning-only readiness expansion.
+Check the actual workspace and policy chooser in both themes at 390, 768 and 1440 pixels;
+the isolated fixture does not prove API persistence or backend publication eligibility.
 
 Run `FeeStructure/hooks/useFeeStructureLookups.test.tsx`,
 `FeeStructure/feeStructureFields.test.tsx`, and the Copy dialog/model tests under
@@ -255,9 +263,11 @@ Copy, refund details and DD dates: run `copyFeeStructure.test.ts`,
 fixtures are `e2e/fixtures/fee-structure/copy.html?copyPolicy=current|stale|unavailable|race`,
 `e2e/fixtures/refund-policy-details` (`?empty=1`, `?dark=1`), and
 `e2e/fixtures/dd-reconciliation`. Check current/stale selection, named version-race recovery,
-zero copies on failure, one copy on retry, unchanged source snapshots, saved refund
-calculation and payout settings with legacy header and settlement metadata omitted,
-keyboard/Escape/touch help, panel bounds, distinct DD dates and missing values.
+zero copies on failure, one copy on retry, and unchanged source snapshots. In Refund Policy
+details, check the status badge, General Information, Refund Scope & Eligibility, and
+Deductions & Allowed Disbursement. Confirm that the version badge, Refund Calculation,
+and settlement metadata are absent. Check keyboard/Escape/touch help, panel bounds,
+distinct DD dates, and missing values.
 Fixtures use synthetic data; persisted backend tests separately establish integrity.
 
 Concession view decisions: run `ConcessionItemCard.test.tsx`, `StucentConcessionCard.test.tsx` and

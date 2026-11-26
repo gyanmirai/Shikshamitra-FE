@@ -354,12 +354,12 @@ export default function ClassAccordionPanel({
             variant="contained"
             color="inherit"
             fullWidth
-            aria-label="Add Structure"
+            aria-label="Structure"
             startIcon={<Iconify icon={GlobalIcons.addIcon} />}
             onClick={addNew}
             disabled={busy}
           >
-            Add Structure
+            Structure
           </Button>
         </Stack>
       )}
@@ -389,7 +389,7 @@ export default function ClassAccordionPanel({
                   border: 1,
                   borderColor: selected ? 'text.secondary' : 'divider',
                   borderLeftWidth: 3,
-                  borderLeftColor: 'success.main',
+                  borderLeftColor: selected ? 'primary.main' : 'transparent',
                   bgcolor: selected ? 'action.selected' : 'background.paper',
                   borderRadius: 1,
                   overflow: 'hidden',
@@ -404,6 +404,8 @@ export default function ClassAccordionPanel({
                 <ListItemButton
                   selected={selected}
                   disabled={busy}
+                  aria-label={name}
+                  aria-describedby={`fee-structure-status-${classId}-${key}`}
                   aria-current={selected ? 'true' : undefined}
                   onClick={() => selectStructure(key)}
                   sx={{
@@ -411,7 +413,7 @@ export default function ClassAccordionPanel({
                     minWidth: 0,
                     flex: 1,
                     display: 'grid',
-                    gridTemplateColumns: '28px minmax(0, 1fr)',
+                    gridTemplateColumns: '24px minmax(0, 1fr) auto',
                     columnGap: 0.5,
                     p: 1.25,
                     '&.Mui-selected, &:hover': { bgcolor: 'transparent' },
@@ -429,13 +431,13 @@ export default function ClassAccordionPanel({
                     component="span"
                     aria-hidden="true"
                     sx={{
-                      width: 28,
-                      height: 28,
+                      width: 24,
+                      height: 24,
                       display: 'grid',
                       placeItems: 'center',
                       borderRadius: '50%',
-                      bgcolor: 'background.neutral',
-                      color: 'text.secondary',
+                      bgcolor: selected ? 'primary.main' : 'background.neutral',
+                      color: selected ? 'primary.contrastText' : 'text.secondary',
                       typography: 'caption',
                       fontWeight: 600,
                     }}
@@ -453,11 +455,20 @@ export default function ClassAccordionPanel({
                   >
                     {name}
                   </Typography>
+                  <Label
+                    id={`fee-structure-status-${classId}-${key}`}
+                    color={published ? 'success' : draft ? 'warning' : 'default'}
+                  >
+                    {published ? 'Published' : draft ? 'Draft' : 'Status unavailable'}
+                  </Label>
                 </ListItemButton>
-                <Label color={published ? 'success' : draft ? 'warning' : 'default'} sx={{ mr: 1 }}>
-                  {published ? 'Published' : draft ? 'Draft' : 'Status unavailable'}
-                </Label>
-                <Box ref={actionRef(key)} sx={{ flexShrink: 0 }} />
+                <Box
+                  ref={actionRef(key)}
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
+                  onKeyUp={(event) => event.stopPropagation()}
+                  sx={{ flexShrink: 0 }}
+                />
               </Box>
             );
           })}
@@ -544,7 +555,7 @@ export default function ClassAccordionPanel({
                 disabled={busy}
                 onClick={addNew}
               >
-                Add Structure
+                Structure
               </Button>
             </Stack>
           )}
@@ -583,7 +594,7 @@ export default function ClassAccordionPanel({
               title="No fee structures"
               description={
                 canAdd
-                  ? 'Use Add Structure to start configuring fees for this class.'
+                  ? 'Use the Structure button to start configuring fees for this class.'
                   : 'No fee structures are configured for this class.'
               }
               sx={{ flex: 1 }}

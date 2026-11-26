@@ -31,7 +31,6 @@ import {
 
 import AssignmentMoneyInput from './AssignmentMoneyInput';
 import AssignmentFeeHeadSummary from './AssignmentFeeHeadSummary';
-import { groupFeeHeadProration } from './assignmentReviewPresentation';
 import {
   endOfServiceMonth,
   servicePeriodErrors,
@@ -76,10 +75,6 @@ export default function AssignmentStudentInputs({
   const editing = Boolean(request.editAssignmentId);
   const saved =
     editing && savedAssignment?.structureId === candidate.id ? savedAssignment : undefined;
-  const savedProration =
-    saved?.calculationVersion !== 'LegacyUnknown' && saved?.lines
-      ? groupFeeHeadProration(saved.lines)
-      : undefined;
   const [touched, setTouched] = useState<string[]>([]);
   const [expandedHeads, setExpandedHeads] = useState<string[]>([]);
   const touch = (key: string) =>
@@ -453,7 +448,6 @@ export default function AssignmentStudentInputs({
                     : undefined
                 }
                 serviceDetails={included ? serviceFields : null}
-                calculation={showSavedAmount ? savedProration?.get(feeHeadId) : undefined}
                 amountInput={included ? moneyFields : null}
                 amountDetails={
                   !included || showSavedAmount || canEditAmount ? undefined : (

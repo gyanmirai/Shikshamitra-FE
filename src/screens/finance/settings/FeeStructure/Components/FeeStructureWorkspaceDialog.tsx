@@ -123,6 +123,7 @@ export default function FeeStructureWorkspaceDialog({
             size="small"
             color="inherit"
             variant="contained"
+            startIcon={<Iconify icon="ic:round-arrow-forward" />}
             onClick={() => setPublishedName(null)}
           >
             Continue

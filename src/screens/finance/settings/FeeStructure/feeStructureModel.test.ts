@@ -7,12 +7,21 @@ import {
   paymentTermError,
   defaultPaymentTerm,
   structureCandidate,
+  structurePolicyError,
   buildStructureChanges,
   selectablePaymentTerms,
   withDefaultPaymentTerm,
 } from './feeStructureModel';
 
 describe('Fee Structure editor contract', () => {
+  it('requires both the proration policy and its pinned version for completion', () => {
+    const candidate = structureCandidate();
+    expect(structurePolicyError(candidate, 'proration')).toBe('Proration Policy is required');
+    candidate.prorationPolicyId = 'proration';
+    expect(structurePolicyError(candidate, 'proration')).toBe('Proration Policy is required');
+    candidate.prorationPolicyVersionId = 'proration-v1';
+    expect(structurePolicyError(candidate, 'proration')).toBe('');
+  });
   it('requires schedules for every head and strips the retired admission field from requests', () => {
     const before = structureCandidate({
       feeHeads: [
@@ -336,7 +345,10 @@ it('requires both term IDs and preserves pinned versions and customized schedule
 });
 
 it('preserves an explicitly saved proration version without resending it on a name edit', () => {
-  const adapted = structureCandidate({ prorationPolicyId: 'saved', prorationPolicyVersionId: 'saved-v1' });
+  const adapted = structureCandidate({
+    prorationPolicyId: 'saved',
+    prorationPolicyVersionId: 'saved-v1',
+  });
   expect(adapted.prorationPolicyId).toBe('saved');
   expect(adapted.prorationPolicyVersionId).toBe('saved-v1');
   expect(buildStructureChanges(adapted, { ...adapted, name: 'Changed name' })).toEqual({
@@ -344,7 +356,7 @@ it('preserves an explicitly saved proration version without resending it on a na
   });
 });
 
-it('saves and clears the optional proration policy version independently', () => {
+it('preserves explicit proration version changes in draft payloads', () => {
   const inherited = structureCandidate();
   const attached = structureCandidate({
     prorationPolicyId: 'proration-policy',

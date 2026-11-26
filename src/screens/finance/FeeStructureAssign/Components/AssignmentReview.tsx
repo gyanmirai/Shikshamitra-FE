@@ -71,6 +71,7 @@ export default function AssignmentReview({
       : null;
   const tableId = `assignment-${data.studentId}-${data.structureId}-${committed ? 'saved' : 'preview'}`;
   const money = (value: number) => formatNumber(value, data.currency);
+  const showProrationTotals = hasProration && (committed || data.reductionTotal !== 0);
   const summary = (
     <DetailSection
       helpText="The total amount is calculated by the server for the selected fees and service dates."
@@ -81,36 +82,45 @@ export default function AssignmentReview({
         sx={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr)',
-          '@container (min-width: 440px)': { gridTemplateColumns: 'minmax(0, 1fr) auto' },
+          '@container (min-width: 360px)': { gridTemplateColumns: 'minmax(0, 1fr) auto' },
           gap: 1.5,
           alignItems: 'start',
         }}
       >
-        <DetailField
-          label="Fee structure"
-          value={`${data.structureName} · ${data.revisionNumber ? `r${data.revisionNumber}` : 'Historical'}`}
-        />
-        {data.registrationJoiningDate && (
-          <DetailField label="Joining date" value={fDate(data.registrationJoiningDate)} />
-        )}
-        {committed && data.assignmentSource === 'Admission' && (
-          <DetailField label="Assignment source" value="Admission" />
-        )}
-        {committed && cancelledAmount > 0 && (
-          <DetailField label="Cancelled installments" value={money(cancelledAmount)} />
-        )}
-        {hasProration && (committed || data.reductionTotal !== 0) && (
-          <>
-            <DetailField label="Scheduled fees" value={money(data.scheduledTotal)} />
-            <DetailField label="Proration reduction" value={money(data.reductionTotal)} />
-          </>
-        )}
-        <Box sx={{ gridColumn: 1, fontVariantNumeric: 'tabular-nums' }}>
+        <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+          <DetailField
+            label="Fee structure"
+            value={`${data.structureName} · ${data.revisionNumber ? `r${data.revisionNumber}` : 'Historical'}`}
+          />
+          {data.registrationJoiningDate && (
+            <DetailField label="Joining date" value={fDate(data.registrationJoiningDate)} />
+          )}
+          {committed && data.assignmentSource === 'Admission' && (
+            <DetailField label="Assignment source" value="Admission" />
+          )}
+        </Stack>
+        <Stack
+          spacing={1.5}
+          sx={{
+            minWidth: 0,
+            fontVariantNumeric: 'tabular-nums',
+            '@container (min-width: 360px)': { textAlign: 'right' },
+          }}
+        >
+          {committed && cancelledAmount > 0 && (
+            <DetailField label="Cancelled installments" value={money(cancelledAmount)} />
+          )}
+          {showProrationTotals && (
+            <>
+              <DetailField label="Scheduled fees" value={money(data.scheduledTotal)} />
+              <DetailField label="Proration reduction" value={money(data.reductionTotal)} />
+            </>
+          )}
           <DetailField
             label={committed ? 'Assigned amount' : 'Total to assign'}
-            value={money(data.proratedTotal)}
+            value={<Box component="strong">{money(data.proratedTotal)}</Box>}
           />
-        </Box>
+        </Stack>
       </Box>
 
       {data.overrideReason && (

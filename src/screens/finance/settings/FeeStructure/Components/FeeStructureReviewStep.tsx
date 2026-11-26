@@ -52,12 +52,14 @@ export default function FeeStructureReviewStep({
   onReview,
   onNavigate,
 }: Props) {
-  const [readinessExpanded, setReadinessExpanded] = useState(true);
+  const [readinessExpanded, setReadinessExpanded] = useState(() =>
+    Boolean(preview?.errors.length || preview?.warnings.length)
+  );
+  const [warningsExpanded, setWarningsExpanded] = useState(true);
 
   useEffect(() => {
-    if (preview && (preview.errors.length || !preview.isReady)) {
-      setReadinessExpanded(true);
-    }
+    setReadinessExpanded(Boolean(preview?.errors.length || preview?.warnings.length));
+    if (preview?.warnings.length) setWarningsExpanded(true);
   }, [preview]);
 
   return (
@@ -96,7 +98,7 @@ export default function FeeStructureReviewStep({
             <DetailField key={item.label} label={item.label} value={item.value} />
           ))}
         </DetailGrid>
-        <DetailGrid desktopColumns={2} desktopMinWidth={680}>
+        <DetailGrid desktopColumns={4} desktopMinWidth={800}>
           {impacts.map(({ key, label, policyLabel, empty }) => (
             <DetailField
               key={key}
@@ -190,6 +192,8 @@ export default function FeeStructureReviewStep({
                 sx={{ border: 1, borderColor: 'warning.main', borderRadius: 1, overflow: 'hidden' }}
               >
                 <CustomAccordion
+                  expanded={warningsExpanded}
+                  onChange={() => setWarningsExpanded((expanded) => !expanded)}
                   title={`${preview.warnings.length} warning${preview.warnings.length === 1 ? '' : 's'}`}
                   summary={
                     <AccordionSummary

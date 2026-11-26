@@ -9,6 +9,7 @@ import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
+import { DefaultIndicator } from 'src/screens/finance/components/DefaultIndicator';
 import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import {
   Box,
@@ -51,6 +52,7 @@ type FinancePolicyDetailsProps = {
   errorMessage?: string;
   savedVersionDetails?: ReactNode;
   showVersionBadge?: boolean;
+  presentation?: 'standard' | 'feeStructure';
 };
 
 type FinancePolicyDetailsDrawerProps = FinancePolicyDetailsProps & {
@@ -107,7 +109,12 @@ export default function FinancePolicyDetailsDrawer({
         },
       }}
     >
-      <FinancePolicyDetails {...details} onClose={onClose} drawerTitleId={titleId} />
+      <FinancePolicyDetails
+        {...details}
+        onClose={onClose}
+        drawerTitleId={titleId}
+        isRefundPolicyDrawer={details.policy.policyType === 'refund'}
+      />
     </Drawer>
   );
 }
@@ -121,24 +128,31 @@ export function FinancePolicyDetails({
   errorMessage = 'Unable to load this policy. Retry to view its saved configuration.',
   savedVersionDetails,
   showVersionBadge,
+  presentation = 'standard',
+  isRefundPolicyDrawer = false,
   onClose,
   drawerTitleId,
-}: FinancePolicyDetailsProps & { onClose?: () => void; drawerTitleId?: string }) {
+}: FinancePolicyDetailsProps & {
+  onClose?: () => void;
+  drawerTitleId?: string;
+  isRefundPolicyDrawer?: boolean;
+}) {
   const titleId = useId();
   if (!policy) return null;
 
   const type = policy.policyType;
+  const feeStructure = presentation === 'feeStructure';
   const useFormLayout = type === 'collection' || type === 'proration';
-  const displayVersion = showVersionBadge ?? type === 'payment';
+  const displayVersion = !feeStructure && !isRefundPolicyDrawer && (showVersionBadge ?? type === 'payment');
   const version =
     type === 'concession'
       ? policy.version || policyDetails?.version || 1
       : (policyDetails?.version ?? policy.version);
   const showVersionInGeneral =
-    !displayVersion && (type === 'concession' || useFormLayout) && policyDetails && version != null;
+    !feeStructure && !displayVersion && (type === 'concession' || useFormLayout) && policyDetails && version != null;
   const descriptionField = (
     <DetailField
-      fullWidth={type !== 'refund'}
+      fullWidth={!feeStructure && type !== 'refund'}
       label="Description"
       value={policyDetails?.description || 'No description provided.'}
     />
@@ -160,6 +174,7 @@ export function FinancePolicyDetails({
             policy.academicYearName || 'Current academic year'
           }`}
           title={policy.policyName}
+          titleAdornment={feeStructure && policy.isDefault ? <DefaultIndicator label="Default policy" /> : undefined}
           titleId={drawerTitleId ?? titleId}
 
           onClose={onClose}
@@ -213,14 +228,21 @@ export function FinancePolicyDetails({
 
                   icon={GlobalIcons.notebook}
                 >
-                  <DetailGrid>
-                    <DetailField label="Policy name" value={policy.policyName} />
+                  <DetailGrid desktopMinWidth={feeStructure ? 440 : undefined}>
+                    <DetailField label="Policy name" value={
+                      feeStructure ? (
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                          <span>{policy.policyName}</span>
+                          {policy.isDefault && <DefaultIndicator label="Default policy" />}
+                        </Stack>
+                      ) : policy.policyName
+                    } />
                     {type === 'payment' && (
                       <DetailField label="Policy code" value={policy.policyCode || '—'} />
                     )}
                     <DetailField label="Academic year" value={policy.academicYearName || '—'} />
                     {type === 'refund' && descriptionField}
-                    {type !== 'refund' && (
+                    {!feeStructure && type !== 'refund' && (
                       <DetailField
                         label="Default selection"
                         value={
@@ -276,7 +298,7 @@ export function FinancePolicyDetails({
                 ) : (
                   <>
                     {/* ── Collection Policy Specific Details ── */}
-                    {type === 'collection' && <CollectionPolicyDetails policy={policyDetails} />}
+                    {type === 'collection' && <CollectionPolicyDetails policy={policyDetails} presentation={presentation} />}
 
                     {/* ── Payment Policy Details ── */}
                     {type === 'payment' && (
@@ -473,55 +495,55 @@ export function FinancePolicyDetails({
                             )}
                         </DetailSection>
 
-                        {/* Calculation & Ceilings */}
-                        <DetailSection
-                          helpText="The saved method for calculating the eligible refund amount."
-                          sx={{ mb: 2 }}
-                          title="Refund Calculation"
-
-                          icon="solar:calculator-minimalistic-bold-duotone"
-                        >
-                          <Grid container spacing={1.5}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Amount calculation mode"
-                                value={
-                                  policyDetails.amountMode === 'RemainingPaidAmount'
-                                    ? 'Entire Remaining Paid Amount (100%)'
-                                    : policyDetails.amountMode === 'ManualUpToEligible'
-                                      ? 'Manual (Up to eligible balance)'
-                                      : policyDetails.amountMode === 'Percentage'
-                                        ? 'Percentage of Eligible Amount'
-                                        : 'Fixed Amount'
-                                }
-                              />
+                        {!isRefundPolicyDrawer && (
+                          <DetailSection
+                            helpText="The saved method for calculating the eligible refund amount."
+                            sx={{ mb: 2 }}
+                            title="Refund Calculation"
+                            icon="solar:calculator-minimalistic-bold-duotone"
+                          >
+                            <Grid container spacing={1.5}>
+                              <Grid size={{ xs: 12, sm: 6 }}>
+                                <DetailField
+                                  label="Amount calculation mode"
+                                  value={
+                                    policyDetails.amountMode === 'RemainingPaidAmount'
+                                      ? 'Entire Remaining Paid Amount (100%)'
+                                      : policyDetails.amountMode === 'ManualUpToEligible'
+                                        ? 'Manual (Up to eligible balance)'
+                                        : policyDetails.amountMode === 'Percentage'
+                                          ? 'Percentage of Eligible Amount'
+                                          : 'Fixed Amount'
+                                  }
+                                />
+                              </Grid>
+                              {policyDetails.amountMode === 'Percentage' && (
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                  <DetailField
+                                    label="Configured refund percentage"
+                                    value={
+                                      policyDetails.percentageValue != null
+                                        ? `${policyDetails.percentageValue}%`
+                                        : '—'
+                                    }
+                                  />
+                                </Grid>
+                              )}
+                              {policyDetails.amountMode === 'FixedAmount' && (
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                  <DetailField
+                                    label="Configured refund amount"
+                                    value={
+                                      policyDetails.fixedAmount != null
+                                        ? formatNumber(policyDetails.fixedAmount, 'INR')
+                                        : '—'
+                                    }
+                                  />
+                                </Grid>
+                              )}
                             </Grid>
-                            {policyDetails.amountMode === 'Percentage' && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Configured refund percentage"
-                                  value={
-                                    policyDetails.percentageValue != null
-                                      ? `${policyDetails.percentageValue}%`
-                                      : '—'
-                                  }
-                                />
-                              </Grid>
-                            )}
-                            {policyDetails.amountMode === 'FixedAmount' && (
-                              <Grid size={{ xs: 12, sm: 6 }}>
-                                <DetailField
-                                  label="Configured refund amount"
-                                  value={
-                                    policyDetails.fixedAmount != null
-                                      ? formatNumber(policyDetails.fixedAmount, 'INR')
-                                      : '—'
-                                  }
-                                />
-                              </Grid>
-                            )}
-                          </Grid>
-                        </DetailSection>
+                          </DetailSection>
+                        )}
 
                         {/* Payout Methods */}
                         <DetailSection

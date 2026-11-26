@@ -135,7 +135,9 @@ it('lets the user continue in the current class or exit after publication', asyn
   ).toEqual(['Exit', 'Continue']);
   expect(published().getByRole('button', { name: 'Exit' })).toHaveClass('MuiButton-outlined');
   expect(published().getByRole('button', { name: 'Continue' })).toHaveClass('MuiButton-contained');
-  expect(published().getByRole('button', { name: 'Continue' }).querySelector('svg')).toBeNull();
+  expect(
+    published().getByRole('button', { name: 'Continue' }).querySelector('.MuiButton-startIcon svg')
+  ).toBeTruthy();
   fireEvent.click(published().getByRole('button', { name: 'Continue' }));
   await waitFor(() =>
     expect(screen.queryByRole('dialog', { name: 'Fee Structure Published' })).toBeNull()

@@ -2,7 +2,7 @@ import React from 'react';
 import { it, vi, expect } from 'vitest';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 
-import FinancePolicyDetailsDrawer from './FinancePolicyDetailsDrawer';
+import FinancePolicyDetailsDrawer, { FinancePolicyDetails } from './FinancePolicyDetailsDrawer';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/scrollbar', () => ({
@@ -99,7 +99,7 @@ it('shows refund fee head names and lifecycle labels without exposing reference 
 });
 
 it.each([{ maximumPerRequest: 12500, maximumPerStudentYear: 25000 }, {}])(
-  'keeps refund calculation and payout settings without settlement or audit metadata (%j)',
+  'shows refund eligibility and payout settings without calculation, version, or settlement metadata (%j)',
   (caps) => {
     render(
       <FinancePolicyDetailsDrawer
@@ -122,8 +122,11 @@ it.each([{ maximumPerRequest: 12500, maximumPerStudentYear: 25000 }, {}])(
 
     expect(screen.getByText('Active')).toBeVisible();
     expect(screen.queryByText('v1')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Refund Calculation' })).toBeVisible();
-    expect(screen.getByText('25%')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'General Information' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Refund Scope & Eligibility' })).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Refund Calculation' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Amount calculation mode')).not.toBeInTheDocument();
+    expect(screen.queryByText('25%')).not.toBeInTheDocument();
     const disbursement = screen
       .getByRole('heading', { name: 'Deductions & Allowed Disbursement' })
       .closest('section')!;
@@ -322,3 +325,36 @@ it('shows saved admission and withdrawal rules in a read-only proration drawer',
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   expect(simulate).not.toHaveBeenCalled();
 });
+
+it.each(['Combined', 'Separate'])(
+  'limits compact default, version and receipt presentation to Fee Structure (%s)',
+  (receiptGrouping) => {
+    const props = {
+      policy: { ...policy, policyType: 'collection' as const, policyName: 'School collection', isDefault: true, academicYearName: '2026–27' },
+      policyDetails: { description: 'Saved collection settings', version: 3, receiptGrouping, enableLateFee: false, allocationBasis: 'FeeHead' },
+    };
+    const { rerender } = render(<FinancePolicyDetails {...props} presentation="feeStructure" showVersionBadge />);
+    expect(screen.queryByText('v1')).toBeNull();
+    expect(screen.queryByText('Version 3')).toBeNull();
+    expect(screen.queryByText('Default selection')).toBeNull();
+    expect(screen.getAllByRole('img', { name: 'Default policy' })).toHaveLength(2);
+    const general = screen.getByRole('heading', { name: 'General Information' }).closest('section')!;
+    expect(within(general).getByText('Policy name')).toBeVisible();
+    expect(within(general).getByText('Academic year')).toBeVisible();
+    expect(within(general).getByText('Description')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Payment Priority' })).toBeVisible();
+    const receipts = screen.getByRole('heading', { name: 'Receipts' }).closest('section')!;
+    expect(within(receipts).getByText('Fee receipts')).toBeVisible();
+    expect(within(receipts).getByText('Charge receipts')).toBeVisible();
+    expect(within(receipts).getByText(receiptGrouping === 'Combined' ? 'Combined with charges' : 'Separate from charges')).toBeVisible();
+    expect(within(receipts).getByText(receiptGrouping === 'Combined' ? 'Combined with fees' : 'Separate from fees')).toBeVisible();
+
+    rerender(<FinancePolicyDetails {...props} />);
+    expect(screen.getByText('Default selection')).toBeVisible();
+    expect(screen.getByText('Version 3')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Automatic Payment Priority' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Receipt Generation' })).toBeVisible();
+    expect(screen.queryByRole('img', { name: 'Default policy' })).toBeNull();
+    expect(screen.queryByText('Fee receipts')).toBeNull();
+  }
+);

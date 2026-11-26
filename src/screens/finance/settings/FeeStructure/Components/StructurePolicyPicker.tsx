@@ -5,7 +5,9 @@ import type {
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Label } from 'src/components/label';
+import { DefaultIndicator } from 'src/screens/finance/components/DefaultIndicator';
 import { shikshaMitraToast } from 'src/components/toast';
+import FinanceFormSkeleton from 'src/screens/finance/components/FinanceFormSkeleton';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
@@ -156,17 +158,6 @@ export default function StructurePolicyPicker({
                 onChange={(event) => setSearch(event.target.value)}
                 slotProps={{ htmlInput: { 'aria-label': `Search ${label.toLowerCase()} choices` } }}
               />
-              {key === 'proration' && (
-                <Button
-                  type="button"
-                  size="small"
-                  variant="outlined"
-                  disabled={!canSelect}
-                  onClick={() => select('')}
-                >
-                  Use academic-year default
-                </Button>
-              )}
               {catalog.error && (
                 <Alert
                   severity="error"
@@ -199,29 +190,49 @@ export default function StructurePolicyPicker({
                         key={policy.versionId}
                         disablePadding
                         divider
-                        sx={{ gap: 1, pr: 1.5 }}
+                        sx={{
+                          gap: 1,
+                          pr: 1.5,
+                          bgcolor: isPreviewed ? 'action.selected' : undefined,
+                          '&:hover, &:focus-within': {
+                            bgcolor: isPreviewed ? 'action.selected' : 'action.hover',
+                          },
+                        }}
                       >
                         <ListItemButton
                           component="button"
                           type="button"
                           aria-label={`Preview ${identity}`}
                           aria-pressed={isPreviewed}
-                          selected={isPreviewed}
                           onClick={() => setPreviewVersionId(policy.versionId)}
-                          sx={{ alignSelf: 'stretch', textAlign: 'left', minWidth: 0 }}
+                          sx={{
+                            alignSelf: 'stretch',
+                            textAlign: 'left',
+                            minWidth: 0,
+                            '&:hover, &.Mui-focusVisible': { bgcolor: 'transparent' },
+                            '&.Mui-focusVisible': {
+                              outline: '2px solid',
+                              outlineColor: 'primary.main',
+                              outlineOffset: -2,
+                            },
+                          }}
                         >
                           <Stack
                             component="span"
                             spacing={0.25}
                             sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
                           >
-                            <Typography component="span" variant="subtitle2">
-                              {policy.name}
-                            </Typography>
-                            <Typography component="span" variant="caption" color="text.secondary">
-                              Version {policy.versionNumber}
-                              {policy.isDefault ? ' · Default' : ''}
-                            </Typography>
+                            <Stack
+                              component="span"
+                              direction="row"
+                              spacing={0.5}
+                              alignItems="center"
+                            >
+                              <Typography component="span" variant="subtitle2">
+                                {policy.name}
+                              </Typography>
+                              {policy.isDefault && <DefaultIndicator label="Default policy" />}
+                            </Stack>
                             {key === 'collection' && (
                               <Typography component="span" variant="caption" color="text.secondary">
                                 {coverage
@@ -251,7 +262,9 @@ export default function StructurePolicyPicker({
                           <Button
                             type="button"
                             size="small"
-                            variant="outlined"
+                            variant="contained"
+                            color="inherit"
+                            sx={{ flexShrink: 0 }}
                             aria-label={`Select ${identity}`}
                             disabled={!canSelect || !!refundRestriction}
                             onClick={() => select(policy.versionId)}
@@ -264,10 +277,37 @@ export default function StructurePolicyPicker({
                   })}
                 </List>
               ) : catalog.loading ? (
-                <Stack role="status" aria-label="Loading policies" spacing={1.5} sx={{ p: 1.5 }}>
-                  <Skeleton variant="rounded" height={44} />
-                  <Skeleton variant="rounded" height={44} />
-                </Stack>
+                <FinanceFormSkeleton label={`Loading ${label.toLowerCase()} choices`}>
+                  <Stack aria-hidden="true">
+                    {[0, 1, 2, 3].map((row) => (
+                      <Stack
+                        key={row}
+                        direction="row"
+                        alignItems="center"
+                        spacing={1.5}
+                        sx={{
+                          px: 2,
+                          py: 1.5,
+                          minHeight: key === 'proration' ? 56 : 64,
+                          '&:not(:last-child)': { borderBottom: 1, borderColor: 'divider' },
+                        }}
+                      >
+                        <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                          <Skeleton variant="text" width="72%" height={20} />
+                          {key !== 'proration' && (
+                            <Skeleton variant="text" width="48%" height={16} />
+                          )}
+                        </Stack>
+                        <Skeleton
+                          variant="rounded"
+                          width={64}
+                          height={30}
+                          sx={{ flexShrink: 0, borderRadius: 1 }}
+                        />
+                      </Stack>
+                    ))}
+                  </Stack>
+                </FinanceFormSkeleton>
               ) : (
                 !catalog.error && (
                   <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>

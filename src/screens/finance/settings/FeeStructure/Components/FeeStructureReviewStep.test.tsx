@@ -121,12 +121,51 @@ it('reveals all installment details by expanding the schedule without another de
   fireEvent.click(screen.getByRole('button', { name: /Tuition/ }));
   expect(screen.getByRole('columnheader', { name: 'Demand date' })).toBeVisible();
   expect(screen.getByRole('columnheader', { name: 'Allocation (%)' })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: '1 warning' }));
+  expect(screen.getByRole('button', { name: '1 warning' })).toHaveAttribute(
+    'aria-expanded',
+    'true'
+  );
   expect(screen.getByText('Optional heads need student selection.')).toBeVisible();
   const edit = screen.getByRole('button', { name: 'Edit fee heads' });
   expect(edit).not.toHaveTextContent(/edit/i);
   fireEvent.click(edit);
   expect(onNavigate).toHaveBeenCalledWith(0);
+});
+
+it('reopens collapsed readiness and warning details for a warning-only result', () => {
+  const clean = { isReady: true, errors: [], warnings: [], coverage: [], schedules: [] };
+  const message = 'Review the refund coverage before publishing.';
+  const subject = (preview: any) => (
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <FeeStructureReviewStep
+        candidate={{ name: 'Annual fees', feeHeads: [] } as any}
+        preview={preview}
+        impacts={[]}
+        writable
+        locked={false}
+        busy={false}
+        previewing={false}
+        tableId="warning-review"
+        onReview={vi.fn()}
+        onNavigate={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  const view = render(subject(clean));
+  expect(screen.getByRole('button', { name: 'Expand Publish Readiness' })).toHaveAttribute(
+    'aria-expanded',
+    'false'
+  );
+  view.rerender(subject({ ...clean, warnings: [message] }));
+  expect(screen.getByRole('button', { name: 'Collapse Publish Readiness' })).toHaveAttribute(
+    'aria-expanded',
+    'true'
+  );
+  expect(screen.getByRole('button', { name: '1 warning' })).toHaveAttribute(
+    'aria-expanded',
+    'true'
+  );
+  expect(screen.getByText(message)).toBeVisible();
 });
 
 it('reopens collapsed readiness for new blockers and keeps the review action independent', () => {
@@ -150,7 +189,10 @@ it('reopens collapsed readiness for new blockers and keeps the review action ind
     </ThemeProvider>
   );
   const view = render(subject(preview));
-  fireEvent.click(screen.getByRole('button', { name: 'Collapse Publish Readiness' }));
+  expect(screen.getByRole('button', { name: 'Expand Publish Readiness' })).toHaveAttribute(
+    'aria-expanded',
+    'false'
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Check Readiness' }));
   expect(onReview).toHaveBeenCalledOnce();
   expect(screen.getByRole('button', { name: 'Expand Publish Readiness' })).toHaveAttribute(
@@ -168,4 +210,61 @@ it('reopens collapsed readiness for new blockers and keeps the review action ind
   expect(screen.getByRole('alert')).not.toHaveClass('MuiAlert-root');
   fireEvent.click(screen.getByRole('button', { name: 'Review Policies' }));
   expect(onNavigate).toHaveBeenCalledWith(1);
+});
+
+it.each([
+  undefined,
+  { isReady: true, errors: [], warnings: [], coverage: [], schedules: [] },
+  { isReady: false, errors: [], warnings: [], coverage: [], schedules: [] },
+])('starts readiness collapsed when there are no errors or warnings (%j)', (preview) => {
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <FeeStructureReviewStep
+        candidate={{ name: 'Annual fees', feeHeads: [] } as any}
+        preview={preview as any}
+        impacts={[]}
+        writable
+        locked={false}
+        busy={false}
+        previewing={false}
+        tableId="clean-review"
+        onReview={vi.fn()}
+        onNavigate={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  expect(screen.getByRole('button', { name: 'Expand Publish Readiness' })).toHaveAttribute(
+    'aria-expanded',
+    'false'
+  );
+});
+
+it('closes readiness when a fresh check clears the warnings', () => {
+  const clean = { isReady: true, errors: [], warnings: [], coverage: [], schedules: [] };
+  const subject = (preview: any) => (
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <FeeStructureReviewStep
+        candidate={{ name: 'Annual fees', feeHeads: [] } as any}
+        preview={preview}
+        impacts={[]}
+        writable
+        locked={false}
+        busy={false}
+        previewing={false}
+        tableId="cleared-review"
+        onReview={vi.fn()}
+        onNavigate={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  const view = render(subject({ ...clean, warnings: ['Review optional heads.'] }));
+  expect(screen.getByRole('button', { name: 'Collapse Publish Readiness' })).toHaveAttribute(
+    'aria-expanded',
+    'true'
+  );
+  view.rerender(subject(clean));
+  expect(screen.getByRole('button', { name: 'Expand Publish Readiness' })).toHaveAttribute(
+    'aria-expanded',
+    'false'
+  );
 });

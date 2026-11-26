@@ -73,6 +73,11 @@ export default function AssignmentDrawer({
   const viewing =
     students.length === 1 && (students[0].isFeeStructureAssigned || status === 'Assigned');
   const prepared = students.length === 1 && status === 'Prepared';
+  const compactForm =
+    students.length === 1 &&
+    !prepared &&
+    status !== 'NeedsAttention' &&
+    (!viewing || (editAssignedPolicies && !showingSavedView));
   const taskTitle = viewing
     ? editAssignedPolicies && !showingSavedView
       ? 'Edit Fee Assignment'
@@ -110,9 +115,11 @@ export default function AssignmentDrawer({
             'aria-label': title,
             'aria-modal': true,
             sx: {
-              width: viewing
-                ? { xs: '100%', sm: 'min(760px, 92vw)' }
-                : { xs: '100%', md: students.length > 1 ? 1200 : 960 },
+              width: compactForm
+                ? { xs: '100%', sm: 'min(640px, 92vw)' }
+                : viewing
+                  ? { xs: '100%', sm: 'min(760px, 92vw)' }
+                  : { xs: '100%', md: students.length > 1 ? 1200 : 960 },
               maxWidth: '100%',
               overflow: 'hidden',
             },

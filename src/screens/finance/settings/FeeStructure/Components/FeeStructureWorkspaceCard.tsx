@@ -105,8 +105,8 @@ const families: {
   {
     key: 'proration',
     label: 'Proration Policy',
-    description: 'Choose a policy for this fee structure or use the academic-year default.',
-    empty: 'Academic-year default',
+    description: 'Choose a Proration Policy for this fee structure.',
+    empty: 'Select a Proration Policy',
   },
 ];
 
@@ -428,7 +428,7 @@ export default function FeeStructureWorkspaceCard({
     : missingFeeHeads || missingRequiredFeeHead || (draftRevision && nameError)
       ? 'Complete Fee heads & terms before publishing.'
       : !locked && !policiesValid
-        ? 'Select a Collection Policy and a Refund Policy before publishing.'
+        ? 'Select Collection, Refund and Proration Policies before publishing.'
         : dirty
           ? 'Save draft before publishing.'
           : preview?.errors.length
@@ -491,6 +491,9 @@ export default function FeeStructureWorkspaceCard({
     if (message === unchangedRevisionFeeHeadsError) {
       setConfirmation(null);
       setTab('heads');
+      setError('');
+      shikshaMitraToast.error({ message });
+      return;
     }
     setError(message);
   };
@@ -558,7 +561,7 @@ export default function FeeStructureWorkspaceCard({
     setError(
       refundMismatch
         ? 'Choose a refund policy that applies to at least one fee head in this structure.'
-        : 'Select a Collection Policy and a Refund Policy before continuing.'
+        : 'Select Collection, Refund and Proration Policies before continuing.'
     );
     return false;
   };
@@ -675,10 +678,12 @@ export default function FeeStructureWorkspaceCard({
       setConfirmation(null);
     } catch (cause) {
       if (action === 'delete') {
-        setError(getFinanceSettingErrorMessage(
-          cause,
-          'Could not delete the fee structure draft. Refresh the list to check it before retrying.'
-        ));
+        setError(
+          getFinanceSettingErrorMessage(
+            cause,
+            'Could not delete the fee structure draft. Refresh the list to check it before retrying.'
+          )
+        );
       } else {
         showSaveError(cause);
       }
@@ -775,9 +780,6 @@ export default function FeeStructureWorkspaceCard({
             <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere' }}>
               {candidate.name || 'New fee structure'}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              v{record?.revisionNumber ?? 1}
-            </Typography>
             {viewOnly && <Label color="default">Read-only</Label>}
             <Stack
               direction="row"
@@ -790,7 +792,8 @@ export default function FeeStructureWorkspaceCard({
               {!viewOnly && locked && settings?.permissions.add && settings?.permissions.edit && (
                 <LoadingButton
                   size="small"
-                  variant="outlined"
+                  variant="contained"
+                  color="inherit"
                   loading={revising}
                   disabled={navigationBusy}
                   startIcon={<Iconify icon="mdi:file-document-edit-outline" />}
@@ -1076,15 +1079,6 @@ export default function FeeStructureWorkspaceCard({
                         locked={!!locked}
                         busy={navigationBusy}
                         onChange={(key, version) => {
-                          if (key === 'proration' && !version) {
-                            defaultsHandled.current.add(key);
-                            change({
-                              ...candidate,
-                              prorationPolicyId: null,
-                              prorationPolicyVersionId: null,
-                            });
-                            return;
-                          }
                           const policy = settings.policies.find(
                             (item) => item.family === key && item.versionId === version
                           );
@@ -1153,12 +1147,20 @@ export default function FeeStructureWorkspaceCard({
         disableCancel={navigationBusy}
         disableEscapeKeyDown={navigationBusy}
         disableBackdropClick
-        icon={confirmation === 'delete' || confirmation === 'discard' ? 'error' : 'info'}
+        icon={
+          confirmation === 'revision' ? (
+            <Iconify icon="mdi:file-document-edit-outline" sx={{ color: 'text.secondary' }} />
+          ) : confirmation === 'delete' || confirmation === 'discard' ? (
+            'error'
+          ) : (
+            'info'
+          )
+        }
         title={
           confirmation === 'publish'
             ? 'Publish Fee Structure'
             : confirmation === 'revision'
-              ? 'Create draft revision'
+              ? 'Create Draft Revision'
               : confirmation === 'delete'
                 ? 'Delete unused draft'
                 : 'Discard unsaved changes'

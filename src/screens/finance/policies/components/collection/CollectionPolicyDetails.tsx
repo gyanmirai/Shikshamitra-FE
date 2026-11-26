@@ -50,9 +50,12 @@ function LateFeeIncomeCategory({ id, academicYearId }: { id: string; academicYea
 
 export default function CollectionPolicyDetails({
   policy,
+  presentation = 'standard',
 }: {
   policy: ICollectionPolicy & { lateFeeIncomeCategoryName?: string | null };
+  presentation?: 'standard' | 'feeStructure';
 }) {
+  const feeStructure = presentation === 'feeStructure';
   const amounts: Partial<
     Record<ICollectionPolicy['lateFeeType'], { label: string; value: number | null }>
   > = {
@@ -65,33 +68,70 @@ export default function CollectionPolicyDetails({
   const slabs = policy.escalationRules ?? [];
 
   return (
-    <>
-      <DetailSection
-        title="Automatic Payment Priority"
-        icon={GlobalIcons.receiptIcon}
-        sx={{ mb: 2 }}
-        helpText="Choose which outstanding fees to pay first when no items are selected."
+    <Box sx={{ containerType: 'inline-size' }}>
+      <Box
+        sx={
+          feeStructure
+            ? {
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1fr)',
+                gap: 2,
+                mb: 2,
+                '@container (min-width: 440px)': {
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                },
+              }
+            : undefined
+        }
       >
-        <DetailField
-          label="Prioritize automatic payments by"
-          value={PAYMENT_PRIORITIES[policy.allocationBasis ?? 'Legacy']}
-        />
-      </DetailSection>
-      <DetailSection
-        title="Receipt Generation"
-        icon={GlobalIcons.receiptIcon}
-        sx={{ mb: 2 }}
-        helpText="Applies when fees and charges are collected together. A fees-only or charges-only payment produces one receipt."
-      >
-        <DetailField
-          label="Receipts for fees and charges"
-          value={
-            policy.receiptGrouping === 'Combined'
-              ? 'Single combined receipt'
-              : 'Separate fee and charge receipts'
-          }
-        />
-      </DetailSection>
+        <DetailSection
+          title={feeStructure ? 'Payment Priority' : 'Automatic Payment Priority'}
+          icon={GlobalIcons.receiptIcon}
+          sx={{ mb: feeStructure ? 0 : 2 }}
+          helpText="Choose which outstanding fees to pay first when no items are selected."
+        >
+          <DetailField
+            label="Prioritize automatic payments by"
+            value={PAYMENT_PRIORITIES[policy.allocationBasis ?? 'Legacy']}
+          />
+        </DetailSection>
+        <DetailSection
+          title={feeStructure ? 'Receipts' : 'Receipt Generation'}
+          icon={GlobalIcons.receiptIcon}
+          sx={{ mb: feeStructure ? 0 : 2 }}
+          helpText="Applies when fees and charges are collected together. A fees-only or charges-only payment produces one receipt."
+        >
+          {feeStructure ? (
+            <Box sx={{ display: 'grid', gap: 2 }}>
+              <DetailField
+                label="Fee receipts"
+                value={
+                  policy.receiptGrouping === 'Combined'
+                    ? 'Combined with charges'
+                    : 'Separate from charges'
+                }
+              />
+              <DetailField
+                label="Charge receipts"
+                value={
+                  policy.receiptGrouping === 'Combined'
+                    ? 'Combined with fees'
+                    : 'Separate from fees'
+                }
+              />
+            </Box>
+          ) : (
+            <DetailField
+              label="Receipts for fees and charges"
+              value={
+                policy.receiptGrouping === 'Combined'
+                  ? 'Single combined receipt'
+                  : 'Separate fee and charge receipts'
+              }
+            />
+          )}
+        </DetailSection>
+      </Box>
       <DetailSection
         title="Late Fee Rules"
         icon={GlobalIcons.receiptIcon}
@@ -180,6 +220,6 @@ export default function CollectionPolicyDetails({
           </Box>
         )}
       </DetailSection>
-    </>
+    </Box>
   );
 }

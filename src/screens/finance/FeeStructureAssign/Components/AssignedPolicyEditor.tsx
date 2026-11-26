@@ -12,9 +12,8 @@ import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Stack, Alert, Button, Divider, Typography } from '@mui/material';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { DetailField } from 'src/screens/finance/components/detail-view';
+import { Stack, Alert, Button, Divider, Typography } from '@mui/material';
 import {
   assignmentError,
   assignmentPolicyFamilies,
@@ -26,11 +25,7 @@ import AssignmentReview from './AssignmentReview';
 import AssignmentPolicies from './AssignmentPolicies';
 import OptionalFeeServiceStops from './OptionalFeeServiceStops';
 import AssignmentFeeHeadSummary from './AssignmentFeeHeadSummary';
-import { groupFeeHeadProration } from './assignmentReviewPresentation';
-import AssignmentStepperFrame, {
-  assignmentEditSteps,
-  assignmentEditPadding,
-} from './AssignmentStepperFrame';
+import AssignmentForm, { AssignmentPreviewDialog } from './AssignmentForm';
 
 export default function AssignedPolicyEditor({
   data,
@@ -64,14 +59,10 @@ export default function AssignedPolicyEditor({
   );
   const [error, setError] = useState('');
   const pending = useRef(false);
-  const [activeStep, setActiveStep] = useState(0);
-  const [reachedStep, setReachedStep] = useState(0);
+  const assignmentStamp = useRef(data.concurrencyStamp);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [serviceBusy, setServiceBusy] = useState(false);
   const busy = state.isLoading || serviceBusy;
-  const feeHeadProration =
-    activeStep === 1 && data.assignment.calculationVersion !== 'LegacyUnknown'
-      ? groupFeeHeadProration(data.assignment.lines.filter((line) => !line.optionalServicePeriodId))
-      : undefined;
   const policiesDiffer = (policies: AssignmentPolicySelection[]) =>
     policies.some(
       (policy) =>
@@ -80,6 +71,7 @@ export default function AssignedPolicyEditor({
           null)
     );
   const formik = useFormik<{ policies: AssignmentPolicySelection[]; reason: string }>({
+    validateOnChange: false,
     initialValues: {
       policies: assignmentPolicyFamilies
         .filter((family) => family !== 'proration')
@@ -125,7 +117,7 @@ export default function AssignedPolicyEditor({
         await save({
           studentId: data.assignment.studentId,
           academicYearId: data.assignment.academicYearId,
-          concurrencyStamp: data.concurrencyStamp,
+          concurrencyStamp: assignmentStamp.current,
           ...values,
         }).unwrap();
         onDirtyChange(false);
@@ -138,224 +130,174 @@ export default function AssignedPolicyEditor({
       }
     },
   });
-  const policiesChanged = formik.values.policies.some(
-    (policy) =>
-      policy.versionId !==
-      (data.assignment.policies.find((assigned) => assigned.family === policy.family)?.versionId ??
-        null)
-  );
+  const policiesChanged = policiesDiffer(formik.values.policies);
+  const formBusy = busy || formik.isSubmitting;
+  const openPreview = async () => {
+    if (formBusy || formik.isValidating) return;
+    setError('');
+    if (policiesChanged) {
+      const errors = await formik.validateForm();
+      if (errors.reason || typeof errors.policies === 'string') {
+        setError(errors.reason || String(errors.policies));
+        return;
+      }
+    }
+    setPreviewOpen(true);
+  };
   useEffect(() => {
-    onBusyChange?.(busy);
+    onBusyChange?.(formBusy);
     return () => onBusyChange?.(false);
-  }, [busy, onBusyChange]);
+  }, [formBusy, onBusyChange]);
   useEffect(() => {
     onDirtyChange(formik.dirty);
     return () => onDirtyChange(false);
   }, [formik.dirty, onDirtyChange]);
   return (
-    <AssignmentStepperFrame savedAssignment>
-      <CustomStepperWithFormik
-        steps={assignmentEditSteps}
-        activeStep={activeStep}
-        initialValues={formik.initialValues}
-        formikInstance={formik}
-        validationSchema={undefined}
-        showSaveButton={false}
-        nextButtonLabel="Next"
-        finalButtonLabel={policiesChanged ? 'Save policies' : 'Close'}
+    <>
+      <AssignmentForm
+        busy={formBusy}
+        busyLabel="Saving…"
         onCancel={onCancel}
-        handleBack={() => setActiveStep((step) => Math.max(0, step - 1))}
-        handleNext={(last) => {
-          if (last) {
-            formik.handleSubmit();
-            return;
-          }
-          setReachedStep((step) => Math.max(step, activeStep + 1));
-          setActiveStep((step) => step + 1);
+        onPreview={async (event) => {
+          event.preventDefault();
+          await openPreview();
         }}
-        completedSteps={Array.from({ length: reachedStep }, (_, index) => index)}
-        isStepClickable={(index) => index <= reachedStep && !busy}
-        onStepClick={(index) => {
-          if (index <= reachedStep) setActiveStep(index);
-        }}
-        validateForwardStepClick
-        saveAndNextButtonProps={{
-          loading: busy,
-          disabled: busy,
-          color: 'inherit',
-          startIcon: (
-            <Iconify
-              icon={
-                activeStep < 2
-                  ? 'mdi:arrow-right'
-                  : policiesChanged
-                    ? GlobalIcons.submit
-                    : GlobalIcons.cancel
-              }
-              width={20}
-            />
-          ),
-          endIcon: null,
-        }}
-        backButtonProps={{ disabled: busy }}
-        renderItem={() => (
-          <Stack
-            role="region"
-            aria-label="Assigned policy fields"
-            spacing={2}
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              p: assignmentEditPadding,
-              '& > *': { flexShrink: 0 },
-            }}
+        previewDisabled={formBusy || formik.isValidating}
+      >
+        <Stack role="region" aria-label="Assigned policy fields" spacing={2}>
+          {error && !previewOpen && <Alert severity="error">{error}</Alert>}
+          {children}
+          <FormSectionCard
+            title="Fee Structure"
+            icon="mdi:file-document-outline"
+            descriptionTooltip="The saved fee structure and revision for this student and academic year."
           >
-            {activeStep === 0 && (
-              <>
-                {children}
-                <FormSectionCard
-                  title="Fee Structure"
-                  icon="mdi:file-document-outline"
-                  descriptionTooltip="The saved fee structure and revision for this student and academic year."
+            <Typography variant="body2">
+              {data.assignment.structureName} · r{data.assignment.revisionNumber}
+            </Typography>
+          </FormSectionCard>
+          <AssignmentPolicies
+            studentId={data.assignment.studentId}
+            academicYearId={data.assignment.academicYearId}
+            defaults={data.assignment.policies}
+            selections={formik.values.policies}
+            reason={formik.values.reason}
+            editing
+            canOverride={canOverridePolicies}
+            disabled={busy}
+            onChange={(policies, reason) => {
+              formik.setValues({
+                policies: [...policies].sort(
+                  (a, b) =>
+                    assignmentPolicyFamilies.indexOf(a.family) -
+                    assignmentPolicyFamilies.indexOf(b.family)
+                ),
+                reason,
+              });
+            }}
+          />
+          <FormSectionCard
+            title="Required Fee Heads"
+            icon="mdi:format-list-checks"
+            descriptionTooltip={
+              onEditFees
+                ? 'Review the saved amounts and service dates for required fees. See Preview for calculations.'
+                : data.structureEditBlocker ||
+                  'Required fees are read-only. See Preview for calculations.'
+            }
+            action={
+              onEditFees && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon={GlobalIcons.edit} />}
+                  disabled={formik.dirty || busy}
+                  onClick={onEditFees}
                 >
-                  <DetailField
-                    label="Fee structure"
-                    value={`${data.assignment.structureName} · r${data.assignment.revisionNumber}`}
-                  />
-                </FormSectionCard>
-                <AssignmentPolicies
-                  studentId={data.assignment.studentId}
-                  academicYearId={data.assignment.academicYearId}
-                  defaults={data.assignment.policies}
-                  selections={formik.values.policies}
-                  reason={formik.values.reason}
-                  editing
-                  canOverride={canOverridePolicies}
-                  disabled={busy}
-                  onChange={(policies, reason) => {
-                    setReachedStep(0);
-                    formik.setValues({
-                      policies: [...policies].sort(
-                        (a, b) =>
-                          assignmentPolicyFamilies.indexOf(a.family) -
-                          assignmentPolicyFamilies.indexOf(b.family)
-                      ),
-                      reason,
-                    });
-                  }}
-                />
-              </>
-            )}
-            {activeStep === 1 && (
-              <>
-                {!onEditFees && (
-                  <Alert severity="info">
-                    {data.structureEditBlocker ||
-                      'The assigned amounts and service dates are read-only in this editor.'}
-                  </Alert>
-                )}
-                <FormSectionCard
-                  title="Required Fee Heads"
-                  icon="mdi:format-list-checks"
-                  descriptionTooltip="Review the saved amounts, service dates and proration for the required fees."
-                  action={
-                    onEditFees && (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<Iconify icon={GlobalIcons.edit} />}
-                        disabled={formik.dirty || busy}
-                        onClick={onEditFees}
-                      >
-                        Edit fees
-                      </Button>
-                    )
-                  }
-                >
-                  <Stack spacing={1.5} divider={<Divider flexItem />}>
-                    {(data.assignment.heads ?? [])
-                      .filter((head) => !head.isOptional && head.included)
-                      .map((head) => (
-                        <AssignmentFeeHeadSummary
-                          key={head.feeHeadId}
-                          head={head}
-                          currency={data.assignment.currency}
-                          calculation={feeHeadProration?.get(head.feeHeadId)}
-                          serviceDetails={
-                            <DetailField
-                              label="Service dates"
-                              value={
-                                head.servicePeriod?.startDate && head.servicePeriod?.endDate
-                                  ? `${fDate(head.servicePeriod.startDate)} – ${fDate(head.servicePeriod.endDate)}`
-                                  : 'Not recorded'
-                              }
-                            />
-                          }
-                        />
-                      ))}
-                  </Stack>
-                </FormSectionCard>
-                {(data.assignment.heads ?? []).some((head) => head.isOptional) && (
-                  <OptionalFeeServiceStops
-                    assignment={data.assignment}
-                    feeHeadProration={feeHeadProration}
-                    canRestart={canRestartOptionalService}
-                    disabled={!canStopOptionalService || formik.dirty || busy}
-                    disabledReason={
-                      !canStopOptionalService
-                        ? 'Optional service cancellation requires the Stop Optional Service permission and an active enrollment.'
-                        : formik.dirty
-                          ? 'Save or discard the pending policy changes before changing an optional service.'
-                          : busy
-                            ? 'Another fee assignment operation is in progress.'
-                            : undefined
+                  Edit fees
+                </Button>
+              )
+            }
+          >
+            <Stack spacing={1.5} divider={<Divider flexItem />}>
+              {(data.assignment.heads ?? [])
+                .filter((head) => !head.isOptional && head.included)
+                .map((head) => (
+                  <AssignmentFeeHeadSummary
+                    key={head.feeHeadId}
+                    head={head}
+                    currency={data.assignment.currency}
+                    serviceDetails={
+                      <DetailField
+                        label="Service dates"
+                        value={
+                          head.servicePeriod?.startDate && head.servicePeriod?.endDate
+                            ? `${fDate(head.servicePeriod.startDate)} – ${fDate(head.servicePeriod.endDate)}`
+                            : 'Not recorded'
+                        }
+                      />
                     }
-                    onSaved={onOptionalServiceSaved}
-                    onBusyChange={setServiceBusy}
                   />
-                )}
-                {!canStopOptionalService && !onEditFees && (
-                  <Typography variant="body2" color="text.secondary">
-                    Optional service cancellation requires the fee assignment Stop Optional Service
-                    permission and an active enrollment.
-                  </Typography>
-                )}
-              </>
-            )}
-            {activeStep === 2 && (
-              <>
-                <AssignmentReview data={data.assignment} committed />
-                {policiesChanged && (
-                  <FormSectionCard
-                    title="Policy Changes"
-                    icon="mdi:shield-check-outline"
-                    descriptionTooltip="Review the pending policies before saving. Assigned amounts are unchanged."
-                  >
-                    <AssignmentPolicies
-                      studentId={data.assignment.studentId}
-                      academicYearId={data.assignment.academicYearId}
-                      defaults={[...data.assignment.policies, ...(policyOptions.data ?? [])]}
-                      selections={formik.values.policies}
-                      reason={formik.values.reason}
-                      canOverride={false}
-                      onChange={() => {}}
-                    />
-                    <DetailField label="Policy change reason" value={formik.values.reason} />
-                  </FormSectionCard>
-                )}
-              </>
-            )}
-            {(formik.submitCount > 0 || formik.touched.reason) && formik.errors.reason && (
-              <Alert severity="error">{formik.errors.reason}</Alert>
-            )}
-            {error && (
-              <Alert severity="error">
-                {error} Reopen the assignment if another user changed it.
-              </Alert>
-            )}
-          </Stack>
-        )}
-      />
-    </AssignmentStepperFrame>
+                ))}
+            </Stack>
+          </FormSectionCard>
+          {(data.assignment.heads ?? []).some((head) => head.isOptional) && (
+            <OptionalFeeServiceStops
+              assignment={data.assignment}
+              canRestart={canRestartOptionalService}
+              disabled={!canStopOptionalService || formik.dirty || busy}
+              disabledReason={
+                !canStopOptionalService
+                  ? 'Optional service cancellation requires the Stop Optional Service permission and an active enrollment.'
+                  : formik.dirty
+                    ? 'Save or discard the pending policy changes before changing an optional service.'
+                    : busy
+                      ? 'Another fee assignment operation is in progress.'
+                      : undefined
+              }
+              onSaved={onOptionalServiceSaved}
+              onBusyChange={setServiceBusy}
+            />
+          )}
+        </Stack>
+      </AssignmentForm>
+      {previewOpen && (
+        <AssignmentPreviewDialog
+          busy={formBusy}
+          onClose={() => setPreviewOpen(false)}
+          action={
+            policiesChanged && canOverridePolicies
+              ? { label: 'Save policies', onClick: formik.handleSubmit }
+              : undefined
+          }
+        >
+          {error && (
+            <Alert severity="error">
+              {error} Reopen the assignment if another user changed it.
+            </Alert>
+          )}
+          {formik.errors.reason && <Alert severity="error">{formik.errors.reason}</Alert>}
+          <AssignmentReview data={data.assignment} committed />
+          {policiesChanged && (
+            <FormSectionCard
+              title="Policy Changes"
+              icon="mdi:shield-check-outline"
+              descriptionTooltip="Review the pending policies before saving. Assigned amounts are unchanged."
+            >
+              <AssignmentPolicies
+                studentId={data.assignment.studentId}
+                academicYearId={data.assignment.academicYearId}
+                defaults={[...data.assignment.policies, ...(policyOptions.data ?? [])]}
+                selections={formik.values.policies}
+                reason={formik.values.reason}
+                canOverride={false}
+                onChange={() => {}}
+              />
+              <DetailField label="Policy change reason" value={formik.values.reason} />
+            </FormSectionCard>
+          )}
+        </AssignmentPreviewDialog>
+      )}
+    </>
   );
 }

@@ -15,13 +15,14 @@ import {
   waitForElementToBeRemoved,
 } from '@testing-library/react';
 
-import { structureCandidate } from './feeStructureModel';
+import { structureCandidate, unchangedRevisionFeeHeadsError } from './feeStructureModel';
 import FeeStructureWorkspaceCard from './Components/FeeStructureWorkspaceCard';
 
 const state = vi.hoisted(() => ({
   lookups: {} as any,
   mutate: vi.fn(),
   policyToast: vi.fn(),
+  errorToast: vi.fn(),
   mobile: false,
 }));
 vi.mock('react-redux', () => ({
@@ -32,7 +33,7 @@ vi.mock('src/hooks/use-responsive', () => ({
     state.mobile && query === 'down' && breakpoint === 'sm',
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: state.policyToast, error: vi.fn() },
+  shikshaMitraToast: { success: state.policyToast, error: state.errorToast },
 }));
 vi.mock('./hooks/useFeeStructureLookups', () => ({ default: () => state.lookups }));
 vi.mock('src/redux/customQueryAndMutation', () => ({
@@ -149,6 +150,7 @@ beforeEach(() => {
   window.localStorage.clear();
   state.mutate.mockReset();
   state.policyToast.mockReset();
+  state.errorToast.mockReset();
   state.mobile = false;
   state.lookups = {
     settings: {
@@ -217,46 +219,34 @@ async function chooseCollection(name: string) {
   fireEvent.click(await screen.findByRole('button', { name: `Select ${name} version 1` }));
 }
 
-it.each([false, true])(
-  'saves the proration default after the catalog loads unless fallback was chosen (%s)',
-  async (useFallback) => {
-    Object.assign(state.lookups.settings.permissions, { proration: true, prorationRead: true });
-    state.lookups.catalogs.proration = { ...catalog, loading: true };
-    const view = render(ui());
-    fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
-      target: { value: 'Annual fees' },
-    });
-    await addValidHead();
-    fireEvent.click(screen.getByRole('button', { name: 'Step 2: Policies' }));
+it('saves the sole current proration default after the catalog loads', async () => {
+  Object.assign(state.lookups.settings.permissions, { proration: true, prorationRead: true });
+  state.lookups.catalogs.proration = { ...catalog, loading: true };
+  const view = render(ui());
+  fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
+    target: { value: 'Annual fees' },
+  });
+  await addValidHead();
+  fireEvent.click(screen.getByRole('button', { name: 'Step 2: Policies' }));
 
-    const policy = within(screen.getByRole('group', { name: 'Proration Policy' }));
-    if (useFallback) {
-      fireEvent.click(policy.getByRole('button', { name: 'Select Proration Policy' }));
-      fireEvent.click(
-        within(screen.getByRole('dialog', { name: 'Choose Proration Policy' })).getByRole('button', {
-          name: 'Use academic-year default',
-        })
-      );
-    }
+  const policy = within(screen.getByRole('group', { name: 'Proration Policy' }));
 
-    state.lookups.settings = { ...state.lookups.settings, policies: [prorationDefault] };
-    state.lookups.catalogs = { ...state.lookups.catalogs, proration: { ...catalog, ready: true } };
-    view.rerender(ui());
-    expect(
-      policy.getByText(useFallback ? 'Use academic-year default' : 'School Proration')
-    ).toBeVisible();
+  state.lookups.settings = { ...state.lookups.settings, policies: [prorationDefault] };
+  state.lookups.catalogs = { ...state.lookups.catalogs, proration: { ...catalog, ready: true } };
+  view.rerender(ui());
+  expect(policy.getByText('School Proration')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Use academic-year default' })).toBeNull();
 
-    state.mutate.mockImplementation(({ standardFeeStructures }) => ({
-      unwrap: async () => ({ ...standardFeeStructures, id: 'saved', status: 1 }),
-    }));
-    fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
-    await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
-    expect(state.mutate.mock.calls[0][0].standardFeeStructures).toMatchObject({
-      prorationPolicyId: useFallback ? null : 'school-proration',
-      prorationPolicyVersionId: useFallback ? null : 'school-proration-v2',
-    });
-  }
-);
+  state.mutate.mockImplementation(({ standardFeeStructures }) => ({
+    unwrap: async () => ({ ...standardFeeStructures, id: 'saved', status: 1 }),
+  }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
+  await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
+  expect(state.mutate.mock.calls[0][0].standardFeeStructures).toMatchObject({
+    prorationPolicyId: 'school-proration',
+    prorationPolicyVersionId: 'school-proration-v2',
+  });
+});
 
 it('retains the unsaved name when suspending and resuming an editor without saving', async () => {
   const view = render(ui());
@@ -361,12 +351,14 @@ it('blocks Next and direct Review when collection is missing while allowing inco
   expect(state.mutate).not.toHaveBeenCalled();
 });
 
-it('requires both policies before review and does not offer to clear a required policy', async () => {
+it('requires all three policies before review and does not offer to clear a required policy', async () => {
   Object.assign(state.lookups.settings.permissions, {
     collection: true,
     collectionRead: true,
     refund: true,
     refundRead: true,
+    proration: true,
+    prorationRead: true,
   });
   state.lookups.settings.policies = [
     {
@@ -386,6 +378,7 @@ it('requires both policies before review and does not offer to clear a required 
       feeHeadScope: 'AllFeeHeads',
       isDefault: false,
     },
+    { ...prorationDefault, isDefault: false },
   ];
   render(ui());
   await addValidHead();
@@ -415,6 +408,11 @@ it('requires both policies before review and does not offer to clear a required 
   fireEvent.click(screen.getByRole('button', { name: 'Select Refund Policy' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Select Refund version 1' }));
   expect(screen.queryByText('Refund Policy is required')).toBeNull();
+  expect(screen.getByText('Proration Policy is required')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Review & Continue' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Select Proration Policy' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Select School Proration version 2' }));
+  expect(screen.queryByText('Proration Policy is required')).toBeNull();
   expect(screen.getByRole('button', { name: 'Review & Continue' })).not.toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Change Refund Policy' }));
   expect(screen.queryByRole('button', { name: 'Remove Refund Policy' })).toBeNull();
@@ -745,6 +743,8 @@ const savedRecord = (head = savedHead()) => ({
   name: 'Saved fees',
   status: 1,
   revisionNumber: 1,
+  prorationPolicyId: 'school-proration',
+  prorationPolicyVersionId: 'school-proration-v2',
   feeHeads: [head],
 });
 
@@ -1018,6 +1018,23 @@ it('shows an inherited duplicate revision name and blocks unchanged saves until 
       expect.objectContaining({ structureId: revision.id, changes: { name: 'Revised fees' } })
     )
   );
+});
+
+it('shows the unchanged revision error once in a toast and preserves the revision editor', async () => {
+  state.mutate.mockReturnValue({
+    unwrap: vi
+      .fn()
+      .mockRejectedValue({ data: { error: { code: 'FeeStructure:UnchangedRevisionFeeHeads' } } }),
+  });
+  render(ui({ ...savedRecord(), revisionNumber: 2, previousRevisionId: 'published' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
+  await waitFor(() =>
+    expect(state.errorToast).toHaveBeenCalledExactlyOnceWith({
+      message: unchangedRevisionFeeHeadsError,
+    })
+  );
+  expect(screen.queryByText(unchangedRevisionFeeHeadsError)).toBeNull();
+  expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue('Saved fees');
 });
 
 it('checks an unchanged revision name with the server when the class list missed a duplicate', async () => {
@@ -1521,7 +1538,7 @@ it('keeps published policy and payment-term names from the saved snapshot after 
   expect(summary.getByText('Not attached')).toBeVisible();
   expect(summary.queryByText('Renamed Collection')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
-  expect(screen.getByText('Original Collection · v1')).toBeTruthy();
+  expect(screen.getByText('Original Collection')).toBeTruthy();
   expect(screen.queryByText('Renamed Collection')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Back' }));
   expect(screen.queryByRole('button', { name: 'View Fee Head' })).toBeNull();

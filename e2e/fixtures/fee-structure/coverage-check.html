@@ -11,9 +11,10 @@ import FeeStructurePoliciesStep from 'src/screens/finance/settings/FeeStructure/
 import {structureCandidate} from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
 const h=React.createElement;
 const store=configureStore({reducer:(state={confirmPopup:{isChanges:false},auth:{permissions:[]}})=>state});
-const catalog={items:[],loading:false,error:false,retry:()=>{}};
+const loading=new URLSearchParams(window.location.search).has('loading');
+const catalog={items:[],loading,error:false,retry:()=>{}};
 const families=['collection','refund','proration'];
-const policies=families.map(family=>({id:family,versionId:`${family}-v1`,family,name:`School ${family} policy`,versionNumber:1,isCurrent:true,feeHeadScope:'SelectedFeeHeads',applicableFeeHeadIds:['tuition'],feeHeadNames:{tuition:'Tuition Fee'}}));
+const policies=loading?[]:families.map(family=>({id:family,versionId:`${family}-v1`,family,name:`School ${family} policy`,versionNumber:1,isCurrent:true,feeHeadScope:'SelectedFeeHeads',applicableFeeHeadIds:['tuition'],feeHeadNames:{tuition:'Tuition Fee'}}));
 function Fixture(){
  const [candidate,setCandidate]=React.useState({...structureCandidate(),name:'School fees',feeHeads:[{feeHeadId:'tuition',feeHeadName:'Tuition Fee',amount:12000,isVariable:false,isOptional:false}]});
  const {setMode}=useColorScheme();
