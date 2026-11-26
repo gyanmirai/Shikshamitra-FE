@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
   refetch: vi.fn(),
   query: vi.fn(),
+  staffQuery: vi.fn(),
+  tenantId: 'school-a',
   canRead: true,
   params: 'employeeId=staff-1&month=2026-10',
   isError: false,
@@ -17,10 +19,22 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(mocks.params),
   useRouter: () => ({ replace: mocks.replace }),
 }));
-vi.mock('react-redux', () => ({ useSelector: () => [] }));
+vi.mock('react-redux', () => ({
+  useSelector: (select: (state: unknown) => unknown) =>
+    select({
+      auth: {
+        permissions: [],
+        user: { sub: 'hr-user' },
+        sessionContext: { tenantId: mocks.tenantId },
+      },
+    }),
+}));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => mocks.canRead }));
 vi.mock('src/redux/hr/employeeApi', () => ({
-  useGetEmployeeByIdQuery: () => ({ currentData: employee }),
+  useGetEmployeeByIdQuery: (...args: [string, { skip: boolean }]) => {
+    mocks.staffQuery(...args);
+    return { currentData: args[1].skip ? undefined : employee };
+  },
   useLazyGetEmployeeOptionsQuery: () => [vi.fn()],
 }));
 vi.mock('src/redux/customQueryAndMutation', () => ({ default: () => [vi.fn()] }));
@@ -106,6 +120,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.params = 'employeeId=staff-1&month=2026-10';
   mocks.canRead = true;
+  mocks.tenantId = 'school-a';
   mocks.isError = false;
   mocks.isFetching = false;
   mocks.summary = undefined;
@@ -211,6 +226,25 @@ it('preserves month when changing staff', () => {
     '/hr/payroll/structure?employeeId=staff-2&month=2026-10'
   );
 });
+it('reuses a staff picker label without a full profile read after URL navigation', () => {
+  const { rerender } = render(<EmployeeSalaryStructureScreen />);
+  expect(mocks.staffQuery).toHaveBeenLastCalledWith('staff-1', { skip: false });
+  fireEvent.click(screen.getByRole('button', { name: 'Select second staff' }));
+  mocks.params = 'employeeId=staff-2&month=2026-10';
+  rerender(<EmployeeSalaryStructureScreen />);
+  expect(screen.getByText('Second staff')).toBeVisible();
+  expect(mocks.staffQuery).toHaveBeenLastCalledWith('staff-2', { skip: true });
+  expect(mocks.query).toHaveBeenLastCalledWith(
+    { employeeId: 'staff-2', month: '2026-10' },
+    { skip: false }
+  );
+
+  mocks.tenantId = 'school-b';
+  rerender(<EmployeeSalaryStructureScreen />);
+  expect(screen.queryByText('Second staff')).not.toBeInTheDocument();
+  expect(mocks.staffQuery).toHaveBeenLastCalledWith('staff-2', { skip: false });
+});
+
 it('offers retry after a failed request', () => {
   mocks.isError = true;
   render(<EmployeeSalaryStructureScreen />);
