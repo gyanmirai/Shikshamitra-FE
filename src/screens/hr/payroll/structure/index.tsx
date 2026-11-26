@@ -46,10 +46,39 @@ import {
 
 export default function EmployeeSalaryStructureScreen() {
   const params = useSearchParams();
-  return <SalaryStructureWorkspace key={params.get('employeeId') || ''} />;
+  const employeeId = params.get('employeeId')?.trim() || '';
+  const owner = useSelector((state: RootState) => {
+    const tenantId = state.auth.sessionContext?.tenantId;
+    const userId = state.auth.user?.sub;
+    return tenantId && userId ? `${tenantId}:${userId}` : null;
+  });
+  return <SalaryStructureSelection key={owner} employeeId={employeeId} canReuse={!!owner} />;
 }
 
-function SalaryStructureWorkspace() {
+function SalaryStructureSelection({
+  employeeId,
+  canReuse,
+}: {
+  employeeId: string;
+  canReuse: boolean;
+}) {
+  const [choice, setChoice] = useState<EmployeeOption | null>(null);
+  return (
+    <SalaryStructureWorkspace
+      key={employeeId}
+      pickerChoice={canReuse && choice?.id === employeeId ? choice : null}
+      onPickerChoice={setChoice}
+    />
+  );
+}
+
+function SalaryStructureWorkspace({
+  pickerChoice,
+  onPickerChoice,
+}: {
+  pickerChoice: EmployeeOption | null;
+  onPickerChoice: (choice: EmployeeOption | null) => void;
+}) {
   const params = useSearchParams();
   const router = useRouter();
   const employeeId = params.get('employeeId')?.trim() || '';
@@ -66,10 +95,11 @@ function SalaryStructureWorkspace() {
     canManage ||
     hasGrantedPermission(permissions, hrPermissions.payroll.compensationRevisionActions.view);
   const [selected, setSelected] = useState<EmployeeOption | null>(
-    employeeId ? { id: employeeId, label: 'Loading staff…' } : null
+    pickerChoice || (employeeId ? { id: employeeId, label: 'Loading staff…' } : null)
   );
   const { currentData: employee } = useGetEmployeeByIdQuery(employeeId, {
-    skip: !employeeId || !canRead,
+    // The picker already returned this label. Deep links still resolve it independently.
+    skip: !employeeId || !canRead || !!pickerChoice,
   });
   const {
     currentData: summary,
@@ -189,8 +219,10 @@ function SalaryStructureWorkspace() {
               size="small"
               sx={{ flex: '1 1 280px', maxWidth: { md: 420 } }}
               onChange={(_, value) => {
-                setSelected(value as EmployeeOption | null);
-                updateContext({ employeeId: (value as EmployeeOption | null)?.id || '' });
+                const option = value as EmployeeOption | null;
+                setSelected(option);
+                onPickerChoice(option);
+                updateContext({ employeeId: option?.id || '' });
               }}
             />
             <TextField
