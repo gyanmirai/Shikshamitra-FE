@@ -6,26 +6,27 @@ import { Provider } from 'react-redux';
 import React, { useState } from 'react';
 import { api } from 'src/redux/service';
 import { createRoot } from 'react-dom/client';
-import { hrPaths } from 'src/constants/hr-menus';
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from 'src/redux/auth/authSlice';
 import PF from 'src/screens/hr/payroll/setting/pf';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import HRLayout from 'src/app/(auth-route)/hr/layout';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import globalReducer from 'src/redux/globalState/globalSlice';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { hrSetupOperatorPermissions } from 'src/constants/hr-setup';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
 import { hrRecoveryMiddleware } from 'src/redux/hr/hr-recovery-middleware';
 import { Box, Stack, Button, Typography, CssBaseline } from '@mui/material';
-import { HrSetupSessionProvider } from 'src/screens/hr/setup/hr-setup-session';
 import { HrSetupCoordinator } from 'src/screens/hr/setup/hr-setup-coordinator';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import EarningComponent from 'src/screens/hr/payroll/setting/earning-component';
 import { HrRecoveryProvider } from 'src/screens/hr/recovery/hr-recovery-provider';
+import OperationalDashboard from 'src/screens/hr/hr-dashboard/OperationalDashboard';
 import DeductionComponent from 'src/screens/hr/payroll/setting/deduction-component';
 import SalaryTemplateEditor from 'src/screens/hr/payroll/setting/salary-template-editor';
 import EsiStatutorySettings from 'src/screens/hr/payroll/setting/esi-statutory-settings';
@@ -61,6 +62,8 @@ const baseGrants =
       ];
 const grants = [
   ...baseGrants,
+  ...(window.location.pathname === hrPaths.dashboard ? [hrPermissions.dashboardView] : []),
+  ...(window.location.pathname === hrPaths.payroll.runPayroll ? [hrPermissions.root] : []),
   ...(new URLSearchParams(window.location.search).get('identity') === 'allowed'
     ? ['ShikshaMitra.Module.InstituteSetup', 'InstituteSetup.SchoolIdentity.View']
     : new URLSearchParams(window.location.search).get('identity') === 'view-only'
@@ -97,6 +100,14 @@ setupListeners(store.dispatch);
 
 function Fixture() {
   const [hr, setHr] = useState(true);
+  if (window.location.pathname === hrPaths.dashboard)
+    return <OperationalDashboard cacheIdentity={context.actorId} />;
+  if (window.location.pathname === hrPaths.payroll.runPayroll)
+    return (
+      <HRLayout>
+        <Typography variant="h5">Run Payroll</Typography>
+      </HRLayout>
+    );
   if (scenario === 'pf-page' || scenario === 'pf-view-only')
     return (
       <Box sx={{ height: '100dvh', minHeight: 0, p: 1 }}>
@@ -104,34 +115,32 @@ function Fixture() {
       </Box>
     );
   return (
-    <HrSetupSessionProvider>
-      <Stack
-        spacing={2}
-        sx={{ p: 2, ...(scenario === 'esic-settings' && { height: '100dvh', overflow: 'hidden' }) }}
-      >
-        <Typography variant="h5">HR Workspace</Typography>
-        <Typography variant="body2">
-          {context.synthetic
-            ? 'Synthetic salary component fixture. Real setup editors with in-memory API responses.'
-            : 'Disposable school fixture. Real setup editors and backend APIs. Synthetic authentication.'}
-        </Typography>
-        <Button onClick={() => setHr((value) => !value)}>{hr ? 'Leave HR' : 'Return to HR'}</Button>
-        <Typography>Normal HR operations remain available after closing setup.</Typography>
-        {scenario === 'esic-settings' ? (
-          <EsiStatutorySettings />
-        ) : scenario === 'payslip-settings' ? (
-          <PayslipSettingsForm canEdit />
-        ) : scenario === 'salary-template' ? (
-          <SalaryTemplateEditor mode="create" />
-        ) : scenario === 'earning-components' ? (
-          <EarningComponent />
-        ) : scenario === 'deduction-components' ? (
-          <DeductionComponent />
-        ) : hr ? (
-          <HrSetupCoordinator />
-        ) : null}
-      </Stack>
-    </HrSetupSessionProvider>
+    <Stack
+      spacing={2}
+      sx={{ p: 2, ...(scenario === 'esic-settings' && { height: '100dvh', overflow: 'hidden' }) }}
+    >
+      <Typography variant="h5">HR Workspace</Typography>
+      <Typography variant="body2">
+        {context.synthetic
+          ? 'Synthetic salary component fixture. Real setup editors with in-memory API responses.'
+          : 'Disposable school fixture. Real setup editors and backend APIs. Synthetic authentication.'}
+      </Typography>
+      <Button onClick={() => setHr((value) => !value)}>{hr ? 'Leave HR' : 'Return to HR'}</Button>
+      <Typography>Normal HR operations remain available after closing setup.</Typography>
+      {scenario === 'esic-settings' ? (
+        <EsiStatutorySettings />
+      ) : scenario === 'payslip-settings' ? (
+        <PayslipSettingsForm canEdit />
+      ) : scenario === 'salary-template' ? (
+        <SalaryTemplateEditor mode="create" />
+      ) : scenario === 'earning-components' ? (
+        <EarningComponent />
+      ) : scenario === 'deduction-components' ? (
+        <DeductionComponent />
+      ) : hr ? (
+        <HrSetupCoordinator />
+      ) : null}
+    </Stack>
   );
 }
 

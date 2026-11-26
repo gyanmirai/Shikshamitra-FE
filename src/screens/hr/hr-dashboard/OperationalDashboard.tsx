@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
+import { hrSetupOperatorPermissions } from 'src/constants/hr-setup';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { HrSetupCoordinator } from 'src/screens/hr/setup/hr-setup-coordinator';
 import { Box, Stack, Alert, Button, Typography, LinearProgress } from '@mui/material';
@@ -30,16 +31,20 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
   const params = useSearchParams();
   const router = useRouter();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const granted = (name: string) => hasGrantedPermission(permissions, name);
   const canView = granted(dashboardPermissions.view);
+  const setupAcademicYearId = hasGrantedPermission(permissions, hrSetupOperatorPermissions)
+    ? academicYearId
+    : undefined;
   const state = parseDashboardState(new URLSearchParams(params.toString()));
   const [announcement, setAnnouncement] = useState('');
   const [legacyNotice, setLegacyNotice] = useState(false);
   const [pendingDate, setPendingDate] = useState<string | null>(null);
   const noticedLegacy = useRef(false);
   const args = useMemo(
-    () => ({ date: state.date, accessKey: cacheIdentity }),
-    [state.date, cacheIdentity]
+    () => ({ date: state.date, accessKey: cacheIdentity, setupAcademicYearId }),
+    [state.date, cacheIdentity, setupAcademicYearId]
   );
   const overview = useGetHROperationalOverviewQuery(args, {
     skip: !canView,
@@ -169,7 +174,12 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
           </Box>
         )}
       </Box>
-      <HrSetupCoordinator onDashboard />
+      {canView && !accessDenied && (
+        <HrSetupCoordinator
+          savedReady={data?.hrSetupReady}
+          onChecked={overview.refetch}
+        />
+      )}
       {!canView || accessDenied ? (
         <Alert severity="warning">You do not have permission to view the HR dashboard.</Alert>
       ) : (

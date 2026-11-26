@@ -24,9 +24,10 @@ Backend ownership remains in the [HR API documentation](https://github.com/gyanm
 
 `esi-policy-api.ts` loads `GET /payroll/statutory-schemes/esi/policies/{id}/archive-review` when the archive confirmation mounts, refetching cached reviews. The dialog uses `currentData`, rejects loading/failed/wrong-policy reviews, and submits the reviewed concurrency stamp with `confirmed: true`. Reviews share statutory and salary-template invalidation tags; failed mutations refresh dependencies before retry. See the [backend policy contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#named-esic-policies).
 
-`hr-setup-readiness-api.ts` reads `/api/hr/setup-readiness` for the document-scoped HR setup wizard.
+`hr-setup-readiness-api.ts` reads `/api/hr/setup-readiness` while the HR dashboard’s **Check HR setup** wizard is open.
 Its cache key includes tenant/user/year context, and it shares owning policy, shift, component, template, and statutory invalidation tags.
-The authenticated workspace owns non-persisted dismissal state, while the HR layout owns the query and lazy wizard mounting.
+The HR dashboard receives the current saved setup flag in its existing overview response and refreshes it after an explicit check.
+Run Payroll and other HR workspaces open without a checklist request.
 Embedded editors retain existing mutation endpoints and permissions.
 The [backend readiness contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#hr-setup-readiness) owns readiness rules.
 

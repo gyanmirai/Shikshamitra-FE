@@ -101,7 +101,9 @@ Apply Leave reads the selected paid-type rule from the current staff/date policy
 
 ## HR setup wizard
 
-Authorized HR operators receive the **Let’s Complete Your HR Setup** wizard on any HR route when the readiness summary reports unresolved configuration.
+Authorized operators open **Check HR setup** from the HR dashboard when they want to review school configuration.
+The dashboard shows the last valid result for the selected academic year when it is available.
+Configuration changes or a new statutory month make the check due again.
 The wizard opens at the first unresolved step and marks usable existing configuration complete without requiring acknowledgement.
 Checklist steps use shared section cards with readable saved-state labels, step headings and completion counts.
 A muted summary header explains the setup purpose and confirms that saved progress is available when the user returns.
@@ -127,9 +129,9 @@ Saving refreshes server readiness; missing current-month coverage prevents compl
 Role repair remains an explicitly authorized Role Management task in another tab.
 Each step saves independently through existing APIs, and the final action rechecks server readiness.
 Failed background catalogue reads keep earning and salary-template editors mounted with their entries and an explicit retry action. The earning selector loads the complete paginated catalogue; embedded template loading uses only the wizard's navigation footer.
-Closing preserves saved configuration, protects unsaved entries with the existing discard confirmation, leaves the current route intact, and offers **Continue HR setup** on the HR dashboard when configuration still needs attention or readiness could not be checked.
-Dismissal lasts for the document lifetime across HR navigation and resets on refresh or a user, tenant, or academic-year change.
-Self-service-only users receive no popup and make no readiness request.
+Closing preserves saved configuration, protects unsaved entries with the existing discard confirmation, and returns focus to the dashboard action.
+The launcher stays available whenever an authorized operator wants to check again.
+Run Payroll uses its month-specific payroll checks and opens without this school setup wizard.
 Read failures display a dismissible retry state rather than missing-setup claims.
 This wizard does not change staff creation, finalization, activation, or payroll validation.
 
