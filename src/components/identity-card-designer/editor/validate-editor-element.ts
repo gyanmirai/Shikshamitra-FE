@@ -1,4 +1,4 @@
-import { IDENTITY_CARD_PREFIX_LIMIT } from '../types';
+import { IDENTITY_CARD_PREFIX_LIMIT, IDENTITY_CARD_BORDER_STYLES } from '../types';
 
 import type { IdentityCardElement } from '../types';
 
@@ -40,6 +40,20 @@ export function validateEditorElement(element: IdentityCardElement): string[] {
     errors.push('Only uploaded image layers can contain raster assets.');
   if (element.style?.shape !== undefined && !['rectangle', 'ellipse'].includes(element.style.shape))
     errors.push('Shape must be rectangle or ellipse.');
+  if (
+    element.style?.borderStyle != null &&
+    (!IDENTITY_CARD_BORDER_STYLES.includes(element.style.borderStyle) ||
+      (element.type !== 'line' && element.type !== 'shape'))
+  )
+    errors.push('Border style must be Solid, Dashed, or Dotted on a line or shape.');
+  if (
+    element.style?.borderStyle != null &&
+    element.style.borderWidth != null &&
+    (!Number.isFinite(element.style.borderWidth) ||
+      element.style.borderWidth < 0 ||
+      element.style.borderWidth > 20)
+  )
+    errors.push('Border width must be between 0 and 20 canvas units.');
   if (
     element.style?.fontStyle !== undefined &&
     !['normal', 'italic'].includes(element.style.fontStyle)

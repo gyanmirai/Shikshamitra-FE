@@ -54,6 +54,9 @@ export function StudentICardDesigner({
   };
   const designer = (signatureUrl?: string) => (
     <IdentityCardDesigner
+      configurationPanelSize="wide"
+      showConfigurationHints={false}
+      borderStylesEnabled
       photoRecords={photoRecords}
       photoEdits={photoEdits}
       onPhotoEdit={onPhotoEdit}

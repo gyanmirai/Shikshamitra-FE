@@ -2,27 +2,21 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { UploadAvatar } from 'src/components/upload';
-import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { studentPermissions } from 'src/constants/student-menu';
 import { useGetClassLookupQuery } from 'src/redux/class/classApi';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useGetStudentsByDivisionQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetStudentsByDivisionQuery, useUploadStudentPhotoMutation } from 'src/redux/student';
 import {
   Box,
   Grid,
   Select,
-  Button,
   Divider,
   MenuItem,
   InputLabel,
@@ -30,9 +24,13 @@ import {
   FormControl,
 } from '@mui/material';
 
+import { StudentRecordPhotoDialog } from '../records/student-record-photo-dialog';
+
 const UploadStudentPhotoScreen = () => {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canWrite = hasGrantedPermission(permissions, studentPermissions.records.manageStudent);
+  const canWrite =
+    hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
+    hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
   const {
     currentData: cachedClasses,
     error: classLookupError,
@@ -214,73 +212,19 @@ const UploadStudentPhotoScreen = () => {
         </>
       )}
 
-      <CustomDialog
-        open={Boolean(dialog.value && canWrite && currentSelectedStudent)}
-        handleClose={() => {
-          dialog.onFalse();
-          setSelectedStudent(null);
-        }}
-        title={`Upload Photo${currentSelectedStudent?.fullName ? ` - ${currentSelectedStudent.fullName}` : ''}`}
-      >
-        {currentSelectedStudent && (
-          <UploadPhotoFlow
-            student={currentSelectedStudent}
-            onClose={() => {
-              dialog.onFalse();
-              setSelectedStudent(null);
-            }}
-          />
-        )}
-      </CustomDialog>
+      {dialog.value && canWrite && currentSelectedStudent && (
+        <StudentRecordPhotoDialog
+          key={currentSelectedStudent.studentId}
+          studentId={currentSelectedStudent.studentId}
+          title={currentSelectedStudent.photoUrl ? 'Replace Photo' : 'Upload Photo'}
+          onClose={() => {
+            dialog.onFalse();
+            setSelectedStudent(null);
+          }}
+        />
+      )}
     </Box>
   );
 };
 
 export default UploadStudentPhotoScreen;
-
-const UploadPhotoFlow = ({ student, onClose }: { student: any; onClose: () => void }) => {
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canWrite = hasGrantedPermission(permissions, studentPermissions.records.manageStudent);
-  const [file, setFile] = useState<null | File>(null);
-  const [uploadPhoto, { isLoading }] = useUploadStudentPhotoMutation();
-
-  const handleSave = async () => {
-    if (!canWrite || !file) return;
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      await uploadPhoto({ studentId: student.studentId, body: formData }).unwrap();
-      shikshaMitraToast.success({ message: 'Student photo uploaded successfully.' });
-      onClose();
-    } catch {
-      shikshaMitraToast.error({ message: 'Unable to upload student photo. Please try again.' });
-    }
-  };
-
-  return (
-    <Box p={2}>
-      <UploadAvatar
-        maxSize={3145728}
-        onDrop={(acceptedFiles: File[]) => {
-          const value = acceptedFiles[0];
-          setFile(value);
-          // formik.setFieldValue('photo', value);
-        }}
-        value={file}
-      />
-      <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
-        <Button variant="outlined" onClick={onClose}>
-          Cancel
-        </Button>
-        <LoadingButton
-          variant="contained"
-          loading={isLoading}
-          disabled={!canWrite || !file}
-          onClick={handleSave}
-        >
-          Save
-        </LoadingButton>
-      </Box>
-    </Box>
-  );
-};

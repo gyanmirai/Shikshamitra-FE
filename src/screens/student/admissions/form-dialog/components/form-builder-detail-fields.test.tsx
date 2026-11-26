@@ -10,6 +10,32 @@ import { FormBuilderDetailFields } from './form-builder-detail-fields';
 import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
 
 describe('FormBuilderDetailFields', () => {
+  it('checks name availability inside the input and shows actual conflicts below it', () => {
+    const draft = getBlankAdmissionFormInitialValues(0);
+    const theme = createTheme(defaultSettings);
+    const renderFields = (checkingName: boolean, nameConflictMessage?: string) => (
+      <ThemeProvider theme={theme}>
+        <Formik initialValues={draft} onSubmit={() => undefined}>
+          {(formik) => (
+            <FormBuilderDetailFields {...{ formik, checkingName, nameConflictMessage }} />
+          )}
+        </Formik>
+      </ThemeProvider>
+    );
+    const { rerender } = render(renderFields(true));
+    const nameField = screen.getByRole('textbox', { name: 'Form Name *' });
+    expect(nameField.closest('.MuiInputBase-root')).toContainElement(
+      screen.getByRole('progressbar', { name: 'Checking form name availability' })
+    );
+    expect(nameField).not.toHaveAttribute('aria-describedby');
+    expect(screen.queryByText(/Checking name availability/)).not.toBeInTheDocument();
+
+    rerender(renderFields(false, 'A form with this name already exists.'));
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(nameField).toHaveAccessibleDescription('A form with this name already exists.');
+    expect(nameField).toHaveAttribute('aria-invalid', 'true');
+  });
+
   it('confirms a multi-step inquiry switch without losing fields, groups or visibility rules', async () => {
     const user = userEvent.setup();
     const draft = getBlankAdmissionFormInitialValues(0);

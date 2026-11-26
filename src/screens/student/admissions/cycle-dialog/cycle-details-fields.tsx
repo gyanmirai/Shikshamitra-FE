@@ -76,11 +76,21 @@ export function CycleDetailsFields({
           size="small"
           label="Description"
           placeholder="Internal purpose or audience, e.g. Nursery to Grade 9"
-          slotProps={{ inputLabel: { shrink: true } }}
+          slotProps={{
+            inputLabel: { shrink: true },
+            htmlInput: {
+              sx: {
+                '&::placeholder': {
+                  color: 'text.secondary',
+                  WebkitTextFillColor: (theme) => theme.vars.palette.text.secondary,
+                },
+              },
+              maxLength: 1000,
+            },
+          }}
           {...formik.getFieldProps('description')}
           error={Boolean(formik.touched.description && formik.errors.description)}
           helperText={formik.touched.description ? formik.errors.description : undefined}
-          inputProps={{ maxLength: 1000 }}
         />
       </Grid>
     </>

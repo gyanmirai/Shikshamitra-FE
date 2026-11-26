@@ -101,6 +101,7 @@ export const {
   useLazyGetManagedHousesQuery,
   useGetHouseStudentsQuery,
   useLazyGetHouseStudentsQuery,
+  useGetHouseDivisionsQuery,
   useLazyGetHouseDivisionsQuery,
   useCreateManagedHouseMutation,
   useUpdateManagedHouseMutation,

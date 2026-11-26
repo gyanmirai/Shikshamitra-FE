@@ -2,7 +2,8 @@ import type { IdentityCardElement } from './types';
 
 export function portraitPresetElements(
   elements: IdentityCardElement[],
-  back: boolean
+  back: boolean,
+  staff: boolean
 ): IdentityCardElement[] {
   const positions: Record<string, Partial<IdentityCardElement>> = {
     'header-band': { w: 270 },
@@ -16,8 +17,8 @@ export function portraitPresetElements(
     'person-role': { x: 18, y: 276, w: 234, h: 20 },
     'record-number': { x: 18, y: 308, w: 234, h: 18 },
     division: { x: 18, y: 332, w: 234, h: 18 },
-    'additional-record': { x: 18, y: 349, w: 234, h: 12 },
-    'footer-divider': { x: 18, y: 358, w: 234 },
+    'additional-record': { x: 18, y: 349, w: 234 },
+    'footer-divider': { x: 18, y: staff ? 358 : 367, w: 234 },
     'card-number': { x: 18, y: 371, w: 184, h: 18 },
     validity: { x: 18, y: 398, w: 184, h: 14 },
     qr: { x: 208, y: 371, w: 44, h: 44 },

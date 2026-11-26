@@ -52,6 +52,7 @@ import {
 } from 'src/redux/student/admissions/admission-cycles-api';
 
 import { AdmissionTableText } from './admission-table-text';
+import { ADMISSION_PAGE_SIZES } from './admission-page-sizes';
 import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
@@ -459,7 +460,18 @@ export default function AdmissionCyclesScreen() {
       excludeFromExport: true,
       render: (_, row) => {
         const cycle = row as unknown as AdmissionCycle;
+        const showPublish = canAdd && canPublishCycle(cycle);
         const actions = [
+          ...(showPublish
+            ? [
+                {
+                  id: 'publish',
+                  label: 'Publish',
+                  icon: GlobalIcons.publish,
+                  onClick: () => openGuardedAction('publish', cycle),
+                },
+              ]
+            : []),
           ...(canAdd
             ? [
                 {
@@ -490,16 +502,6 @@ export default function AdmissionCyclesScreen() {
               ]
             : []),
           // Capacity & reservations is temporarily hidden from Admission Periods.
-          ...(canAdd && canPublishCycle(cycle)
-            ? [
-                {
-                  id: 'publish',
-                  label: 'Publish',
-                  icon: GlobalIcons.publish,
-                  onClick: () => openGuardedAction('publish', cycle),
-                },
-              ]
-            : []),
           ...(canAdd && canReopenCycle(cycle)
             ? [
                 {
@@ -545,7 +547,7 @@ export default function AdmissionCyclesScreen() {
           <AdaptiveThreeDotsActions
             placement="right-top"
             moreLabel={`More actions for ${cycle.name}`}
-            directActionLimit={2}
+            directActionLimit={showPublish ? 1 : 2}
             collapseOnOverflow={false}
             sx={{ justifyContent: 'flex-start' }}
             actions={actions}
@@ -733,7 +735,6 @@ export default function AdmissionCyclesScreen() {
           errorContent={isError ? <AdmissionQueryError onRetry={() => refetch()} /> : undefined}
           isLoading={isLoading || (isFetching && !data)}
           isRefreshing={isFetching && !isLoading && Boolean(data)}
-          refreshIndicator="skeleton"
           isPagination
           isSearch
           isFilter={false}
@@ -754,6 +755,7 @@ export default function AdmissionCyclesScreen() {
           }
           page={filters.page}
           rowsPerPage={filters.rowsPerPage}
+          rowsPerPageOptions={ADMISSION_PAGE_SIZES}
           searchTerm={filters.search}
           totalCount={data?.totalCount ?? 0}
           maxServerRowsPerPage={100}

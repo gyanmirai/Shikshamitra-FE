@@ -18,6 +18,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import { useGetAdmissionApplicationsQuery } from 'src/redux/student/admissions/admission-applications-api';
 
+import { ADMISSION_PAGE_SIZES } from './admission-page-sizes';
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import { getAdmissionApplicationStatusLabel } from './application-status';
@@ -300,7 +301,7 @@ export default function AdmissionApplicationsScreen() {
               page={state.page}
               rowsPerPage={state.rowsPerPage}
               defaultRowsPerPage={25}
-              rowsPerPageOptions={[10, 25, 100]}
+              rowsPerPageOptions={ADMISSION_PAGE_SIZES}
               onServerSearch={(search) => update({ search: search || undefined })}
               onServerSort={(_, sorts) =>
                 update({ sort: sorts[0]?.column, direction: sorts[0]?.direction })

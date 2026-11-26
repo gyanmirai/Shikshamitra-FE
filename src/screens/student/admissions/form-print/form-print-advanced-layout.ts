@@ -81,10 +81,21 @@ export function advancedHeaderGeometry(
       (bannerPlacement === 'selected' && bannerPages.some((page) => page > 1)));
   const laterBandHeight =
     laterHasBanner || (logo && options.header.continuation === 'full') ? bandHeight : 0;
-  const address =
+  const addressLines =
     schoolHeader && options.header.address
       ? (branding.addressLines?.filter((line) => line.trim()) ?? [])
       : [];
+  const address =
+    options.header.addressLayout === 'horizontal' && addressLines.length
+      ? [
+          addressLines
+            .join('\n')
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .join(', '),
+        ]
+      : addressLines;
   const contacts = schoolHeader
     ? ([
         options.header.phone ? branding.schoolPhone : '',

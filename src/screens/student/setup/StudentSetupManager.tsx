@@ -24,6 +24,10 @@ const managers = {
 };
 
 export default function StudentSetupManager({ setting }: { setting: StudentSetupSettingKey }) {
+  if (setting === 'houses') {
+    const HouseCatalogue = managers.houses;
+    return <HouseCatalogue workspace="catalogue" />;
+  }
   const Manager = managers[setting];
   if (setting === 'gr-number' || setting === 'roll-number') {
     return <PersistedOnboardingSettingsProvider><Manager /></PersistedOnboardingSettingsProvider>;

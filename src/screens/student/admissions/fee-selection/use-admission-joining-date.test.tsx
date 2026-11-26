@@ -64,31 +64,34 @@ it.each([
   { saved: null, editable: false, locked: false, end: '2027-05-31', expected: '' },
   { saved: null, editable: false, locked: true, end: '2027-05-31', expected: '' },
   { saved: null, editable: true, locked: false, end: '2026-11-18', expected: '' },
-])('uses today only as an eligible default ($expected)', ({ saved, editable, locked, end, expected }) => {
-  vi.useFakeTimers();
-  try {
-    vi.setSystemTime(new Date(2026, 10, 19, 12));
-    mocks.read.mockReturnValue({
-      currentData: {
-        ...state,
-        joiningDate: saved,
-        canEdit: editable,
-        isLocked: locked,
-        academicYearEndDate: end,
-      },
-    });
-    const view = renderDate({ defaultToToday: true });
-    expect(view.result.current.date).toBe(expected);
-    expect(mocks.save).not.toHaveBeenCalled();
-    if (expected === '2026-11-19') {
-      act(() => view.result.current.change(null));
-      expect(view.result.current.date).toBe('');
-      expect(view.result.current.blocked).toBe(true);
+])(
+  'uses today only as an eligible default ($expected)',
+  ({ saved, editable, locked, end, expected }) => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(2026, 10, 19, 12));
+      mocks.read.mockReturnValue({
+        currentData: {
+          ...state,
+          joiningDate: saved,
+          canEdit: editable,
+          isLocked: locked,
+          academicYearEndDate: end,
+        },
+      });
+      const view = renderDate({ defaultToToday: true });
+      expect(view.result.current.date).toBe(expected);
+      expect(mocks.save).not.toHaveBeenCalled();
+      if (expected === '2026-11-19') {
+        act(() => view.result.current.change(null));
+        expect(view.result.current.date).toBe('');
+        expect(view.result.current.blocked).toBe(true);
+      }
+    } finally {
+      vi.useRealTimers();
     }
-  } finally {
-    vi.useRealTimers();
   }
-});
+);
 
 it('does not preview an empty or invalid date and retains validation beside the field', () => {
   const view = renderDate();
@@ -120,38 +123,38 @@ it('debounces candidate dates and rejects an old date preview immediately', asyn
   expect(mocks.save).not.toHaveBeenCalled();
 });
 
-it('does not send a proration policy before the Institute Setup academic-year start date', async () => {
-  mocks.read.mockReturnValue({
-    currentData: {
-      ...state,
-      canSelectProrationPolicy: true,
-      defaultProrationPolicyVersionId: 'default-v1',
-    },
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    refetch: mocks.refetch,
-  });
-  const view = renderDate();
-  act(() => view.result.current.change(dayjs('2026-05-31')));
-
-  expect(view.result.current.prorationPolicyEligible).toBe(false);
-  await waitFor(() =>
-    expect(mocks.preview).toHaveBeenLastCalledWith(
-      expect.not.objectContaining({ prorationPolicyVersionId: expect.anything() }),
-      expect.objectContaining({ skip: false })
-    )
-  );
-});
-
-it.each(['2026-06-01', '2026-06-02'])(
-  'allows proration policy use on or after academic-year start (%s)',
-  (date) => {
+it.each(['2026-05-31', '2026-06-01'])(
+  'omits policy selection for joining date %s',
+  async (date) => {
+    mocks.read.mockReturnValue({
+      currentData: {
+        ...state,
+        canSelectProrationPolicy: true,
+        defaultProrationPolicyVersionId: 'default-v1',
+      },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      refetch: mocks.refetch,
+    });
     const view = renderDate();
     act(() => view.result.current.change(dayjs(date)));
-    expect(view.result.current.prorationPolicyEligible).toBe(true);
+
+    expect(view.result.current.prorationPolicyEligible).toBe(false);
+    await waitFor(() =>
+      expect(mocks.preview).toHaveBeenLastCalledWith(
+        expect.not.objectContaining({ prorationPolicyVersionId: expect.anything() }),
+        expect.objectContaining({ skip: false })
+      )
+    );
   }
 );
+
+it('allows proration policy use the day after academic-year start', () => {
+  const view = renderDate();
+  act(() => view.result.current.change(dayjs('2026-06-02')));
+  expect(view.result.current.prorationPolicyEligible).toBe(true);
+});
 
 it('confirms the date with its original concurrency stamp only on the collection command', async () => {
   mocks.preview.mockReturnValue({

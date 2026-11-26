@@ -98,7 +98,7 @@ function Commands({
         onClick={() =>
           commands.addGroupSection(
             'Current address',
-            ['Country', 'State', 'City'].map((suffix) => ({
+            ['City', 'State', 'Country'].map((suffix) => ({
               key: `Address.${suffix}`,
               displayName: suffix,
               description: '',
@@ -440,6 +440,11 @@ describe('useFormBuilderCommands', () => {
       validationJson: string;
     }[];
     expect(fields.filter((field) => field.bindingKey === 'Address.Country')).toHaveLength(1);
+    expect(fields.map((field) => field.bindingKey)).toEqual([
+      'Address.Country',
+      'Address.State',
+      'Address.City',
+    ]);
     expect(
       JSON.parse(fields.find((field) => field.bindingKey === 'Address.State')!.validationJson)
     ).toMatchObject({ countryField: 'CURRENT_COUNTRY' });

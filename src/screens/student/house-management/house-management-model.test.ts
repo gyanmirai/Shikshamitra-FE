@@ -12,7 +12,10 @@ describe('house workspace state', () => {
       houseWorkspaceState(
         new URLSearchParams('tab=wrong&page=-1&pageSize=999&sort=studentName%20desc')
       )
-    ).toEqual({ tab: 'houses', page: 0, pageSize: 25, search: '', sorting: 'name asc' });
+    ).toEqual({ tab: 'assign', page: 0, pageSize: 25, search: '', sorting: 'studentName desc' });
+    expect(
+      houseWorkspaceState(new URLSearchParams('tab=divisions&sort=name desc'), 'catalogue')
+    ).toEqual({ tab: 'houses', page: 0, pageSize: 25, search: '', sorting: 'name desc' });
     expect(
       houseWorkspaceState(
         new URLSearchParams('tab=students&page=2&pageSize=50&search=Riya&sort=studentName%20desc')

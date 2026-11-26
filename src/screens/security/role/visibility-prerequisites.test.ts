@@ -75,6 +75,18 @@ describe('visibility prerequisites', () => {
       [studentPermissions.root],
     ]);
   });
+  it('uses the Student and Records visibility flags for both Birthday read grants', () => {
+    const items = Object.values(studentModule()).flatMap((sections) =>
+      sections.flatMap((section) => section.items)
+    );
+    const prerequisites = buildVisibilityPrerequisites([
+      { title: 'Student', permissionName: studentPermissions.root, submodule: items },
+    ]);
+    const expected = [[studentPermissions.root, studentVisibilityPermissions.records]];
+    expect(prerequisites['Students.Records.Birthdays']).toEqual(expected);
+    expect(prerequisites['Students.Records.Birthdays.OfficeScope']).toEqual(expected);
+  });
+
   const index = () => buildVisibilityPrerequisites(navigation);
   it('requires both module and feature visibility for an action', () => {
     expect(missingVisibility([action], index(), catalogue(), provider, {})).toEqual([

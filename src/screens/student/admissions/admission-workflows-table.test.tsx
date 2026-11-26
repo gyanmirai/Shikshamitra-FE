@@ -257,7 +257,6 @@ describe('Admission stage server table', () => {
       data: hooks.currentData.items,
       isLoading: false,
       isRefreshing: true,
-      refreshIndicator: 'skeleton',
     });
     hooks.fetching = false;
     hooks.error = true;

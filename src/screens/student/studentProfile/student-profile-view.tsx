@@ -32,6 +32,7 @@ import { StudentProfileHeader } from './student-profile-header';
 import { StudentGrNumberAction } from './student-gr-number-dialog';
 import { StudentProfileOverview } from './student-profile-overview';
 import { LEGACY_PROFILE_SECTIONS } from './student-record-profile-model';
+import { StudentProfilePhotoAction } from './student-profile-photo-action';
 import { StudentRecordHistoryPanel } from './student-record-history-panel';
 import { StudentRegistrationFormPanel } from './student-registration-form-panel';
 
@@ -103,6 +104,11 @@ export function StudentProfileView({
   const [relatedAnchor, setRelatedAnchor] = useState<HTMLElement | null>(null);
   const [historyPage, setHistoryPage] = useState(0);
   const canViewChanges = hasGrantedPermission(permissions, 'Students.Records.Changes.View');
+  const canChangePhoto =
+    canViewChanges &&
+    hasGrantedPermission(permissions, 'Students.Records.Changes.Add') &&
+    student.recordsAccess === 'Full' &&
+    !student.maskedFields?.includes('Identity');
   const canAssignGrNumber =
     view === 'overview' &&
     canViewChanges &&
@@ -198,6 +204,11 @@ export function StudentProfileView({
     <>
       <StudentProfileHeader
         student={student}
+        photoAction={
+          canChangePhoto && (
+            <StudentProfilePhotoAction key={student.studentId} studentId={student.studentId} />
+          )
+        }
         grNumberAction={
           canAssignGrNumber && <StudentGrNumberAction key={student.studentId} student={student} />
         }

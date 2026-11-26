@@ -191,7 +191,6 @@ export default function AdmissionWorkflowsScreen() {
             })}
             isLoading={!data && (query.isLoading || query.isFetching)}
             isRefreshing={Boolean(data && query.isFetching && !lifecycleLoading)}
-            refreshIndicator="skeleton"
             isPagination
             isSearch
             serverSide

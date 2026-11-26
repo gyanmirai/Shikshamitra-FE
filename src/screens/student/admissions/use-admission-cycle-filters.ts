@@ -9,6 +9,8 @@ import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useStudentSetupEmbedding } from 'src/screens/student/setup/embedding';
 
+import { ADMISSION_PAGE_SIZES } from './admission-page-sizes';
+
 export type AdmissionCycleFilters = {
   academicYearId: string;
   status: AdmissionCycleStatus | '';
@@ -41,7 +43,7 @@ const readPage = (value: string | null) => {
 
 const readRowsPerPage = (value: string | null) => {
   const parsed = Number(value);
-  return [10, 25, 100].includes(parsed) ? parsed : 10;
+  return ADMISSION_PAGE_SIZES.includes(parsed) ? parsed : 10;
 };
 
 const areFiltersEqual = (current: AdmissionCycleFilters, next: AdmissionCycleFilters) =>

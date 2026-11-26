@@ -1,8 +1,7 @@
-import { Stack, Typography } from '@mui/material';
-import { UploadAvatar } from 'src/components/upload';
+import { useRef, useEffect } from 'react';
 import { fileToBase64 } from 'src/utils/file-to-base64';
-import { useId, useRef, useState, useEffect } from 'react';
 
+import StudentPhotoInput from '../components/student-photo-input';
 import { getAdmissionPhotoError, ADMISSION_PHOTO_MAX_BYTES } from './admission-profile-photo';
 
 type Props = {
@@ -24,88 +23,38 @@ export function AdmissionProfilePhotoField({
   onBlur,
   onBusyChange,
 }: Props) {
-  const [reading, setReading] = useState(false);
-  const [uploadError, setUploadError] = useState<string>();
-  const helperId = useId();
   const mounted = useRef(true);
-  const busyCallback = useRef(onBusyChange);
-  useEffect(() => {
-    busyCallback.current = onBusyChange;
-  }, [onBusyChange]);
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
-      busyCallback.current?.(false);
     };
   }, []);
-  const displayedError = uploadError || error || getAdmissionPhotoError(value);
+  const savedError = getAdmissionPhotoError(value);
   return (
-    <Stack spacing={1} alignItems="center" aria-busy={reading}>
-      <Typography variant="subtitle2">
-        {field.label}
-        {field.required ? ' *' : ''}
-      </Typography>
-      <UploadAvatar
-        avatarRootProps={{
-          role: 'button',
-          'aria-label': `Choose ${field.label.toLowerCase()}`,
-          'aria-describedby': helperId,
-          'aria-disabled': disabled || reading,
-        }}
-        title={field.label}
-        value={getAdmissionPhotoError(value) ? null : value || null}
-        accept={{ 'image/jpeg': ['.jpg', '.jpeg'], 'image/png': ['.png'] }}
-        maxSize={ADMISSION_PHOTO_MAX_BYTES}
-        disabled={disabled || reading}
-        error={Boolean(displayedError)}
-        onDrop={async (files) => {
-          if (!files.length || disabled || reading) return;
-          setReading(true);
-          busyCallback.current?.(true);
-          setUploadError(undefined);
-          try {
-            const nextValue = await fileToBase64(files[0]);
-            if (!mounted.current) return;
-            const nextError = getAdmissionPhotoError(nextValue);
-            if (nextError) setUploadError(nextError);
-            else {
-              onChange(nextValue);
-              onBlur?.();
-            }
-          } catch {
-            if (mounted.current) setUploadError('Photo could not be read. Choose the file again.');
-          } finally {
-            if (mounted.current) setReading(false);
-            busyCallback.current?.(false);
-          }
-        }}
-        onDropRejected={(files) =>
-          setUploadError(
-            files.some((file) => file.errors.some((reason) => reason.code === 'file-too-large'))
-              ? 'Photo must be 2 MB or smaller.'
-              : 'Choose a valid JPG or PNG photo.'
-          )
-        }
-        onDelete={
-          disabled || reading
-            ? undefined
-            : () => {
-                setUploadError(undefined);
-                onChange('');
-                onBlur?.();
-              }
-        }
-      />
-      <Typography
-        id={helperId}
-        variant="caption"
-        color={displayedError ? 'error.main' : 'text.secondary'}
-        role={displayedError ? 'alert' : undefined}
-      >
-        {displayedError ||
-          (reading ? 'Reading photo…' : field.helpText || 'JPG or PNG, up to 2 MB.')}
-      </Typography>
-    </Stack>
+    <StudentPhotoInput
+      label={field.label}
+      required={field.required}
+      helpText={field.helpText}
+      value={savedError ? null : value || null}
+      error={error || savedError}
+      maxBytes={ADMISSION_PHOTO_MAX_BYTES}
+      disabled={disabled}
+      onBusyChange={onBusyChange}
+      onAccept={async (file) => {
+        const next = await fileToBase64(file).catch(() => {
+          throw new Error('Photo could not be read. Choose the file again.');
+        });
+        if (!mounted.current) return;
+        const invalid = getAdmissionPhotoError(next);
+        if (invalid) throw new Error(invalid);
+        onChange(next);
+        onBlur?.();
+      }}
+      onClear={() => {
+        onChange('');
+        onBlur?.();
+      }}
+    />
   );
 }

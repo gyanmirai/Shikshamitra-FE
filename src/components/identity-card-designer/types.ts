@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 
 export const IDENTITY_CARD_PREFIX_LIMIT = 150;
+export const IDENTITY_CARD_BORDER_STYLES = ['solid', 'dashed', 'dotted'] as const;
+
+export type IdentityCardBorderStyle = (typeof IDENTITY_CARD_BORDER_STYLES)[number];
 
 export type IdentityCardElement = {
   id: string;
@@ -28,6 +31,7 @@ export type IdentityCardElement = {
     backgroundColor?: string;
     borderColor?: string;
     borderWidth?: number;
+    borderStyle?: IdentityCardBorderStyle;
     borderRadius?: number;
     fontSize?: number;
     fontWeight?: number | string;
@@ -93,6 +97,9 @@ export type IdentityCardDesignerProps = IdentityCardPreviewProps & {
   onEditorBusyChange?: (busy: boolean) => void;
   brandingContent?: ReactNode;
   canPlaceSignature?: boolean;
+  configurationPanelSize?: 'regular' | 'wide';
+  showConfigurationHints?: boolean;
+  borderStylesEnabled?: boolean;
   onLayoutChange: (layout: IdentityCardLayout) => void;
   printSettings: IdentityCardPrintSettings;
   onPrintSettingsChange: (settings: IdentityCardPrintSettings) => void;

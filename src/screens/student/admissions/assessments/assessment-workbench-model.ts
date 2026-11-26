@@ -5,6 +5,7 @@ import type {
 } from 'src/redux/student/admissions/admission-assessment-roster-api';
 
 import { canWaiveAssessment } from './assessment-action-model';
+import { ADMISSION_PAGE_SIZES } from '../admission-page-sizes';
 
 import type { AssessmentAction } from './assessment-action-model';
 import type { getAssessmentPermissions } from './use-assessment-permissions';
@@ -48,7 +49,7 @@ export function readAssessmentWorkbench(params: URLSearchParams) {
     search: (params.get('assessmentSearch') ?? '').slice(0, 128),
     columnFilters: params.get('assessmentFilters') ?? '',
     page: Number.isSafeInteger(page) && page >= 0 ? page : 0,
-    size: [10, 25, 100].includes(size) ? size : 25,
+    size: ADMISSION_PAGE_SIZES.includes(size) ? size : 25,
     sort: sortColumns.includes(sort) ? sort : 'enteredAt',
     direction: params.get('assessmentDirection') === 'asc' ? ('asc' as const) : ('desc' as const),
   };

@@ -59,6 +59,7 @@ export default function StudentICardAssignment() {
           class: undefined,
           division: undefined,
           search: undefined,
+          columnFilters: undefined,
           page: undefined,
         }),
         { scroll: false }
@@ -67,12 +68,12 @@ export default function StudentICardAssignment() {
   }, [appliedYear, pathname, rawQuery, router, yearId]);
 
   const scope = directoryScope(new URLSearchParams(rawQuery), options.currentData);
-  const [standardId] = scope.classes;
   const [divisionId] = scope.divisions;
   const academicOptions = options.currentData;
   const mediums = academicOptions?.mediums.filter((item) => item.parentId === scope.board) ?? [];
   const standards =
     academicOptions?.standards.filter((item) => item.parentId === scope.medium) ?? [];
+  const standardId = scope.classes[0] ?? (scope.ready ? standards[0]?.id : undefined);
   const divisions = academicOptions?.divisions.filter((item) => item.parentId === standardId) ?? [];
   const rosterScope = JSON.stringify([yearId, scope.board, scope.medium, standardId, divisionId]);
   const page = positivePageValue(params.get('page'), 0, 100000);
@@ -124,13 +125,12 @@ export default function StudentICardAssignment() {
   const canEdit = canAdd && assignment?.canManage;
   const canOpenTemplate =
     canEdit && templateSelectionKey === reviewKey && !busy && !rule.isFetching;
-  const showTemplateAction = canAdd && (!assignment || assignment.canManage);
   const canRemove =
     canDelete && assignment?.canManage && assignment.templateId && assignment.concurrencyStamp;
 
   const update = (changes: Record<string, string | number | undefined>) => {
     if (busy) return;
-    const next = recordsQueryUrl(pathname, rawQuery, changes);
+    const next = recordsQueryUrl(pathname, rawQuery, { class: standardId, ...changes });
     if (next !== `${pathname}${rawQuery ? `?${rawQuery}` : ''}`) {
       setRuleEditor(null);
       router.push(next, { scroll: false });
@@ -143,10 +143,43 @@ export default function StudentICardAssignment() {
       class: undefined,
       division: undefined,
       search: undefined,
+      columnFilters: undefined,
       page: undefined,
     });
   const academicDisabled = busy || !canView || !yearId || !academicOptions || options.isError;
   const editLabel = assignment?.templateId ? 'Change template' : 'Assign template';
+
+  const ruleActions = (
+    <>
+      {canRemove && (
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.delete} />}
+          disabled={busy || rule.isFetching}
+          onClick={() => setRuleEditor({ scope: rosterScope, remove: true })}
+        >
+          Remove
+        </Button>
+      )}
+      {canEdit && (
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          aria-label={`${editLabel} for ${assignment.standardName}`}
+          startIcon={<Iconify icon={GlobalIcons.assigned} />}
+          disabled={!canOpenTemplate}
+          onClick={() => {
+            if (canOpenTemplate) setRuleEditor({ scope: rosterScope, remove: false });
+          }}
+        >
+          {editLabel}
+        </Button>
+      )}
+    </>
+  );
 
   return (
     <Box
@@ -167,41 +200,6 @@ export default function StudentICardAssignment() {
           { name: 'Student Records', href: studentPaths.records.root },
           { name: 'I-Card Assignment' },
         ]}
-        action={
-          (showTemplateAction || canRemove) && (
-            <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="flex-end">
-              {canRemove && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="inherit"
-                  startIcon={<Iconify icon={GlobalIcons.delete} />}
-                  disabled={busy || rule.isFetching}
-                  onClick={() => setRuleEditor({ scope: rosterScope, remove: true })}
-                >
-                  Remove assignment
-                </Button>
-              )}
-              {showTemplateAction && (
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="inherit"
-                  aria-label={
-                    assignment ? `${editLabel} for ${assignment.standardName}` : editLabel
-                  }
-                  startIcon={<Iconify icon={GlobalIcons.assigned} />}
-                  disabled={!canOpenTemplate}
-                  onClick={() => {
-                    if (canOpenTemplate) setRuleEditor({ scope: rosterScope, remove: false });
-                  }}
-                >
-                  {editLabel}
-                </Button>
-              )}
-            </Stack>
-          )
-        }
         sx={{ flexShrink: 0 }}
       />
       <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
@@ -223,6 +221,7 @@ export default function StudentICardAssignment() {
                 class: undefined,
                 division: undefined,
                 search: undefined,
+                columnFilters: undefined,
                 page: undefined,
               })
             }
@@ -243,6 +242,7 @@ export default function StudentICardAssignment() {
                 class: undefined,
                 division: undefined,
                 search: undefined,
+                columnFilters: undefined,
                 page: undefined,
               })
             }
@@ -261,6 +261,7 @@ export default function StudentICardAssignment() {
                 class: String(value),
                 division: undefined,
                 search: undefined,
+                columnFilters: undefined,
                 page: undefined,
               })
             }
@@ -277,6 +278,7 @@ export default function StudentICardAssignment() {
             onChange={(value) =>
               update({
                 division: value === all ? undefined : String(value),
+                columnFilters: undefined,
                 page: undefined,
               })
             }
@@ -291,6 +293,9 @@ export default function StudentICardAssignment() {
           assignment={assignment}
           divisionId={divisionId}
           assignmentRefreshing={rule.isFetching}
+          ruleActions={ruleActions}
+          columnFilters={params.get('columnFilters')}
+          onColumnFilters={(value) => update({ columnFilters: value, page: undefined })}
           canIssue={canAdd}
           canManageTemplate={Boolean(canEdit)}
           search={search}
@@ -305,7 +310,14 @@ export default function StudentICardAssignment() {
               pageSize: nextSize,
             })
           }
-          onClearFilters={() => update({ division: undefined, search: undefined, page: undefined })}
+          onClearFilters={() =>
+            update({
+              division: undefined,
+              search: undefined,
+              columnFilters: undefined,
+              page: undefined,
+            })
+          }
           onReloadAssignment={rule.refetch}
         />
       ) : (
@@ -335,7 +347,7 @@ export default function StudentICardAssignment() {
               ) : standardId ? (
                 'The selected class is unavailable. Choose another class.'
               ) : (
-                'Select a class to view its students.'
+                'No classes are available in this board and medium.'
               )
             }
             errorContent={

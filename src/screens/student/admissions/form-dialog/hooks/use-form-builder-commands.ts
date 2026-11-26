@@ -10,6 +10,7 @@ import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissio
 
 import { conflictsWithInquiryDefaultName } from '../inquiry-default-fields';
 import { newField, nextFieldOrder, nextFieldDisplayOrder } from '../form-dialog-model';
+import { addressOrderMessage, getAddressLocationField } from '../form-address-dependencies';
 import { classInterestOptions, isClassInterestQuestion } from '../../admission-class-question';
 import { nextStepNumber, nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
 import { configureStudentField, connectStudentAddressFields } from '../student-field-configuration';
@@ -23,6 +24,27 @@ import {
 } from '../admission-form-section-template-catalog';
 
 import type { AdmissionFieldPreset } from '../form-field-presets';
+
+const addressFieldRank = { country: 0, state: 1, city: 2 };
+const addressGroups = ['Address', 'PermanentAddress'] as const;
+
+function orderNewAddressFields(fields: AdmissionFormField[]) {
+  const ordered = [...fields];
+  // Preserve the positions of other fields and order each address independently.
+  addressGroups.forEach((group) => {
+    const locations = fields.flatMap((field, index) => {
+      const location = getAddressLocationField(field);
+      return location?.group === group ? [{ field, index, kind: location.kind }] : [];
+    });
+    const sorted = [...locations].sort(
+      (left, right) => addressFieldRank[left.kind] - addressFieldRank[right.kind]
+    );
+    locations.forEach(({ index }, position) => {
+      ordered[index] = { ...sorted[position].field, displayOrder: fields[index].displayOrder };
+    });
+  });
+  return ordered;
+}
 
 export function useFormBuilderCommands(
   formik: FormikProps<CreateUpdateAdmissionForm>,
@@ -279,6 +301,9 @@ export function useFormBuilderCommands(
       }))
     );
     onSelect(section.id, field.id);
+    if (getAddressLocationField(field)) {
+      shikshaMitraToast.info({ message: addressOrderMessage });
+    }
   };
 
   const addGroupSection = (name: string, groupFields: AdmissionFormSystemFieldMetadata[]) => {
@@ -317,7 +342,7 @@ export function useFormBuilderCommands(
         section.fields.map((field) => field.code.toUpperCase())
       )
     );
-    const fields = availableFields.map((metadata, index) => {
+    const newFields = availableFields.map((metadata, index) => {
       const field = newField(id, fieldOrder + index, metadata.fieldType);
       const baseCode = metadata.key.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase();
       let code = baseCode;
@@ -335,6 +360,7 @@ export function useFormBuilderCommands(
       field.optionsJson = metadata.optionsJson;
       return configureStudentField(field, metadata);
     });
+    const fields = orderNewAddressFields(newFields);
 
     const connectedFields = connectStudentAddressFields([
       ...formik.values.sections.flatMap((item) => item.fields),
@@ -375,11 +401,14 @@ export function useFormBuilderCommands(
     );
     onSelect(id, null);
     const skipped = groupFields.length - availableFields.length;
+    const messages: string[] = [];
     if (skipped) {
-      shikshaMitraToast.info({
-        message: `${skipped} ${skipped === 1 ? 'field was' : 'fields were'} already in the form and skipped.`,
-      });
+      messages.push(
+        `${skipped} ${skipped === 1 ? 'field was' : 'fields were'} already in the form and skipped.`
+      );
     }
+    if (fields.some(getAddressLocationField)) messages.push(addressOrderMessage);
+    if (messages.length) shikshaMitraToast.info({ message: messages.join(' ') });
     return id;
   };
 

@@ -157,6 +157,7 @@ describe('StudentFieldPalette', () => {
     );
     expect(screen.queryByRole('button', { name: 'Current address Pack' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Contact and addresses (3)' }));
+    expect(screen.getByText(/country must come before state, and state before city/i)).toBeVisible();
     expect(screen.getByRole('button', { name: 'Permanent address Pack' })).toBeDisabled();
     await user.click(screen.getByRole('button', { name: 'Current address Pack' }));
     expect(onAddSection).toHaveBeenCalledWith('Current address', addressFields.slice(0, 2));

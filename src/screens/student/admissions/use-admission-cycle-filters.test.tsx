@@ -22,7 +22,7 @@ describe('useAdmissionCycleFilters', () => {
   });
 
   it('restores shareable cycle filters and paging from the URL', () => {
-    mocks.query = 'year=year-1&status=1&window=0&search=fresh&page=3&size=25';
+    mocks.query = 'year=year-1&status=1&window=0&search=fresh&page=3&size=50';
 
     const { result } = renderHook(() => useAdmissionCycleFilters());
 
@@ -33,7 +33,7 @@ describe('useAdmissionCycleFilters', () => {
       search: 'fresh',
       columnFilters: '',
       page: 2,
-      rowsPerPage: 25,
+      rowsPerPage: 50,
     });
   });
 

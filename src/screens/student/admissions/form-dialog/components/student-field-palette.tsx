@@ -16,6 +16,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { fieldTypeIcon } from '../form-dialog-model';
 import { PaletteFieldButton } from './palette-field-button';
 import { groupStudentFields } from '../student-field-groups';
+import { addressOrderMessage } from '../form-address-dependencies';
 import { matchesStudentField, studentFieldDestination } from '../student-field-configuration';
 
 type Props = {
@@ -95,7 +96,6 @@ export function StudentFieldPalette({
         fullWidth
         size="small"
         label="Search Student Fields"
-        InputLabelProps={{ shrink: Boolean(search) }}
         value={search}
         disabled={loading || error}
         onChange={(event) => setSearch(event.target.value)}
@@ -103,12 +103,18 @@ export function StudentFieldPalette({
           '&& .MuiInputBase-root': { minHeight: 36 },
           '& .MuiInputBase-input': { py: 0.75 },
         }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <Iconify icon="mdi:magnify" width={18} />
-            </InputAdornment>
-          ),
+        slotProps={{
+          inputLabel: {
+            shrink: Boolean(search),
+            sx: { '&&.Mui-focused': { color: 'text.secondary' } },
+          },
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <Iconify icon="mdi:magnify" width={18} />
+              </InputAdornment>
+            ),
+          },
         }}
       />
       {(loading || error) && (
@@ -137,6 +143,9 @@ export function StudentFieldPalette({
               const expanded = Boolean(normalizedSearch) || expandedGroup === group.name;
               const availableFields = group.allFields.filter(
                 (field) => !used.has(field.key.toLowerCase()) && !usesAdmissionContext(field)
+              );
+              const showsAddressFields = group.fields.some((field) =>
+                addressPacks.some((pack) => pack.keys.includes(field.key))
               );
               const groupId = `${paletteId}-group-${index}`;
               return (
@@ -208,6 +217,11 @@ export function StudentFieldPalette({
                           description="Linked Board, Medium and Class from Institute Setup"
                           onClick={onAddClassSelector}
                         />
+                      )}
+                      {showsAddressFields && (
+                        <Typography variant="caption" color="text.secondary">
+                          {addressOrderMessage}
+                        </Typography>
                       )}
                       {group.name === 'Contact and addresses' &&
                         onAddSection &&

@@ -27,6 +27,7 @@ import {
 
 import { getAdmissionFormAccess } from '../form-access';
 import { getAdmissionFormPreviewUrl } from '../form-preview/form-preview-navigation';
+import { SavedAdmissionFormValidationError } from '../form-dialog/form-publish-validation';
 import { getInquiryFormConfigurationIssues } from '../admission-inquiry-field-bindings';
 import {
   getUnchangedVersionMessage,
@@ -133,7 +134,7 @@ export function useFormListActions() {
       if (!readiness.isValid) {
         const message = getUnchangedVersionMessage(readiness.errors);
         if (message) throw new UnchangedAdmissionFormError(message);
-        throw new Error(formatAdmissionFormValidationErrors(readiness.errors));
+        throw new SavedAdmissionFormValidationError(readiness.errors, values);
       }
       await publish({ id: draft.id, concurrencyStamp: draft.concurrencyStamp }).unwrap();
       shikshaMitraToast.success({ message: 'Form published' });
@@ -143,6 +144,12 @@ export function useFormListActions() {
       setEditingForm(draft);
       const unchangedVersion = getUnchangedVersionPublishError(error);
       if (unchangedVersion) throw unchangedVersion;
+      if (error instanceof SavedAdmissionFormValidationError) throw error;
+      const problem = error as { data?: { errorCode?: string; data?: { Errors?: string } } };
+      const publishErrors = problem?.data?.data?.Errors;
+      if (problem?.data?.errorCode === 'Admissions.FormInvalidDefinition' && typeof publishErrors === 'string') {
+        throw new SavedAdmissionFormValidationError(publishErrors.split(';').map((issue) => issue.trim()).filter(Boolean), values);
+      }
       throw new Error(`Draft saved, but not published. ${parseApiProblemDetail(error).detail}`);
     }
   };
@@ -207,7 +214,7 @@ export function useFormListActions() {
       setPublishIssues(null);
       try {
         const result = await validate(form.id).unwrap();
-        setPublishIssues(result.errors.map(formatAdmissionFormValidationError));
+        setPublishIssues(result.errors.map((error) => formatAdmissionFormValidationError(error)));
       } catch (error) {
         setPendingPublish(null);
         shikshaMitraToast.error({

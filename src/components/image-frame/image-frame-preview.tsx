@@ -1,22 +1,24 @@
 import Box from '@mui/material/Box';
 
-import { IDENTITY_LABELS } from '../types';
-import { frameRectangle, IDENTITY_FRAMES } from '../identity-image-frame';
+import { frameRectangle } from './image-frame';
 
-import type { IdentityKind } from '../types';
-import type { ImagePlacement } from '../identity-image-frame';
-import type { PendingIdentityImage } from './identity-frame-dialog';
+import type { FrameSize, ImagePlacement, PendingFrameImage } from './image-frame';
 
-export function IdentityFramePreview({
-  kind,
+export function ImageFramePreview({
+  label,
+  frame,
   pending,
   placement,
+  maxWidth,
+  circular,
 }: {
-  kind: IdentityKind;
-  pending: PendingIdentityImage;
+  label: string;
+  frame: FrameSize;
+  pending: PendingFrameImage;
   placement: ImagePlacement;
+  maxWidth?: number;
+  circular?: boolean;
 }) {
-  const frame = IDENTITY_FRAMES[kind];
   const rect = frameRectangle(
     { width: pending.image.naturalWidth, height: pending.image.naturalHeight },
     frame,
@@ -25,14 +27,15 @@ export function IdentityFramePreview({
   return (
     <Box
       role="img"
-      aria-label={`${IDENTITY_LABELS[kind]} frame preview`}
+      aria-label={`${label} frame preview`}
       sx={{
         position: 'relative',
         width: 1,
-        maxWidth: kind === 'logo' ? 256 : undefined,
+        maxWidth: circular ? { xs: Math.min(maxWidth ?? 176, 176), sm: maxWidth } : maxWidth,
         mx: 'auto',
         aspectRatio: `${frame.width} / ${frame.height}`,
         overflow: 'hidden',
+        borderRadius: circular ? '50%' : undefined,
         border: '1px solid',
         borderColor: 'divider',
         bgcolor: 'background.neutral',

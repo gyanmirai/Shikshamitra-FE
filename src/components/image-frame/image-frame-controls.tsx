@@ -6,11 +6,11 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
-import { DEFAULT_PLACEMENT } from '../identity-image-frame';
+import { DEFAULT_PLACEMENT } from './image-frame';
 
-import type { ImagePlacement } from '../identity-image-frame';
+import type { ImagePlacement } from './image-frame';
 
-export function IdentityFrameControls({
+export function ImageFrameControls({
   value,
   disabled,
   onChange,
@@ -57,6 +57,7 @@ export function IdentityFrameControls({
         </Stack>
       ))}
       <Button
+        size="small"
         disabled={disabled}
         onClick={() => onChange(DEFAULT_PLACEMENT)}
         sx={{ alignSelf: 'flex-start' }}

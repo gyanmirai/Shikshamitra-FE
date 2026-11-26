@@ -131,7 +131,8 @@ describe('form lifecycle decision', () => {
         busy
       />
     );
-    expect(screen.getByRole('dialog', { name: 'Restore Inquiry Form?' })).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog', { name: 'Restore Inquiry Form?' });
+    expect(within(dialog).getByTestId('CheckCircleIcon')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Restore' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByText(/same form version/i)).toBeInTheDocument();

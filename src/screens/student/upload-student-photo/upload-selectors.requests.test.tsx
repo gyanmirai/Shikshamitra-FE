@@ -41,6 +41,11 @@ vi.mock('src/components/customDialog', () => ({
       </section>
     ) : null,
 }));
+vi.mock('../records/student-record-photo-dialog', () => ({
+  StudentRecordPhotoDialog: ({ title }: { title: string }) => (
+    <section role="dialog" aria-label={title} />
+  ),
+}));
 vi.mock('src/components/upload', () => ({
   Upload: ({ onDrop, disabled }: any) => (
     <button
@@ -147,9 +152,13 @@ async function choose(label: string, name: string) {
 }
 
 describe.each([
-  ['photos', UploadStudentPhotoScreen],
-  ['documents', UploadStudentDocumentsScreen],
-] as const)('%s upload selectors', (_kind, Screen) => {
+  [
+    'photos',
+    UploadStudentPhotoScreen,
+    ['Students.Records.Changes.View', 'Students.Records.Changes.Add'],
+  ],
+  ['documents', UploadStudentDocumentsScreen, [studentPermissions.records.manageStudent]],
+] as const)('%s upload selectors', (_kind, Screen, writePermissions) => {
   it('loads all scoped class options without a year filter and queries only the selected division', async () => {
     render(
       <Provider store={store}>
@@ -392,7 +401,7 @@ describe.each([
   it.each(['lookup', 'students', 'scope'] as const)(
     'withdraws an open upload dialog after %s denies or removes its current student',
     async (source) => {
-      store = makeStore([studentPermissions.records.manageStudent]);
+      store = makeStore([...writePermissions]);
       render(
         <Provider store={store}>
           <Screen />
@@ -457,7 +466,7 @@ describe.each([
   it.each(['lookup', 'students'] as const)(
     'keeps the current upload dialog through a healthy pending %s refresh',
     async (source) => {
-      store = makeStore([studentPermissions.records.manageStudent]);
+      store = makeStore([...writePermissions]);
       render(
         <Provider store={store}>
           <Screen />

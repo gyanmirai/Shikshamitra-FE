@@ -20,7 +20,11 @@ const settings = {
     photo: { placement: 'header-top-right' as const },
   },
 };
-const branding = { logoUrl: 'logo.png', bannerUrl: 'banner.png' };
+const branding = {
+  logoUrl: 'logo.png',
+  bannerUrl: 'banner.png',
+  addressLines: ['10 School Road', 'Surat 395001'],
+};
 
 function renderEditor(printSettings: AdmissionPrintSettings = settings) {
   const onChange = vi.fn();
@@ -58,6 +62,19 @@ function renderEditor(printSettings: AdmissionPrintSettings = settings) {
 }
 
 describe('Registration print header placement', () => {
+  it('offers address layout only for the address and persists the selected layout', () => {
+    const onChange = renderEditor();
+    expect(screen.queryByRole('combobox', { name: 'Address layout' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Move address' }));
+    const addressLayout = screen.getByRole('combobox', { name: 'Address layout' });
+    expect(addressLayout).toHaveTextContent('Vertical (stacked)');
+    fireEvent.mouseDown(addressLayout);
+    fireEvent.click(screen.getByRole('option', { name: 'Horizontal (single line)' }));
+    expect(onChange.mock.lastCall?.[0].advanced.header).toEqual({
+      ...settings.advanced.header,
+      addressLayout: 'horizontal',
+    });
+  });
   it('moves the applicant photo independently with the keyboard', () => {
     const onChange = renderEditor();
     fireEvent.keyDown(screen.getByRole('button', { name: 'Move applicant photo' }), {

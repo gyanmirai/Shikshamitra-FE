@@ -6,14 +6,26 @@ import type {
 
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { useId, useRef, useState, useEffect } from 'react';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
-import { Box, Alert, Stack, Drawer, Button, Divider, Typography, IconButton } from '@mui/material';
+import {
+  Alert,
+  Stack,
+  Drawer,
+  Button,
+  Divider,
+  Checkbox,
+  Typography,
+  IconButton,
+  FormControlLabel,
+} from '@mui/material';
 
 import { HousePicker } from './house-pickers';
 import { assignmentInput } from './house-management-model';
@@ -22,7 +34,9 @@ import { useHouseCloseGuard } from './use-house-close-guard';
 type Props = {
   academicMediumId: string;
   divisionId: string;
+  divisionLabel?: string;
   enrollmentIds: string[];
+  scope?: 'selected' | 'division';
   initialMode?: 'assign' | 'remove';
   onClose: () => void;
   onPreview: (input: HouseAssignment) => Promise<HouseAssignmentPreview>;
@@ -31,7 +45,9 @@ type Props = {
 export default function HouseAssignmentDrawer({
   academicMediumId,
   divisionId,
+  divisionLabel,
   enrollmentIds,
+  scope = 'selected',
   initialMode = 'assign',
   onClose,
   onPreview,
@@ -40,12 +56,21 @@ export default function HouseAssignmentDrawer({
   const titleId = useId();
   const submitting = useRef(false);
   const requestVersion = useRef(0);
+  const entireDivision = scope === 'division';
   const [mode, setMode] = useState(initialMode);
+  const [includeAssigned, setIncludeAssigned] = useState(false);
+  const noEligibleStudents = includeAssigned
+    ? 'No eligible students in this division need the selected house change.'
+    : 'No unassigned students are available. To move current members, include students already assigned to a house.';
   const [house, setHouse] = useState<House | null>(null);
-  const [preview, setPreview] = useState<HouseAssignmentPreview | null>(null);
+  const [reviewed, setReviewed] = useState<{
+    input: HouseAssignment;
+    result: HouseAssignmentPreview;
+  } | null>(null);
+  const preview = reviewed?.result;
   const [busy, setBusy] = useState(false);
   const [writing, setWriting] = useState(false);
-  const [error, setError] = useState('');
+  const [assignmentBlocker, setAssignmentBlocker] = useState('');
   const [touched, setTouched] = useState(false);
   useEffect(
     () => () => {
@@ -60,38 +85,62 @@ export default function HouseAssignmentDrawer({
     onClose();
   };
   const { close, confirmation } = useHouseCloseGuard(
-    Boolean(house || preview || mode !== initialMode),
+    Boolean(house || reviewed || includeAssigned || mode !== initialMode),
     writing,
     closeDraft
   );
   const submit = async () => {
     if (submitting.current) return;
     setTouched(true);
-    if (mode === 'assign' && !house) return;
+    if ((entireDivision || mode === 'assign') && !house) return;
+    if (entireDivision && preview?.students.length === 0) return;
     submitting.current = true;
     requestVersion.current += 1;
     const version = requestVersion.current;
     setBusy(true);
     setWriting(Boolean(preview));
-    setError('');
+    setAssignmentBlocker('');
     try {
-      const input = assignmentInput(
-        academicMediumId,
-        divisionId,
-        mode === 'remove' ? '' : house!.id,
-        enrollmentIds
-      );
-      if (preview) {
-        await onCommit({ ...input, previewToken: preview.previewToken });
+      if (reviewed) {
+        await onCommit({ ...reviewed.input, previewToken: reviewed.result.previewToken });
         if (version === requestVersion.current) onClose();
       } else {
+        const input: HouseAssignment =
+          entireDivision && house
+            ? {
+                academicMediumId,
+                divisionId,
+                houseId: house.id,
+                targetScope: 'division',
+                includeAssigned,
+              }
+            : assignmentInput(
+                academicMediumId,
+                divisionId,
+                mode === 'remove' ? '' : house!.id,
+                enrollmentIds
+              );
         const result = await onPreview(input);
-        if (version === requestVersion.current) setPreview(result);
+        if (version === requestVersion.current) setReviewed({ input, result });
       }
     } catch (failure) {
       if (version !== requestVersion.current) return;
-      setPreview(null);
-      setError(parseApiProblemDetail(failure).detail);
+      setReviewed(null);
+      const problem = parseApiProblemDetail(failure);
+      if (problem.errorCode === 'Students:HouseManagement:NoEligibleStudents') {
+        setAssignmentBlocker(noEligibleStudents);
+      } else if (problem.errorCode === 'Students:HouseManagement:AssignmentLimitExceeded') {
+        setAssignmentBlocker(
+          'This change exceeds 500 students. Use Selected students to assign a smaller group.'
+        );
+      } else {
+        shikshaMitraToast.error({
+          message:
+            problem.errorCode === 'Students:HouseManagement:StalePreview'
+              ? 'The roster or house membership changed. Preview the change again.'
+              : problem.detail,
+        });
+      }
     } finally {
       if (version === requestVersion.current) {
         submitting.current = false;
@@ -118,7 +167,7 @@ export default function HouseAssignmentDrawer({
             Change House Membership
           </Typography>
           <InfoTooltipIcon
-            title="Preview the selected students and leadership consequences before confirming this change."
+            title="Review the affected students and leadership changes before confirming."
             label="Membership change information"
             disabled={writing}
           />
@@ -127,40 +176,60 @@ export default function HouseAssignmentDrawer({
           </IconButton>
         </Stack>
         <Divider />
-        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: { xs: 2, sm: 3 } }}>
+        <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
           <FormBusyRegion busy={busy} label={preview ? 'Saving changes…' : 'Preparing preview…'}>
-            <Stack spacing={2}>
-              {error && <Alert severity="error">{error}</Alert>}
+            <Stack spacing={2} sx={{ p: { xs: 2, sm: 3 } }}>
+              {assignmentBlocker && <Alert severity="info">{assignmentBlocker}</Alert>}
               <FormSectionCard
                 title="Membership Change"
                 icon={GlobalIcons.assigned}
-                descriptionTooltip="All selected students must be in the selected division. Review the server preview before confirming."
+                descriptionTooltip="Each change applies within one division. The preview shows the students affected."
               >
-                <Typography variant="body2">
-                  Selected students: {enrollmentIds.length}. Up to 500 students can be changed at
-                  once.
-                </Typography>
-                <CustomSelect
-                  label="Change"
-                  value={mode}
-                  options={[
-                    { value: 'assign', label: 'Assign or move to a house' },
-                    { value: 'remove', label: 'Remove from house' },
-                  ]}
-                  disabled={Boolean(preview || busy)}
-                  onChange={(value) => {
-                    setMode(value as typeof mode);
-                    setPreview(null);
-                  }}
-                />
-                {mode === 'assign' && (
+                {entireDivision ? (
+                  <Stack spacing={0.5}>
+                    <Typography variant="subtitle2">
+                      {divisionLabel || 'Entire division'}
+                    </Typography>
+                    <FormControlLabel
+                      control={<Checkbox size="small" checked={includeAssigned} />}
+                      label="Include students already assigned to a house"
+                      disabled={Boolean(preview || busy)}
+                      onChange={(_, checked) => {
+                        setIncludeAssigned(checked);
+                        setAssignmentBlocker('');
+                      }}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      {includeAssigned
+                        ? 'Students in other houses will move to the destination house.'
+                        : 'Only students without a house will be assigned.'}
+                    </Typography>
+                  </Stack>
+                ) : (
+                  <>
+                    <Typography variant="body2">
+                      Selected students: {enrollmentIds.length}.
+                    </Typography>
+                    <CustomSelect
+                      label="Change"
+                      value={mode}
+                      options={[
+                        { value: 'assign', label: 'Assign or move to a house' },
+                        { value: 'remove', label: 'Remove from house' },
+                      ]}
+                      disabled={Boolean(preview || busy)}
+                      onChange={(value) => setMode(value as typeof mode)}
+                    />
+                  </>
+                )}
+                {(entireDivision || mode === 'assign') && (
                   <ShakingTextField error={touched && !house}>
                     <HousePicker
                       academicMediumId={academicMediumId}
                       value={house}
                       onChange={(value) => {
                         setHouse(value);
-                        setPreview(null);
+                        setAssignmentBlocker('');
                       }}
                       required
                       label="Destination house"
@@ -180,6 +249,9 @@ export default function HouseAssignmentDrawer({
                   <Typography variant="body2">
                     Students: {preview.students.length} → {preview.targetHouseName || 'No house'}
                   </Typography>
+                  {entireDivision && preview.students.length === 0 && (
+                    <Alert severity="info">{noEligibleStudents}</Alert>
+                  )}
                   {preview.clearedHouseLeaders.map((student) => (
                     <Alert severity="warning" key={student.enrollmentId}>
                       {student.studentName} will no longer lead{' '}
@@ -203,10 +275,12 @@ export default function HouseAssignmentDrawer({
               )}
             </Stack>
           </FormBusyRegion>
-        </Box>
+        </Scrollbar>
         <Stack
           direction="row"
           spacing={1}
+          useFlexGap
+          flexWrap="wrap"
           justifyContent="flex-end"
           sx={{ px: { xs: 2, sm: 3 }, py: 1.75, borderTop: 1, borderColor: 'divider' }}
         >
@@ -226,7 +300,7 @@ export default function HouseAssignmentDrawer({
               variant="outlined"
               color="inherit"
               disabled={busy}
-              onClick={() => setPreview(null)}
+              onClick={() => setReviewed(null)}
               startIcon={<Iconify icon={GlobalIcons.edit} />}
             >
               Revise
@@ -236,7 +310,7 @@ export default function HouseAssignmentDrawer({
             size="small"
             variant="contained"
             color="inherit"
-            disabled={busy}
+            disabled={busy || (entireDivision && preview?.students.length === 0)}
             onClick={submit}
             startIcon={<Iconify icon={preview ? GlobalIcons.submit : GlobalIcons.eye} />}
           >

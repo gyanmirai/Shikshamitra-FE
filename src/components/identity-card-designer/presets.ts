@@ -32,7 +32,7 @@ export function createIdentityCardPreset(
     themeColor,
     backgroundColor,
     presetKey: key,
-    front: { elements: portrait ? portraitPresetElements(front, false) : front },
-    back: { elements: portrait ? portraitPresetElements(back, true) : back },
+    front: { elements: portrait ? portraitPresetElements(front, false, staff) : front },
+    back: { elements: portrait ? portraitPresetElements(back, true, staff) : back },
   };
 }

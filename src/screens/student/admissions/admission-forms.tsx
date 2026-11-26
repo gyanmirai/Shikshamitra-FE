@@ -256,7 +256,6 @@ export default function AdmissionFormsScreen() {
           filters={filters}
           isLoading={query.isLoading || (query.isFetching && !currentData)}
           isRefreshing={query.isFetching && Boolean(currentData)}
-          refreshIndicator="skeleton"
           isPagination
           isSearch
           isFilter
@@ -347,7 +346,7 @@ export default function AdmissionFormsScreen() {
       <ConfirmDialog
         open={Boolean(pendingVersion)}
         onClose={() => setPendingVersion(null)}
-        icon="info"
+        icon="warning"
         title="Create new version?"
         content={
           <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>

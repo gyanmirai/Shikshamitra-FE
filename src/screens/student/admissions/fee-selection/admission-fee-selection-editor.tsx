@@ -2,8 +2,9 @@ import type { AdmissionFeeSelection } from 'src/redux/student/admissions/admissi
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Iconify } from 'src/components/iconify';
+import { useId, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { EmptyContent } from 'src/components/empty-content';
@@ -13,6 +14,12 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
+import {
+  FeeStructureSelect,
+  FeeHeadSelectionRow,
+  FeeHeadSelectionGroup,
+  FeeHeadSelectionAmount,
+} from 'src/components/fee-structure-selection';
 import {
   useSaveAdmissionFeeSelectionMutation,
   useGetAdmissionFeeSelectionCandidatesQuery,
@@ -32,6 +39,7 @@ type Props = {
   onClose: () => void;
   onEditorStateChange?: (state: AdmissionFeeSelectionEditorState) => void;
   compact?: boolean;
+  actionsElement?: HTMLElement | null;
 };
 
 export function AdmissionFeeSelectionEditor({
@@ -40,7 +48,9 @@ export function AdmissionFeeSelectionEditor({
   onClose,
   onEditorStateChange,
   compact = false,
+  actionsElement,
 }: Props) {
+  const formId = useId();
   const candidates = useGetAdmissionFeeSelectionCandidatesQuery(state.applicationId, {
     refetchOnMountOrArgChange: true,
   });
@@ -130,10 +140,30 @@ export function AdmissionFeeSelectionEditor({
     !candidates.isFetching &&
     candidates.currentData?.length === 0;
   const loadingCandidates = candidates.isLoading || candidates.isFetching;
+  const fieldsDisabled = disabled || busy || candidates.isFetching;
+  const structureOptions = (candidates.currentData ?? []).map((item) => ({
+    value: item.structureId,
+    label: `${item.structureName} · Revision ${item.revisionNumber}`,
+  }));
+  const changeStructure = (value: string | number) => {
+    formik.setFieldValue('structureId', String(value));
+    formik.setFieldValue('optionalHeadIds', []);
+  };
+  const structureError = formik.touched.structureId ? formik.errors.structureId : undefined;
+  const optionalError =
+    typeof formik.errors.optionalHeadIds === 'string' ? formik.errors.optionalHeadIds : undefined;
+  const mandatoryHeads = chosen?.heads.filter((head) => !head.isOptional) ?? [];
+  const optionalHeads = chosen?.heads.filter((head) => head.isOptional) ?? [];
+  const selectedOptionalIds = formik.values.optionalHeadIds;
+
+  const renderActions = (actions: React.ReactNode) =>
+    actionsElement ? createPortal(actions, actionsElement) : actions;
 
   return (
     <Box
       component="form"
+      id={formId}
+      noValidate
       onSubmit={formik.handleSubmit}
       sx={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}
       aria-busy={busy || candidates.isFetching}
@@ -215,34 +245,77 @@ export function AdmissionFeeSelectionEditor({
                 }}
               >
                 {!compact && <Typography variant="subtitle2">Select Fee Structure</Typography>}
-                <CustomSelect
-                  label="Fee Structure *"
-                  isSearch
+                <FeeStructureSelect
+                  label={compact ? undefined : 'Fee Structure *'}
+                  required={compact}
                   value={formik.values.structureId}
-                  disabled={disabled || busy || candidates.isFetching}
-                  options={(candidates.currentData ?? []).map((item) => ({
-                    value: item.structureId,
-                    label: `${item.structureName} · Revision ${item.revisionNumber}`,
-                  }))}
-                  onChange={(value) => {
-                    formik.setFieldValue('structureId', String(value));
-                    formik.setFieldValue('optionalHeadIds', []);
-                  }}
-                  error={Boolean(formik.touched.structureId && formik.errors.structureId)}
+                  disabled={fieldsDisabled}
+                  options={structureOptions}
+                  onChange={changeStructure}
+                  error={Boolean(structureError)}
                   helperText={
-                    (formik.touched.structureId && formik.errors.structureId) ||
+                    structureError ||
                     (compact
                       ? undefined
                       : 'Published structures matching the application year and class.')
                   }
                 />
-                {chosen && (
+                {compact && chosen && (
+                  <>
+                    <FeeHeadSelectionGroup>
+                      {mandatoryHeads.length ? (
+                        mandatoryHeads.map((head) => (
+                          <FeeHeadSelectionRow
+                            key={head.feeHeadId}
+                            name={head.feeHeadName}
+                            amount={
+                              <FeeHeadSelectionAmount deferred={head.isVariable}>
+                                {formatAdmissionFeeHeadAmount(head, state.currency)}
+                              </FeeHeadSelectionAmount>
+                            }
+                          />
+                        ))
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          This structure has no mandatory fee heads.
+                        </Typography>
+                      )}
+                    </FeeHeadSelectionGroup>
+                    {optionalHeads.length > 0 && (
+                      <FeeHeadSelectionGroup optional error={optionalError}>
+                        {optionalHeads.map((head) => (
+                          <FeeHeadSelectionRow
+                            key={head.feeHeadId}
+                            name={head.feeHeadName}
+                            selection={{
+                              checked: selectedOptionalIds.includes(head.feeHeadId),
+                              disabled: fieldsDisabled,
+                              onChange: (checked) =>
+                                formik.setFieldValue(
+                                  'optionalHeadIds',
+                                  checked
+                                    ? [...selectedOptionalIds, head.feeHeadId]
+                                    : selectedOptionalIds.filter((id) => id !== head.feeHeadId)
+                                ),
+                            }}
+                            amount={
+                              <FeeHeadSelectionAmount deferred={head.isVariable}>
+                                {formatAdmissionFeeHeadAmount(head, state.currency)}
+                              </FeeHeadSelectionAmount>
+                            }
+                          />
+                        ))}
+                      </FeeHeadSelectionGroup>
+                    )}
+                  </>
+                )}
+                {!compact && chosen && (
                   <>
                     <Typography variant="subtitle2">Mandatory Fee Heads</Typography>
-                    {chosen.heads.some((head) => !head.isOptional) ? (
+                    {mandatoryHeads.length > 0 ? (
                       <AdmissionFeeHeads
                         label="Mandatory Fee Heads"
-                        heads={chosen.heads.filter((head) => !head.isOptional)}
+                        heads={mandatoryHeads}
                         currency={state.currency}
                       />
                     ) : (
@@ -250,34 +323,26 @@ export function AdmissionFeeSelectionEditor({
                         This structure has no mandatory fee heads.
                       </Typography>
                     )}
-                    {chosen.heads.some((head) => head.isOptional) && (
+                    {optionalHeads.length > 0 && (
                       <CustomSelect
                         label="Optional Fee Heads"
                         multiple
                         isSearch
                         value={formik.values.optionalHeadIds}
-                        disabled={disabled || busy || candidates.isFetching}
-                        options={chosen.heads
-                          .filter((head) => head.isOptional)
-                          .map((head) => ({
-                            value: head.feeHeadId,
-                            label: `${head.feeHeadName} · ${formatAdmissionFeeHeadAmount(head, state.currency)}`,
-                          }))}
+                        disabled={fieldsDisabled}
+                        options={optionalHeads.map((head) => ({
+                          value: head.feeHeadId,
+                          label: `${head.feeHeadName} · ${formatAdmissionFeeHeadAmount(head, state.currency)}`,
+                        }))}
                         onChange={(value) => formik.setFieldValue('optionalHeadIds', value)}
                         error={Boolean(formik.errors.optionalHeadIds)}
-                        helperText={
-                          typeof formik.errors.optionalHeadIds === 'string'
-                            ? formik.errors.optionalHeadIds
-                            : undefined
-                        }
+                        helperText={optionalError}
                       />
                     )}
-                    {!compact && (
-                      <Typography variant="caption" color="text.secondary">
-                        Mandatory heads are included automatically. This saves the selection; it
-                        does not assign Finance dues or collect payment.
-                      </Typography>
-                    )}
+                    <Typography variant="caption" color="text.secondary">
+                      Mandatory heads are included automatically. This saves the selection; it does
+                      not assign Finance dues or collect payment.
+                    </Typography>
                   </>
                 )}
               </Stack>
@@ -301,52 +366,55 @@ export function AdmissionFeeSelectionEditor({
               {saveError}
             </StudentFeedback>
           )}
-          <Stack
-            direction="row"
-            spacing={1}
-            useFlexGap
-            flexWrap="wrap"
-            justifyContent="flex-end"
-            sx={{ mt: 'auto', pt: 1.5, borderTop: compact ? 1 : 0, borderColor: 'divider' }}
-          >
-            <Button
-              size="small"
-              color="inherit"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:close" width={16} />}
-              disabled={busy}
-              onClick={() => closeGuard.requestNavigation(onClose)}
+          {renderActions(
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              flexWrap="wrap"
+              justifyContent="flex-end"
+              sx={actionsElement ? undefined : { mt: 'auto', pt: 1.5 }}
             >
-              Cancel
-            </Button>
-            {noCandidates ? (
               <Button
                 size="small"
-                variant="contained"
-                disabled={busy || disabled || candidates.isFetching}
-                onClick={() => candidates.refetch()}
-                startIcon={<Iconify icon="mdi:refresh" width={16} />}
+                color="inherit"
+                variant="outlined"
+                startIcon={<Iconify icon="mdi:close" width={16} />}
+                disabled={busy}
+                onClick={() => closeGuard.requestNavigation(onClose)}
               >
-                {candidates.isFetching ? 'Checking…' : 'Check Again'}
+                Cancel
               </Button>
-            ) : (
-              <Button
-                size="small"
-                type="submit"
-                variant="contained"
-                startIcon={<Iconify icon="mdi:check" width={16} />}
-                disabled={
-                  disabled ||
-                  busy ||
-                  candidates.isFetching ||
-                  candidates.isError ||
-                  !candidates.currentData?.length
-                }
-              >
-                {busy ? 'Saving…' : 'Confirm Fee Structure'}
-              </Button>
-            )}
-          </Stack>
+              {noCandidates ? (
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={busy || disabled || candidates.isFetching}
+                  onClick={() => candidates.refetch()}
+                  startIcon={<Iconify icon="mdi:refresh" width={16} />}
+                >
+                  {candidates.isFetching ? 'Checking…' : 'Check Again'}
+                </Button>
+              ) : (
+                <Button
+                  size="small"
+                  type="submit"
+                  form={formId}
+                  variant="contained"
+                  startIcon={<Iconify icon="mdi:check" width={16} />}
+                  disabled={
+                    disabled ||
+                    busy ||
+                    candidates.isFetching ||
+                    candidates.isError ||
+                    !candidates.currentData?.length
+                  }
+                >
+                  {busy ? 'Saving…' : 'Confirm Fee Structure'}
+                </Button>
+              )}
+            </Stack>
+          )}
         </Stack>
       </FormBusyRegion>
       {closeGuard.confirmation}

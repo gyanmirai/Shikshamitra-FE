@@ -10,16 +10,20 @@ import { it, vi, expect } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { AdmissionFormDialog } from './admission-form-dialog';
-import { getBlankAdmissionFormInitialValues } from './form-dialog/form-dialog-model';
 import { UnchangedAdmissionFormError } from './form-list/form-validation-errors';
+import { getBlankAdmissionFormInitialValues } from './form-dialog/form-dialog-model';
+import { SavedAdmissionFormValidationError } from './form-dialog/form-publish-validation';
+
+import type { BuilderIssueTarget } from './form-dialog/form-builder-issue-navigation';
 
 const checkName = vi.hoisted(() => vi.fn(() => ({ unwrap: async () => ({ isAvailable: true }) })));
+const toast = vi.hoisted(() => ({ error: vi.fn(), dismiss: vi.fn() }));
 
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   useLazyCheckAdmissionFormNameQuery: () => [checkName],
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { error: vi.fn() } }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 // Keep the real editor, Formik and wizard. Isolate presentation, already covered by the dialog UI suite.
 vi.mock('src/components/customDialog', () => ({
   default: ({ children }: { children: ReactNode }) => <section>{children}</section>,
@@ -78,10 +82,12 @@ vi.mock('./form-dialog/components/form-builder-wizard-content', () => ({
     formik,
     activeStep,
     publishMessage,
+    publishIssueTarget,
   }: {
     formik: FormikProps<CreateUpdateAdmissionForm>;
     activeStep: number;
     publishMessage?: string;
+    publishIssueTarget?: BuilderIssueTarget;
   }) => (
     <>
       <input
@@ -91,6 +97,9 @@ vi.mock('./form-dialog/components/form-builder-wizard-content', () => ({
       />
       <output aria-label="Revision">{formik.values.concurrencyStamp}</output>
       <output aria-label="Current step">{activeStep}</output>
+      {publishIssueTarget?.kind === 'field' && (
+        <output aria-label="Selected question">{publishIssueTarget.fieldId}</output>
+      )}
       {publishMessage && <div role="alert">{publishMessage}</div>}
     </>
   ),
@@ -100,8 +109,58 @@ async function continueToStep(step: number) {
   const next = screen.getByRole('button', { name: 'Continue' });
   await waitFor(() => expect(next).toBeEnabled());
   fireEvent.click(next);
-  await waitFor(() => expect(screen.getByLabelText('Current step')).toHaveTextContent(String(step)));
+  await waitFor(() =>
+    expect(screen.getByLabelText('Current step')).toHaveTextContent(String(step))
+  );
 }
+
+it('opens the affected field from a deduplicated draft publish error', async () => {
+  const original = {
+    ...getBlankAdmissionFormInitialValues(0),
+    name: 'Inquiry address',
+    id: 'draft-address',
+    version: 1,
+    status: 0,
+    concurrencyStamp: 'address-stamp',
+  } as AdmissionForm;
+  original.sections[0].fields.push({
+    ...original.sections[0].fields[0],
+    id: 'city-question',
+    code: 'ADDRESS_CITY',
+    label: 'City',
+    bindingType: 0,
+    bindingKey: 'Address.City',
+    validationJson:
+      '{"format":"city","countryField":"ADDRESS_COUNTRY","stateField":"ADDRESS_STATE"}',
+  });
+  render(
+    <AdmissionFormDialog
+      open
+      editing={original}
+      saving={false}
+      onClose={vi.fn()}
+      onSave={vi.fn()}
+      onPublishNow={async (values) => {
+        const backendIssue = 'Admissions.FormInvalidRuleReference:ADDRESS_CITY';
+        throw new SavedAdmissionFormValidationError([backendIssue, backendIssue], values);
+      }}
+    />
+  );
+  await continueToStep(1);
+  await continueToStep(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Publish now' }));
+  const message =
+    'Draft saved, but not published. City needs Country and State fields. Add them or remove City to publish.';
+  await waitFor(() =>
+    expect(toast.error).toHaveBeenCalledWith(expect.objectContaining({ message }))
+  );
+  const toastPayload = toast.error.mock.calls.find(([item]) => item.message === message)![0];
+  render(<>{toastPayload.alertProps('publish-address').action}</>);
+  fireEvent.click(screen.getByRole('button', { name: 'Go to field' }));
+  expect(toast.dismiss).toHaveBeenCalledWith('publish-address');
+  expect(screen.getByLabelText('Current step')).toHaveTextContent('1');
+  expect(screen.getByLabelText('Selected question')).toHaveTextContent('city-question');
+});
 
 it.each([0, 1] as const)(
   'blocks a reopened unchanged draft while allowing editing and draft saves (purpose=%s)',

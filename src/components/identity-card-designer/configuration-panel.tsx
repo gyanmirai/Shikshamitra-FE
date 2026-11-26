@@ -1,4 +1,5 @@
 import { useId, useRef, useEffect } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Box, Tab, Stack, Alert, Button } from '@mui/material';
 
@@ -21,6 +22,9 @@ export function DesignerConfigurationPanel(
     onTabChange,
     brandingContent,
     canPlaceSignature,
+    configurationPanelSize,
+    showConfigurationHints,
+    borderStylesEnabled,
     disabled,
     elements,
     selectedId,
@@ -39,11 +43,12 @@ export function DesignerConfigurationPanel(
     if (tab === 'elements' && selectedId && scrollArea.current) scrollArea.current.scrollTop = 0;
   }, [tab, selectedId]);
   const errors = validateIdentityCardLayout(layout, fields);
+  const wide = configurationPanelSize === 'wide';
   const tabs = [
-    ...(brandingContent ? [{ value: 'school', label: 'School' }] : []),
-    { value: 'layout', label: 'Layout' },
-    { value: 'elements', label: 'Elements' },
-    { value: 'print', label: 'Print' },
+    ...(brandingContent ? [{ value: 'school', label: 'School', icon: 'mdi:school-outline' }] : []),
+    { value: 'layout', label: 'Layout', icon: 'mdi:page-layout-body' },
+    { value: 'elements', label: 'Elements', icon: 'mdi:layers-outline' },
+    { value: 'print', label: 'Print', icon: 'mdi:printer-outline' },
   ];
   return (
     <Box
@@ -54,7 +59,7 @@ export function DesignerConfigurationPanel(
         minHeight: 0,
         minWidth: 0,
         overflow: 'hidden',
-        gap: 0.5,
+        gap: wide ? 1 : 0.5,
       }}
     >
       <CustomTabs
@@ -62,19 +67,29 @@ export function DesignerConfigurationPanel(
         onChange={(_, value) => onTabChange(value)}
         guardUnsavedChanges={false}
         density="compact"
-        variant="fullWidth"
+        variant={wide ? 'scrollable' : 'fullWidth'}
+        scrollButtons={wide ? 'auto' : undefined}
+        allowScrollButtonsMobile={wide}
         aria-label="Designer settings"
-        sx={{ flexShrink: 0, '& .MuiTabs-scroller': { px: 0 } }}
+        slotProps={wide ? { tab: { px: 0.75 } } : undefined}
+        sx={{
+          flexShrink: 0,
+          ...(wide
+            ? { border: 1, borderColor: 'divider', borderRadius: 1 }
+            : { '& .MuiTabs-scroller': { px: 0 } }),
+        }}
       >
         {tabs.map((item) => (
           <Tab
             key={item.value}
             value={item.value}
             label={item.label}
+            icon={wide ? <Iconify icon={item.icon} width={14} aria-hidden /> : undefined}
+            iconPosition="start"
             disabled={disabled}
             id={`${id}-${item.value}`}
             aria-controls={`${id}-panel-${item.value}`}
-            sx={{ minWidth: 0, px: 0.75 }}
+            sx={wide ? { flexGrow: 1, minWidth: 'max-content' } : { minWidth: 0, px: 0.75 }}
           />
         ))}
       </CustomTabs>
@@ -91,7 +106,8 @@ export function DesignerConfigurationPanel(
           overflowY: 'auto',
           overscrollBehavior: 'contain',
           scrollbarGutter: 'stable',
-          pr: 0.5,
+          pl: wide ? 0.5 : 0,
+          pr: wide ? 1 : 0.5,
           '&:focus-visible': { outline: '2px solid', outlineColor: 'info.main', outlineOffset: -2 },
         }}
       >
@@ -130,6 +146,9 @@ export function DesignerConfigurationPanel(
                 onChange={onElementChange}
                 onDelete={onDelete}
                 disabled={disabled}
+                borderStylesEnabled={borderStylesEnabled}
+                themeColor={layout.themeColor}
+                showEmptySelectionHint={showConfigurationHints}
               />
               <ElementLayers
                 elements={elements}

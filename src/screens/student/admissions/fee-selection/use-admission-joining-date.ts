@@ -10,6 +10,14 @@ import {
 
 import { useAdmissionFeePreview } from './use-admission-fee-preview';
 
+function validateJoiningDate(value: Dayjs | null, yearEnd: string) {
+  if (!value) return 'Actual joining date is required.';
+  if (!value.isValid()) return 'Enter a valid actual joining date.';
+  if (yearEnd && toDateOnly(value) > yearEnd)
+    return 'Actual joining date must be within the academic year or earlier.';
+  return '';
+}
+
 export function useAdmissionJoiningDate(
   applicationId: string,
   {
@@ -30,8 +38,8 @@ export function useAdmissionJoiningDate(
   }>();
   const [touched, setTouched] = useState(false);
   const [selection, setSelection] = useState<{ applicationId: string; versionId: string | null }>();
-  const currentDraft =
-    state?.canEdit && !state.isLocked && draft?.applicationId === applicationId ? draft : undefined;
+  const applicationDraft = draft?.applicationId === applicationId ? draft : undefined;
+  const currentDraft = state?.canEdit && !state.isLocked ? applicationDraft : undefined;
   const yearEnd = toDateOnly(state?.academicYearEndDate);
   const today = dayjs().startOf('day');
   const canDefaultToToday =
@@ -50,15 +58,9 @@ export function useAdmissionJoiningDate(
       ? selection.versionId
       : (state?.defaultProrationPolicyVersionId ?? null);
   const prorationPolicyEligible = Boolean(
-    date && state?.academicYearStartDate && date >= toDateOnly(state.academicYearStartDate)
+    date && state?.academicYearStartDate && date > toDateOnly(state.academicYearStartDate)
   );
-  const validation = !value
-    ? 'Actual joining date is required.'
-    : !validDate
-      ? 'Enter a valid actual joining date.'
-      : yearEnd && date > yearEnd
-        ? 'Actual joining date must be within the academic year or earlier.'
-        : '';
+  const validation = validateJoiningDate(value, yearEnd);
   const stale = Boolean(currentDraft && currentDraft.stamp !== state?.concurrencyStamp);
   const needsPreview = Boolean(
     enabled && state?.canPreview && !state.isLocked && !requiresVariableAmounts
@@ -77,15 +79,21 @@ export function useAdmissionJoiningDate(
   );
   const { result: preview, pending: previewPending, query: previewQuery } = feePreview;
   const unavailable =
-    !enabled ||
-    !state ||
-    query.isFetching ||
-    query.isError ||
-    saving.isLoading ||
-    stale;
-  const blocked = unavailable || (!state?.isLocked && (Boolean(validation) || (needsPreview && !preview)));
-  const canSaveDate = Boolean(
-    !unavailable && state?.canEdit && !state.isLocked && !validation && date !== toDateOnly(state.joiningDate)
+    !enabled || !state || query.isFetching || query.isError || saving.isLoading || stale;
+  const blocked =
+    unavailable || (!state?.isLocked && (Boolean(validation) || (needsPreview && !preview)));
+  const canSaveValue = (candidate: Dayjs | null) =>
+    Boolean(
+      !unavailable &&
+      state?.canEdit &&
+      !state.isLocked &&
+      !validateJoiningDate(candidate, yearEnd) &&
+      toDateOnly(candidate) !== toDateOnly(state.joiningDate)
+    );
+  const hasUnsavedDateEdit = Boolean(
+    applicationDraft &&
+    (applicationDraft.value?.isValid() === false ||
+      toDateOnly(applicationDraft.value) !== toDateOnly(state?.joiningDate))
   );
   const change = (next: Dayjs | null) => {
     setDraft({
@@ -97,24 +105,25 @@ export function useAdmissionJoiningDate(
   const changePolicy = (versionId: string | null) => {
     setSelection({ applicationId, versionId });
   };
-  const persistDate = async (intent: 'save' | 'collect') => {
+  const persistDate = async (intent: 'save' | 'collect', candidate = value) => {
     const saveOnly = intent === 'save';
     setTouched(true);
-    if (!state || (saveOnly ? !canSaveDate : blocked))
+    if (!state || (saveOnly ? !canSaveValue(candidate) : blocked))
       throw new Error(
-        validation ||
+        validateJoiningDate(candidate, yearEnd) ||
           (saveOnly
             ? 'Refresh the joining date before saving.'
             : 'Refresh the joining date and fee preview before collecting fees.')
       );
     if (state.isLocked || !state.canEdit) return;
+    const joiningDate = toDateOnly(candidate);
     try {
       const saved = await save({
         applicationId,
-        joiningDate: date,
+        joiningDate,
         concurrencyStamp: currentDraft?.stamp ?? state.concurrencyStamp,
       }).unwrap();
-      if (toDateOnly(saved?.joiningDate) !== date) {
+      if (toDateOnly(saved?.joiningDate) !== joiningDate) {
         throw new Error(
           'Could not confirm the actual joining date. Check the saved date before retrying fee preparation.'
         );
@@ -147,8 +156,10 @@ export function useAdmissionJoiningDate(
     prorationPolicyEligible,
     changePolicy,
     confirm: () => persistDate('collect'),
-    canSaveDate,
-    saveDate: () => persistDate('save'),
+    canSaveDate: canSaveValue(value),
+    canSaveValue,
+    hasUnsavedDateEdit,
+    saveDate: (candidate?: Dayjs | null) => persistDate('save', candidate),
     retry,
     stale,
     blur: () => setTouched(true),

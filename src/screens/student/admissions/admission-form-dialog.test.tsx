@@ -198,6 +198,15 @@ it.each([
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: new RegExp(`Create ${type} Form`) })).toBeVisible()
     );
+    const formDetailsStep = screen.getByRole('button', { name: 'Step 1: Form details' });
+    const progress = formDetailsStep.closest('.MuiStepper-root');
+    expect(progress).toHaveClass('MuiStepper-horizontal');
+    if (purpose === 1) {
+      expect(progress).not.toHaveClass('MuiStepper-alternativeLabel');
+      expect(screen.getByRole('button', { name: 'Step 4: Print layout' })).toBeDisabled();
+    } else {
+      expect(progress).toHaveClass('MuiStepper-alternativeLabel');
+    }
     await user.click(screen.getByRole('button', { name: starter }));
     await clickContinue(user);
     await screen.findByRole('heading', { name: 'Build fields' });
@@ -207,8 +216,10 @@ it.each([
     expect(screen.getByRole('heading', { name: new RegExp(`Create ${type} Form`) })).toBeVisible();
     if (purpose === 1) {
       expect(screen.queryByRole('button', { name: 'Publish now' })).not.toBeInTheDocument();
-      await clickContinue(user);
+      const printStep = screen.getByRole('button', { name: 'Step 4: Print layout' });
+      await user.click(printStep);
       await screen.findByRole('heading', { name: 'Print layout preview' });
+      expect(printStep).toHaveAttribute('aria-current', 'step');
       expect(onPublishNow).not.toHaveBeenCalled();
     } else {
       expect(

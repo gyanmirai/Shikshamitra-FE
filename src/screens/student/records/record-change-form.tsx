@@ -12,7 +12,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { GenderType } from 'src/enums/gender';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { UploadAvatar } from 'src/components/upload';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -46,6 +45,8 @@ import {
 } from 'src/components/studentProfile/form-fields/initialvalues';
 
 import RecordPhotoPreview from './record-photo-preview';
+import StudentPhotoAvatar from '../components/student-photo-avatar';
+import StudentPhotoInput, { RECORD_PHOTO_MAX_BYTES } from '../components/student-photo-input';
 
 type StructuredRecordSection = Exclude<RecordSection, 'gr-number'>;
 
@@ -158,6 +159,7 @@ function StructuredRecordChangeForm({
   const [clientKey] = useState(() => crypto.randomUUID());
   const [submit, submitState] = useCreateStudentRecordChangeMutation();
   const [uploadPhoto, photoState] = useUploadStudentRecordPhotoDraftMutation();
+  const [preparingPhoto, setPreparingPhoto] = useState(false);
   const tab = sectionTabs[snapshot.section];
   const source = snapshot.data;
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
@@ -204,6 +206,11 @@ function StructuredRecordChangeForm({
         : {}),
     }),
     onSubmit: async (formValues) => {
+      if (
+        snapshot.section === 'photo' &&
+        (preparingPhoto || photoState.isLoading || !formValues.photoDraftId)
+      )
+        return;
       setFailure(null);
       let payload: Record<string, unknown>;
       if (tab < 7) payload = profileSectionPayload(tab, formValues, source);
@@ -273,7 +280,10 @@ function StructuredRecordChangeForm({
     onDirtyChange?.(form.dirty);
     return () => onDirtyChange?.(false);
   }, [form.dirty, onDirtyChange]);
-  const guard = useUnsavedNavigation(form.dirty, { push: onDirtyChange ? undefined : router.push });
+  const guard = useUnsavedNavigation(form.dirty, {
+    push: onDirtyChange ? undefined : router.push,
+    blockNavigation: preparingPhoto || photoState.isLoading,
+  });
   const divisions =
     classes.find((standard: any) => standard.id === form.values.standardId)?.divisions ?? [];
   return (
@@ -344,21 +354,24 @@ function StructuredRecordChangeForm({
           {snapshot.section === 'photo' ? (
             <FormSectionCard
               icon="mdi:camera-outline"
-              title="Student photo"
-              description="Upload a JPG or PNG up to 3 MB. It becomes the student photo after this change applies."
+              title="Photo Change"
+              descriptionTooltip="The new photo becomes the student photo when this change applies."
             >
-              <UploadAvatar
-                value={form.values.photoDraftId ? undefined : form.values.photoUrl}
-                maxSize={3 * 1024 * 1024}
-                accept={{ 'image/jpeg': ['.jpg', '.jpeg'], 'image/png': ['.png'] }}
+              {!form.values.photoDraftId && source.photoUrl && (
+                <StudentPhotoAvatar
+                  studentId={studentId}
+                  hasPhoto
+                  alt="Current student photo"
+                  sx={{ width: 64, height: 64, mx: 'auto' }}
+                />
+              )}
+              <StudentPhotoInput
+                label="Student photo"
+                value={null}
+                maxBytes={RECORD_PHOTO_MAX_BYTES}
                 disabled={photoState.isLoading || submitState.isLoading}
-                onDrop={async (files) => {
-                  const file = files[0];
-                  if (!file) return;
-                  if (file.size > 3 * 1024 * 1024) {
-                    setFailure('Choose a photo up to 3 MB.');
-                    return;
-                  }
+                onBusyChange={setPreparingPhoto}
+                onAccept={async (file) => {
                   const body = new FormData();
                   body.append('file', file);
                   try {
@@ -367,8 +380,8 @@ function StructuredRecordChangeForm({
                     form.setFieldValue('photoUrl', staged.photoUrl);
                     setFailure(null);
                   } catch {
-                    setFailure(
-                      'The photo could not be uploaded. Choose a valid JPG or PNG and retry.'
+                    throw new Error(
+                      'The photo could not be uploaded. Choose the photo and try again.'
                     );
                   }
                 }}
@@ -524,6 +537,7 @@ function StructuredRecordChangeForm({
           loading={submitState.isLoading}
           disabled={
             !form.dirty ||
+            preparingPhoto ||
             photoState.isLoading ||
             (snapshot.section === 'photo' && !form.values.photoDraftId)
           }

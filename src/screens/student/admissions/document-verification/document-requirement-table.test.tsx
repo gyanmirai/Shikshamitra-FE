@@ -139,13 +139,13 @@ describe('admission document table', { timeout: 15000 }, () => {
 
   it('opens upload directly from the table and disables View until evidence exists', async () => {
     renderTable();
-    const table = await screen.findByRole('table');
+    const view = await screen.findByRole('button', { name: 'View Document For Birth certificate' });
+    const table = screen.getByRole('table');
     ['Document Name', 'Format', 'Status', 'Actions'].forEach((name) =>
       expect(within(table).getByText(name)).toBeInTheDocument()
     );
     expect(within(table).queryByText('Accepted: PDF')).not.toBeInTheDocument();
     expect(within(table).getByText('Missing')).toBeInTheDocument();
-    const view = screen.getByRole('button', { name: 'View Document For Birth certificate' });
     expect(view).toBeDisabled();
     expect(view).toHaveTextContent('');
     const upload = screen.getByRole('button', { name: 'Upload Document for Birth certificate' });
@@ -331,7 +331,8 @@ describe('admission document table', { timeout: 15000 }, () => {
         name: `Document ${index}`,
       })),
     });
-    const table = await screen.findByRole('table');
+    await screen.findByText('Document 0');
+    const table = screen.getByRole('table');
     expect(within(table).getAllByRole('row')).toHaveLength(13);
     expect(within(table).getByText('Document 11')).toBeInTheDocument();
   });
@@ -345,7 +346,8 @@ describe('admission document table', { timeout: 15000 }, () => {
         name: `Document ${index}`,
       })),
     });
-    const table = await screen.findByRole('table');
+    await screen.findByText('Document 0');
+    const table = screen.getByRole('table');
     expect(within(table).getAllByRole('row')).toHaveLength(26);
     expect(within(table).queryByText('Document 25')).not.toBeInTheDocument();
     ['Actions'].forEach((name) => {

@@ -1,6 +1,6 @@
 import { createRef } from 'react';
-import { render, screen } from '@testing-library/react';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import PdfCanvas from './pdf-canvas';
 import { usePdfPage } from './use-pdf-page';
@@ -29,5 +29,23 @@ describe('PDF page controls', () => {
     expect(screen.getByRole('button', { name: 'Next page' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Previous Page' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next Page' })).not.toBeInTheDocument();
+  });
+
+  it('distinguishes page boundaries and keeps both arrows enabled between them', () => {
+    render(<PdfCanvas url="/sample.pdf" title="Registration" usePageSelector />);
+    const previous = screen.getByRole('button', { name: 'Previous page' });
+    const next = screen.getByRole('button', { name: 'Next page' });
+    expect(previous).toBeDisabled();
+    expect(previous).toHaveStyle({ cursor: 'not-allowed' });
+    expect(next).toBeEnabled();
+
+    fireEvent.click(next);
+    expect(previous).toBeEnabled();
+    expect(next).toBeEnabled();
+
+    fireEvent.click(next);
+    expect(previous).toBeEnabled();
+    expect(next).toBeDisabled();
+    expect(next).toHaveStyle({ cursor: 'not-allowed' });
   });
 });

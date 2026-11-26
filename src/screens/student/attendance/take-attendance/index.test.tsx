@@ -553,13 +553,12 @@ describe('Daily Attendance workspace', () => {
     expect(controls.getByRole('button', { name: 'Lock' })).toBeVisible();
   });
 
-  it('uses the shared skeleton refresh while keeping existing register rows visible', async () => {
+  it('uses the shared refresh while keeping existing register rows visible', async () => {
     mocks.query = { ...mocks.query, isFetching: true };
     render(<TakeAttendanceScreen />);
     await screen.findByRole('group', { name: 'Attendance: Aarav' });
     expect(mocks.tableProps.mock.calls.at(-1)![0]).toMatchObject({
       isRefreshing: true,
-      refreshIndicator: 'skeleton',
     });
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });

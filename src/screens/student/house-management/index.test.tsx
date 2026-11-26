@@ -32,6 +32,7 @@ const fixture = vi.hoisted(() => ({
   scopeRevision: 'original-scope',
   studentTotal: 1,
   studentIsDivisionLeader: true,
+  canAssignDivision: true,
   studentsMissing: false,
   studentsFetching: false,
   studentsError: false,
@@ -136,6 +137,7 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
         standardName: '6',
         divisionId: 'd1',
         divisionName: 'A',
+        houseId: 'h1',
         houseName: 'Falcon',
         isHouseLeader: true,
         isDivisionLeader: true,
@@ -156,6 +158,10 @@ vi.mock('src/redux/student/house-management/house-management-api', () => {
       isError: fixture.housesError,
     }),
     useGetHouseLogoQuery: () => ({ currentData: undefined }),
+    useGetHouseDivisionsQuery: () => ({
+      ...result,
+      currentData: { items: [{ id: 'd1', canManage: fixture.canAssignDivision }] },
+    }),
     useUploadHouseLogoMutation: mutation,
     useLazyGetHouseDivisionsQuery: () => [
       fixture.divisionInput,
@@ -203,7 +209,11 @@ function workspace() {
       })}
     >
       <ThemeProvider theme={createTheme(defaultSettings)}>
-        <HouseManagement />
+        <HouseManagement
+          workspace={
+            new URLSearchParams(fixture.query).get('tab') === 'houses' ? 'catalogue' : 'operations'
+          }
+        />
       </ThemeProvider>
     </Provider>
   );
@@ -223,13 +233,15 @@ beforeEach(() => {
   fixture.scopeRevision = 'original-scope';
   fixture.studentTotal = 1;
   fixture.studentIsDivisionLeader = true;
+  fixture.canAssignDivision = true;
   fixture.studentsMissing = false;
   fixture.studentsFetching = false;
   fixture.studentsError = false;
   vi.clearAllMocks();
   fixture.updateHouse.mockImplementation(() => ({ unwrap: () => Promise.resolve() }));
   fixture.divisionInput.mockImplementation(() => ({
-    unwrap: () => Promise.resolve({ items: fixture.divisions, totalCount: fixture.divisions.length }),
+    unwrap: () =>
+      Promise.resolve({ items: fixture.divisions, totalCount: fixture.divisions.length }),
   }));
   fixture.setDivisionLeader.mockImplementation(() => ({ unwrap: () => Promise.resolve() }));
 });
@@ -249,6 +261,7 @@ it('lets House-only viewers read the scoped roster without exposing write action
 
 it('requires a specific division before selecting students for either membership action', () => {
   fixture.permissions.push('Students.Records.HouseManagement.Add');
+  fixture.query = 'tab=assign';
   const view = mount();
   expect(screen.getByText('Select a division to change house membership.')).toBeVisible();
   expect(screen.queryByRole('checkbox', { name: 'Select Riya' })).not.toBeInTheDocument();
@@ -257,23 +270,63 @@ it('requires a specific division before selecting students for either membership
   );
   expect(screen.getByRole('button', { name: 'Assign or move' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Remove from house' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Assign entire division' })).toBeDisabled();
 
-  fixture.query = 'tab=students&class=c1&division=d1';
+  fixture.query = 'tab=assign&class=c1&division=d1';
   view.rerender(workspace());
   fireEvent.click(screen.getByRole('checkbox', { name: 'Select Riya' }));
   expect(screen.getByRole('button', { name: 'Assign or move' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Remove from house' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Assign entire division' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Clear selection' })).not.toBeInTheDocument();
 
-  fixture.query = 'tab=students';
+  fixture.query = 'tab=assign';
   view.rerender(workspace());
   expect(screen.queryByRole('checkbox', { name: 'Select Riya' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Assign or move' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Remove from house' })).toBeDisabled();
 });
 
+it('opens the entire division preview without selecting any rows', () => {
+  fixture.permissions.push('Students.Records.HouseManagement.Add');
+  fixture.query = 'tab=assign&class=c1&division=d1';
+  mount();
+  expect(screen.getByRole('checkbox', { name: 'Select Riya' })).not.toBeChecked();
+  fireEvent.click(screen.getByRole('button', { name: 'Assign entire division' }));
+  const dialog = screen.getByRole('dialog', { name: 'Change House Membership' });
+  expect(
+    within(dialog).getByRole('checkbox', { name: 'Include students already assigned to a house' })
+  ).not.toBeChecked();
+  expect(within(dialog).getByText('6 / A')).toBeVisible();
+});
+
+it('separates membership assignment from both quick leader actions', () => {
+  fixture.permissions.push('Students.Records.HouseManagement.Add');
+  fixture.query = 'tab=assign&class=c1&division=d1';
+  fixture.canAssignDivision = false;
+  const view = mount();
+  expect(screen.getByRole('tab', { name: 'Assign House' })).toHaveAttribute(
+    'aria-selected',
+    'true'
+  );
+  expect(screen.queryByRole('tab', { name: 'Houses' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Assign entire division' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Select Riya' }));
+  expect(screen.getByRole('button', { name: 'Assign or move' })).toBeEnabled();
+
+  fixture.query = 'tab=divisions&class=c1&division=d1';
+  view.rerender(workspace());
+  expect(screen.queryByRole('checkbox', { name: 'Select Riya' })).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('toolbar', { name: 'House membership actions' })
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Remove Riya as house leader' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Remove Riya as division leader' })).toBeEnabled();
+});
+
 it('ignores a Division URL value without its parent class', () => {
   fixture.permissions.push('Students.Records.HouseManagement.Add');
-  fixture.query = 'tab=students&division=d1';
+  fixture.query = 'tab=assign&division=d1';
   mount();
   expect(screen.getByRole('combobox', { name: 'Division' })).toHaveAttribute(
     'aria-disabled',
@@ -436,7 +489,7 @@ it('reviews a replacement from the roster before sending the candidate and revie
     },
   ];
   const view = mount();
-  expect(screen.getByRole('button', { name: 'Assign or move' })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: 'Assign or move' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Assign Riya as division leader' }));
   const dialog = await screen.findByRole('dialog', { name: 'Replace Division Leader?' });
   expect(dialog).toHaveTextContent('Current leader: Mira');
@@ -517,16 +570,16 @@ it('keeps class filter changes in the URL and resets the page', () => {
 });
 it('clears checked students when the class filter is reset', () => {
   fixture.permissions.push('Students.Records.HouseManagement.Add');
-  fixture.query = 'tab=students&class=c1&division=d1';
+  fixture.query = 'tab=assign&class=c1&division=d1';
   const view = mount();
   fireEvent.click(screen.getByRole('checkbox', { name: 'Select Riya' }));
   expect(screen.getByText('1 selected')).toBeVisible();
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Class' }));
   fireEvent.click(screen.getByRole('option', { name: 'All classes' }));
-  expect(fixture.push).toHaveBeenLastCalledWith('/student/records/houses?tab=students', {
+  expect(fixture.push).toHaveBeenLastCalledWith('/student/records/houses?tab=assign', {
     scroll: false,
   });
-  fixture.query = 'tab=students';
+  fixture.query = 'tab=assign';
   view.rerender(workspace());
   expect(screen.queryByRole('checkbox', { name: 'Select Riya' })).not.toBeInTheDocument();
   expect(screen.getByRole('combobox', { name: 'Division' })).toHaveAttribute(
@@ -680,7 +733,7 @@ it.each(['catalogue', 'academic'] as const)(
 
 it('clears checked students on a failed roster refresh and keeps them clear after recovery', () => {
   fixture.permissions.push('Students.Records.HouseManagement.Add');
-  fixture.query = 'tab=students&class=c1&division=d1';
+  fixture.query = 'tab=assign&class=c1&division=d1';
   const view = mount();
   fireEvent.click(screen.getByRole('checkbox', { name: 'Select Riya' }));
   expect(screen.getByText('1 selected')).toBeVisible();

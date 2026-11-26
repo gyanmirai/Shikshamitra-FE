@@ -1,9 +1,15 @@
-import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  AdmissionFormField,
+  CreateUpdateAdmissionForm,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import { vi, it, expect, describe } from 'vitest';
+import { shikshaMitraToast } from 'src/components/toast';
 
 import { reorderFormBuilder } from './reorder-form-builder';
 import { newField, getBlankAdmissionFormInitialValues } from './form-dialog-model';
+
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: { warning: vi.fn() } }));
 
 function makeForm(): CreateUpdateAdmissionForm {
   return {
@@ -165,6 +171,69 @@ describe('form builder reordering', () => {
     expect(sections?.map((section) => section.displayOrder)).toEqual([0, 1]);
     expect(sections?.[1].fields.map((field) => field.id)).toEqual(['a', 'b', 'c']);
     expect(selectField).not.toHaveBeenCalled();
+  });
+
+  it.each([0, 1] as const)('rejects new address inversions in layout %s', (layoutType) => {
+    const values = makeForm();
+    values.layoutType = layoutType;
+    const [first, second] = values.sections;
+    if (layoutType === 1) {
+      Object.assign(first, { stepId: 'earlier', stepDisplayOrder: 0 });
+      Object.assign(second, { stepId: 'later', stepDisplayOrder: 1 });
+    }
+    Object.assign(first.fields[0], {
+      bindingType: 0,
+      bindingKey: 'Address.Country',
+      validationJson: '{"format":"country"}',
+    });
+    Object.assign(first.fields[1], {
+      bindingType: 0,
+      bindingKey: 'Address.State',
+      validationJson: '{"format":"state","countryField":"A"}',
+    });
+    Object.assign(second.fields[0], {
+      bindingType: 0,
+      bindingKey: 'Address.City',
+      validationJson: '{"format":"city","countryField":"A","stateField":"B"}',
+    });
+    const setFieldValue = vi.fn();
+    const selectField = vi.fn();
+    vi.mocked(shikshaMitraToast.warning).mockClear();
+    reorderFormBuilder(
+      { active: { id: 'field:first:a' }, over: { id: 'section:second' } },
+      { values, setFieldValue },
+      selectField
+    );
+    expect(setFieldValue).not.toHaveBeenCalled();
+    expect(selectField).not.toHaveBeenCalled();
+    expect(shikshaMitraToast.warning).toHaveBeenCalledWith({
+      message: expect.stringMatching(/country must come before state/i),
+    });
+    expect(first.fields[0].bindingKey).toBe('Address.Country');
+  });
+
+  it('allows a drag to repair an existing inversion', () => {
+    const values = makeForm();
+    const [first] = values.sections;
+    Object.assign(first.fields[0], {
+      bindingType: 0,
+      bindingKey: 'PermanentAddress.State',
+      validationJson: '{"format":"state","countryField":"B"}',
+    });
+    Object.assign(first.fields[1], {
+      bindingType: 0,
+      bindingKey: 'PermanentAddress.Country',
+      validationJson: '{"format":"country"}',
+    });
+    const setFieldValue = vi.fn();
+    reorderFormBuilder(
+      { active: { id: 'field:first:b' }, over: { id: 'field:first:a' } },
+      { values, setFieldValue },
+      vi.fn()
+    );
+    expect(
+      setFieldValue.mock.calls[0][1][0].fields.map((field: AdmissionFormField) => field.id)
+    ).toEqual(['b', 'a', 'c']);
   });
 
   it.each([null, 'field:first:a', 'field:missing:a'])('ignores a drop on %s', (over) => {

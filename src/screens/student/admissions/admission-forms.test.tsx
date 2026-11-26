@@ -271,9 +271,11 @@ describe('Admission forms list workspace', () => {
   it('keeps safe current rows while refreshing the same query', () => {
     mocks.result.isFetching = true;
     renderScreen();
-    expect(screen.getByText('Fresh inquiry')).toBeInTheDocument();
-    expect(screen.getByRole('status', { name: 'Refreshing Admission Forms' })).toBeInTheDocument();
-    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    const table = screen.getByRole('table', { name: 'Admission Forms table' });
+    expect(within(table).getByText('Fresh inquiry')).toBeInTheDocument();
+    expect(table).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('progressbar', { name: 'Refreshing Admission Forms' })).toBeVisible();
+    expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
   });
 
   it('places Add Form and the Form Type filter in the same region', () => {
@@ -302,6 +304,7 @@ describe('Admission forms list workspace', () => {
     renderScreen();
     fireEvent.click(screen.getByRole('button', { name: 'New Version' }));
     const confirmation = screen.getByRole('dialog', { name: 'Create new version?' });
+    expect(within(confirmation).getByTestId('WarningAmberIcon')).toBeVisible();
     expect(within(confirmation).getByText(form.name)).toBeInTheDocument();
     expect(mocks.createVersion).not.toHaveBeenCalled();
     fireEvent.click(within(confirmation).getByRole('button', { name: 'Cancel' }));
@@ -386,7 +389,9 @@ describe('Admission forms list workspace', () => {
     mocks.result.isFetching = true;
     renderScreen();
     expect(screen.queryByText('Fresh inquiry')).not.toBeInTheDocument();
-    expect(document.querySelector('.MuiSkeleton-root')).toBeInTheDocument();
+    const table = screen.getByRole('table', { name: 'Admission Forms table' });
+    expect(table.querySelector('tbody .MuiSkeleton-root')).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(screen.queryByText(/No Admission Forms/)).not.toBeInTheDocument();
   });
 

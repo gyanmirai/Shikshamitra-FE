@@ -26,19 +26,21 @@ const props = () => ({
 });
 
 describe('Admission form publish confirmation', () => {
-  it('uses the shared information icon and shows the publish consequence', () => {
+  it('shows the publish consequence and keeps the icon in the Publish Form button', () => {
     const callbacks = props();
     render(<AdmissionFormPublishDialog {...callbacks} />);
 
     expect(screen.getByRole('dialog', { name: 'Publish Admission inquiry?' })).toBeVisible();
-    expect(screen.getByTestId('InfoIcon')).toBeVisible();
-    expect(screen.getAllByTestId('mdi:publish')).toHaveLength(1);
     expect(screen.queryByTestId('WarningAmberIcon')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('InfoIcon')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ErrorIcon')).not.toBeInTheDocument();
+    const publishButton = screen.getByRole('button', { name: 'Publish Form' });
+    expect(publishButton).toContainElement(screen.getByTestId('mdi:publish'));
     expect(
       screen.getByText(/Version 1 will become available for new admission offerings/)
     ).toBeVisible();
     expect(screen.getByText(/Published versions cannot be edited/)).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Publish Form' }));
+    fireEvent.click(publishButton);
     expect(callbacks.onPublish).toHaveBeenCalledOnce();
   });
 
@@ -62,6 +64,7 @@ describe('Admission form publish confirmation', () => {
     render(<AdmissionFormPublishDialog {...callbacks} />);
 
     expect(screen.getByRole('dialog', { name: 'Form Needs Changes' })).toBeVisible();
+    expect(screen.getByTestId('ErrorIcon')).toBeVisible();
     expect(screen.getByText('Add a required student name field.')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Publish Form' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));

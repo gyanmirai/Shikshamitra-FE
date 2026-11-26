@@ -311,9 +311,13 @@ Run `npm run ts`, scoped ESLint, `npm run docs:check` and `git diff --check`; ba
 In-app-browser acceptance must separately save/reopen a synthetic definition, edit a core label, exercise desktop/mobile dragging and source reuse, and submit invalid/valid Inquiry and Registration answers against a freshly built API.
 Component serialization and local automated tests do not establish server persistence, staging or production acceptance.
 
+## Birthday roster checks
+
+Run the Birthday screen and date tests in `src/screens/student/records/` with the Student menu and Records permission tests in `src/constants/`. Cover the default period, custom dates, IST rollover, URL state, permission-aware profile links, empty results, option failure and retry. In the local in-app browser, open the route as office staff and as a class teacher. Check the same roster controls and a narrower teacher scope.
+
 ## House Management checks
 
-Run the House Management client, model and component tests alongside `src/constants/student-menu.test.ts`, `src/screens/security/role/student-permission-actions.test.ts` and `visibility-prerequisites.test.ts`. The explicit Student capability inventory includes House View/Add/Delete and preserves compact View, Add/Update and Delete grouping in the existing editor. Menu tests pin placement after Student List and the existing Records visibility ancestor.
+Run the House Management client, model and component tests alongside `src/constants/student-menu.test.ts`, `src/screens/security/role/student-permission-actions.test.ts` and `visibility-prerequisites.test.ts`. Verify independent Settings child permissions, the catalogue redirect, the selected and entire-division assignment payloads, and both leader actions with current scope and concurrency stamps.
 
 Run `npm run ts`, scoped ESLint, `npm run docs:check` and the normal production build. In the Codex in-app browser, verify View-only controls, medium switching, stale selection/preview rejection, assignment/removal consequences, both independent leader roles, empty-house deletion, loading/error Retry, keyboard focus and narrow layouts. Automated/synthetic checks do not establish live school persistence or deployed acceptance.
 

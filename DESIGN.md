@@ -1065,7 +1065,7 @@ Use `ThreeDotsActions` from `src/components/three-dots-actions/` for row actions
 | Direct actions   | Show at most three frequent row actions directly. Use built-in view/edit/delete props first and `directActions` for a feature-specific `mdi:` action; place every remaining action in the three-dot menu. |
 | Server-side data | When the API supports server-side pagination, search, sorting, or filtering, enable the corresponding `serverSide*` props and provide the matching callbacks.     |
 | Loading          | Pass the API loading state through `isLoading`; retain the table geometry while the request is in progress.                                                       |
-| Scoped refresh   | Admissions worklists use `isRefreshing` with `refreshIndicator="skeleton"` to retain safe rows and show a labelled skeleton status. The shared default remains linear for other consumers. |
+| Scoped refresh   | Use `isRefreshing` to retain safe current rows and show a thin labelled progress indicator along the bottom edge of the table without shifting rows or headings. |
 | Pagination       | Use server-side pagination for API-backed collections that can grow; pass `totalCount` and handle `onServerPagination`.                                           |
 
 **Field-to-filter mapping**

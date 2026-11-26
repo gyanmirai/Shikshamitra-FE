@@ -254,22 +254,17 @@ async function chooseStructure() {
   });
   await screen.findByText('Policies');
 }
-async function selectStructure() {
-  await chooseStructure();
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  await screen.findByRole('button', { name: 'Preview assignments' });
-}
 it('requires at least one fee for an optional-only structure before previewing', async () => {
   mocks.candidateState = {
     heads: [{ feeHeadId: 'transport', feeHeadName: 'Transport', isOptional: true }],
   };
   mount();
-  await selectStructure();
-  expect(screen.getByRole('button', { name: 'Preview assignments' })).toBeDisabled();
+  await chooseStructure();
+  expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
   expect(screen.getByText('Select at least one fee before assigning.')).toBeVisible();
   expect(mocks.preview).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Include transport for one' }));
-  expect(screen.getByRole('button', { name: 'Preview assignments' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Preview' })).toBeEnabled();
 });
 beforeEach(() => {
   vi.clearAllMocks();
@@ -674,8 +669,7 @@ it('prefills the admission selection without asking staff to choose the structur
   expect(proration).toBeVisible();
   expect(screen.getByText('Student Applications')).toBeVisible();
   expect(screen.getByText('Monthly school fees · v3')).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Preview' }));
   await waitFor(() =>
     expect(mocks.preview).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -722,8 +716,7 @@ it('preserves each student’s verified admission dates in a bulk preview', asyn
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: 'Fee structure' })).toHaveValue('structure')
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Preview' }));
   await waitFor(() => expect(mocks.bulkPreview).toHaveBeenCalled());
   const items = mocks.bulkPreview.mock.lastCall?.[0].items;
   expect(items[0].servicePeriods[0]).toMatchObject({
@@ -799,8 +792,8 @@ it('keeps failed students pending after a context refresh following partial bulk
     { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false },
     { studentId: 'two', studentName: 'Riya', isFeeStructureAssigned: false },
   ]);
-  await selectStructure();
-  fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+  await chooseStructure();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Assign fees (2)' }));
   await screen.findByRole('button', { name: 'Review remaining students' });
   mocks.contextState = {
@@ -825,8 +818,8 @@ it('refreshes context after another operator assigned the student during this re
     },
   });
   const view = mount();
-  await selectStructure();
-  fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+  await chooseStructure();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
   await waitFor(() => expect(refetch).toHaveBeenCalled());
   mocks.contextState = { data: [{ studentId: 'one', status: 'Assigned' }], refetch };
   mocks.details.mockReturnValue({ data: { assignment: result('one', 9000) } });
@@ -840,7 +833,7 @@ describe('assignment review and commit boundaries', () => {
     mount();
     expect(screen.getByText('Publish a fee structure first')).toBeVisible();
     expect(screen.queryByRole('combobox', { name: 'Fee structure' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
     const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
     visibility.mockReturnValue('hidden');
     fireEvent(document, new Event('visibilitychange'));
@@ -875,8 +868,8 @@ describe('assignment review and commit boundaries', () => {
       }),
     }));
     mount(students);
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await screen.findByRole('button', { name: 'Assign fees (25)' });
 
     const list = screen.getByLabelText('Selected students list');
@@ -907,7 +900,7 @@ describe('assignment review and commit boundaries', () => {
     expect(within(list).getByText('No matching students.')).toBeVisible();
     expect(screen.getByText('0 assigned · 25 remaining')).toBeVisible();
     expect(screen.getByText('Ready total')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Back' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Assign fees (25)' })).toBeEnabled();
   });
 
@@ -919,12 +912,12 @@ describe('assignment review and commit boundaries', () => {
       }),
     }));
     mount();
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await screen.findByText('This preview has expired. Preview again before assigning fees.');
     expect(screen.getByRole('button', { name: 'Assign fees' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Review and refresh' }));
-    expect(await screen.findByRole('button', { name: 'Preview assignments' })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: 'Preview' })).toBeEnabled();
     expect(mocks.commit).not.toHaveBeenCalled();
   });
 
@@ -948,12 +941,11 @@ describe('assignment review and commit boundaries', () => {
       { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false },
       { studentId: 'two', studentName: 'Meera', isFeeStructureAssigned: false },
     ]);
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Assign fees (2)' }));
-    expect(await screen.findByRole('status')).toHaveTextContent('Assigning 2 students…');
-    expect(screen.getByRole('progressbar', { name: 'Assigning 2 students…' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
+    expect(await screen.findByRole('status', { name: 'Assigning 2 students…' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Assign fees (2)' }));
     expect(mocks.bulkCommit).toHaveBeenCalledTimes(1);
     finish({
@@ -971,9 +963,7 @@ describe('assignment review and commit boundaries', () => {
       ],
     });
     await screen.findByText('1 assigned · 1 need attention.');
-    expect(
-      screen.queryByRole('progressbar', { name: 'Assigning 2 students…' })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('status', { name: 'Assigning 2 students…' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Select Meera' }));
     expect(await screen.findByText('Preview expired or changed')).toBeVisible();
     expect(screen.queryByText('Committed amount 12000')).not.toBeInTheDocument();
@@ -981,7 +971,9 @@ describe('assignment review and commit boundaries', () => {
 
   it('shows plain saving feedback for one student', async () => {
     let finish!: () => void;
-    const pending = new Promise<void>((resolve) => { finish = resolve; });
+    const pending = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
     mocks.commit.mockImplementation(() => ({
       unwrap: async () => {
         await pending;
@@ -989,10 +981,10 @@ describe('assignment review and commit boundaries', () => {
       },
     }));
     mount();
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Assign fees' }));
-    expect(await screen.findByRole('progressbar', { name: 'Saving…' })).toBeVisible();
+    expect(await screen.findByRole('status', { name: 'Saving…' })).toBeVisible();
     finish();
     await screen.findByText('Committed amount 12000');
   });
@@ -1019,8 +1011,8 @@ describe('assignment review and commit boundaries', () => {
         }),
       }));
     mount();
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Assign fees' }));
     await screen.findByText(
       'Assignment status could not be confirmed. Retry this review to safely retrieve any saved assignments.'
@@ -1040,27 +1032,30 @@ describe('assignment review and commit boundaries', () => {
     }
   });
 
-  it('uses exactly three steps and a single open student form', async () => {
+  it('keeps structure, policies, fees and preview together in the new assignment form', async () => {
     mount();
-    expect(screen.getAllByRole('button', { name: /^Step [0-9]:/ })).toHaveLength(3);
-    await selectStructure();
+    expect(screen.queryByRole('button', { name: /^Step [0-9]:/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Assign fees' })).toBeDisabled();
+    await chooseStructure();
     expect(screen.queryByRole('button', { name: 'Aarav' })).not.toBeInTheDocument();
-    expect(screen.queryByText('Policies')).not.toBeInTheDocument();
     expect(screen.queryByText('Select fee structure')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Policies' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Fees & Dates' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Include transport for one' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+    expect(await screen.findByText('Preview amount 12000')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Include transport for one' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Assign fees' })).toBeEnabled();
   });
-  it('puts policies in step one and blocks advancing without an override reason', async () => {
+  it('validates policies on the same screen before preview without an override reason', async () => {
     mount(undefined, true);
     await chooseStructure();
     expect(screen.queryByText('Select fee structure')).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Include transport for one' })
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Include transport for one' })).toBeVisible();
     fireEvent.change(screen.getByRole('combobox', { name: 'Collection policy' }), {
       target: { value: 'collection-version' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('policy override reason');
     expect(screen.getByRole('combobox', { name: 'Collection policy' })).toHaveValue(
       'collection-version'
@@ -1091,11 +1086,11 @@ describe('assignment review and commit boundaries', () => {
     await chooseStructure();
     const refundSelect = screen.getByRole('combobox', { name: 'Refund policy' });
     expect(within(refundSelect).queryByText('No policy assigned')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Select a Refund Policy before continuing.'
     );
-    expect(screen.queryByRole('heading', { name: 'Fees & Dates' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Fees & Dates' })).toBeVisible();
   });
   it('shows names only during bulk setup and preserves the common form while searching', async () => {
     mount(
@@ -1133,12 +1128,11 @@ describe('assignment review and commit boundaries', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Fee structure' }), {
       target: { value: 'structure' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Use out-of-year dates' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('within the selected academic year');
     expect(mocks.preview).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Preview assignments' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeInTheDocument();
   });
   it('opens the assigned-policy editor directly from edit mode without saving', () => {
     mocks.details.mockReturnValue({
@@ -1355,18 +1349,15 @@ describe('assignment review and commit boundaries', () => {
     fireEvent.change(screen.getByRole('textbox', { name: /Policy override reason/ }), {
       target: { value: 'Approved bulk exception' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Include transport for one' }));
     fireEvent.click(screen.getByRole('button', { name: 'Set common fees and dates' }));
     expect(
       within(screen.getByRole('list', { name: 'Selected students' })).queryByRole('button')
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(screen.getByRole('textbox', { name: /Policy override reason/ })).toHaveValue(
       'Approved bulk exception'
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Preview' }));
     await waitFor(() => expect(mocks.bulkPreview).toHaveBeenCalledTimes(1));
     const requests = mocks.bulkPreview.mock.calls[0][0].items;
     expect(requests.find((item: any) => item.studentId === 'one')).toEqual(
@@ -1400,14 +1391,13 @@ describe('assignment review and commit boundaries', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Collection policy' }), {
       target: { value: 'collection-version' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    await screen.findByText('Aarav: Enter a policy override reason.');
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+    await screen.findByText('Enter a policy override reason.');
     expect(mocks.preview).not.toHaveBeenCalled();
     fireEvent.change(screen.getByRole('textbox', { name: /Policy override reason/ }), {
       target: { value: 'Approved student exception' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Preview' }));
     await screen.findByText('Preview amount 12000');
     expect(mocks.preview).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -1425,35 +1415,18 @@ describe('assignment review and commit boundaries', () => {
       })
     );
   });
-  it('keeps the final step read-only and returns to the editable inputs with Back', async () => {
-    mount();
-    await chooseStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
-    await screen.findByText('Preview amount 12000');
-    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Assign fees' })).toBeEnabled();
-    expect(
-      screen.queryByRole('button', { name: 'Include transport for one' })
-    ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-    expect(await screen.findByRole('button', { name: 'Include transport for one' })).toBeEnabled();
-    expect(screen.queryByText('Preview amount 12000')).not.toBeInTheDocument();
-  });
-
   it('invalidates a successful preview when optional heads change', async () => {
     mount();
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await screen.findByText('Preview amount 12000');
     expect(screen.getByRole('button', { name: 'Assign fees' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     fireEvent.click(screen.getByRole('button', { name: 'Include transport for one' }));
-    expect(screen.queryByRole('button', { name: /Assign fees/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Assign fees' })).toBeDisabled();
     expect(screen.queryByText('Preview amount 12000')).not.toBeInTheDocument();
     expect(mocks.commit).not.toHaveBeenCalled();
   });
-  it('blocks back navigation and duplicate previews while calculating', async () => {
+  it('blocks cancel, fee edits and duplicate previews while calculating', async () => {
     let resolve!: (value: any) => void;
     mocks.preview.mockReturnValue({
       unwrap: () =>
@@ -1462,48 +1435,26 @@ describe('assignment review and commit boundaries', () => {
         }),
     });
     mount();
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Preview assignments' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Step 2: Fees & dates' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Include transport for one' })).toBeDisabled();
     resolve(result());
     await screen.findByText('Preview amount 12000');
     expect(mocks.preview).toHaveBeenCalledTimes(1);
   });
-  it('keeps completed steps directly navigable and reuses an unchanged review', async () => {
+  it('requires a fresh preview after a change and assigns with the latest token', async () => {
     mount();
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await screen.findByText('Preview amount 12000');
-    fireEvent.click(screen.getByRole('button', { name: 'Step 2: Fees & dates' }));
-    expect(screen.getByRole('button', { name: 'Include transport for one' })).toBeInTheDocument();
-    expect(screen.queryByText('Preview amount 12000')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Step 3: Review & assign' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Step 1: Structure & policies' }));
-    expect(screen.getByRole('button', { name: 'Step 2: Fees & dates' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Step 3: Review & assign' }));
-    await screen.findByText('Preview amount 12000');
-    expect(mocks.preview).toHaveBeenCalledTimes(1);
-    expect(mocks.commit).not.toHaveBeenCalled();
-  });
-
-  it('locks uncompleted steps, then safely re-previews changed values through direct review navigation', async () => {
-    mount();
-    expect(screen.getByRole('button', { name: 'Step 2: Fees & dates' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Step 3: Review & assign' })).toBeDisabled();
-    await selectStructure();
-    expect(screen.getByRole('button', { name: 'Step 3: Review & assign' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
-    await screen.findByText('Preview amount 12000');
-    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     fireEvent.click(screen.getByRole('button', { name: 'Include transport for one' }));
     mocks.preview.mockImplementation(() => ({
       unwrap: async () => ({ ...result('one', 12500), previewToken: 'changed-token' }),
     }));
-    fireEvent.click(screen.getByRole('button', { name: 'Step 1: Structure & policies' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Step 3: Review & assign' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await screen.findByText('Preview amount 12500');
     expect(mocks.preview).toHaveBeenCalledTimes(2);
     expect(mocks.preview).toHaveBeenLastCalledWith(
@@ -1522,24 +1473,23 @@ describe('assignment review and commit boundaries', () => {
     );
   });
 
-  it('validates changed policy overrides before direct review navigation', async () => {
+  it('validates changed policy overrides before generating another preview', async () => {
     mount(undefined, true);
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await screen.findByText('Preview amount 12000');
-    fireEvent.click(screen.getByRole('button', { name: 'Step 1: Structure & policies' }));
     fireEvent.change(screen.getByRole('combobox', { name: 'Collection policy' }), {
       target: { value: 'collection-version' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Step 3: Review & assign' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     expect(await screen.findByText('Enter a policy override reason.')).toBeVisible();
     expect(mocks.preview).toHaveBeenCalledTimes(1);
     expect(mocks.commit).not.toHaveBeenCalled();
   });
   it('submits the reviewed token and retains canonical completion', async () => {
     mount();
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await screen.findByText('Preview amount 12000');
     fireEvent.click(screen.getByRole('button', { name: 'Assign fees' }));
     await screen.findByText('Committed amount 12000');
@@ -1551,7 +1501,7 @@ describe('assignment review and commit boundaries', () => {
         selectedOptionalFeeHeadIds: [],
       })
     );
-    expect(screen.queryByRole('button', { name: 'Preview assignments' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Preview' })).not.toBeInTheDocument();
     await waitFor(() => expect(mocks.completed).toHaveBeenCalledOnce());
   });
   it('retries only failed students after an immutable partially successful bulk commit', async () => {
@@ -1581,15 +1531,15 @@ describe('assignment review and commit boundaries', () => {
       { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false },
       { studentId: 'two', studentName: 'Meera', isFeeStructureAssigned: false },
     ]);
-    await selectStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await screen.findByRole('button', { name: 'Assign fees (2)' });
     fireEvent.click(screen.getByRole('button', { name: 'Assign fees (2)' }));
     await screen.findByText('Committed amount 12000');
     expect(mocks.completed).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Review remaining students' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Include transport for two' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Preview' }));
     await waitFor(() =>
       expect(mocks.bulkPreview).toHaveBeenLastCalledWith({
         items: [
@@ -1603,11 +1553,11 @@ describe('assignment review and commit boundaries', () => {
     );
     expect(screen.queryByText('Failed')).not.toBeInTheDocument();
   });
-  it('requires a structure before advancing or requesting a preview', async () => {
+  it('requires a structure before requesting a preview', async () => {
     mount();
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument());
-    expect(screen.queryByRole('button', { name: 'Preview assignments' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Assign fees' })).toBeDisabled();
     expect(mocks.preview).not.toHaveBeenCalled();
   });
 

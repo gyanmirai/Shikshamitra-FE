@@ -5,10 +5,14 @@ import { it, vi, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { getExportableColumns } from 'src/components/customizabaleTable/utils';
 import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { TemplateIdentityAsset } from 'src/screens/setting/school-identity/components/template-identity-asset';
 
 import StudentICardBuilder from './student-icard-builder';
 import StudentICardTemplates from './student-icard-templates';
+import { createStudentICardTemplate } from './student-icard-design';
+import { StudentICardDesigner } from './components/student-icard-designer';
 
 const mocks = vi.hoisted(() => ({
   options: vi.fn(),
@@ -22,6 +26,9 @@ const mocks = vi.hoisted(() => ({
   delete: vi.fn(),
   toastError: vi.fn(),
   actions: vi.fn(),
+  exportTable: vi.fn(),
+  realCatalogueTable: false,
+  realBranding: false,
   templates: [] as unknown[],
   legacy: {} as unknown,
   state: {
@@ -48,6 +55,7 @@ vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/custom-stepper', () => ({ default: () => null }));
 vi.mock('src/components/student-feedback', () => ({
   StudentFeedback: ({ children }: any) => <div role="alert">{children}</div>,
+  StudentScopedFeedback: ({ children }: any) => <div role="alert">{children}</div>,
 }));
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ heading, action }: any) => (
@@ -71,9 +79,19 @@ vi.mock('src/components/adaptive-three-dots-actions', () => ({
     ));
   },
 }));
-vi.mock('src/screens/setting/school-identity/components/template-identity-asset', () => ({
-  TemplateIdentityAsset: () => null,
+vi.mock('src/redux/InstituteSetup/schoolIdentityApi', () => ({
+  useGetSchoolIdentityQuery: () => ({}),
+  useUploadSchoolIdentityAssetMutation: () => [vi.fn(), {}],
 }));
+vi.mock('src/screens/setting/school-identity/components/template-identity-asset', async (importOriginal) => {
+  const { TemplateIdentityAsset: OriginalTemplateIdentityAsset } = await importOriginal<
+    typeof import('src/screens/setting/school-identity/components/template-identity-asset')
+  >();
+  return {
+    TemplateIdentityAsset: (props: React.ComponentProps<typeof OriginalTemplateIdentityAsset>) =>
+      mocks.realBranding ? <OriginalTemplateIdentityAsset {...props} /> : null,
+  };
+});
 vi.mock('src/components/custom-select', () => ({
   default: ({ label, value, options, multiple, disabled, onChange }: any) => (
     <select
@@ -97,12 +115,30 @@ vi.mock('src/components/custom-select', () => ({
     </select>
   ),
 }));
-vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ data, columns, tableId }: any) => (
+vi.mock('src/components/customizabaleTable/table-export', () => ({
+  exportTable: mocks.exportTable,
+}));
+vi.mock('src/components/customizabaleTable', async (importOriginal) => {
+  const { default: CustomizableTable } = await importOriginal<
+    typeof import('src/components/customizabaleTable')
+  >();
+  return {
+    default: (props: React.ComponentProps<typeof CustomizableTable>) =>
+      mocks.realCatalogueTable && props.tableId === 'student-icard-templates' ? (
+        <CustomizableTable {...props} />
+      ) : (
+        <FixtureTable {...props} />
+      ),
+  };
+});
+function FixtureTable({ data, columns, tableId }: React.ComponentProps<
+  typeof import('src/components/customizabaleTable')['default']
+>) {
+  return (
     <section aria-label={tableId}>
-      {data.map((row: any) => (
-        <div key={row.studentId ?? row.id}>
-          {columns.map((column: any) => (
+      {data.map((row, index) => (
+        <div key={row.studentId ?? row.id ?? index}>
+          {columns.map((column) => (
             <span key={column.id}>
               {column.render ? column.render(row[column.id], row) : row[column.id]}
             </span>
@@ -110,8 +146,8 @@ vi.mock('src/components/customizabaleTable', () => ({
         </div>
       ))}
     </section>
-  ),
-}));
+  );
+}
 vi.mock('src/redux/student/records/student-records-api', () => ({
   useGetStudentRecordsDirectoryOptionsQuery: (input: unknown) => mocks.options(input),
   useGetStudentRecordsDirectoryQuery: (input: unknown, options: unknown) =>
@@ -195,6 +231,8 @@ const openStudents = async (expectRoster = true) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.realCatalogueTable = false;
+  mocks.realBranding = false;
   mocks.state.globalState.currentYear.id = 'year-1';
   mocks.state.auth.permissions = ['View', 'Add'].map((action) => ({
     name: `Students.Records.StudentICard.${action}`,
@@ -264,6 +302,93 @@ it('shows only the template catalogue even for staff who can also manage Records
   expect(
     screen.queryByRole('tablist', { name: 'Student Records settings tasks' })
   ).not.toBeInTheDocument();
+});
+
+it('opens the template preview from the shared table row and isolates edit and delete', async () => {
+  mocks.realCatalogueTable = true;
+  mocks.state.auth.permissions.push({
+    name: 'Students.Records.StudentICard.Delete',
+    isGranted: true,
+  });
+  render(wrap(<StudentICardTemplates />));
+  const row = screen.getByRole('row', { name: 'Preview Saved design' });
+  expect(row).toHaveAttribute('tabindex', '0');
+  expect(within(row).queryByRole('button', { name: /View|More actions/ })).not.toBeInTheDocument();
+  expect(within(row).getByRole('button', { name: 'Edit Saved design' })).toBeVisible();
+  expect(within(row).getByRole('button', { name: 'Delete Saved design' })).toBeVisible();
+
+  fireEvent.keyDown(row, { key: 'Enter' });
+  const preview = await screen.findByRole('dialog', { name: 'I-Card Preview' });
+  fireEvent.click(within(preview).getByRole('button', { name: 'close' }));
+  await waitFor(() => expect(preview).not.toBeInTheDocument());
+
+  fireEvent.click(within(row).getByRole('cell', { name: 'School' }));
+  const mousePreview = await screen.findByRole('dialog', { name: 'I-Card Preview' });
+  fireEvent.click(within(mousePreview).getByRole('button', { name: 'close' }));
+  await waitFor(() => expect(mousePreview).not.toBeInTheDocument());
+
+  fireEvent.click(within(row).getByRole('button', { name: 'Delete Saved design' }));
+  expect(screen.getByRole('dialog')).toBeVisible();
+  expect(screen.queryByRole('dialog', { name: 'I-Card Preview' })).not.toBeInTheDocument();
+});
+
+it.each(['Excel', 'PDF'] as const)(
+  'exports template columns in %s from the shared toolbar',
+  async (format) => {
+    mocks.realCatalogueTable = true;
+    render(wrap(<StudentICardTemplates />));
+    const columns = screen.getByRole('button', { name: 'Columns' });
+    const exportButton = screen.getByRole('button', { name: 'Export' });
+    expect(columns.compareDocumentPosition(exportButton)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    fireEvent.click(exportButton);
+    fireEvent.click(screen.getByRole('menuitem', { name: format }));
+    await waitFor(() => expect(mocks.exportTable).toHaveBeenCalledOnce());
+    const [exportRequest] = mocks.exportTable.mock.calls[0];
+    expect(exportRequest.format).toBe(format.toLowerCase());
+    expect(exportRequest.tableTitle).toBe('I-Card Templates');
+    expect(
+      getExportableColumns(exportRequest.columns, exportRequest.columnVisibility).map(
+        ({ id }) => id
+      )
+    ).toEqual(['name', 'schoolName', 'orientation', 'cardsPerPage']);
+  }
+);
+
+it('keeps School, Elements and Print usable without the three Student designer paragraphs', () => {
+  mocks.realBranding = true;
+  render(wrap(<StudentICardDesigner template={createStudentICardTemplate()} onChange={vi.fn()} />));
+  const school = screen.getByRole('tabpanel', { name: 'School' });
+  expect(within(school).getByRole('heading', { name: 'School Identity' })).toBeVisible();
+  expect(within(school).getByRole('heading', { name: 'School Logo' })).toBeVisible();
+  expect(
+    within(school).queryByText(/Inherited assets use School Identity/)
+  ).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('tab', { name: 'Layout' }));
+  expect(
+    within(screen.getByRole('tabpanel', { name: 'Layout' })).getByRole('heading', {
+      name: 'Card Layout',
+    })
+  ).toBeVisible();
+  fireEvent.click(screen.getByRole('tab', { name: 'Elements' }));
+  expect(screen.getByRole('tabpanel', { name: 'Elements' })).toBeVisible();
+  expect(
+    screen.queryByText(/Select an element on the card or in the layer list/)
+  ).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('tab', { name: 'Print' }));
+  expect(
+    within(screen.getByRole('tabpanel', { name: 'Print' })).getByRole('heading', {
+      name: 'Print Settings',
+    })
+  ).toBeVisible();
+  expect(screen.queryByText(/Print at actual size/)).not.toBeInTheDocument();
+});
+
+it('keeps the shared school identity asset inheritance explanation by default', () => {
+  mocks.realBranding = true;
+  render(wrap(<TemplateIdentityAsset kind="logo" onChange={vi.fn()} />));
+  expect(screen.getByText(/Inherited assets use School Identity/)).toBeVisible();
 });
 
 it('opens the template editor full-screen without reading students and guards unsaved changes', async () => {
@@ -836,7 +961,7 @@ it('does not let View-only staff create or edit templates', () => {
     (permission) => permission.name.endsWith('.View')
   );
   render(wrap(<StudentICardTemplates />));
-  expect(screen.getByRole('button', { name: 'View Saved design' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Preview Saved design' })).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Edit Saved design' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Create I-Card template' })).not.toBeInTheDocument();
 });

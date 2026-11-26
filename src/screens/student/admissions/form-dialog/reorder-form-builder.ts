@@ -2,16 +2,40 @@ import type { FormikProps } from 'formik';
 import type { Over, Active } from '@dnd-kit/core';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
+import { shikshaMitraToast } from 'src/components/toast';
+
 import { isLockedInquiryField } from './inquiry-default-fields';
+import { addressOrderMessage, getAddressOrderViolations } from './form-address-dependencies';
 
 export function reorderFormBuilder(
   { active, over }: { active: Pick<Active, 'id'>; over: Pick<Over, 'id'> | null },
   formik: Pick<FormikProps<CreateUpdateAdmissionForm>, 'values' | 'setFieldValue'>,
-  selectField: (sectionId: string, fieldId: string) => void
+  selectField: (sectionId: string, fieldId: string) => void,
+  getEffectiveForm: (form: CreateUpdateAdmissionForm) => CreateUpdateAdmissionForm = (form) => form
 ) {
   if (!over || active.id === over.id) return;
   const activeId = String(active.id);
   const overId = String(over.id);
+  const saveMove = (sections: CreateUpdateAdmissionForm['sections']) => {
+    const nextOrderViolations = getAddressOrderViolations(
+      getEffectiveForm({ ...formik.values, sections })
+    );
+    if (nextOrderViolations.length) {
+      const existingOrderViolations = getAddressOrderViolations(getEffectiveForm(formik.values));
+      const introducesViolation = nextOrderViolations.some(
+        ({ fieldId, dependencyId }) =>
+          !existingOrderViolations.some(
+            (issue) => issue.fieldId === fieldId && issue.dependencyId === dependencyId
+          )
+      );
+      if (introducesViolation) {
+        shikshaMitraToast.warning({ message: `Move canceled. ${addressOrderMessage}` });
+        return false;
+      }
+    }
+    formik.setFieldValue('sections', sections);
+    return true;
+  };
   if (activeId.startsWith('section:') && overId.startsWith('section:')) {
     const from = formik.values.sections.findIndex(
       (section) => `section:${section.id}` === activeId
@@ -21,10 +45,7 @@ export function reorderFormBuilder(
     const sections = [...formik.values.sections];
     const [moved] = sections.splice(from, 1);
     sections.splice(to, 0, moved);
-    formik.setFieldValue(
-      'sections',
-      sections.map((section, index) => ({ ...section, displayOrder: index }))
-    );
+    saveMove(sections.map((section, index) => ({ ...section, displayOrder: index })));
     return;
   }
   if (
@@ -73,6 +94,5 @@ export function reorderFormBuilder(
         : section.fields
     ).map((field, order) => ({ ...field, displayOrder: order })),
   }));
-  formik.setFieldValue('sections', sections);
-  selectField(formik.values.sections[targetIndex].id, moved.id);
+  if (saveMove(sections)) selectField(target.id, moved.id);
 }

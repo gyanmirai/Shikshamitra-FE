@@ -2,6 +2,7 @@ import type { AdmissionApplicationStatus } from 'src/redux/student/admissions/ad
 
 import { studentPaths } from 'src/constants/student-menu';
 
+import { ADMISSION_PAGE_SIZES } from '../admission-page-sizes';
 import { readQueueColumnFilters } from '../admission-queue-column-filters';
 
 export const PIPELINE_ACTIVE_STATUSES: AdmissionApplicationStatus[] = [0, 1, 4, 5, 6, 7, 8];
@@ -28,7 +29,7 @@ export function readAdmissionPipelineState(params: Params) {
     filters: readQueueColumnFilters(params.get('filters') ?? '', 'pipeline'),
     search: params.get('search') ?? '',
     page: Number.isSafeInteger(page) && page > 0 ? page - 1 : 0,
-    rowsPerPage: [10, 25, 100].includes(size) ? size : 25,
+    rowsPerPage: ADMISSION_PAGE_SIZES.includes(size) ? size : 25,
     myCases: false,
     assignedCounsellorId: undefined,
     currentStageCode: params.get('stage') || undefined,

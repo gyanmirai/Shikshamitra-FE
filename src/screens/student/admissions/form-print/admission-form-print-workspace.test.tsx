@@ -165,13 +165,10 @@ describe('Registration print workspace controls', () => {
     });
   });
 
-  it('opens layout settings on demand while keeping the existing preview mounted', () => {
+  it('opens layout settings by default while keeping the existing preview mounted', () => {
     render(<AdmissionFormPrintWorkspace form={form} onSettingsChange={vi.fn()} />);
     const preview = screen.getByTestId('pdf-preview');
     const settings = screen.getByRole('button', { name: 'Layout settings' });
-    expect(settings).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByRole('complementary', { name: 'Layout Settings' })).toBeNull();
-    fireEvent.click(settings);
     expect(settings).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('complementary', { name: 'Layout Settings' })).toBeVisible();
     const headingRow = screen.getByRole('heading', { name: 'Layout Settings' }).parentElement;
@@ -184,6 +181,7 @@ describe('Registration print workspace controls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
     expect(screen.getByText('Advanced print settings')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Close layout settings' }));
+    expect(settings).toHaveAttribute('aria-expanded', 'false');
     expect(settings).toHaveFocus();
     expect(screen.getByTestId('pdf-preview')).toBe(preview);
     fireEvent.click(settings);
@@ -227,8 +225,10 @@ describe('Registration print workspace controls', () => {
       ['FIELD_0', 'FIELD_1']
     );
     fireEvent.click(screen.getByRole('button', { name: 'Print' }));
-    fireEvent.click(screen.getByRole('button', { name: 'More print actions' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Download PDF' }));
+    const download = screen.getByRole('button', { name: 'Download PDF' });
+    expect(screen.queryByRole('button', { name: 'More print actions' })).not.toBeInTheDocument();
+    expect(download.parentElement?.parentElement?.lastElementChild).toContainElement(download);
+    fireEvent.click(download);
     expect(mocks.print).toHaveBeenCalledWith('blob:current');
     expect(mocks.download).toHaveBeenCalledWith('blob:current', 'Registration-filled');
     expect(onSettingsChange).not.toHaveBeenCalled();
@@ -315,12 +315,7 @@ describe('Registration print workspace controls', () => {
     expect(screen.getByTestId('pdf-preview')).toBe(preview);
     expect(screen.queryByText('Preparing printable form…')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Print' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'More print actions' }));
-    expect(screen.getByRole('menuitem', { name: 'Download PDF' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
-    fireEvent.keyDown(screen.getByRole('menu', { name: 'More print actions' }), { key: 'Escape' });
+    expect(screen.getByRole('button', { name: 'Download PDF' })).toBeDisabled();
     mocks.preview.mockReturnValue({
       previewUrl: 'blob:updated',
       url: 'blob:updated',
@@ -337,7 +332,6 @@ describe('Registration print workspace controls', () => {
     const onSettingsChange = vi.fn();
     const props = { form, onSettingsChange, settings: DEFAULT_ADMISSION_PRINT_SETTINGS };
     const { rerender } = render(<AdmissionFormPrintWorkspace {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Layout settings' }));
     const settingsButton = screen.getByRole('button', { name: 'Print settings' });
     settingsButton.focus();
     fireEvent.click(settingsButton);
@@ -375,7 +369,6 @@ describe('Registration print workspace controls', () => {
       error: false,
     });
     render(<AdmissionFormPrintWorkspace form={form} onSettingsChange={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Layout settings' }));
     fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit header' }));
     const logo = screen.getByRole('button', { name: 'Move school logo' });
@@ -395,7 +388,6 @@ describe('Registration print workspace controls', () => {
       onSettingsChange,
     };
     const { rerender } = render(<AdmissionFormPrintWorkspace {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Layout settings' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit header' }));
     expect(screen.queryByRole('button', { name: 'Move school logo' })).not.toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole('button', { name: 'Move form title' }), {

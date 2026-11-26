@@ -1,4 +1,5 @@
 import { it, expect, describe } from 'vitest';
+import { hasNavigationPermission } from 'src/utils/permissions';
 
 import studentModule, {
   studentPaths,
@@ -16,16 +17,24 @@ type NestedMenuItem = {
 };
 
 describe('student navigation', () => {
-  it('places House Management after Student List under existing Records visibility', () => {
+  it('places Birthday and House Management after Student List under existing Records visibility', () => {
     const items = Object.values(studentModule()).flatMap((sections) =>
       sections.flatMap((group) => group.items)
     );
     const records = items.find((item) => item.title === 'Student Records') as NestedMenuItem;
+    const birthday = records.children?.find((item) => item.title === 'Birthday');
     const house = records.children?.find((item) => item.title === 'House Management');
-    expect(records.children?.slice(0, 2).map((item) => item.title)).toEqual([
+    expect(records.children?.slice(0, 3).map((item) => item.title)).toEqual([
       'Student List',
+      'Birthday',
       'House Management',
     ]);
+    expect(birthday).toMatchObject({
+      path: '/student/records/birthdays',
+      permissionName: 'Students.Records.Birthdays.View',
+    });
+    expect(records.permissionName).toContain('Students.Records.Birthdays.View');
+    expect(records.permissionName).not.toContain('Students.Records.Birthdays.OfficeScope.View');
     expect(house).toMatchObject({
       path: '/student/records/houses',
       permissionName: 'Students.Records.HouseManagement.View',
@@ -67,6 +76,7 @@ describe('student navigation', () => {
     const records = items.find((item) => item.title === 'Student Records') as NestedMenuItem;
     expect(records.children?.map((item) => item.title)).toEqual([
       'Student List',
+      'Birthday',
       'House Management',
       'I-Card Assignment',
       'Certificates',
@@ -76,21 +86,44 @@ describe('student navigation', () => {
     expect(records.path).toBe('/student/profile');
     expect(records.children?.map((item) => item.path)).toEqual([
       '/student/profile',
+      '/student/records/birthdays',
       '/student/records/houses',
       '/student/student-i-card',
       '/student/certificates',
       '/student/reports',
-      '/student/records/settings/i-card-templates',
+      '/student/records/settings',
     ]);
-    expect(records.children?.find((item) => item.title === 'Settings')?.permissionName).toBe(
-      studentPermissions.records.studentICard
-    );
     expect(
       records.permissionChildren?.find((item) => item.title === 'Policy Settings')
     ).toMatchObject({
       permissionName: studentPermissions.records.setting,
     });
     expect(studentPermissions.records.root).not.toContain(studentPermissions.records.setting);
+  });
+
+  it('opens the Records Settings menu independently for template and house viewers', () => {
+    const items = Object.values(studentModule()).flatMap((sections) =>
+      sections.flatMap((group) => group.items)
+    );
+    const records = items.find((item) => item.title === 'Student Records') as NestedMenuItem;
+    const settings = records.children?.find((item) => item.title === 'Settings');
+    expect(settings?.children?.map(({ title, path }) => [title, path])).toEqual([
+      ['I-Card Templates', '/student/records/settings/i-card-templates'],
+      ['Create House', '/student/records/settings/create-house'],
+    ]);
+
+    const { studentICard, houseManagement, setting, settingsWorkspace } = studentPermissions.records;
+    const allowedChildren = (name: string) => {
+      const permissions = [{ name, isGranted: true }];
+      if (!hasNavigationPermission(permissions, settings?.permissionName)) return [];
+      return settings?.children
+        ?.filter((item) => hasNavigationPermission(permissions, item.permissionName))
+        .map((item) => item.title);
+    };
+    expect(allowedChildren(studentICard)).toEqual(['I-Card Templates']);
+    expect(allowedChildren(houseManagement)).toEqual(['Create House']);
+    expect(allowedChildren(setting)).toEqual([]);
+    expect(settingsWorkspace).toEqual(expect.arrayContaining([studentICard, houseManagement, setting]));
   });
   it('keeps Dashboard access separate from Dashboard visibility', () => {
     const sections = Object.values(studentModule());

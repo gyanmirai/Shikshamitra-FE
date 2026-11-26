@@ -72,6 +72,7 @@ describe('FormBuilderCanvas section deletion', () => {
 
     expect(within(steps).getByRole('button', { name: bankStepName })).toBeVisible();
 
+    await user.click(screen.getByRole('button', { name: 'More Actions For Bank Details Section' }));
     await user.click(screen.getByRole('button', { name: 'Delete Bank Details Section' }));
     expect(screen.getByText(/removes that step too/i)).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Delete section' }));
@@ -87,6 +88,7 @@ describe('FormBuilderCanvas section deletion', () => {
     const user = userEvent.setup();
     renderCanvas(true);
 
+    await user.click(screen.getByRole('button', { name: 'More Actions For Bank Details Section' }));
     await user.click(screen.getByRole('button', { name: 'Delete Bank Details Section' }));
     await user.click(screen.getByRole('button', { name: 'Delete section' }));
 
@@ -265,6 +267,9 @@ describe('combined Inquiry and Registration canvas', () => {
     expect(
       screen.queryByRole('button', { name: 'Delete Family questions section' })
     ).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', { name: 'More Actions For Student Details Section' })
+    );
     await user.click(screen.getByRole('button', { name: 'Edit Student Details Section' }));
     const heading = screen.getByRole('textbox', { name: 'Section Heading' });
     fireEvent.change(heading, { target: { value: 'Registration details' } });

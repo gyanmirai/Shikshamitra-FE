@@ -46,6 +46,7 @@ import {
 import {
   useGetManagedHousesQuery,
   useGetHouseStudentsQuery,
+  useGetHouseDivisionsQuery,
   useSetHouseLeaderMutation,
   useSetDivisionLeaderMutation,
   useCreateManagedHouseMutation,
@@ -60,17 +61,21 @@ import HouseFormDialog from './house-form-dialog';
 import HouseLogoAvatar from './house-logo-avatar';
 import HouseMembersDrawer from './house-members-drawer';
 import DivisionLeaderDialog from './division-leader-dialog';
+import HouseRowLeaderDialog from './house-row-leader-dialog';
 import HouseAssignmentDrawer from './house-assignment-drawer';
 import { recordsQueryUrl } from '../records/records-url-state';
 import StudentPhotoAvatar from '../components/student-photo-avatar';
 import { studentAcademicFilterRowSx } from '../student-academic-filter-layout';
 import { houseWorkspaceState, selectionForContext } from './house-management-model';
 
+import type { HouseWorkspace } from './house-management-model';
+
 type Session =
   | { kind: 'house'; house?: House }
   | { kind: 'members'; house: House }
+  | { kind: 'houseLeader'; student: HouseStudent & { houseId: string } }
   | { kind: 'divisionLeader'; student: HouseStudent & { divisionId: string } }
-  | { kind: 'assignment'; mode: 'assign' | 'remove'; ids: string[] }
+  | { kind: 'assignment'; mode: 'assign' | 'remove'; ids: string[]; scope?: 'division' }
   | { kind: 'delete'; house: House };
 
 function classDivisionLabel(standardName: string, divisionName?: string | null) {
@@ -116,7 +121,11 @@ function StudentLeaderIcon({
   );
 }
 
-export default function HouseManagement() {
+export default function HouseManagement({
+  workspace = 'operations',
+}: {
+  workspace?: HouseWorkspace;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const routeParams = useSearchParams();
@@ -124,7 +133,9 @@ export default function HouseManagement() {
   const [embeddedQuery, setEmbeddedQuery] = useState('');
   const params = embedded ? new URLSearchParams(embeddedQuery) : routeParams;
   const currentQuery = params.toString();
-  const state = houseWorkspaceState(new URLSearchParams(currentQuery));
+  const state = houseWorkspaceState(new URLSearchParams(currentQuery), workspace);
+  const isHouseTab = state.tab === 'houses';
+  const isAssignment = state.tab === 'assign';
   const academic = useStudentAcademicScope();
   const permissions = useSelector((store: RootState) => store.auth.permissions);
   const canManage = hasGrantedPermission(
@@ -151,7 +162,8 @@ export default function HouseManagement() {
   const standard = standards.find((item) => item.id === params.get('class'));
   const standardId = standard?.id ?? '';
   const divisions = standard?.divisions ?? [];
-  const divisionId = divisions.find((item) => item.id === params.get('division'))?.id ?? '';
+  const division = divisions.find((item) => item.id === params.get('division'));
+  const divisionId = division?.id ?? '';
   const houseId = params.get('house') ?? '';
   const unassignedOnly = params.get('assignment') === 'unassigned';
   const validScope = Boolean(medium);
@@ -165,7 +177,11 @@ export default function HouseManagement() {
     skipCount: state.page * state.pageSize,
     maxResultCount: state.pageSize,
   };
-  const houses = useGetManagedHousesQuery(input, { skip: !ready || state.tab !== 'houses' });
+  const houses = useGetManagedHousesQuery(input, { skip: !ready || !isHouseTab });
+  const assignmentDivision = useGetHouseDivisionsQuery(
+    { academicMediumId: mediumId, divisionId, maxResultCount: 1 },
+    { skip: !ready || !isAssignment || !canManage || !hasSelectedDivision }
+  );
   const students = useGetHouseStudentsQuery(
     {
       ...input,
@@ -174,9 +190,9 @@ export default function HouseManagement() {
       houseId: unassignedOnly ? undefined : houseId || undefined,
       unassignedOnly: unassignedOnly || undefined,
     },
-    { skip: !ready || state.tab !== 'divisions' }
+    { skip: !ready || isHouseTab }
   );
-  const query = state.tab === 'houses' ? houses : students;
+  const query = isHouseTab ? houses : students;
   const rows = ready ? (query.currentData?.items ?? []) : [];
   const mediumCanManage = houses.currentData?.canManage === true;
   const [createHouse] = useCreateManagedHouseMutation();
@@ -210,7 +226,7 @@ export default function HouseManagement() {
     ids: [],
   });
   const selected =
-    canManage && hasSelectedDivision && ready && !query.isError
+    canManage && isAssignment && hasSelectedDivision && ready && !query.isError
       ? selectionForContext(selection, context)
       : [];
   const currentSession = session?.context === context ? session.value : null;
@@ -274,7 +290,15 @@ export default function HouseManagement() {
     setSelection({ context, ids: [] });
   };
   const toggle = (ids: string[], checked: boolean) => {
-    if (!canManage || !hasSelectedDivision || !ready || query.isFetching || query.isError) return;
+    if (
+      !canManage ||
+      !isAssignment ||
+      !hasSelectedDivision ||
+      !ready ||
+      query.isFetching ||
+      query.isError
+    )
+      return;
     setSelection((previous) => {
       const next = new Set(selectionForContext(previous, context));
       ids.forEach((id) => {
@@ -318,6 +342,16 @@ export default function HouseManagement() {
     );
   const disabled = !ready || query.isFetching || query.isError;
   const membershipSelectionDisabled = disabled || !hasSelectedDivision;
+  const canAssignDivision =
+    !assignmentDivision.isFetching &&
+    !assignmentDivision.isError &&
+    assignmentDivision.currentData?.items.some((row) => row.id === divisionId && row.canManage) ===
+      true;
+  const divisionAssignmentHelp = assignmentDivision.isError
+    ? 'Division access could not be checked. Try again.'
+    : hasSelectedDivision && !canAssignDivision && !assignmentDivision.isFetching
+      ? 'Entire division assignment requires access to the full division.'
+      : '';
   const houseColumns: IColumn[] = [
     {
       id: 'name',
@@ -434,7 +468,7 @@ export default function HouseManagement() {
   ];
   const visibleStudents = students.currentData?.items ?? [];
   const studentColumns: IColumn[] = [
-    ...(canManage && hasSelectedDivision
+    ...(canManage && isAssignment && hasSelectedDivision
       ? [
           {
             id: 'selected',
@@ -585,7 +619,7 @@ export default function HouseManagement() {
         ),
     },
   ];
-  const divisionLeaderActions: IColumn = {
+  const leaderActions: IColumn = {
     id: 'actions',
     label: 'Actions',
     align: 'right',
@@ -597,33 +631,53 @@ export default function HouseManagement() {
     excludeFromExport: true,
     render: (_, data) => {
       const row = data as HouseStudent;
-      if (!row.divisionId) return '—';
-      const student = { ...row, divisionId: row.divisionId };
+      const houseStudent = row.houseId ? { ...row, houseId: row.houseId } : undefined;
+      const divisionStudent = row.divisionId ? { ...row, divisionId: row.divisionId } : undefined;
+      if (!houseStudent && !divisionStudent) return '—';
       return (
         <AdaptiveThreeDotsActions
-          directActionLimit={1}
+          directActionLimit={2}
           sx={{ justifyContent: 'flex-end' }}
           actions={[
-            {
-              id: 'leader',
-              label: row.isDivisionLeader ? 'Remove division leader' : 'Assign division leader',
-              ariaLabel: row.isDivisionLeader
-                ? `Remove ${row.studentName} as division leader`
-                : `Assign ${row.studentName} as division leader`,
-              icon: 'mdi:account-tie-hat-outline',
-              disabled,
-              onClick: () => open({ kind: 'divisionLeader', student }),
-            },
+            ...(houseStudent
+              ? [
+                  {
+                    id: 'house-leader',
+                    label: row.isHouseLeader ? 'Remove house leader' : 'Assign house leader',
+                    ariaLabel: row.isHouseLeader
+                      ? `Remove ${row.studentName} as house leader`
+                      : `Assign ${row.studentName} as house leader`,
+                    icon: 'mdi:crown-outline',
+                    disabled,
+                    onClick: () => open({ kind: 'houseLeader', student: houseStudent }),
+                  },
+                ]
+              : []),
+            ...(divisionStudent
+              ? [
+                  {
+                    id: 'division-leader',
+                    label: row.isDivisionLeader
+                      ? 'Remove division leader'
+                      : 'Assign division leader',
+                    ariaLabel: row.isDivisionLeader
+                      ? `Remove ${row.studentName} as division leader`
+                      : `Assign ${row.studentName} as division leader`,
+                    icon: 'mdi:account-tie-hat-outline',
+                    disabled,
+                    onClick: () => open({ kind: 'divisionLeader', student: divisionStudent }),
+                  },
+                ]
+              : []),
           ]}
         />
       );
     },
   };
-  const isHouseTab = state.tab === 'houses';
-  const tableTitle = isHouseTab ? 'Houses' : 'Assign Leaders';
+  const tableTitle = isHouseTab ? 'Houses' : isAssignment ? 'Assign House' : 'Assign Leaders';
   const columns = isHouseTab
     ? houseColumns
-    : [...studentColumns, ...(canManage ? [divisionLeaderActions] : [])];
+    : [...studentColumns, ...(canManage && !isAssignment ? [leaderActions] : [])];
   const mediumPrompt = mediums.length
     ? 'Select a medium to view records.'
     : 'No mediums are available for this board.';
@@ -649,16 +703,22 @@ export default function HouseManagement() {
       <CustomBreadcrumbs
         editorOpen={Boolean(currentSession)}
         busy={deleting.isLoading}
-        heading="House Management"
-        description="Manage medium-wise houses, cross-class membership, and separate House and Division leaders. Counts and leaders reflect your academic scope."
+        heading={isHouseTab ? 'Create House' : 'House Management'}
+        description={
+          isHouseTab
+            ? 'Create and manage houses for the selected medium.'
+            : 'Assign students to houses and manage House and Division leaders.'
+        }
         descriptionDisplay="tooltip"
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Student Records', href: studentPaths.records.root },
-          { name: 'House Management' },
+          ...(isHouseTab
+            ? [{ name: 'Settings' }, { name: 'Create House' }]
+            : [{ name: 'House Management' }]),
         ]}
         action={
-          canManage && state.tab === 'houses' ? (
+          canManage && isHouseTab ? (
             <Button
               size="small"
               variant="contained"
@@ -672,71 +732,73 @@ export default function HouseManagement() {
           ) : undefined
         }
       />
-      <Card
-        variant="outlined"
-        sx={{
-          borderRadius: 2,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          flexShrink: 0,
-        }}
-      >
-        <CustomTabs
-          value={state.tab}
-          variant="scrollable"
-          scrollButtons="auto"
-          guardUnsavedChanges={false}
-          onChange={
-            embedded
-              ? (_, tab: string) =>
-                  !currentSession &&
-                  update({ tab, search: undefined, sort: undefined, page: undefined })
-              : undefined
-          }
-          aria-label="House management sections"
-          sx={{ bgcolor: 'transparent' }}
-          slotProps={{ scroller: { px: 0.75, py: 0.5 }, tab: { px: 1.25 } }}
+      {!isHouseTab && (
+        <Card
+          variant="outlined"
+          sx={{
+            borderRadius: 2,
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+            flexShrink: 0,
+          }}
         >
-          <Tab
-            value="houses"
-            component={embedded ? 'button' : RouterLink}
-            href={
+          <CustomTabs
+            value={state.tab}
+            variant="scrollable"
+            scrollButtons="auto"
+            guardUnsavedChanges={false}
+            onChange={
               embedded
-                ? undefined
-                : recordsQueryUrl(pathname, currentQuery, {
-                    tab: 'houses',
-                    search: undefined,
-                    sort: undefined,
-                    page: undefined,
-                  })
+                ? (_, tab: string) =>
+                    !currentSession &&
+                    update({ tab, search: undefined, sort: undefined, page: undefined })
+                : undefined
             }
-            id="house-management-tab-houses"
-            aria-controls="house-management-panel"
-            label="Houses"
-            icon={<Iconify icon={GlobalIcons.building} />}
-            iconPosition="start"
-          />
-          <Tab
-            value="divisions"
-            component={embedded ? 'button' : RouterLink}
-            href={
-              embedded
-                ? undefined
-                : recordsQueryUrl(pathname, currentQuery, {
-                    tab: 'divisions',
-                    search: undefined,
-                    sort: undefined,
-                    page: undefined,
-                  })
-            }
-            id="house-management-tab-divisions"
-            aria-controls="house-management-panel"
-            label="Assign Leaders"
-            icon={<Iconify icon="mdi:account-switch-outline" />}
-            iconPosition="start"
-          />
-        </CustomTabs>
-      </Card>
+            aria-label="House management sections"
+            sx={{ bgcolor: 'transparent' }}
+            slotProps={{ scroller: { px: 0.75, py: 0.5 }, tab: { px: 1.25 } }}
+          >
+            <Tab
+              value="assign"
+              component={embedded ? 'button' : RouterLink}
+              href={
+                embedded
+                  ? undefined
+                  : recordsQueryUrl(pathname, currentQuery, {
+                      tab: 'assign',
+                      search: undefined,
+                      sort: undefined,
+                      page: undefined,
+                    })
+              }
+              id="house-management-tab-assign"
+              aria-controls="house-management-panel"
+              label="Assign House"
+              icon={<Iconify icon={GlobalIcons.building} />}
+              iconPosition="start"
+            />
+            <Tab
+              value="divisions"
+              component={embedded ? 'button' : RouterLink}
+              href={
+                embedded
+                  ? undefined
+                  : recordsQueryUrl(pathname, currentQuery, {
+                      tab: 'divisions',
+                      search: undefined,
+                      sort: undefined,
+                      page: undefined,
+                    })
+              }
+              id="house-management-tab-divisions"
+              aria-controls="house-management-panel"
+              label="Assign Leaders"
+              icon={<Iconify icon="mdi:account-switch-outline" />}
+              iconPosition="start"
+            />
+          </CustomTabs>
+        </Card>
+      )}
       <Card
         variant="outlined"
         sx={{
@@ -1022,7 +1084,7 @@ export default function HouseManagement() {
           </Stack>
         </CustomPopover>
       )}
-      {canManage && !isHouseTab && (
+      {canManage && isAssignment && (
         <Card
           variant="outlined"
           sx={{
@@ -1036,7 +1098,7 @@ export default function HouseManagement() {
         >
           <Stack
             role="toolbar"
-            aria-label="Selected students"
+            aria-label="House membership actions"
             direction="row"
             gap={0.5}
             flexWrap="wrap"
@@ -1067,22 +1129,35 @@ export default function HouseManagement() {
             >
               Remove from house
             </Button>
-            {selected.length > 0 && (
-              <Button
-                size="small"
-                color="inherit"
-                onClick={() => setSelection({ context, ids: [] })}
-              >
-                Clear selection
+            <CustomTooltip title={divisionAssignmentHelp}>
+              <span>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="inherit"
+                  loading={assignmentDivision.isFetching}
+                  disabled={membershipSelectionDisabled || !canAssignDivision}
+                  startIcon={<Iconify icon="mdi:account-group-outline" />}
+                  onClick={() =>
+                    open({ kind: 'assignment', mode: 'assign', scope: 'division', ids: [] })
+                  }
+                >
+                  Assign entire division
+                </Button>
+              </span>
+            </CustomTooltip>
+            {assignmentDivision.isError && (
+              <Button size="small" color="inherit" onClick={() => assignmentDivision.refetch()}>
+                Retry division access
               </Button>
             )}
           </Stack>
         </Card>
       )}
       <Box
-        role="tabpanel"
-        id="house-management-panel"
-        aria-labelledby={`house-management-tab-${state.tab}`}
+        role={isHouseTab ? undefined : 'tabpanel'}
+        id={isHouseTab ? undefined : 'house-management-panel'}
+        aria-labelledby={isHouseTab ? undefined : `house-management-tab-${state.tab}`}
         sx={{
           flex: 1,
           // Mobile filters scroll with the page while the roster retains usable space.
@@ -1094,7 +1169,7 @@ export default function HouseManagement() {
         }}
       >
         <CustomizableTable
-          tableId={`student-house-management-${isHouseTab ? 'houses' : 'students'}`}
+          tableId={`student-house-management-${isHouseTab ? 'houses' : isAssignment ? 'assignment' : 'students'}`}
           tableTitle={tableTitle}
           showColumns
           showFullScreen
@@ -1252,13 +1327,27 @@ export default function HouseManagement() {
           }}
         />
       )}
+      {currentSession?.kind === 'houseLeader' && canManage && ready && (
+        <HouseRowLeaderDialog
+          key={`${context}:${currentSession.student.enrollmentId}`}
+          academicMediumId={mediumId}
+          student={currentSession.student}
+          onClose={() => setSession(null)}
+          onSave={async (values) => {
+            await setHouseLeader(values).unwrap();
+            success('House leader updated.');
+          }}
+        />
+      )}
       {currentSession?.kind === 'assignment' && canManage && hasSelectedDivision && (
         <HouseAssignmentDrawer
           key={context}
           academicMediumId={mediumId}
           divisionId={divisionId}
+          divisionLabel={standard ? classDivisionLabel(standard.name, division?.name) : undefined}
           enrollmentIds={currentSession.ids}
           initialMode={currentSession.mode}
+          scope={currentSession.scope}
           onClose={() => setSession(null)}
           onPreview={(values) => previewAssignment(values).unwrap()}
           onCommit={async (values) => {

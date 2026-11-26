@@ -8,6 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import { Stack, Tooltip, IconButton } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { ADMISSION_PAGE_SIZES } from '../admission-page-sizes';
 import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { assessmentDateTimeTimestamp, normalizeAssessmentDateTime } from './assessment-date-time';
 
@@ -138,6 +139,7 @@ export function AssessmentSessionTable({
       errorContent={errorContent}
       isSearch
       isPagination
+      rowsPerPageOptions={ADMISSION_PAGE_SIZES}
       wrapperProps={{ sx: { height: 1 } }}
       tableContainerProps={{ sx: { height: 1 } }}
       noDataText="No Sessions for This Offering and Stage. Create a Session to Start Staff Bookings."

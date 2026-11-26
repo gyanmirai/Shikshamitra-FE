@@ -1,12 +1,14 @@
 import type { AdmissionFeeCollectionSummary } from 'src/redux/student/admissions/admission-fee-collection-types';
 
+import { createRef } from 'react';
 import { it, vi, expect, beforeEach } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionFeeCollectionPanel from './admission-fee-collection-panel';
 import { ADMISSION_FEE_COLLECTION_PERMISSIONS } from './admission-fee-collection-permissions';
@@ -520,7 +522,7 @@ it('requires a joining date before collecting fees and keeps deferral available'
   });
 
   const collect = screen.getByRole('button', { name: 'Collect Fees' });
-  expect(screen.getByText('Required before collecting fees.')).toBeVisible();
+  expect(screen.getByText('Used to calculate fees and any proration.')).toBeVisible();
   expect(collect).toBeDisabled();
   const day = screen.getByRole('spinbutton', { name: 'Day' });
   const month = screen.getByRole('spinbutton', { name: 'Month' });
@@ -534,40 +536,43 @@ it('requires a joining date before collecting fees and keeps deferral available'
   expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
 });
 
-it('explains full fees and hides policy choices before the school start date', async () => {
-  const current = enablePolicySelection();
-  mocks.joiningDate.mockReturnValue({
-    currentData: { ...current, joiningDate: '2026-05-31', academicYearStartDate: '2026-06-01' },
-    isFetching: false,
-    isError: false,
-    refetch: mocks.refetch,
-  });
-  mocks.previewDate.mockReturnValue({
-    currentData: {
-      joiningDate: '2026-05-31',
-      totalAmount: 10000,
-      scheduledAmount: 10000,
-      reductionAmount: 0,
-      proration: null,
-      prorationPolicy: null,
-      warnings: [],
-    },
-    isFetching: false,
-    isError: false,
-  });
+it.each(['2026-05-31', '2026-06-01'])(
+  'explains full fees and hides policy choices for joining date %s',
+  async (joiningDate) => {
+    const current = enablePolicySelection();
+    mocks.joiningDate.mockReturnValue({
+      currentData: { ...current, joiningDate, academicYearStartDate: '2026-06-01' },
+      isFetching: false,
+      isError: false,
+      refetch: mocks.refetch,
+    });
+    mocks.previewDate.mockReturnValue({
+      currentData: {
+        joiningDate,
+        totalAmount: 10000,
+        scheduledAmount: 10000,
+        reductionAmount: 0,
+        proration: null,
+        prorationPolicy: null,
+        warnings: [],
+      },
+      isFetching: false,
+      isError: false,
+    });
 
-  renderPanel();
+    renderPanel();
 
-  expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
-  expect(
-    await screen.findByText(
-      'Full fees apply because the joining date is before the school start date.'
-    )
-  ).toBeVisible();
-  expect(
-    screen.queryByText(/No active default proration policy is configured/)
-  ).not.toBeInTheDocument();
-});
+    expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        'Full fees apply because the joining date is on or before the school start date.'
+      )
+    ).toBeVisible();
+    expect(
+      screen.queryByText(/No active default proration policy is configured/)
+    ).not.toBeInTheDocument();
+  }
+);
 
 it('places joining-date information beside the label and leaves only the calendar in the input', () => {
   editableDate();
@@ -583,6 +588,149 @@ it('places joining-date information beside the label and leaves only the calenda
   expect(screen.getByText('Actual Joining Date').parentElement).toContainElement(infoButton);
   expect(dateField).not.toContainElement(infoButton);
   expect(dateField).toContainElement(calendarButton);
+});
+
+it('shows the read-only reason beside the joining date without repeating the registration blocker', () => {
+  const current = editableDate();
+  const lockReason = 'Joining date changes are unavailable at this stage.';
+  mocks.joiningDate.mockReturnValue({
+    ...mocks.joiningDate.mock.results.at(-1)?.value,
+    currentData: { ...current, joiningDate: null, canEdit: false, canPreview: false, lockReason },
+  });
+  renderPanel({ stretch: true });
+
+  const details = screen.getByRole('region', { name: 'Payment Details' });
+  const field = within(details).getByRole('group', { name: 'Actual Joining Date' });
+  expect(within(field).getByRole('spinbutton', { name: 'Day' })).toHaveAttribute(
+    'aria-readonly',
+    'true'
+  );
+  expect(field).toHaveAccessibleDescription(expect.stringContaining(lockReason));
+  expect(
+    screen.queryByText(
+      'Complete the actual joining date in the registration form before preparing fees.'
+    )
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeDisabled();
+});
+
+it('keeps the date picker available with a fee calculation explanation in Payment', () => {
+  editableDate();
+  renderPanel({ stretch: true });
+
+  const details = screen.getByRole('region', { name: 'Payment Details' });
+  expect(within(details).getByRole('button', { name: /choose date/i })).toBeEnabled();
+  expect(within(details).getByText('Used to calculate fees and any proration.')).toBeVisible();
+});
+
+it('lets staff jump to a month before choosing the joining day', async () => {
+  const current = editableDate();
+  mocks.joiningDate.mockReturnValue({
+    currentData: { ...current, canPreview: false },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  renderPanel({ stretch: true, autoSaveEarlyDate: true });
+
+  fireEvent.click(screen.getByRole('button', { name: /choose date/i }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Choose month' }));
+  fireEvent.click(await screen.findByRole('radio', { name: 'July' }));
+  expect(await screen.findByRole('grid', { name: 'July 2026' })).toBeVisible();
+  expect(mocks.saveDate).not.toHaveBeenCalled();
+});
+
+it('auto-saves an explicitly picked early date without saving the default or collecting fees', async () => {
+  const current = editableDate();
+  mocks.joiningDate.mockReturnValue({
+    currentData: {
+      ...current,
+      joiningDate: null,
+      canPreview: false,
+      academicYearEndDate: '2099-05-31',
+    },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  mocks.summary.mockReturnValue({
+    currentData: { ...summary, canCollect: true },
+    isFetching: false,
+    isError: false,
+  });
+  mocks.saveDateUnwrap.mockImplementationOnce(async () => ({
+    ...current,
+    joiningDate: mocks.saveDate.mock.calls.at(-1)?.[0].joiningDate,
+  }));
+  renderPanel({ stretch: true, defaultJoiningDateToToday: true, autoSaveEarlyDate: true });
+
+  expect(screen.queryByRole('button', { name: 'Save Joining Date' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeDisabled();
+  expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
+  expect(mocks.saveDate).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: /choose date/i }));
+  fireEvent.click(await screen.findByRole('gridcell', { name: '15' }));
+  await waitFor(() => expect(mocks.saveDate).toHaveBeenCalledOnce());
+  expect(mocks.saveDate.mock.lastCall?.[0].joiningDate).toMatch(/-15$/);
+  expect(mocks.prepare).not.toHaveBeenCalled();
+});
+
+it('saves only an edited date before Onboarding deferral', async () => {
+  const current = editableDate();
+  const saveBeforeDeferral = createRef<() => Promise<void>>();
+  mocks.joiningDate.mockReturnValue({
+    currentData: { ...current, joiningDate: null, academicYearEndDate: '2099-05-31' },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  mocks.saveDateUnwrap.mockImplementationOnce(async () => ({
+    ...current,
+    joiningDate: mocks.saveDate.mock.calls.at(-1)?.[0].joiningDate,
+  }));
+  renderPanel({
+    stretch: true,
+    defaultJoiningDateToToday: true,
+    saveJoiningDateBeforeDeferralRef: saveBeforeDeferral,
+  });
+  await act(async () => saveBeforeDeferral.current!());
+  expect(mocks.saveDate).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('button', { name: /choose date/i }));
+  fireEvent.click(await screen.findByRole('gridcell', { name: '16' }));
+  if (screen.queryByRole('button', { name: 'OK' }))
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+  expect(mocks.saveDate).not.toHaveBeenCalled();
+  await act(async () => saveBeforeDeferral.current!());
+  expect(mocks.saveDate).toHaveBeenCalledOnce();
+  expect(mocks.saveDate.mock.lastCall?.[0].joiningDate).toMatch(/-16$/);
+  expect(mocks.prepare).not.toHaveBeenCalled();
+});
+
+it('auto-saves a keyboard-edited early date when focus leaves the date field', async () => {
+  const current = editableDate();
+  mocks.joiningDate.mockReturnValue({
+    currentData: { ...current, canPreview: false },
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  mocks.saveDateUnwrap.mockResolvedValueOnce({ joiningDate: '2026-06-03' });
+  renderPanel({ stretch: true, autoSaveEarlyDate: true });
+  const day = screen.getByRole('spinbutton', { name: 'Day' });
+  const month = screen.getByRole('spinbutton', { name: 'Month' });
+  fireEvent.focus(day);
+  fireEvent.keyDown(day, { key: 'ArrowUp' });
+  fireEvent.blur(day, { relatedTarget: month });
+  expect(mocks.saveDate).not.toHaveBeenCalled();
+
+  fireEvent.blur(month);
+  await waitFor(() =>
+    expect(mocks.saveDate).toHaveBeenCalledWith(
+      expect.objectContaining({ joiningDate: '2026-06-03' })
+    )
+  );
+  expect(mocks.prepare).not.toHaveBeenCalled();
 });
 
 it.each([false, true])(
@@ -675,6 +823,17 @@ it('shows the academic-year default when it applies no joining-date reduction', 
 });
 
 it('explains full-charge treatment when no academic-year default is configured', () => {
+  mocks.joiningDate.mockReturnValue({
+    currentData: {
+      joiningDate: '2026-06-02',
+      academicYearStartDate: '2026-06-01',
+      isLocked: true,
+      canEdit: false,
+      canPreview: false,
+    },
+    isFetching: false,
+    isError: false,
+  });
   mocks.summary.mockReturnValue({
     currentData: { ...summary, proration: null, prorationPolicy: null },
     isLoading: false,
@@ -833,6 +992,12 @@ it('confirms a Finance-verified zero fee structure without opening or creating a
 });
 
 it('keeps unknown balances distinct from zero and preserves collection prerequisites in the workspace', () => {
+  mocks.joiningDate.mockReturnValue({
+    currentData: { joiningDate: null, canEdit: false, canPreview: false },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+  });
   mocks.summary.mockReturnValue({
     currentData: {
       ...summary,
@@ -854,7 +1019,11 @@ it('keeps unknown balances distinct from zero and preserves collection prerequis
     stretch: true,
     footerAction: <button type="button">Collect later in Onboarding</button>,
   });
-  expect(screen.getAllByLabelText('Not Calculated')).toHaveLength(2);
+  expect(screen.getByRole('group', { name: 'Actual Joining Date' })).toBeVisible();
+  expect(screen.getAllByText('Not calculated')).toHaveLength(2);
+  expect(screen.getByRole('region', { name: 'Payment Details' })).toBeVisible();
+  expect(screen.getByRole('region', { name: 'Payment Summary' })).toBeVisible();
+  expect(screen.getByRole('region', { name: 'Payment History' })).toBeVisible();
   expect(screen.getByText('Confirmed payments').nextElementSibling).toHaveTextContent('₹0');
   expect(screen.getByRole('heading', { name: 'Fee Collection' })).toBeVisible();
   expect(screen.getByText('No payments recorded yet.')).toBeVisible();
@@ -864,6 +1033,33 @@ it('keeps unknown balances distinct from zero and preserves collection prerequis
   expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Collect later in Onboarding' })).toBeEnabled();
   expect(mocks.prepare).not.toHaveBeenCalled();
+});
+
+it('discloses Payment Summary and Payment History independently with the keyboard', async () => {
+  const user = userEvent.setup();
+  renderPanel({ stretch: true });
+
+  const summaryToggle = screen.getByRole('button', { name: 'Collapse Payment Summary' });
+  const historyToggle = screen.getByRole('button', { name: 'Collapse Payment History' });
+  expect(summaryToggle).toHaveAttribute('aria-expanded', 'true');
+  expect(historyToggle).toHaveAttribute('aria-expanded', 'true');
+
+  summaryToggle.focus();
+  await user.keyboard('{Enter}');
+  expect(summaryToggle).toHaveAccessibleName('Expand Payment Summary');
+  expect(summaryToggle).toHaveFocus();
+  await waitFor(() => expect(screen.getByText('Scheduled fees')).not.toBeVisible());
+  expect(screen.getByText('FEE-0001')).toBeVisible();
+
+  historyToggle.focus();
+  await user.keyboard(' ');
+  await waitFor(() => expect(screen.getByText('FEE-0001')).not.toBeVisible());
+  expect(screen.getByRole('group', { name: 'Actual Joining Date' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Collect Fees' })).toBeVisible();
+
+  await user.click(summaryToggle);
+  expect(screen.getByText('Scheduled fees')).toBeVisible();
+  expect(historyToggle).toHaveAttribute('aria-expanded', 'false');
 });
 
 it.each(['loading', 'error'])(

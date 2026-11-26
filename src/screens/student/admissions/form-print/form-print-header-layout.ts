@@ -89,7 +89,10 @@ export function getAdmissionPrintHeaderElements(
     if (!text.trim()) return;
     const lines = text.split('\n');
     const longest = Math.max(...lines.map((line) => Array.from(line).length));
-    const w = Math.min(availableWidth, Math.max(size * 4, (longest + 2) * size * 0.61));
+    const w =
+      key === 'address' && options.header.addressLayout === 'horizontal'
+        ? availableWidth
+        : Math.min(availableWidth, Math.max(size * 4, (longest + 2) * size * 0.61));
     const lineCount = lines.reduce(
       (count, line) => count + estimatePrintTextLines(line, w, size * 0.6),
       0

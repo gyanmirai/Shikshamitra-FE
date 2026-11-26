@@ -1,6 +1,6 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
-import { useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 
 import { CollectLaterDialog } from './collect-later-dialog';
 import AdmissionFeeSelectionPanel, {
@@ -39,6 +39,7 @@ export function ApplicationPaymentStage({
 }: Props) {
   const [collectionOpen, setCollectionOpen] = useState(false);
   const [deferring, setDeferring] = useState(false);
+  const saveJoiningDateBeforeDeferralRef = useRef<(() => Promise<void>) | null>(null);
   const feeEditorChanged = useCallback(
     (state: AdmissionFeeSelectionEditorState) => {
       onFeeSelectionStateChange?.({ ...state, busy: state.busy || collectionOpen });
@@ -69,6 +70,7 @@ export function ApplicationPaymentStage({
           canAdvance && !readOnly && onDeferCollection ? () => setDeferring(true) : undefined
         }
         onCollectionOpenChange={collectionChanged}
+        saveJoiningDateBeforeDeferralRef={saveJoiningDateBeforeDeferralRef}
         editorBlocked={feeEditor.blocked}
         onEditorStateChange={feeEditor.update}
         onReadinessChange={onReadinessChange}
@@ -77,6 +79,7 @@ export function ApplicationPaymentStage({
         <CollectLaterDialog
           busy={advancing}
           onClose={() => setDeferring(false)}
+          beforeSubmit={async () => saveJoiningDateBeforeDeferralRef.current?.()}
           onSubmit={onDeferCollection}
         />
       )}

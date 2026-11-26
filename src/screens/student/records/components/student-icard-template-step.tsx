@@ -92,96 +92,26 @@ export function StudentICardTemplateStep({ template, nameError, onNameBlur, onCh
 
   return (
     <Stack spacing={2}>
-      <Box
-        role="group"
-        aria-label="Card templates"
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
-          gridAutoRows: { sm: '1fr' },
-          gap: 1.25,
-        }}
-      >
-        {presets.map((preset) => {
-          const active = template.presetKey === preset.key;
-          return (
-            <ButtonBase
-              key={preset.key}
-              type="button"
-              aria-pressed={active}
-              onClick={() => selectPreset(preset)}
-              sx={{
-                gridColumn: preset.key === 'classic-identity' ? '1 / -1' : undefined,
-                justifyContent: 'flex-start',
-                gap: 1.25,
-                p: 1.5,
-                minHeight: 64,
-                textAlign: 'left',
-                border: 1,
-                borderRadius: 1,
-                borderColor: active ? 'primary.main' : 'divider',
-                bgcolor: active ? 'action.selected' : 'background.paper',
-                '&:hover': { bgcolor: active ? 'action.selected' : 'action.hover' },
-                '&.Mui-focusVisible': {
-                  outline: '2px solid',
-                  outlineColor: 'primary.main',
-                  outlineOffset: 2,
-                },
-              }}
-            >
-              <Box
-                component="span"
-                aria-hidden
-                sx={{
-                  width: 32,
-                  height: 22,
-                  borderRadius: 0.75,
-                  bgcolor: preset.color,
-                  flexShrink: 0,
-                }}
-              />
-              <Box component="span" sx={{ minWidth: 0, flex: 1 }}>
-                <Typography component="span" variant="subtitle2" display="block">
-                  {preset.label}
-                </Typography>
-                <Typography component="span" variant="caption" color="text.secondary">
-                  {preset.description}
-                </Typography>
-              </Box>
-              {active && (
-                <Iconify
-                  icon={GlobalIcons.approvedIcon}
-                  width={18}
-                  sx={{ color: 'primary.main' }}
-                  aria-hidden
-                />
-              )}
-            </ButtonBase>
-          );
-        })}
-      </Box>
       <FormSectionCard
-        title="Template Settings"
-        aria-label="Template Settings"
+        title="Template Details"
+        aria-label="Template Details"
         icon={GlobalIcons.academicFieldSettings}
+        descriptionTooltip="Use a name staff can recognize. Orientation controls the printed card direction."
       >
         <Stack spacing={2} alignItems="flex-start">
-          <ShakingTextField error={nameError} sx={{ width: 1, maxWidth: 480 }}>
+          <ShakingTextField error={nameError} sx={{ width: 1 }}>
             <TextField
               fullWidth
               size="small"
               required
+              name="templateName"
               label="Template name"
               value={template.name}
               slotProps={{ htmlInput: { maxLength: 150 } }}
               onChange={(event) => onChange({ name: event.target.value })}
               onBlur={onNameBlur}
               error={nameError}
-              helperText={
-                nameError
-                  ? 'Template name is required.'
-                  : 'Name this design so you can find and reuse it.'
-              }
+              helperText={nameError ? 'Template name is required.' : undefined}
             />
           </ShakingTextField>
           <Stack spacing={0.5} alignItems="flex-start">
@@ -220,6 +150,75 @@ export function StudentICardTemplateStep({ template, nameError, onNameBlur, onCh
             </ToggleButtonGroup>
           </Stack>
         </Stack>
+      </FormSectionCard>
+      <FormSectionCard
+        title="Choose a Base Template"
+        aria-label="Choose a Base Template"
+        icon={GlobalIcons.admissionDetails}
+        descriptionTooltip="Choose a starting design to customize in Designer."
+      >
+        <Box
+          role="group"
+          aria-label="Card templates"
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+            gridAutoRows: { sm: '1fr' },
+            gap: 1.5,
+          }}
+        >
+          {presets.map((preset) => {
+            const active = template.presetKey === preset.key;
+            return (
+              <ButtonBase
+                key={preset.key}
+                type="button"
+                aria-pressed={active}
+                onClick={() => selectPreset(preset)}
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: '32px minmax(0, 1fr) 18px',
+                  gap: 1,
+                  p: 1.5,
+                  minHeight: 72,
+                  textAlign: 'left',
+                  border: 1,
+                  borderRadius: 1,
+                  borderColor: active ? 'primary.main' : 'divider',
+                  bgcolor: active ? 'action.selected' : 'background.paper',
+                  '&:hover': { bgcolor: active ? 'action.selected' : 'action.hover' },
+                  '&.Mui-focusVisible': {
+                    outline: '2px solid',
+                    outlineColor: 'primary.main',
+                    outlineOffset: 2,
+                  },
+                }}
+              >
+                <Box
+                  component="span"
+                  aria-hidden
+                  sx={{ width: 32, height: 22, borderRadius: 0.75, bgcolor: preset.color }}
+                />
+                <Box component="span" sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+                  <Typography component="span" variant="subtitle2" display="block">
+                    {preset.label}
+                  </Typography>
+                  <Typography component="span" variant="caption" color="text.secondary">
+                    {preset.description}
+                  </Typography>
+                </Box>
+                {active && (
+                  <Iconify
+                    icon={GlobalIcons.approvedIcon}
+                    width={18}
+                    sx={{ color: 'primary.main' }}
+                    aria-hidden
+                  />
+                )}
+              </ButtonBase>
+            );
+          })}
+        </Box>
       </FormSectionCard>
     </Stack>
   );

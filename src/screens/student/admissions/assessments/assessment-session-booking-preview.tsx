@@ -6,6 +6,7 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Stack, Button, Checkbox, Typography } from '@mui/material';
 
+import { ADMISSION_PAGE_SIZES } from '../admission-page-sizes';
 import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
 import type {
@@ -197,7 +198,7 @@ export function AssessmentSessionBookingPreview({
           page={page}
           rowsPerPage={pageSize}
           defaultRowsPerPage={25}
-          rowsPerPageOptions={[25, 50, 100]}
+          rowsPerPageOptions={ADMISSION_PAGE_SIZES}
           onServerPagination={(nextPage, size) => onPage(Math.max(0, nextPage - 1), size)}
           onServerSearch={onSearch}
           showCheckbox={false}

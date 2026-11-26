@@ -240,13 +240,21 @@ export function FormPreviewContent({
       }}
     >
       <CardContent>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          {form.name} · v{form.version}
-        </Typography>
-        {supportedLanguages.length > 1 && (
-          <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
+        <Stack
+          component="header"
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          justifyContent="space-between"
+          spacing={1.5}
+          sx={{ minWidth: 0, mb: 2 }}
+        >
+          <Typography component="h2" variant="h6" sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+            {form.name} · v{form.version}
+          </Typography>
+          {supportedLanguages.length > 1 && (
             <CustomSelect
               size="small"
+              name="formLanguage"
               label="Form Language"
               disabled={readingPhoto}
               value={language}
@@ -255,10 +263,17 @@ export function FormPreviewContent({
                 label: getAdmissionLanguageLabel(code),
               }))}
               onChange={(value) => setLanguage(String(value))}
-              sx={{ width: { xs: 1, sm: 220 } }}
+              formControlProps={{
+                sx: {
+                  width: 1,
+                  maxWidth: 180,
+                  flexShrink: 0,
+                  alignSelf: { xs: 'flex-end', sm: 'center' },
+                },
+              }}
             />
-          </Stack>
-        )}
+          )}
+        </Stack>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="stretch">
           {isStepper && visibleSteps.length > 0 && (
             <Stack sx={{ width: { xs: 1, md: 220 }, flexShrink: 0, minWidth: 0 }}>

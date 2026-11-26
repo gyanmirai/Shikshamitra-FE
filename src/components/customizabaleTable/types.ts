@@ -137,8 +137,6 @@ export interface ICustomizableTableProps {
   isLoading?: boolean;
   /** Same-scope refresh: retain safe rows and show a labelled progress indicator. */
   isRefreshing?: boolean;
-  /** Opt-in content skeletons for refreshes; other consumers retain linear progress. */
-  refreshIndicator?: 'linear' | 'skeleton';
   isPagination?: boolean;
   isFilter?: boolean;
   isSearch?: boolean;

@@ -17,6 +17,9 @@ export function ElementInspector({
   onChange,
   onDelete,
   disabled,
+  borderStylesEnabled,
+  themeColor,
+  showEmptySelectionHint = true,
 }: {
   element?: IdentityCardElement;
   fields: IdentityCardFieldOption[];
@@ -24,13 +27,16 @@ export function ElementInspector({
   onChange: (element: IdentityCardElement) => void;
   onDelete: () => void;
   disabled?: boolean;
+  borderStylesEnabled?: boolean;
+  themeColor?: string;
+  showEmptySelectionHint?: boolean;
 }) {
   if (!element)
-    return (
+    return showEmptySelectionHint ? (
       <Typography variant="body2" color="text.secondary">
         Select an element on the card or in the layer list to edit its content and position.
       </Typography>
-    );
+    ) : null;
   const readOnly = disabled || element.locked;
   const textElement = element.type === 'text';
   return (
@@ -99,7 +105,13 @@ export function ElementInspector({
             />
           ))}
         </Box>
-        <ElementStyle element={element} onChange={onChange} disabled={readOnly} />
+        <ElementStyle
+          element={element}
+          onChange={onChange}
+          disabled={readOnly}
+          borderStylesEnabled={borderStylesEnabled}
+          themeColor={themeColor}
+        />
         <StudioAppearance element={element} onChange={onChange} disabled={readOnly} />
       </FormSectionCard>
       <Button

@@ -222,6 +222,8 @@ export default function AdmissionApplicationDetailScreen({
           isAdmissionDecisionStage(selectedStage) ||
           (!workspace.stageId && [6, 11].includes(application?.status ?? -1)))));
   const selectedCurrentStage = selectedStage?.id === currentStage?.id;
+  const paymentWorkspace =
+    !showDecisionReview && selectedStage?.stageType === 4 && !isFormStage(selectedStage);
   const stageDraftDirty = Boolean(
     stageReadiness?.stageId === selectedStage?.id && stageReadiness?.dirty
   );
@@ -997,7 +999,17 @@ export default function AdmissionApplicationDetailScreen({
               })
             }
           />
-          <Scrollbar fillContent sx={{ flex: '1 1 auto', minHeight: 0, minWidth: 0, width: 0 }}>
+          <Box
+            component={paymentWorkspace ? 'div' : Scrollbar}
+            {...(!paymentWorkspace && { fillContent: true })}
+            sx={{
+              flex: '1 1 auto',
+              minHeight: 0,
+              minWidth: 0,
+              width: 0,
+              ...(paymentWorkspace && { display: 'flex', flexDirection: 'column' }),
+            }}
+          >
             <Box sx={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
               {isLoading && (
                 <Stack spacing={1.5} role="status" aria-label="Loading Application Details">
@@ -1044,7 +1056,7 @@ export default function AdmissionApplicationDetailScreen({
                 >
                   <FormBusyRegion
                     fillContent
-                    flattenFieldset={showDecisionReview}
+                    flattenFieldset={showDecisionReview || paymentWorkspace}
                     busy={workspaceBusy}
                     showOverlay={panelBusy.validation}
                     label={
@@ -1059,8 +1071,12 @@ export default function AdmissionApplicationDetailScreen({
                       sx={{
                         flex: 1,
                         minWidth: 0,
-                        p: { xs: 1.5, sm: 2 },
-                        ...(isFormStage(selectedStage) && { pb: 0.5 }),
+                        ...(paymentWorkspace
+                          ? { px: { xs: 1.5, sm: 2 }, pt: { xs: 1.5, sm: 2 } }
+                          : {
+                              p: { xs: 1.5, sm: 2 },
+                              ...(isFormStage(selectedStage) && { pb: 0.5 }),
+                            }),
                         display: 'flex',
                         flexDirection: 'column',
                       }}
@@ -1071,7 +1087,7 @@ export default function AdmissionApplicationDetailScreen({
                 </Box>
               )}
             </Box>
-          </Scrollbar>
+          </Box>
         </Box>
         {showDecisionReview && (
           <Box

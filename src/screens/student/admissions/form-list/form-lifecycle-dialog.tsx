@@ -39,7 +39,7 @@ export function FormLifecycleDialog({
     <ConfirmDialog
       open={Boolean(pending)}
       onClose={onClose}
-      icon={restoring ? 'info' : 'warning'}
+      icon={restoring ? 'success' : 'warning'}
       title={`${outcome} ${inquiry ? 'Inquiry' : 'Registration'} Form?`}
       sx={
         restoring

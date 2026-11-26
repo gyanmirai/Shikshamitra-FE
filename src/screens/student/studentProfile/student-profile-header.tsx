@@ -13,10 +13,12 @@ export function StudentProfileHeader({
   student,
   compact = false,
   grNumberAction,
+  photoAction,
 }: {
   student: StudentRecordProfile;
   compact?: boolean;
   grNumberAction?: ReactNode;
+  photoAction?: ReactNode;
 }) {
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const board = currentYear?.boards?.find((item: Board) =>
@@ -87,6 +89,7 @@ export function StudentProfileHeader({
               {name}
             </Typography>
             <Label color={student.status === 6 ? 'success' : 'default'}>{status}</Label>
+            {photoAction}
           </Stack>
         </Stack>
         {[

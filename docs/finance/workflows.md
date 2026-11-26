@@ -34,6 +34,8 @@ one-time/full-charge treatment and authorized custom/service sources remain avai
 Bulk requests retain each student's own joining date, source reference and confirmed optional selections. Different confirmed
 structures require separate groups. Review displays saved proration evidence and current balances.
 
+New single and bulk assignments keep structure, policies, amounts and dates on one screen. Preview shows the server-calculated totals and evidence in the drawer. Assign Fees uses that preview from the same footer. Existing assignment corrections and policy edits keep their stepper.
+
 Preparation completion previews and commits through the existing client, then refreshes context and
 assignment/Admission/dues cache tags. It does not run another new-assignment wizard. The
 [backend workflow](../../../Shikshamitra-BE/docs/modules/finance/workflows.md#admission-to-finance-assignment)

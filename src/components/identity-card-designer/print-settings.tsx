@@ -17,6 +17,7 @@ export function PrintSettings({
   backSideEnabled,
   printPreviewOpen,
   onPrintPreviewToggle,
+  showConfigurationHints = true,
 }: IdentityCardDesignerProps & { printPreviewOpen: boolean; onPrintPreviewToggle: () => void }) {
   const update = <K extends keyof IdentityCardPrintSettings>(
     key: K,
@@ -143,10 +144,12 @@ export function PrintSettings({
           {error}
         </Alert>
       ))}
-      <Typography variant="caption" color="text.secondary">
-        Print at actual size / 100%. Check the finished dimensions and front/back alignment before
-        printing a batch.
-      </Typography>
+      {showConfigurationHints && (
+        <Typography variant="caption" color="text.secondary">
+          Print at actual size / 100%. Check the finished dimensions and front/back alignment before
+          printing a batch.
+        </Typography>
+      )}
     </FormSectionCard>
   );
 }

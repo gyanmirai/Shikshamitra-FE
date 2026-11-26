@@ -1,13 +1,21 @@
-import type { HouseAssignment } from 'src/redux/student/house-management/house-management-types';
+import type { SelectedHouseAssignment } from 'src/redux/student/house-management/house-management-types';
 
-export type HouseTab = 'houses' | 'divisions';
-export function houseWorkspaceState(params: URLSearchParams) {
+export type HouseTab = 'houses' | 'assign' | 'divisions';
+export type HouseWorkspace = 'operations' | 'catalogue';
+export function houseWorkspaceState(
+  params: URLSearchParams,
+  workspace: HouseWorkspace = 'operations'
+) {
   const requested = params.get('tab');
   const tab: HouseTab =
-    requested === 'students' || requested === 'divisions' ? 'divisions' : 'houses';
+    workspace === 'catalogue'
+      ? 'houses'
+      : requested === 'students' || requested === 'divisions'
+        ? 'divisions'
+        : 'assign';
   const page = Number(params.get('page') ?? 0);
   const pageSize = Number(params.get('pageSize') ?? 25);
-  const fields = tab === 'divisions' ? ['studentName', 'standardName', 'houseName'] : ['name'];
+  const fields = tab === 'houses' ? ['name'] : ['studentName', 'standardName', 'houseName'];
   const [field, direction] = (params.get('sort') ?? '').split(' ');
   return {
     tab,
@@ -31,7 +39,7 @@ export function assignmentInput(
   divisionId: string,
   houseId: string,
   ids: string[]
-): HouseAssignment {
+): SelectedHouseAssignment {
   if (!divisionId) throw new Error('Select a division to change house membership.');
   const enrollmentIds = [...new Set(ids)];
   if (!enrollmentIds.length) throw new Error('Select at least one student.');

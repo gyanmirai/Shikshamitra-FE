@@ -17,6 +17,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 
 import { FIELD_TYPES } from './form-dialog-model';
 import { parseFieldConfiguration } from './form-field-presets';
+import { getAdmissionBuilderFieldHint } from './builder-field-hints';
 import { FormBuilderUnitActions } from './components/form-builder-unit-actions';
 import { isLockedInquiryField, INQUIRY_FIELD_LOCK_HELP } from './inquiry-default-fields';
 
@@ -68,6 +69,7 @@ export function FormBuilderField({
   );
   const fieldType = FIELD_TYPES.find(([, value]) => value === field.fieldType)?.[0] ?? 'Field';
   const name = field.label || `Field ${fieldIndex + 1}`;
+  const fieldHelp = field.helpText || getAdmissionBuilderFieldHint(field.code);
   const compactFourColumnCard = formik.values.fieldsPerRow === 4;
   const sortable = useSortable({
     id: `field:${formik.values.sections[sectionIndex].id}:${field.id}`,
@@ -199,9 +201,9 @@ export function FormBuilderField({
                 />
               )}
             </Stack>
-            {!locked && (field.helpText || selected) && (
+            {!locked && (fieldHelp || selected) && (
               <Typography variant="caption" color={selected ? 'success.main' : 'text.secondary'}>
-                {field.helpText || `Selected · ${fieldType} field`}
+                {fieldHelp || `Selected · ${fieldType} field`}
               </Typography>
             )}
           </Stack>

@@ -3,6 +3,29 @@ import { it, expect } from 'vitest';
 import { buildAdmissionPrintDocument } from './form-print-model';
 import { getAdmissionPrintHeaderElements } from './form-print-header-layout';
 
+it('uses printable width for a horizontal address and leaves room for it above the title', () => {
+  const model = buildAdmissionPrintDocument({
+    definition: { name: 'Registration', sections: [] },
+    values: {},
+    mode: 'blank',
+    settings: { advanced: { header: { addressLayout: 'horizontal' } } },
+  });
+  const branding = {
+    addressLines: [
+      'Building 12\nEducation Campus',
+      '   ',
+      'A long school address that wraps when placed in the printable header '.repeat(4).trim(),
+    ],
+  };
+  const { elements } = getAdmissionPrintHeaderElements(model, branding);
+  const address = elements.find(({ key }) => key === 'address')!;
+  const title = elements.find(({ key }) => key === 'title')!;
+  expect(address.text).toMatch(/^Building 12, Education Campus, A long school address/);
+  expect(address.text).not.toMatch(/[\r\n]/);
+  expect(address.placement.width).toBe(100);
+  expect(address.placement.y + address.placement.height).toBeCloseTo(title.placement.y);
+});
+
 it('keeps movable header elements within the same printable frame', () => {
   const model = buildAdmissionPrintDocument({
     definition: { name: 'Registration', sections: [] },

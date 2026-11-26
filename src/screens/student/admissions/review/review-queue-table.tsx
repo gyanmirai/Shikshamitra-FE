@@ -11,6 +11,7 @@ import { studentPaths } from 'src/constants/student-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { reviewStatusLabels } from './review-model';
+import { ADMISSION_PAGE_SIZES } from '../admission-page-sizes';
 import { formatAdmissionReference } from '../admission-reference';
 import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
@@ -89,7 +90,7 @@ export function ReviewQueueTable({
       rowsPerPage={rowsPerPage}
       totalCount={totalCount}
       onServerPagination={(requestedPage, size) => onPage(requestedPage - 1, size)}
-      rowsPerPageOptions={[10, 20, 50]}
+      rowsPerPageOptions={ADMISSION_PAGE_SIZES}
       maxServerRowsPerPage={50}
       wrapperProps={{ sx: { height: 1 } }}
       tableContainerProps={{ sx: { height: 1 } }}

@@ -17,11 +17,12 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import { useRef, useState, useEffect } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
   useSensor,
   DndContext,
@@ -37,7 +38,6 @@ import { getSectionStepId } from './form-step-groups';
 import { reorderFormBuilder } from './reorder-form-builder';
 import { FormBuilderPalette } from './form-builder-palette';
 import { FormValidationPanel } from './form-validation-panel';
-import { AdmissionDialogTitle } from '../admission-dialog-title';
 import { FormBuilderProperties } from './form-builder-properties';
 import { useFormInheritance } from './hooks/use-form-inheritance';
 import { FormBuilderFieldDragPreview } from './form-builder-field';
@@ -72,9 +72,13 @@ const fieldDropAnimation = {
 export function FormBuilderSections({
   formik,
   footer,
+  publishIssueTarget,
+  onPublishIssueHandled,
 }: {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   footer?: ReactNode;
+  publishIssueTarget?: BuilderIssueTarget;
+  onPublishIssueHandled?: () => void;
 }) {
   const inheritance = useFormInheritance();
   const inheritedFields = getInheritedFields(
@@ -163,11 +167,11 @@ export function FormBuilderSections({
     setCanvasMode('design');
     setMobilePanel('form');
   };
-  const selectCanvasField = (sectionId: string, fieldId: string | null) => {
+  const selectCanvasField = useCallback((sectionId: string, fieldId: string | null) => {
     const selectedField = effectiveForm.sections
       .find((section) => section.id === sectionId)
       ?.fields.find((field) => field.id === fieldId);
-    selection.select(sectionId, fieldId);
+    selectSection(sectionId, fieldId);
     if (selectedField?.inheritedFrom) {
       inheritance?.selectField(selectedField);
       setSidePanel(null);
@@ -176,8 +180,8 @@ export function FormBuilderSections({
     inheritance?.selectField(null);
     if (fieldId) setSidePanel('settings');
     else setSidePanel(null);
-  };
-  const selectIssue = (target: BuilderIssueTarget) => {
+  }, [effectiveForm.sections, inheritance, selectSection]);
+  const selectIssue = useCallback((target: BuilderIssueTarget) => {
     setCanvasMode('design');
     setMobilePanel('form');
     let resolved = target;
@@ -233,7 +237,14 @@ export function FormBuilderSections({
       target: resolved,
       sequence: (previous?.sequence ?? 0) + 1,
     }));
-  };
+  }, [effectiveForm.sections, formik.values.sections, selectCanvasField]);
+  const handledPublishIssue = useRef<BuilderIssueTarget>(undefined);
+  useEffect(() => {
+    if (!publishIssueTarget || handledPublishIssue.current === publishIssueTarget) return;
+    handledPublishIssue.current = publishIssueTarget;
+    selectIssue(publishIssueTarget);
+    onPublishIssueHandled?.();
+  }, [publishIssueTarget, onPublishIssueHandled, selectIssue]);
   const { selectedSection } = selection;
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -259,13 +270,21 @@ export function FormBuilderSections({
         justifyContent="space-between"
         sx={{ px: 2, py: 1.5 }}
       >
-        <Typography id="admission-form-field-settings-title" variant="subtitle1">
-          <AdmissionDialogTitle
-            title="Field Settings"
-            helpLabel="About Field Settings"
-            helpText="Configure the Field, Answer Options, and Visibility. Changes Stay in This Draft Until You Save."
+        <Stack direction="row" spacing={0.75} alignItems="center">
+          <Typography id="admission-form-field-settings-title" variant="subtitle1">
+            Field Settings
+          </Typography>
+          <InfoTooltipIcon
+            label="About Field Settings"
+            keepSidePlacement
+            title={
+              <Box component="span" sx={{ display: 'block', maxWidth: '10rem' }}>
+                Configure the Field, Answer Options, and Visibility. Changes Stay in This Draft
+                Until You Save.
+              </Box>
+            }
           />
-        </Typography>
+        </Stack>
         <IconButton aria-label="Close Field Settings" onClick={() => setSidePanel(null)}>
           <Iconify icon="mdi:close" />
         </IconButton>
@@ -319,7 +338,14 @@ export function FormBuilderSections({
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={(event) => {
-        reorderFormBuilder(event, formik, selection.selectForReorder);
+        reorderFormBuilder(event, formik, selection.selectForReorder, (form) =>
+          getInheritanceBuilderValues(
+            form,
+            inheritance?.preview?.definition,
+            inheritance?.previewBaseSectionIds,
+            inheritance?.preview?.inquiryContextSections
+          )
+        );
         setActiveFieldDrag(null);
       }}
       onDragCancel={() => setActiveFieldDrag(null)}

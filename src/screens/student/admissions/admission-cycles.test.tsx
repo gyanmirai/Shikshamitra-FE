@@ -253,8 +253,7 @@ describe('Admission periods table states', () => {
     mocks.result.currentData = { items: [cycle], totalCount: 1 };
     renderScreen();
 
-    fireEvent.click(screen.getByRole('button', { name: 'More actions for Fresh Admission' }));
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Publish' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
     await waitFor(() =>
       expect(mocks.guardedProps?.validationError).toBe('Unable to check readiness.')
     );
@@ -314,25 +313,57 @@ describe('Admission periods table states', () => {
     expect(screen.getByRole('button', { name: /full.?screen/i })).toBeInTheDocument();
   });
 
-  it('keeps Publish in the draft period menu without Clone as Draft', async () => {
+  it('places Publish before the draft period menu and keeps Edit inside it', async () => {
     mocks.result.currentData = { items: [cycle], totalCount: 1 };
     renderScreen();
 
-    fireEvent.click(screen.getByRole('button', { name: 'More actions for Fresh Admission' }));
-    expect(await screen.findByRole('menuitem', { name: 'Publish' })).toBeVisible();
+    const publish = screen.getByRole('button', { name: 'Publish' });
+    const more = screen.getByRole('button', { name: 'More actions for Fresh Admission' });
+    expect(within(publish.closest('td')!).getAllByRole('button')).toEqual([publish, more]);
+    fireEvent.click(more);
+    expect(await screen.findByRole('menuitem', { name: 'Edit' })).toBeVisible();
+    expect(screen.queryByRole('menuitem', { name: 'Publish' })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Clone as Draft' })).not.toBeInTheDocument();
   });
 
-  it('shows the shared refresh skeleton while retaining records and headings', () => {
+  it('shows shared progress at the bottom while retaining records and headings', () => {
     mocks.result.currentData = { items: [cycle], totalCount: 1 };
     mocks.result.isFetching = true;
     renderScreen();
     expect(screen.getByText('Fresh Admission')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
-    const status = screen.getByRole('status', { name: 'Refreshing Admission Periods' });
-    expect(status).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByRole('table')).not.toContainElement(status);
-    expect(screen.queryByRole('progressbar', { name: 'Refreshing Admission Periods' })).toBeNull();
+    expect(screen.getByRole('progressbar', { name: 'Refreshing Admission Periods' })).toHaveStyle({
+      position: 'absolute',
+      bottom: '0px',
+    });
+    expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
+    expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
+  });
+
+  it('uses the shared outlined Columns reset and only the four standard page sizes', async () => {
+    mocks.result.currentData = { items: [cycle], totalCount: 36 };
+    renderScreen();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Columns' }));
+    const reset = screen.getByRole('button', { name: 'Reset' });
+    expect(reset).toHaveClass('MuiButton-outlined');
+    expect(reset).toHaveStyle({ alignSelf: 'flex-start' });
+    const search = screen.getByRole('textbox', { name: 'Search columns' });
+    fireEvent.change(search, { target: { value: 'Cycle' } });
+    fireEvent.click(reset);
+    expect(search).toHaveValue('');
+    fireEvent.keyDown(reset, { key: 'Escape' });
+
+    const sizes = screen.getByRole('combobox', { name: /Rows per page/i });
+    fireEvent.mouseDown(sizes);
+    expect((await screen.findAllByRole('option')).map((option) => option.textContent)).toEqual([
+      '10',
+      '25',
+      '50',
+      '100',
+    ]);
+    fireEvent.click(screen.getByRole('option', { name: '50' }));
+    expect(mocks.update).toHaveBeenCalledWith({ page: 0, rowsPerPage: 50 });
   });
 
   it('shows the successful first-use empty state only after loading completes', () => {
@@ -401,6 +432,7 @@ describe('Admission periods table states', () => {
 
     expect(screen.getByRole('button', { name: 'Add Cycle' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Numbering Settings' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /More Actions/ })).not.toBeInTheDocument();

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { IdCard } from 'src/redux/student/records/student-record-documents-api';
 import type {
@@ -10,18 +11,15 @@ import { useRouter } from 'next/navigation';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useRef, useState, useEffect } from 'react';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Box, Paper, Stack, Button, Checkbox, Typography } from '@mui/material';
-import {
-  downloadRecordPdf,
-  useGetRecordIdPhotoQuery,
-} from 'src/redux/student/records/student-record-documents-api';
+import { downloadRecordPdf } from 'src/redux/student/records/student-record-documents-api';
 import {
   isICardAssignmentConflict,
   useIssueAssignedICardsMutation,
@@ -30,8 +28,15 @@ import {
   useGetICardAssignmentRosterQuery,
 } from 'src/redux/student/records/student-icard-assignment-api';
 
-import { StudentCardPreview } from './components/student-card-preview';
-import StudentAssignmentDrawer from '../onboarding/student-setup/student-assignment-drawer';
+import StudentICardAssignmentPreview from './student-icard-assignment-preview';
+import { useStudentICardRosterExport } from './use-student-icard-roster-export';
+import { StudentICardRosterAvatar } from './components/student-icard-roster-avatar';
+import {
+  cardStatusLabel,
+  readRosterFilters,
+  rosterTableFilters,
+  serializeRosterFilters,
+} from './student-icard-roster-filters';
 
 const maxStudents = 100;
 export const rosterPageSizes = [10, 25, 50, 100];
@@ -41,16 +46,46 @@ export const rosterColumns: IColumn[] = [
     id: 'studentName',
     label: 'Student',
     rowHeader: true,
-    minWidth: 160,
+    minWidth: 210,
     isSort: false,
-    isFilter: false,
+    isFilter: true,
+    filterType: 'string',
+    filterOperators: ['contains', 'equals', 'startsWith', 'endsWith'],
+    render: (_value, data) => {
+      const { studentId, studentName, hasPhoto } = data as ICardAssignmentStudent;
+      return (
+        <Stack direction="row" spacing={1} alignItems="center">
+          <StudentICardRosterAvatar
+            studentId={studentId}
+            studentName={studentName}
+            hasPhoto={hasPhoto}
+          />
+          <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+            {studentName}
+          </Typography>
+        </Stack>
+      );
+    },
+  },
+  {
+    id: 'rollNumber',
+    label: 'Roll number',
+    minWidth: 110,
+    isSort: false,
+    isFilter: true,
+    filterType: 'number',
+    filterOperators: ['equals', 'greaterThan', 'lessThan', 'between'],
+    exportValue: (value) => (typeof value === 'number' ? value : null),
+    render: (value) => value ?? '—',
   },
   {
     id: 'grNumber',
     label: 'GR number',
     minWidth: 110,
     isSort: false,
-    isFilter: false,
+    isFilter: true,
+    filterType: 'string',
+    filterOperators: ['contains', 'equals', 'startsWith', 'endsWith'],
     render: (value) => value || '—',
   },
   {
@@ -62,13 +97,26 @@ export const rosterColumns: IColumn[] = [
     render: (value) => value || '—',
   },
   {
+    id: 'templateName',
+    label: 'I-Card template',
+    minWidth: 160,
+    isSort: false,
+    isFilter: false,
+  },
+  {
     id: 'hasValidIssuedCard',
     label: 'Card status',
     minWidth: 132,
     isSort: false,
-    isFilter: false,
+    isFilter: true,
+    filterType: 'enum',
+    enumOptions: [
+      { label: 'Issued', value: true },
+      { label: 'Pending', value: false },
+    ],
+    exportValue: cardStatusLabel,
     render: (value) => (
-      <Label color={value ? 'success' : 'default'}>{value ? 'Issued' : 'Pending'}</Label>
+      <Label color={value === true ? 'success' : 'default'}>{cardStatusLabel(value)}</Label>
     ),
   },
 ];
@@ -78,12 +126,15 @@ type Props = {
   assignment: ICardAssignmentClass;
   divisionId?: string;
   assignmentRefreshing: boolean;
+  ruleActions?: ReactNode;
   search: string;
+  columnFilters: string | null;
   page: number;
   pageSize: number;
   canIssue: boolean;
   canManageTemplate: boolean;
   onSearch: (value: string) => void;
+  onColumnFilters: (value: string | undefined) => void;
   onPageChange: (page: number, pageSize: number) => void;
   onClearFilters: () => void;
   onBusyChange: (busy: boolean) => void;
@@ -96,6 +147,7 @@ type CardReview = {
   cards: IdCard[];
   studentId: string;
   pendingIssue: string[] | null;
+  printError?: string;
 };
 
 export default function StudentICardAssignmentRoster({
@@ -104,12 +156,15 @@ export default function StudentICardAssignmentRoster({
   assignment,
   divisionId,
   assignmentRefreshing,
+  ruleActions,
   search,
+  columnFilters,
   page,
   pageSize,
   canIssue,
   canManageTemplate,
   onSearch,
+  onColumnFilters,
   onPageChange,
   onClearFilters,
   onBusyChange,
@@ -140,19 +195,32 @@ export default function StudentICardAssignmentRoster({
     blockNavigation: busy,
   });
 
+  const filters = useMemo(() => readRosterFilters(columnFilters), [columnFilters]);
+  const tableFilters = useMemo(() => rosterTableFilters(filters), [filters]);
+  const scope = { academicYearId, standardId, divisionId };
+  const tableTitle = `Students in ${standardName}`;
+  const displayTemplateName = templateName || 'Unassigned';
+  const exportRoster = useStudentICardRosterExport(scope, tableTitle, displayTemplateName);
   const roster = useGetICardAssignmentRosterQuery(
     {
-      academicYearId,
-      standardId,
-      divisionId,
+      ...scope,
       search: search || undefined,
+      columnFilters: filters.length ? filters : undefined,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
     },
     { refetchOnMountOrArgChange: true }
   );
 
-  const rows = roster.isError ? [] : (roster.currentData?.items ?? []);
+  const rosterData = roster.isError ? undefined : roster.currentData;
+  const rows = useMemo(
+    () =>
+      (rosterData?.items ?? []).map((student) => ({
+        ...student,
+        templateName: displayTemplateName,
+      })),
+    [rosterData, displayTemplateName]
+  );
   const selectedIds = Object.keys(selected);
   const canSelect = assigned || canManageTemplate;
   const isTableLoading = !roster.isError && (assignmentRefreshing || roster.isFetching);
@@ -170,9 +238,6 @@ export default function StudentICardAssignmentRoster({
   const existingCount = selectedIds.length - issueIds.length;
   const currentCard =
     review?.cards.find((card) => card.studentId === review.studentId) ?? review?.cards[0];
-  const photo = useGetRecordIdPhotoQuery(currentCard?.studentId ?? '', {
-    skip: !currentCard?.hasPhoto || !currentCard.templateSnapshot.showPhoto,
-  });
   const canProcess = assigned && selectionReady;
   const studentsOnPage = rows.filter((student) => selected[student.studentId]);
   const allOnPage = Boolean(rows.length && studentsOnPage.length === rows.length);
@@ -183,7 +248,7 @@ export default function StudentICardAssignmentRoster({
       ? { academicYearId, standardId, studentIds, concurrencyStamp, templateConcurrencyStamp }
       : undefined;
 
-  const handleFailure = (error: unknown, message: string) => {
+  const handleFailure = (error: unknown, message: string, operation?: 'print') => {
     if (isICardAssignmentConflict(error)) {
       setCardReview(null);
       setSelected({});
@@ -194,7 +259,18 @@ export default function StudentICardAssignmentRoster({
           'The class template, roster, or issued cards changed. Check the refreshed roster and select students again.',
       });
     } else {
-      shikshaMitraToast.error({ message });
+      const problem = parseApiProblemDetail(error);
+      if (problem.errorCode === 'ShikshaMitra:IdentityCard:InvalidConfiguration') {
+        if (operation === 'print') {
+          setCardReview((current) =>
+            current?.key === reviewKey ? { ...current, printError: problem.detail } : current
+          );
+        } else {
+          shikshaMitraToast.error({ message: problem.detail });
+        }
+      } else {
+        shikshaMitraToast.error({ message });
+      }
     }
   };
 
@@ -217,6 +293,7 @@ export default function StudentICardAssignmentRoster({
     const request = getRequest(selectedIds);
     if (!request || !canProcess || !canIssue || !currentCard || requestLock.current) return;
     requestLock.current = true;
+    setCardReview((current) => (current ? { ...current, printError: undefined } : current));
     try {
       const pdf = await exportCards({
         ...request,
@@ -227,7 +304,7 @@ export default function StudentICardAssignmentRoster({
       downloadRecordPdf(pdf, 'Student-I-Cards.pdf');
       shikshaMitraToast.success({ message: 'I-Card print sheet downloaded.' });
     } catch (error) {
-      handleFailure(error, 'The print sheet could not be downloaded. Please try again.');
+      handleFailure(error, 'The print sheet could not be downloaded. Please try again.', 'print');
     } finally {
       requestLock.current = false;
     }
@@ -341,7 +418,13 @@ export default function StudentICardAssignmentRoster({
             </Label>
           </Stack>
           {canSelect && (
-            <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+            <Stack
+              direction="row"
+              gap={1}
+              alignItems="center"
+              flexWrap="wrap"
+              justifyContent={{ sm: 'flex-end' }}
+            >
               <Typography
                 variant="body2"
                 color="text.secondary"
@@ -350,13 +433,7 @@ export default function StudentICardAssignmentRoster({
               >
                 {selectedIds.length} of {maxStudents} selected
               </Typography>
-              <Button
-                size="small"
-                disabled={busy || selectedIds.length === 0}
-                onClick={() => setSelected({})}
-              >
-                Clear selection
-              </Button>
+              {ruleActions}
               <Button
                 size="small"
                 variant="contained"
@@ -376,16 +453,21 @@ export default function StudentICardAssignmentRoster({
       <Box sx={{ flex: 1, minHeight: { xs: 360, sm: 0 }, minWidth: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="student-icard-assignment-roster"
-          tableTitle={`Students in ${standardName}`}
+          tableTitle={tableTitle}
           columns={columns}
           data={rows}
           isLoading={isTableLoading}
           serverSidePagination
           serverSideSearch
+          serverSideFilter
+          filters={tableFilters}
+          externalFiltersActive={Boolean(divisionId)}
+          onServerFilter={(nextFilters) => onColumnFilters(serializeRosterFilters(nextFilters))}
+          onClearCriteria={onClearFilters}
           page={page}
           rowsPerPage={pageSize}
           rowsPerPageOptions={rosterPageSizes}
-          totalCount={roster.isError ? 0 : (roster.currentData?.totalCount ?? 0)}
+          totalCount={rosterData?.totalCount ?? 0}
           searchTerm={search}
           paginationDisabled={busy}
           onServerSearch={(value) => {
@@ -393,12 +475,12 @@ export default function StudentICardAssignmentRoster({
           }}
           onServerPagination={(nextPage, nextSize) => onPageChange(nextPage - 1, nextSize)}
           searchFieldProps={{
-            placeholder: 'Search student or GR number',
+            placeholder: 'Search name, GR or roll number',
             disabled: busy,
             inputProps: { 'aria-label': 'Search class roster', maxLength: 150 },
           }}
           noDataText={
-            search || divisionId ? (
+            search || divisionId || filters.length > 0 ? (
               <Stack spacing={1} alignItems="center">
                 No eligible students match your filters.
                 <Button size="small" onClick={onClearFilters}>
@@ -425,7 +507,10 @@ export default function StudentICardAssignmentRoster({
             ) : undefined
           }
           showColumns
-          showExport={false}
+          showExport
+          exportScope="all"
+          onExport={exportRoster}
+          exportDisabled={busy || isTableLoading || !rosterData?.totalCount}
           showFullScreen
           wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
           tableContainerProps={{
@@ -436,85 +521,57 @@ export default function StudentICardAssignmentRoster({
         />
       </Box>
       {review && currentCard && (
-        <StudentAssignmentDrawer
-          title={`Preview I-Cards for ${standardName}`}
-          titleInfo="Review and print the selected cards, or issue numbered cards where needed."
+        <StudentICardAssignmentPreview
+          standardName={standardName}
           busy={busy}
+          printError={review.printError}
+          cards={review.cards}
+          currentCard={currentCard}
+          existingCount={existingCount}
+          getStudentName={(card) =>
+            card.studentSnapshot.StudentName ?? selected[card.studentId]?.studentName ?? 'Student'
+          }
+          onStudentChange={(studentId) => setCardReview({ ...review, studentId })}
           onClose={() => setCardReview(null)}
           actions={
-            <Stack
-              direction="row"
-              gap={1}
-              flexWrap="wrap"
-              justifyContent="flex-end"
-              sx={{ px: 2, py: 1.75 }}
-            >
-              <Button
-                size="small"
-                variant="outlined"
-                color="inherit"
-                startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                disabled={busy}
-                onClick={() => setCardReview(null)}
+            canIssue && (
+              <Stack
+                direction="row"
+                gap={1}
+                flexWrap="wrap"
+                alignItems="center"
+                justifyContent="flex-end"
+                sx={{ px: 2, py: 1.75 }}
               >
-                Close
-              </Button>
-              {canIssue && (
-                <>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="inherit"
-                    startIcon={<Iconify icon={GlobalIcons.download} />}
-                    loadingPosition="start"
-                    loading={exporting}
-                    disabled={!canProcess}
-                    onClick={downloadSheet}
-                  >
-                    Download print sheet
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="inherit"
-                    startIcon={<Iconify icon={GlobalIcons.assigned} />}
-                    disabled={!canProcess || !issueIds.length}
-                    onClick={() => setCardReview({ ...review, pendingIssue: issueIds })}
-                  >
-                    Issue cards
-                  </Button>
-                </>
-              )}
-            </Stack>
+                <Typography variant="caption" sx={{ color: 'text.secondary', mr: 'auto' }}>
+                  A4 · Actual size / 100%
+                </Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<Iconify icon={GlobalIcons.printer} />}
+                  loadingPosition="start"
+                  loading={exporting}
+                  disabled={!canProcess}
+                  onClick={downloadSheet}
+                >
+                  Print Sheet
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="inherit"
+                  startIcon={<Iconify icon={GlobalIcons.assigned} />}
+                  disabled={!canProcess || !issueIds.length}
+                  onClick={() => setCardReview({ ...review, pendingIssue: issueIds })}
+                >
+                  Issue cards
+                </Button>
+              </Stack>
+            )
           }
-        >
-          <Stack spacing={2} sx={{ maxWidth: 480, mx: 'auto', minWidth: 0 }}>
-            <CustomSelect
-              label="Student to preview"
-              value={currentCard.studentId}
-              options={review.cards.map((card) => ({
-                id: card.studentId,
-                name:
-                  card.studentSnapshot.StudentName ??
-                  selected[card.studentId]?.studentName ??
-                  'Student',
-              }))}
-              labelKey="name"
-              valueKey="id"
-              isSearch
-              disabled={busy}
-              onChange={(value) => setCardReview({ ...review, studentId: String(value) })}
-            />
-            <StudentCardPreview
-              template={currentCard.templateSnapshot}
-              card={currentCard}
-              photoUrl={photo.currentData?.imageData}
-            />
-            {existingCount > 0 && (
-              <Typography variant="body2">{existingCount} already issued</Typography>
-            )}
-          </Stack>
-        </StudentAssignmentDrawer>
+        />
       )}
       <ConfirmDialog
         open={Boolean(pendingIssue && canIssue)}
