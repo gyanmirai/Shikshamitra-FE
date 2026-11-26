@@ -17,14 +17,17 @@ test('opens saved and empty months without generating payroll', async ({ page })
   expect(starts).toHaveLength(0);
 });
 
-test('direct entry shows saved staff before detailed reads complete without calculating', async ({ page }) => {
+test('direct entry still shows saved staff when both register reads are slow', async ({ page }) => {
   const registerReads: boolean[] = [];
   const calculations: string[] = [];
   let releaseDetails!: () => void;
+  let releaseOpening!: () => void;
+  const openingGate = new Promise<void>((resolve) => { releaseOpening = resolve; });
   const detailsGate = new Promise<void>((resolve) => { releaseDetails = resolve; });
+  await page.clock.install();
   await page.route('**/api/payroll/run/register?*', async (route) => {
-    if (new URL(route.request().url()).searchParams.get('rowsOnly') !== 'true')
-      await detailsGate;
+    const opening = new URL(route.request().url()).searchParams.get('rowsOnly') === 'true';
+    await (opening ? openingGate : detailsGate);
     await route.continue();
   });
   page.on('request', (request) => {
@@ -40,11 +43,16 @@ test('direct entry shows saved staff before detailed reads complete without calc
   await page.goto('/hr/payroll/run-payroll?month=2026-09');
   const register = page.getByRole('region', { name: 'Payroll Register' });
   try {
+    await expect.poll(() => registerReads.length).toBe(2);
+    // Model a slow first visit without sleeping in the browser test.
+    await page.clock.fastForward(7000);
+    releaseOpening();
     await expect(register.getByText('Asha Rao')).toBeVisible();
     await expect(register.getByText('Showing saved staff rows. Loading payroll details…')).toBeVisible();
     await expect(register.getByRole('button', { name: 'View', exact: true })).toHaveCount(0);
     await expect(register.getByRole('checkbox', { name: 'Select payroll for Asha Rao' })).toHaveCount(0);
   } finally {
+    releaseOpening();
     releaseDetails();
   }
   await discovered;
@@ -71,11 +79,36 @@ test('full payroll is available while the first names request is still pending',
     await page.goto('/hr/payroll/run-payroll?month=2026-09');
     await openingRequested;
     const register = page.getByRole('region', { name: 'Payroll Register' });
-    // The opening read times out after six seconds. The full register must win before then.
+    // Leave the opening read blocked until the full register can be used.
     await expect(register.getByRole('button', { name: 'View', exact: true }).first())
       .toBeEnabled({ timeout: 4000 });
     await expect(register.getByText('Asha Rao')).toBeVisible();
     await expect(register.getByText('Showing saved staff rows. Loading payroll details…')).toHaveCount(0);
+  } finally {
+    releaseOpening();
+  }
+});
+
+test('the full register can recover while the first names request is still pending', async ({ page }) => {
+  let failDetails = true;
+  let releaseOpening!: () => void;
+  const openingGate = new Promise<void>((resolve) => { releaseOpening = resolve; });
+  await page.route('**/api/payroll/run/register?*', async (route) => {
+    if (new URL(route.request().url()).searchParams.get('rowsOnly') === 'true') await openingGate;
+    else if (failDetails) {
+      await route.fulfill({ status: 503, json: { message: 'Synthetic register outage' } });
+      return;
+    }
+    await route.continue();
+  });
+  try {
+    await page.goto('/hr/payroll/run-payroll?month=2026-09');
+    const reconnect = page.getByRole('button', { name: 'Reconnect', exact: true });
+    await expect(reconnect).toBeEnabled();
+    failDetails = false;
+    await reconnect.click();
+    await expect(page.getByRole('region', { name: 'Payroll Register' })
+      .getByRole('button', { name: 'View', exact: true }).first()).toBeEnabled({ timeout: 4000 });
   } finally {
     releaseOpening();
   }
