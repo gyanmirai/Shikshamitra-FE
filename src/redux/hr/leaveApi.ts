@@ -9,6 +9,13 @@ import { employeeType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
+const leaveAttendanceInvalidationTags = [
+  employeeType.employee,
+  employeeType.attendance,
+  employeeType.hrDashboard,
+  employeeType.runPayroll,
+];
+
 type LeaveRequestQueryArgs = {
   academicYearId?: string;
   'month-year'?: string;
@@ -289,7 +296,7 @@ export const leaveApi = api.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [employeeType.employee, employeeType.hrDashboard, employeeType.runPayroll],
+      invalidatesTags: (_result, error) => (error ? [] : leaveAttendanceInvalidationTags),
     }),
     createMyLeaveRequest: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -298,7 +305,7 @@ export const leaveApi = api.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [employeeType.employee, employeeType.hrDashboard, employeeType.runPayroll],
+      invalidatesTags: (_result, error) => (error ? [] : leaveAttendanceInvalidationTags),
     }),
     getLeaveRequestById: builder.query({
       query: ({ id }) => ({
@@ -319,7 +326,7 @@ export const leaveApi = api.injectEndpoints({
         url: `/leave-management/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [employeeType.employee, employeeType.hrDashboard, employeeType.runPayroll],
+      invalidatesTags: (_result, error) => (error ? [] : leaveAttendanceInvalidationTags),
     }),
     cancelMyLeaveRequest: builder.mutation({
       query: (id) => ({
@@ -334,7 +341,7 @@ export const leaveApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [employeeType.employee, employeeType.hrDashboard, employeeType.runPayroll],
+      invalidatesTags: (_result, error) => (error ? [] : leaveAttendanceInvalidationTags),
     }),
     rejectLeaveRequest: builder.mutation({
       query: ({ id, body }) => ({

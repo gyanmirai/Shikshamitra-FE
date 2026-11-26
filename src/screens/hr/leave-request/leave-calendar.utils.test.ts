@@ -7,8 +7,8 @@ import {
 
 describe('leave calendar utils', () => {
   it('builds offset-preserving calendar range payload', () => {
-    const start = new Date('2026-04-01T00:00:00-07:00');
-    const endExclusive = new Date('2026-05-01T00:00:00-07:00');
+    const start = new Date(2026, 3, 1);
+    const endExclusive = new Date(2026, 4, 1);
 
     const payload = buildCalendarVisibleRangePayload(start, endExclusive);
 
