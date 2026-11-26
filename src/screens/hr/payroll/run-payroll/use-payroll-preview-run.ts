@@ -62,7 +62,10 @@ export function usePayrollPreviewRun(month: string, academicYearId: string, useR
     { ...registerArgs, pageSize: Math.min(pageSize, 25) },
     { skip: !openWithRows }
   );
-  const waitingForOpeningRows = openWithRows && !openingRows.currentData && !openingRows.isError;
+  // Keep secondary reads out of the way while both register reads are pending.
+  // A failed full read must still allow status and recovery controls to load.
+  const waitingForOpeningRows =
+    openWithRows && !openingRows.currentData && !openingRows.isError && !cachedRegister.isError;
   const [searchInput, setSearchInput] = useState(search);
   const [display, setDisplay] = useState<{ key: string; data: PayrollPreviewPage } | null>(null);
   const [failure, setFailure] = useState<(PreviewFailure & { key: string }) | null>(null);

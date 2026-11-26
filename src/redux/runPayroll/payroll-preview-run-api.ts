@@ -100,7 +100,6 @@ export const payrollPreviewRunApi = employeeApi.injectEndpoints({
       query: (params) => ({
         url: '/payroll/run/register',
         params: { ...params, rowsOnly: true },
-        timeout: 6000,
       }),
       keepUnusedDataFor: 0,
     }),
