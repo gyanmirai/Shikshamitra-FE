@@ -54,7 +54,7 @@ The audience response's `primaryGuardianNotConfigured` flag drives the main-cont
 
 The submitted Teacher Diary drawer loads available follow-up recipients using the diary ID and the current school and account. Its action sends the selected staff reference through the same preview and confirmation client. See the [diary follow-up contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#teacher-diary-follow-up).
 
-`src/redux/communication/notification-self-api.ts` supplies the dashboard bell's unread count and the drawer's All and Unread pages. Separate requests record reading and acknowledgement. Queries use the current school and account, and changes invalidate only that account's inbox reads. Polling pauses while the page is unfocused.
+`src/redux/communication/notification-self-api.ts` supplies the dashboard bell's unread count and the drawer's All and Unread feeds. The drawer requests action priority, appends older pages with an infinite query, and groups loaded records by the browser's local date. Separate requests record reading and acknowledgement. Queries use the current school and account, and changes invalidate only that account's inbox reads. Polling pauses while the page is unfocused. [Inbox API](../../../Shikshamitra-BE/docs/modules/academic/api.md#personal-notification-inbox)
 
 ## Personal notification preferences
 

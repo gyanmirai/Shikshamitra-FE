@@ -186,7 +186,7 @@ Open **Delivery History** to find recent automatic and reviewed sends, then sele
 
 ## Read or acknowledge a notification
 
-Open the notification bell. **All** shows notifications for the signed-in account, and **Unread** shows messages without a read timestamp. **Mark as read** clears the unread indicator. **Acknowledge** records a separate acknowledgement. Open record follows the school's internal link when one is available.
+Open the notification bell. **All** shows notifications for the signed-in account, and **Unread** shows messages without a read timestamp. **Needs your attention** collects pending lesson plan revisions and notices that require acknowledgement. Other items appear by date. Select a title to expand the saved message and actions, or use **Load more** to append older items. **Mark as read** clears the unread indicator. **Acknowledge** records a separate acknowledgement. **Open record** follows the school's internal link when one is available.
 
 Academic report ready notices offer **Download report** in the inbox. This opens the same authenticated download used by the report workspace. Export ownership and expiry are checked for every download. If the file expired or is unavailable, the link opens the report status page. Select **Generate again** when available to rerun the saved export with your current access. Download from the status page or the same inbox link when the replacement is ready. [Academic report notification contract](../../../Shikshamitra-BE/docs/modules/academic/api.md#report-export-notifications)
 
@@ -197,11 +197,11 @@ Open the notification bell and choose **Notification preferences**. Pick a categ
 ## Enable notifications on a device
 
 Sign in to the school website on the device that should receive updates.
-Open the Notifications drawer and choose **Enable browser notifications**.
+Open the Notifications drawer, select **Notification preferences**, then choose **Enable browser notifications**.
 Grant browser permission when prompted.
 On a supported iPhone or iPad, open the website in Safari and use **Share → Add to Home Screen**. Turn on **Open as Web App** if shown, open the new icon, then enable notifications from the bell.
-If the bell reports an expired subscription, choose **Enable browser notifications again**.
-To remove the device, choose **Turn off browser notifications** in the same drawer.
+If preferences reports an expired subscription, choose **Enable browser notifications again**.
+To remove the device, choose **Turn off browser notifications** in the same dialog.
 Signing out removes the device association for that browser session.
 
 ## Review the current scope

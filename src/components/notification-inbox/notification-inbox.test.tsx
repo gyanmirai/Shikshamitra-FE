@@ -68,12 +68,51 @@ describe('signed-in notification inbox', () => {
     render(inbox(createStore(), originalOwner));
     await screen.findByRole('heading', { name: notice.title });
     expect(screen.queryByRole('link', { name: 'Open record' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Mathematics homework/ }));
     await user.click(screen.getByRole('button', { name: 'Mark as read' }));
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Mark as read' })).not.toBeInTheDocument());
     expect(screen.queryByText('Acknowledged')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Acknowledge' }));
     expect(await screen.findByText('Acknowledged')).toBeVisible();
     expect(commands).toEqual(['read', 'acknowledge']);
+  });
+
+  it('groups explicitly actionable items once and keeps browser links out of notification copy', async () => {
+    const review = {
+      ...notice, title: 'LessonPlan: Changes Requested', requiresReview: true,
+      body: 'Hello Teacher,\nChanges have been requested for your lesson plan.\nView details: https://app.example.test/dashboard?openNotifications=1\nDemo School',
+      relativeLink: '/dashboard?openNotifications=1',
+    };
+    const receipt = { ...notice, id: 'receipt', title: 'Staff circular', requiresAcknowledgement: true, readAt: notice.creationTime };
+    const normal = { ...notice, id: 'general' };
+    mswServer.use(http.get('*/api/communication/notifications/me/inbox', () =>
+      HttpResponse.json({ totalCount: 3, items: [review, receipt, normal] })
+    ));
+    const user = userEvent.setup();
+    render(inbox(createStore(), originalOwner));
+    const priority = await screen.findByRole('region', { name: 'Needs your attention' });
+    expect(priority).toHaveTextContent('Changes requested');
+    expect(priority).toHaveTextContent('Staff circular');
+    expect(priority).not.toHaveTextContent(normal.title);
+    expect(screen.getAllByRole('heading', { name: 'Staff circular' })).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'Review feedback' }));
+    expect(screen.getByRole('button', { name: 'Hide feedback' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.queryByText(/https:\/\/app.example.test/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Open record' })).not.toBeInTheDocument();
+  });
+
+  it('appends older pages when loading more', async () => {
+    const older = { ...notice, id: 'older', title: 'Older circular' };
+    const fillers = Array.from({ length: 9 }, (_, index) => ({ ...notice, id: `item-${index}`, title: `Circular ${index}` }));
+    mswServer.use(http.get('*/api/communication/notifications/me/inbox', ({ request }) =>
+      HttpResponse.json({ totalCount: 11, items: new URL(request.url).searchParams.get('skipCount') === '10' ? [older] : [notice, ...fillers] })
+    ));
+    const user = userEvent.setup();
+    render(inbox(createStore(), originalOwner));
+    await user.click(await screen.findByRole('button', { name: 'Load more' }));
+    expect(await screen.findByRole('heading', { name: older.title })).toBeVisible();
+    expect(screen.getByRole('heading', { name: notice.title })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
   });
 
   it('clears the previous owner’s visible rows and blocks a stale mutation before it reaches the API', async () => {

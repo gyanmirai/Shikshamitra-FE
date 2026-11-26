@@ -8,7 +8,7 @@ import { useWebPush } from 'src/hooks/notifications/use-web-push';
 const messages = {
   loading: 'Checking notification settings…',
   unsupported: 'Browser notifications are unavailable on this device.',
-  'needs-installation': 'On iPhone or iPad, open this site in Safari and choose Share → Add to Home Screen. Turn on Open as Web App if shown, then open the new icon and enable notifications from the bell.',
+  'needs-installation': 'On iPhone or iPad, open this site in Safari and choose Share → Add to Home Screen. Turn on Open as Web App if shown. Open the new icon, then go to Notifications and open preferences.',
   unconfigured: 'Browser notifications are unavailable for this school.',
   blocked: 'Allow notifications in your browser settings, then try again.',
   ready: 'Get school updates on this device.',
@@ -28,7 +28,8 @@ export default function EnableNotifications() {
   if (!visible) return null;
 
   return (
-    <Box sx={{ px: 2.5, py: 1.5, borderBottom: 1, borderColor: 'divider' }}>
+    <Box component="section" aria-label="Browser notifications" sx={{ pb: 1, borderBottom: 1, borderColor: 'divider' }}>
+      <Typography component="h3" variant="subtitle2" sx={{ mb: 0.25 }}>Browser Notifications</Typography>
       <Typography variant="body2" color="text.secondary" role="status">
         {failure ?? messages[state]}
       </Typography>

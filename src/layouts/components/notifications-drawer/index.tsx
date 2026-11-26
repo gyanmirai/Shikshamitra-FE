@@ -84,8 +84,8 @@ function OwnedNotificationsDrawer({ owner }: { owner: string }) {
       </IconButton>
 
       <Drawer open={drawer.value} onClose={drawer.onFalse} anchor="right"
-        slotProps={{ paper: { role: 'dialog', 'aria-modal': true, 'aria-labelledby': drawerId, sx: { width: 1, maxWidth: 420 } } }}>
-        <Stack direction="row" alignItems="center" gap={1} sx={{ py: 1.5, pl: 2, pr: 1.5 }}>
+        slotProps={{ paper: { role: 'dialog', 'aria-modal': true, 'aria-labelledby': drawerId, sx: { width: 1, maxWidth: 420, overflow: 'hidden' } } }}>
+        <Stack direction="row" alignItems="center" gap={1} sx={{ py: 1.5, pl: 2, pr: 1.5, flexShrink: 0 }}>
           <Typography id={drawerId} variant="h6" sx={{ flexGrow: 1 }}>Notifications</Typography>
           <Tooltip title="Notification preferences">
             <IconButton aria-label="Notification preferences" onClick={preferences.onTrue}>
@@ -94,8 +94,8 @@ function OwnedNotificationsDrawer({ owner }: { owner: string }) {
           </Tooltip>
           <IconButton aria-label="Close notifications" onClick={drawer.onFalse}><Iconify icon="mingcute:close-line" /></IconButton>
         </Stack>
-        {drawer.value && <EnableNotifications />}
-        <CustomTabs variant="fullWidth" aria-label="Notification inbox filters" value={tab} guardUnsavedChanges={false}
+        <CustomTabs density="compact" aria-label="Notification inbox filters" value={tab} guardUnsavedChanges={false}
+          sx={{ borderBlock: 1, borderColor: 'divider' }}
           onChange={(_, value: InboxTab) => setTab(value)}>
           <Tab value="all" label="All" id={`${drawerId}-all`} aria-controls={`${drawerId}-inbox`} />
           <Tab value="unread" label={unreadCount ? `Unread (${unreadCount})` : 'Unread'}
@@ -106,7 +106,9 @@ function OwnedNotificationsDrawer({ owner }: { owner: string }) {
           {drawer.value && <NotificationInbox key={tab} owner={owner} unreadOnly={tab === 'unread'} onOpen={drawer.onFalse} />}
         </Box>
       </Drawer>
-      {preferences.value && <NotificationPreferences owner={owner} onClose={preferences.onFalse} />}
+      {preferences.value && (
+        <NotificationPreferences owner={owner} onClose={preferences.onFalse} deviceSettings={<EnableNotifications />} />
+      )}
     </>
   );
 }

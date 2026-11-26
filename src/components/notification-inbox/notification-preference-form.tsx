@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { AcademicNotificationChannel } from 'src/redux/academic-notifications/types';
 import type { NotificationPreference, NotificationPreferenceOptions } from 'src/redux/communication/notification-self-api';
 
@@ -28,6 +29,7 @@ type Props = {
   onClose: () => void;
   onReload: () => Promise<NotificationPreference | undefined>;
   onAccessChanged: () => void;
+  deviceSettings?: ReactNode;
 };
 
 const channels = [
@@ -59,7 +61,7 @@ function initialPreference(selection: Selection, available: AcademicNotification
 }
 
 export function NotificationPreferenceForm({
-  owner, selection, saved, availableChannels, options, categoryLabel, onSelect, onClose, onReload, onAccessChanged,
+  owner, selection, saved, availableChannels, options, categoryLabel, onSelect, onClose, onReload, onAccessChanged, deviceSettings,
 }: Props) {
   const id = useId();
   const lock = useRef(false);
@@ -160,6 +162,7 @@ export function NotificationPreferenceForm({
         } }}>
         <DialogScrollContent>
           <Stack gap={2}>
+            {deviceSettings}
             {error && <Alert severity="error" action={conflict && (
               <Button size="small" disabled={busy} onClick={() => requestChange(reload)}>Reload saved settings</Button>
             )}>{error}</Alert>}
