@@ -3,6 +3,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import type { IFloor } from '../types';
 
 export const floorRoomLimitCode = 'ShikshaMitra.TenantSettings:FloorRoomLimitBelowUsage';
+export const floorInUseCode = 'ShikshaMitra.TenantSettings:FloorInUse';
 
 export const floorRoomLimitMessage = (floorName: string, totalRoom: number, roomCount: number) =>
   `Cannot set total rooms to ${totalRoom}. ${floorName} already has ${roomCount} rooms. Delete or reassign existing rooms before reducing the total room capacity.`;

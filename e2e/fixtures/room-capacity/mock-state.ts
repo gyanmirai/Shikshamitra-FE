@@ -42,8 +42,15 @@ export function createRoomFixture() {
       }
       if (method === 'PUT' && path === `/api/institute-setup/buildings/${building.id}`) {
         writes.push({ method, path, body });
-        const floors = body.floorsToUpdate as typeof building.floors;
-        building = { ...building, floors: floors.map((floor) => ({ ...floor, roomCount: 1 })) };
+        const floors = body.floorsToAdd as Omit<(typeof building.floors)[number], 'id' | 'roomCount'>[];
+        building = {
+          ...building,
+          totalFloors: building.floors.length + floors.length,
+          floors: [
+            ...building.floors,
+            ...floors.map((floor) => ({ ...floor, id: `synthetic-floor-${floor.floorNo}`, roomCount: 0 })),
+          ],
+        };
         return { status: 200, json: building };
       }
       if (method === 'POST' && path === '/api/institute-setup/rooms') {

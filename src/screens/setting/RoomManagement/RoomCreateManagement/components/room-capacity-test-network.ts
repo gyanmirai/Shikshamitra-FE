@@ -35,6 +35,7 @@ export function capacityNetwork() {
   });
   prepareRoomFormNetwork();
   mswServer.use(
+    http.get('*/api/app/institute-field-formatting/buildings', () => HttpResponse.json({ fields: [] })),
     http.get('*/api/institute-setup/buildings', () => {
       state.buildingReads += 1;
       return state.failBuildings
@@ -48,8 +49,7 @@ export function capacityNetwork() {
       if (state.failBuildingSave) {
         return HttpResponse.json({ detail: 'Building save failed.' }, { status: 500 });
       }
-      const floors = body.floorsToUpdate as { totalRoom: number }[];
-      state.totalRoom = floors[0].totalRoom;
+      if ((body.floorsToAdd as unknown[]).length) state.otherFloor = true;
       return HttpResponse.json(building());
     }),
     http.post('*/api/institute-setup/rooms', async ({ request }) => {

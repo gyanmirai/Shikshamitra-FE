@@ -31,8 +31,8 @@ See the [backend rules](../../../Shikshamitra-BE/docs/modules/institute-setup/pr
 
 ## Building floor capacity
 
-Open the existing building form and adjust a floor's total room capacity.
-The form loads current room counts, places an invalid reduction below its floor field and retains entered values after a rejected save.
+Open the building form to edit an unused floor. The first floor stays in the building and remains editable while unused.
+The form loads current room counts and makes floors with assigned rooms read-only, including their order and removal controls. A rejected save retains the draft.
 After deleting or reassigning rooms in the room workflow, choose `Refresh room counts` to validate the current draft against refreshed usage, then submit again.
 A failed refresh keeps the previous validation state and offers `Retry`; saving remains blocked until counts load.
 The [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families) owns the room-capacity rule and error contract.
@@ -84,7 +84,7 @@ TL;DR: submit shared assets once, then change only the assets that differ for a 
 
 1. Open School defaults and edit the logo, banner/letterhead and principal signature.
 2. Choose inherited, custom or do not display independently for each asset. Custom signatures require the principal's name and designation together.
-3. Upload PNG/JPEG files, review image proportions and resolution warnings, and preview the draft PDF.
+3. Upload PNG/JPEG files and review image proportions and resolution warnings. Preview the saved defaults from Document Layout Preview after submitting. Override editors also offer a draft PDF preview.
 4. Submit. Uploading alone does not change saved configuration; cancellation leaves the existing settings intact.
 5. Open Board, medium & organization overrides, choose the academic year and board, then All mediums or one medium. Choose a specific medium to enable Organization; All organizations shows medium settings. Organization means the academic stage, such as Primary or Secondary.
 6. Review each effective asset's source before editing. Reset to inherited requires confirmation and does not change issued documents.
@@ -105,7 +105,7 @@ Changing criteria resets pagination; deletion updates the visible row immediatel
 The room form warns when a floor has reached its configured room limit and retains the draft when a concurrent save takes its remaining place.
 Basic Information likewise retains editable values after failed saves and closes only after a successful response.
 
-Selecting a full floor shows **Room Limit Reached** with the building, floor, existing room count and configured limit. **Edit building** opens that building's existing editor for users with building write access. Increase **Total rooms** for the selected floor and submit, then continue the retained room draft. The form refreshes building options and removes the warning only when space is available; cancellation, failed saves and unchanged limits retain it. A failed refresh offers Retry and keeps submission blocked. Switching to another available floor also allows the draft to continue. Editing a room already on the same full floor remains available. The [backend room rules](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families) enforce the limit at save time.
+Selecting a full floor shows **Room Limit Reached** with the building, floor, existing room count and configured limit. Choose an available floor, or move an existing room and refresh capacity. **Edit building** lets users with building write access add a floor and return to the retained room draft to select it. A failed refresh offers Retry and keeps submission blocked. Editing a room already on the same full floor remains available. The [backend room rules](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families) enforce the limit at save time.
 
 At `/setting/room`, Add Room and Update Room use shared section cards for location, bench layout and features.
 Enter a column count to show one labelled group per column, with a row-count field, bounded plus/minus controls and a bench/student subtotal.

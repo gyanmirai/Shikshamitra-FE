@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import { createRoomFixture } from '../fixtures/room-capacity/mock-state';
 
 ['light', 'dark'].forEach((theme) => {
-  test(`${theme}: edit the full floor limit and preserve the room draft`, async ({ page }) => {
+  test(`${theme}: keep the full floor locked and move the room draft to a new floor`, async ({ page }) => {
     const fixture = createRoomFixture();
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
@@ -48,15 +48,23 @@ import { createRoomFixture } from '../fixtures/room-capacity/mock-state';
     await room.getByRole('checkbox', { name: 'Projector', exact: true }).check();
     await room.getByRole('button', { name: 'Edit building', exact: true }).click();
     const building = page.getByRole('dialog', { name: 'Edit Building', exact: true });
-    await expect(building.getByLabel('Total rooms')).toHaveValue('1');
-    await building.getByLabel('Total rooms').fill('2');
+    const full = building.getByRole('listitem', { name: 'Floor 1' });
+    await expect(full.getByLabel('Total rooms')).toHaveAttribute('readonly', '');
+    await expect(full.getByRole('button', { name: 'Remove floor 1' })).toBeDisabled();
+    await building.getByRole('button', { name: 'Add floor', exact: true }).click();
+    const newFloor = building.getByRole('listitem', { name: 'Floor 2' });
+    await newFloor.getByLabel('Floor name').fill('New Floor');
+    await newFloor.getByLabel('Total rooms').fill('2');
     await building.getByRole('button', { name: 'Submit', exact: true }).click();
     await expect(building).toHaveCount(0);
-    await expect(room.getByText('Room Limit Reached', { exact: true })).toHaveCount(0);
     await expect(room.getByLabel('Room name/no.')).toBeFocused();
+    await expect(room.getByText('Room Limit Reached', { exact: true })).toBeVisible();
+    await room.getByRole('combobox', { name: 'Floor' }).click();
+    await page.getByRole('option', { name: 'New Floor', exact: true }).click();
+    await expect(room.getByText('Room Limit Reached', { exact: true })).toHaveCount(0);
     await expect(room.getByLabel('Room name/no.')).toHaveValue('Test Room 102');
     await expect(room.getByRole('combobox', { name: 'Building' })).toContainText('Test Building');
-    await expect(room.getByRole('combobox', { name: 'Floor' })).toContainText('Test Floor');
+    await expect(room.getByRole('combobox', { name: 'Floor' })).toContainText('New Floor');
     await expect(room.getByRole('combobox', { name: 'Room type' })).toContainText('Classroom');
     await expect(room.getByRole('spinbutton', { name: 'Column 1 rows' })).toHaveValue('3');
     await expect(room.getByRole('spinbutton', { name: 'Column 2 rows' })).toHaveValue('4');
@@ -69,11 +77,11 @@ import { createRoomFixture } from '../fixtures/room-capacity/mock-state';
         body: {
           buildingName: 'Test Building',
           description: 'Synthetic building for local browser validation.',
-          totalFloors: 1,
+          totalFloors: 2,
           floorsToUpdate: [
-            { id: 'synthetic-floor', floorNo: 1, floorName: 'Test Floor', totalRoom: 2 },
+            { id: 'synthetic-floor', floorNo: 1, floorName: 'Test Floor', totalRoom: 1 },
           ],
-          floorsToAdd: [],
+          floorsToAdd: [{ floorNo: 2, floorName: 'New Floor', totalRoom: 2 }],
           floorIdsToDelete: [],
         },
       },
@@ -96,8 +104,8 @@ import { createRoomFixture } from '../fixtures/room-capacity/mock-state';
           capacity: 14,
           buildingId: 'synthetic-building',
           buildingName: 'Test Building',
-          floorId: 'synthetic-floor',
-          floorName: 'Test Floor',
+          floorId: 'synthetic-floor-2',
+          floorName: 'New Floor',
           roomTypeId: 'synthetic-type',
           roomTypeName: 'Classroom',
           totalBenches: 7,

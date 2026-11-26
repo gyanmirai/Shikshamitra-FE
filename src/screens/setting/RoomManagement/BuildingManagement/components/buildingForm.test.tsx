@@ -53,6 +53,7 @@ describe('building floor entry', () => {
     );
     const onClose = vi.fn();
     renderBuildingForm(store, onClose);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Move floor 2 up' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Move floor 2 up' }));
     expect(
       screen
@@ -81,15 +82,14 @@ describe('building floor entry', () => {
     );
     const onClose = vi.fn();
     renderBuildingForm(store, onClose);
-    fireEvent.click(screen.getByRole('button', { name: 'Remove floor 1' }));
-    const confirmation = screen.queryByRole('button', { name: 'Remove floor' });
-    if (confirmation) fireEvent.click(confirmation);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Remove floor 2' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Remove floor 2' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledWith(null, true));
-    expect(saved).toMatchObject({ totalFloors: 1, floorIdsToDelete: ['floor-a'] });
+    expect(saved).toMatchObject({ totalFloors: 1, floorIdsToDelete: ['floor-b'] });
     expect(saved?.floorsToUpdate).toEqual([
-      { id: 'floor-b', floorNo: 1, floorName: 'First', totalRoom: 8 },
+      { id: 'floor-a', floorNo: 1, floorName: 'Ground', totalRoom: 5 },
     ]);
   });
 

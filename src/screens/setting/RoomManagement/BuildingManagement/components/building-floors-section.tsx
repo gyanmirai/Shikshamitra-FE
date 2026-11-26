@@ -15,9 +15,13 @@ import type { IBuildingFloorValue, IBuildingFormValues } from '../types';
 
 export function BuildingFloorsSection({
   formik,
+  occupiedFloorIds,
+  usagePending = false,
   onDraggingChange,
 }: {
   formik: FormikProps<IBuildingFormValues>;
+  occupiedFloorIds?: ReadonlySet<string>;
+  usagePending?: boolean;
   onDraggingChange?: (dragging: boolean) => void;
 }) {
   const [announcement, setAnnouncement] = useState('');
@@ -35,7 +39,7 @@ export function BuildingFloorsSection({
             icon={GlobalIcons.floors}
             title="Floors"
             actionFullWidthOnMobile
-            descriptionTooltip="Add floors individually, drag them by their handles or use the arrows to change their sequence. At least one floor is required. Changes are saved on Submit. A saved floor with assigned rooms cannot be removed."
+            descriptionTooltip="Use the arrows or drag handles to reorder unused floors. Keep the first floor. Floors with assigned rooms are locked."
             action={
               <Button
                 id="add-building-floor"
@@ -59,6 +63,8 @@ export function BuildingFloorsSection({
           >
             <BuildingFloorList
               formik={formik}
+              occupiedFloorIds={occupiedFloorIds}
+              usagePending={usagePending}
               error={error}
               onDraggingChange={onDraggingChange}
               onMove={(from, to) => {

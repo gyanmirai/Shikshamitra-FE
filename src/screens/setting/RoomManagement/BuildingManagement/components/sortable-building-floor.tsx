@@ -1,5 +1,3 @@
-import type { FormikProps } from 'formik';
-
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
 import { Box, Tooltip, IconButton } from '@mui/material';
@@ -7,17 +5,14 @@ import DragIndicator from '@mui/icons-material/DragIndicator';
 
 import { BuildingFloorRow } from './building-floor-row';
 
-import type { IBuildingFormValues } from '../types';
+import type { BuildingFloorRowProps } from './building-floor-row';
 
-type Props = {
-  formik: FormikProps<IBuildingFormValues>;
-  index: number;
-  onMove: (destination: number) => void;
-  onRemove: () => void;
-};
+type Props = Omit<BuildingFloorRowProps, 'dragHandle'>;
 
-export function SortableBuildingFloor({ formik, index, onMove, onRemove }: Props) {
+export function SortableBuildingFloor(props: Props) {
+  const { formik, index, canMoveUp, canMoveDown } = props;
   const floor = formik.values.floors[index];
+  const disabled = !canMoveUp && !canMoveDown;
   const {
     attributes,
     listeners,
@@ -26,7 +21,7 @@ export function SortableBuildingFloor({ formik, index, onMove, onRemove }: Props
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: floor.rowKey, disabled: formik.isSubmitting });
+  } = useSortable({ id: floor.rowKey, disabled });
   return (
     <Box
       ref={setNodeRef}
@@ -44,10 +39,7 @@ export function SortableBuildingFloor({ formik, index, onMove, onRemove }: Props
       }}
     >
       <BuildingFloorRow
-        formik={formik}
-        index={index}
-        onMove={onMove}
-        onRemove={onRemove}
+        {...props}
         dragHandle={
           <Tooltip title="Drag to reorder. With a keyboard, press Space, then use arrow keys.">
             <span>
@@ -58,7 +50,7 @@ export function SortableBuildingFloor({ formik, index, onMove, onRemove }: Props
                 type="button"
                 size="small"
                 aria-label={`Drag floor ${index + 1} to reorder`}
-                disabled={formik.isSubmitting}
+                disabled={disabled}
                 sx={{ touchAction: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
               >
                 <DragIndicator fontSize="small" />

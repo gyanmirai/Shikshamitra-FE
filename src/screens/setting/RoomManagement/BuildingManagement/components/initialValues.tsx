@@ -24,17 +24,26 @@ export const getBuildingInitialValues = (editData?: IBuilding | null): IBuilding
   description: plainBuildingDescription(editData?.description ?? ''),
   floors: editData
     ? [...(editData.floors ?? [])]
-        .sort((first, second) => first.floorNo - second.floorNo)
+        .sort((first, second) => first.floorNo - second.floorNo || first.id.localeCompare(second.id))
         .map((floor) => ({ ...floor, rowKey: floor.id }))
     : [createBuildingFloor(1)],
 });
 
 export function buildingPayload(values: IBuildingFormValues, editData?: IBuilding | null) {
-  const start = editData?.floors.some((floor) => floor.floorNo === 0) ? 0 : 1;
+  const savedFloors = new Map(editData?.floors.map((floor) => [floor.id, floor]));
+  // Keep gaps after deletion so removing an earlier floor doesn't renumber an occupied floor.
+  const floorNumbers = values.floors
+    .flatMap(({ id }) => {
+      const saved = savedFloors.get(id);
+      return saved ? [saved.floorNo] : [];
+    })
+    .sort((first, second) => first - second);
+  const nextFloorNumber = (floorNumbers.at(-1) ?? 0) + 1;
   const floors = values.floors.map((floor, index) => ({
     id: floor.id,
-    floorNo: start + index,
-    floorName: floor.floorName.trim(),
+    floorNo: floorNumbers[index] ?? nextFloorNumber + index - floorNumbers.length,
+    floorName:
+      floor.floorName === savedFloors.get(floor.id)?.floorName ? floor.floorName : floor.floorName.trim(),
     totalRoom: Number(floor.totalRoom),
   }));
   const details = {
