@@ -1,4 +1,5 @@
 import type { ICustomizableTableProps } from 'src/components/customizabaleTable/types';
+import type { CustomBreadcrumbsProps } from 'src/components/custom-breadcrumbs/types';
 import type { AdaptiveThreeDotsActionsProps } from 'src/components/adaptive-three-dots-actions/types';
 
 import { vi, it, expect, describe, beforeEach } from 'vitest';
@@ -8,12 +9,14 @@ import FinanceIncomeCategoriesScreen from './index';
 import FinanceExpenseCategoriesScreen from '../ExpenseCategories/ExpenseCategories';
 
 const mocks = vi.hoisted(() => ({
+  academicYearId: 'year' as string | undefined,
   canDelete: true,
   isActive: false,
   isUsed: false,
   isSystem: false,
   deletionReason: undefined as string | null | undefined,
   deleting: false,
+  addCategory: vi.fn(),
   deleteCategory: vi.fn(),
   success: vi.fn(),
 }));
@@ -22,7 +25,7 @@ vi.mock('react-redux', () => ({
   useDispatch: () => vi.fn(),
   useSelector: (selector: (state: unknown) => unknown) =>
     selector({
-      globalState: { currentYear: { id: 'year' } },
+      globalState: { currentYear: { id: mocks.academicYearId } },
       confirmPopup: { isChanges: false },
     }),
 }));
@@ -65,6 +68,8 @@ vi.mock('src/redux/finance/incomeCategory', () => ({
     isLoading: false,
     isFetching: false,
   }),
+  usePostIncomeCategoryMutation: () => [mocks.addCategory, { isLoading: false }],
+  usePutIncomeCategoryMutation: () => [vi.fn(), { isLoading: false }],
   useDeleteIncomeCategoryMutation: () => [mocks.deleteCategory, { isLoading: mocks.deleting }],
   useGetIncomeCategoryVersionsQuery: () => ({}),
   usePatchIncomeCategoryStatusMutation: () => [vi.fn(), { isLoading: false }],
@@ -84,9 +89,10 @@ vi.mock('src/redux/finance/expenseCategory', () => ({
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.success } }));
-vi.mock('src/components/custom-breadcrumbs', () => ({ CustomBreadcrumbs: () => null }));
+vi.mock('src/components/custom-breadcrumbs', () => ({
+  CustomBreadcrumbs: ({ action }: CustomBreadcrumbsProps) => action ?? null,
+}));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock('./Components/IncomeCategoryForm', () => ({ default: () => null }));
 vi.mock('../ExpenseCategories/Components/ExpenseCategoryForm', () => ({ default: () => null }));
 vi.mock('src/screens/finance/settings/components/AccountCategoryVersionDrawer', () => ({
   default: () => null,
@@ -126,14 +132,58 @@ vi.mock('src/components/adaptive-three-dots-actions', () => ({
 
 describe('Income category deletion', () => {
   beforeEach(() => {
+    mocks.academicYearId = 'year';
     mocks.canDelete = true;
     mocks.isActive = false;
     mocks.isUsed = false;
     mocks.isSystem = false;
     mocks.deletionReason = undefined;
     mocks.deleting = false;
+    mocks.addCategory.mockReset();
     mocks.deleteCategory.mockReset();
     mocks.success.mockReset();
+  });
+
+  it('requires an academic year before allowing an income category to be added', () => {
+    mocks.academicYearId = undefined;
+    const { rerender } = render(<FinanceIncomeCategoriesScreen />);
+
+    expect(screen.getByRole('button', { name: 'Income Category' })).toBeDisabled();
+    expect(screen.getByText('Select an academic year to manage income categories.')).toBeVisible();
+
+    mocks.academicYearId = 'year';
+    rerender(<FinanceIncomeCategoriesScreen />);
+
+    expect(screen.getByRole('button', { name: 'Income Category' })).toBeEnabled();
+  });
+
+  it('blocks an open Add form if the year is cleared and sends the selected year on submit', async () => {
+    mocks.addCategory.mockReturnValue({ unwrap: () => Promise.resolve() });
+    const { rerender } = render(<FinanceIncomeCategoriesScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Income Category' }));
+
+    const dialog = within(screen.getByRole('dialog'));
+    fireEvent.change(dialog.getByRole('textbox', { name: /Income Category Name/ }), {
+      target: { value: 'Activity income' },
+    });
+    mocks.academicYearId = undefined;
+    rerender(<FinanceIncomeCategoriesScreen />);
+
+    const submit = dialog.getByRole('button', { name: 'Submit' });
+    expect(submit).toBeDisabled();
+    expect(dialog.getByRole('alert')).toHaveTextContent('Select an academic year');
+    fireEvent.click(submit);
+    expect(mocks.addCategory).not.toHaveBeenCalled();
+
+    mocks.academicYearId = 'selected-year';
+    rerender(<FinanceIncomeCategoriesScreen />);
+    fireEvent.click(submit);
+    await waitFor(() =>
+      expect(mocks.addCategory).toHaveBeenCalledExactlyOnceWith({
+        academicYearId: 'selected-year',
+        body: { name: 'Activity income', description: '', tags: [], concurrencyStamp: null },
+      })
+    );
   });
 
   it('keeps the built-in None category available by disabling edit, status and deletion', () => {

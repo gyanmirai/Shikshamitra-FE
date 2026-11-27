@@ -26,7 +26,6 @@ import {
   Stack,
   Button,
   Typography,
-  LinearProgress,
 } from '@mui/material';
 import {
   useGetRefundPoliciesQuery,
@@ -1056,12 +1055,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
           Unable to load {policyLabel.toLowerCase()}.
         </Alert>
       )}
-      {usesPolicyListApi && isFetching && Boolean(policyData) && (
-        <LinearProgress aria-label={`Refreshing ${policyLabel.toLowerCase()}`} />
-      )}
       <CustomizableTable
         tableId={`finance-${policyType}-policy-table`}
-        isLoading={isLoading || (isFetching && !policyData)}
+        isLoading={isLoading || isFetching}
         errorContent={
           usesPolicyListApi && listError && !policyData?.items.length ? (
             <Stack spacing={1.5} alignItems="center">

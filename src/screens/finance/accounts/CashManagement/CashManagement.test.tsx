@@ -16,6 +16,7 @@ const state = vi.hoisted(() => ({
   url: '',
   push: vi.fn(),
   depositProps: {} as any,
+  expenseProps: {} as any,
 }));
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(state.url),
@@ -35,6 +36,26 @@ vi.mock('src/screens/finance/hooks/useFinancePermissions', () => ({
   useFinancePermissions: () => ({ isReady: true, canView: state.canView }),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('src/components/custom-date-range-picker', async () => {
+  const { default: dayjs } = await import('dayjs');
+  return {
+    CustomDateRangePicker: ({ label, value, onChange }: any) => (
+      <button
+        type="button"
+        aria-label={label}
+        onClick={() => onChange([dayjs('2026-06-15'), dayjs('2026-06-25')])}
+      >
+        {value[0]?.format('DD/MM/YYYY') ?? 'All dates'}
+      </button>
+    ),
+  };
+});
+vi.mock('./CashExpensesDrawer', () => ({
+  default: (props: any) => {
+    state.expenseProps = props;
+    return <div role="dialog">Cash expenses</div>;
+  },
+}));
 vi.mock('src/redux/finance/cashManagementApi', () => ({
   useGetCashManagementQuery: (args: any) => {
     state.query(args);
@@ -44,9 +65,9 @@ vi.mock('src/redux/finance/cashManagementApi', () => ({
         yearSummary: { collected: 8429, spent: 3100, deposited: 0, remaining: 5329 },
         summary: { collected: 9999, spent: 8888, deposited: 7777, remaining: 0 },
         activitySummary:
-          args.month === undefined
+          args.month === undefined && !args.startDate
             ? { collected: 8429, spent: 3100, deposited: 0, remaining: 5329 }
-            : args.month === 6
+            : args.month === 6 || args.startDate === '2026-06-15'
               ? { collected: 50, spent: 10, deposited: 20, remaining: 20 }
               : { collected: 1234, spent: 200, deposited: 100, remaining: 934 },
         items: [{ id: 'cash', reference: 'CASH-001', status: 0, canApprove: true }],
@@ -192,13 +213,15 @@ it('opens a linked cash source only in the matching academic year', () => {
   setup();
   expect(screen.getByRole('dialog')).toHaveTextContent('Cash details cash');
 });
-it('shows board medium and academic month filters without statuses or row actions and opens receipt details', () => {
+it('shows the date range without the spent or status column and opens receipt details', () => {
   setup();
   expect(screen.getByRole('heading', { name: 'Cash Management' })).toBeInTheDocument();
   expect(screen.getByRole('combobox', { name: 'Board' })).toBeInTheDocument();
   expect(screen.getByRole('combobox', { name: 'Medium' })).toBeInTheDocument();
-  expect(screen.getByRole('combobox', { name: 'Month' })).toHaveTextContent('June 2026');
-  expect(state.table.columns.some((c: any) => ['status', 'actions'].includes(c.id))).toBe(false);
+  expect(screen.getByRole('button', { name: 'Date range' })).toBeInTheDocument();
+  expect(
+    state.table.columns.some((c: any) => ['status', 'actions', 'spentAmount'].includes(c.id))
+  ).toBe(false);
   fireEvent.click(screen.getByRole('button', { name: 'CASH-001' }));
   expect(screen.getByRole('dialog')).toHaveTextContent('cash');
   fireEvent.click(screen.getByRole('button', { name: 'Close details' }));
@@ -226,7 +249,7 @@ it('deposits the academic year balance independently of display filters', () => 
   expect(screen.queryByText('Cash details cash')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /reject/i })).not.toBeInTheDocument();
 });
-it('updates activity metrics when the selected month changes while keeping available cash cumulative', () => {
+it('updates activity metrics for the date range while keeping available cash cumulative', () => {
   state.url = 'month=2026-10';
   setup();
   const metric = (label: string) => screen.getByText(label).parentElement!;
@@ -235,21 +258,39 @@ it('updates activity metrics when the selected month changes while keeping avail
   expect(metric('Deposited')).toHaveTextContent('100');
   expect(metric('Academic-year cash available')).toHaveTextContent('5,329');
 
-  fireEvent.change(screen.getByRole('combobox', { name: 'Month' }), {
-    target: { value: '2026-06' },
+  fireEvent.click(screen.getByRole('button', { name: 'Date range' }));
+  expect(state.query.mock.lastCall?.[0]).toMatchObject({
+    startDate: '2026-06-15',
+    endDate: '2026-06-25',
+    month: undefined,
+    year: undefined,
+    page: 1,
   });
   expect(metric('Collected')).toHaveTextContent('50');
   expect(metric('Spent')).toHaveTextContent('10');
   expect(metric('Deposited')).toHaveTextContent('20');
   expect(metric('Academic-year cash available')).toHaveTextContent('5,329');
 
-  fireEvent.change(screen.getByRole('combobox', { name: 'Month' }), {
-    target: { value: 'all' },
-  });
+  fireEvent.click(screen.getByRole('button', { name: 'Clear date range' }));
   expect(metric('Collected')).toHaveTextContent('8,429');
   expect(metric('Spent')).toHaveTextContent('3,100');
   expect(metric('Deposited')).toHaveTextContent('0');
   expect(metric('Academic-year cash available')).toHaveTextContent('5,329');
+});
+it('opens the cash expenses drawer with the current activity filters', () => {
+  state.url =
+    'startDate=2026-10-20&endDate=2026-10-23&boardId=board&mediumId=medium&search=receipt';
+  setup();
+  fireEvent.click(screen.getByRole('button', { name: 'View expenses' }));
+  expect(screen.getByRole('dialog')).toHaveTextContent('Cash expenses');
+  expect(state.expenseProps.criteria).toMatchObject({
+    academicYearId: 'year',
+    startDate: '2026-10-20',
+    endDate: '2026-10-23',
+    boardId: 'board',
+    mediumId: 'medium',
+    search: 'receipt',
+  });
 });
 it('preserves a linked page when the table hydrates the same search term', () => {
   state.url = 'page=3&search=receipt';

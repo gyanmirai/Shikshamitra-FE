@@ -11,6 +11,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { DetailField } from 'src/screens/finance/components/detail-view';
 import { Stack, Alert, Button, Divider, Typography } from '@mui/material';
@@ -23,6 +24,7 @@ import {
 
 import AssignmentReview from './AssignmentReview';
 import AssignmentPolicies from './AssignmentPolicies';
+import VariableFeeChangeEditor from './VariableFeeChangeEditor';
 import OptionalFeeServiceStops from './OptionalFeeServiceStops';
 import AssignmentFeeHeadSummary from './AssignmentFeeHeadSummary';
 import AssignmentForm, { AssignmentPreviewDialog } from './AssignmentForm';
@@ -37,6 +39,7 @@ export default function AssignedPolicyEditor({
   canStopOptionalService,
   canRestartOptionalService,
   canOverridePolicies = true,
+  canChangeVariableFees = false,
   onOptionalServiceSaved,
   onEditFees,
 }: {
@@ -49,6 +52,7 @@ export default function AssignedPolicyEditor({
   canStopOptionalService?: boolean;
   canRestartOptionalService?: boolean;
   canOverridePolicies?: boolean;
+  canChangeVariableFees?: boolean;
   onOptionalServiceSaved?: () => void;
   onEditFees?: () => void;
 }) {
@@ -61,6 +65,10 @@ export default function AssignedPolicyEditor({
   const pending = useRef(false);
   const assignmentStamp = useRef(data.concurrencyStamp);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [variableEditorOpen, setVariableEditorOpen] = useState(false);
+  const [variableDraftDirty, setVariableDraftDirty] = useState(false);
+  const editFeesButton = useRef<HTMLButtonElement>(null);
+  const restoreEditFocus = useRef(false);
   const [serviceBusy, setServiceBusy] = useState(false);
   const busy = state.isLoading || serviceBusy;
   const policiesDiffer = (policies: AssignmentPolicySelection[]) =>
@@ -132,8 +140,21 @@ export default function AssignedPolicyEditor({
   });
   const policiesChanged = policiesDiffer(formik.values.policies);
   const formBusy = busy || formik.isSubmitting;
+  const variableHeads =
+    data.assignment.heads?.filter((head) => head.isVariable && head.included) ?? [];
+  const canEditVariable =
+    canChangeVariableFees && variableHeads.some((head) => head.canChangeVariableFee);
+  const editRestriction = formBusy
+    ? 'Wait for the current fee assignment operation to finish.'
+    : formik.dirty
+      ? 'Save or discard the pending policy changes before editing fees.'
+      : !canEditVariable && !onEditFees
+        ? !canChangeVariableFees
+          ? 'Editing variable fees requires an active enrollment and permission to edit service dates.'
+          : `No variable fee has an eligible monthly schedule.${data.structureEditBlocker ? ` ${data.structureEditBlocker}` : ''}`
+        : undefined;
   const openPreview = async () => {
-    if (formBusy || formik.isValidating) return;
+    if (formBusy || formik.isValidating || variableEditorOpen) return;
     setError('');
     if (policiesChanged) {
       const errors = await formik.validateForm();
@@ -149,32 +170,82 @@ export default function AssignedPolicyEditor({
     return () => onBusyChange?.(false);
   }, [formBusy, onBusyChange]);
   useEffect(() => {
-    onDirtyChange(formik.dirty);
+    onDirtyChange(formik.dirty || variableDraftDirty);
     return () => onDirtyChange(false);
-  }, [formik.dirty, onDirtyChange]);
+  }, [formik.dirty, variableDraftDirty, onDirtyChange]);
+  useEffect(() => {
+    if (variableEditorOpen) {
+      restoreEditFocus.current = true;
+    } else if (restoreEditFocus.current) {
+      editFeesButton.current?.focus();
+      restoreEditFocus.current = false;
+    }
+  }, [variableEditorOpen]);
   return (
     <>
       <AssignmentForm
-        busy={formBusy}
+        busy={formBusy && !variableEditorOpen}
         busyLabel="Saving…"
         onCancel={onCancel}
         onPreview={async (event) => {
           event.preventDefault();
           await openPreview();
         }}
-        previewDisabled={formBusy || formik.isValidating}
+        previewDisabled={formBusy || formik.isValidating || variableEditorOpen}
       >
         <Stack role="region" aria-label="Assigned policy fields" spacing={2}>
           {error && !previewOpen && <Alert severity="error">{error}</Alert>}
+          {!variableEditorOpen && (onEditFees || variableHeads.length > 0) && (
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+              {canEditVariable && onEditFees && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  disabled={Boolean(editRestriction)}
+                  onClick={onEditFees}
+                >
+                  Edit assignment
+                </Button>
+              )}
+              <CustomTooltip title={editRestriction ?? ''} describeChild arrow>
+                <span
+                  // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Keep the disabled action's explanation reachable by keyboard.
+                  tabIndex={editRestriction && !formBusy ? 0 : undefined}
+                  style={{ display: 'inline-flex' }}
+                >
+                  <Button
+                    ref={editFeesButton}
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Iconify icon={GlobalIcons.edit} />}
+                    disabled={Boolean(editRestriction)}
+                    onClick={canEditVariable ? () => setVariableEditorOpen(true) : onEditFees}
+                  >
+                    Edit fees
+                  </Button>
+                </span>
+              </CustomTooltip>
+            </Stack>
+          )}
+          {variableEditorOpen && (
+            <VariableFeeChangeEditor
+              data={data}
+              onClose={() => setVariableEditorOpen(false)}
+              onSaved={() => {
+                setVariableEditorOpen(false);
+                onSaved();
+              }}
+              onBusyChange={setServiceBusy}
+              onDirtyChange={setVariableDraftDirty}
+            />
+          )}
           {children}
           <FormSectionCard
             title="Fee Structure"
             icon="mdi:file-document-outline"
             descriptionTooltip="The saved fee structure and revision for this student and academic year."
           >
-            <Typography variant="body2">
-              {data.assignment.structureName} · r{data.assignment.revisionNumber}
-            </Typography>
+            <Typography variant="body2">{data.assignment.structureName}</Typography>
           </FormSectionCard>
           <AssignmentPolicies
             studentId={data.assignment.studentId}
@@ -184,7 +255,7 @@ export default function AssignedPolicyEditor({
             reason={formik.values.reason}
             editing
             canOverride={canOverridePolicies}
-            disabled={busy}
+            disabled={busy || variableEditorOpen}
             onChange={(policies, reason) => {
               formik.setValues({
                 policies: [...policies].sort(
@@ -204,19 +275,6 @@ export default function AssignedPolicyEditor({
                 ? 'Review the saved amounts and service dates for required fees. See Preview for calculations.'
                 : data.structureEditBlocker ||
                   'Required fees are read-only. See Preview for calculations.'
-            }
-            action={
-              onEditFees && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<Iconify icon={GlobalIcons.edit} />}
-                  disabled={formik.dirty || busy}
-                  onClick={onEditFees}
-                >
-                  Edit fees
-                </Button>
-              )
             }
           >
             <Stack spacing={1.5} divider={<Divider flexItem />}>
@@ -245,15 +303,17 @@ export default function AssignedPolicyEditor({
             <OptionalFeeServiceStops
               assignment={data.assignment}
               canRestart={canRestartOptionalService}
-              disabled={!canStopOptionalService || formik.dirty || busy}
+              disabled={!canStopOptionalService || formik.dirty || busy || variableEditorOpen}
               disabledReason={
                 !canStopOptionalService
                   ? 'Optional service cancellation requires the Stop Optional Service permission and an active enrollment.'
                   : formik.dirty
                     ? 'Save or discard the pending policy changes before changing an optional service.'
-                    : busy
-                      ? 'Another fee assignment operation is in progress.'
-                      : undefined
+                    : variableEditorOpen
+                      ? 'Finish editing the variable fee before changing an optional service.'
+                      : busy
+                        ? 'Another fee assignment operation is in progress.'
+                        : undefined
               }
               onSaved={onOptionalServiceSaved}
               onBusyChange={setServiceBusy}

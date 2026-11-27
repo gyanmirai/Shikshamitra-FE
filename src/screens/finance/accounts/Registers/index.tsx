@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
-import type { AccountsActivityRow } from 'src/redux/finance/accountsActivityApi';
+import type { AccountsActivityRow, AccountsActivityQuery } from 'src/redux/finance/accountsActivityApi';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
@@ -20,15 +20,22 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import { useGetAccountsActivityQuery } from 'src/redux/finance/accountsActivityApi';
+import { PaymentMethod, PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 
 import ManualEntryForm from './ManualEntryForm';
 import AccountEntryDetails from './AccountEntryDetails';
+import { useExpenseRegisterExport } from './useExpenseRegisterExport';
 import { academicMonthOptions, defaultAcademicMonth } from './academicMonths';
 import { toRegisterTableRow, registerStatusOptions } from './registerTablePresentation';
 import { bankAccountReturnTo, readBankAccountEntryContext } from '../bankAccountEntryContext';
 
 import type { AcademicPeriod } from './academicMonths';
+
+const paymentMethodOptions = [
+  { value: 'all', label: 'All payment methods' },
+  ...Object.entries(PaymentMethodLabels).map(([value, label]) => ({ value: Number(value), label })),
+];
 
 export default function AccountsRegister({ direction }: { direction: 'income' | 'expense' }) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -95,6 +102,7 @@ function RegisterContent({
     returnTo && routeParams.get('search') ? 'all' : defaultAcademicMonth(months)
   );
   const [category, setCategory] = useState('all');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | 'all'>('all');
   const [search, setSearch] = useState(() =>
     returnTo ? (routeParams.get('search') || '').slice(0, 100) : ''
   );
@@ -129,21 +137,37 @@ function RegisterContent({
     }
     requestAnimationFrame(() => addButton.current?.focus());
   };
-  const query = useGetAccountsActivityQuery(
-    {
-      academicYearId: period.id,
-      direction,
-      month: month === 'all' ? undefined : Number(month.slice(5)),
-      year: month === 'all' ? undefined : Number(month.slice(0, 4)),
-      categoryId: category === 'all' ? undefined : category,
-      search: search || undefined,
-      filters: serializeFinanceTableFilters(columnFilters),
-      sortBy: sorts[0]?.column,
-      sortDescending: sorts[0] ? sorts[0].direction === 'desc' : true,
-      page,
-      pageSize,
-    },
-    { skip: months.length === 0, refetchOnMountOrArgChange: 60 }
+  const queryArgs: AccountsActivityQuery = {
+    academicYearId: period.id,
+    direction,
+    month: month === 'all' ? undefined : Number(month.slice(5)),
+    year: month === 'all' ? undefined : Number(month.slice(0, 4)),
+    categoryId: category === 'all' ? undefined : category,
+    paymentMethod: income || paymentMethod === 'all' ? undefined : paymentMethod,
+    search: search || undefined,
+    filters: serializeFinanceTableFilters(columnFilters),
+    sortBy: sorts[0]?.column,
+    sortDescending: sorts[0] ? sorts[0].direction === 'desc' : true,
+    page,
+    pageSize,
+  };
+  const query = useGetAccountsActivityQuery(queryArgs, {
+    skip: months.length === 0,
+    refetchOnMountOrArgChange: 60,
+  });
+  const categories = query.data?.categories ?? [];
+  const categoryLabel = categories.find((item) => item.id === category)?.label;
+  const exportExpenses = useExpenseRegisterExport(
+    queryArgs,
+    [
+      month === 'all'
+        ? 'All academic-year months'
+        : (months.find((item) => item.value === month)?.label ?? ''),
+      categoryLabel ? `Category: ${categoryLabel}` : '',
+      paymentMethod === 'all' ? '' : `Payment method: ${PaymentMethodLabels[paymentMethod]}`,
+      search ? `Search: ${search}` : '',
+      columnFilters.length ? `Column filters applied: ${columnFilters.length}` : '',
+    ].filter(Boolean)
   );
   const columns: IColumn[] = (
     [
@@ -243,8 +267,8 @@ function RegisterContent({
       'sourceStatus',
     ].includes(column.id),
   }));
-  const filtered = month !== 'all' || category !== 'all' || columnFilters.length > 0;
-  const categories = query.data?.categories ?? [];
+  const filtered =
+    month !== 'all' || category !== 'all' || paymentMethod !== 'all' || columnFilters.length > 0;
   const noData = (
     <Stack alignItems="center" justifyContent="center" spacing={1} sx={{ minHeight: 220 }}>
       <Box>
@@ -272,6 +296,7 @@ function RegisterContent({
           onClick={() => {
             setMonth('all');
             setCategory('all');
+            setPaymentMethod('all');
             setColumnFilters([]);
             setPage(1);
           }}
@@ -370,6 +395,19 @@ function RegisterContent({
               }}
             />
           </Box>
+          {!income && (
+            <Box sx={{ width: { xs: '100%', sm: 260 } }}>
+              <CustomSelect
+                label="Payment method"
+                value={paymentMethod}
+                options={paymentMethodOptions}
+                onChange={(value) => {
+                  setPaymentMethod(value === 'all' ? 'all' : (Number(value) as PaymentMethod));
+                  setPage(1);
+                }}
+              />
+            </Box>
+          )}
           {canAdd && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', ml: 'auto' }}>
               <Button
@@ -407,7 +445,10 @@ function RegisterContent({
             wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
             tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
             tableId={`accounts-${direction}-register`}
-            exportLabel="Export current page"
+            exportLabel={income ? 'Export current page' : 'Export'}
+            exportScope={income ? 'loaded' : 'all'}
+            onExport={income ? undefined : exportExpenses}
+            exportDisabled={!income && (query.isError || !query.currentData?.totalCount)}
             columns={columns}
             data={query.isError ? [] : (query.currentData?.items ?? []).map(toRegisterTableRow)}
             isLoading={query.isFetching}

@@ -66,6 +66,7 @@ export interface PagedResult<T> {
 }
 
 export interface FeeCollectionSummaryParams {
+  studentRecordsOnly?: boolean;
   filters?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
@@ -104,6 +105,7 @@ export interface StudentInfo {
 }
 
 export interface FeeSummary {
+  refundedAmount?: number;
   totalFee: number;
   paidFee: number;
   pendingFee: number;

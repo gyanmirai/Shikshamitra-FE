@@ -121,10 +121,32 @@ it('prefills the bank account from activity without changing the year-wide depos
       expect.objectContaining({
         bankAccountId: 'bank',
         expectedAmount: 5329,
+        amount: 5329,
         academicYearId: 'year',
       })
     )
   );
+});
+it('sends a partial amount and the separate available balance for stale detection', async () => {
+  setup(true, 'bank');
+  const input = screen.getByRole('textbox', { name: 'Deposit amount' });
+  expect(input).toHaveDisplayValue(/5,329/);
+  fireEvent.change(input, { target: { value: '180.25' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Deposit cash' }));
+  await waitFor(() =>
+    expect(mock.send).toHaveBeenCalledWith(
+      expect.objectContaining({ expectedAmount: 5329, amount: 180.25 })
+    )
+  );
+});
+it('validates a deposit greater than available cash before sending', async () => {
+  setup(true, 'bank');
+  fireEvent.change(screen.getByRole('textbox', { name: 'Deposit amount' }), {
+    target: { value: '8000' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Deposit cash' }));
+  expect(await screen.findByText('Deposit amount cannot exceed available cash.')).toBeVisible();
+  expect(mock.send).not.toHaveBeenCalled();
 });
 function bank() {
   fireEvent.change(screen.getByRole('combobox', { name: 'Receiving school bank account' }), {
@@ -234,7 +256,7 @@ it('disables submission without deposit authority or bank setup', () => {
   expect(screen.getByRole('button', { name: 'Deposit cash' })).toBeDisabled();
 });
 it('validates optional file MIME and size boundaries and notes length', async () => {
-  const valid = { bankAccountId: 'bank', notes: '', file: null };
+  const valid = { amount: '5329', bankAccountId: 'bank', notes: '', file: null };
   await expect(bulkDepositSchema.validate(valid)).resolves.toBeDefined();
   await expect(
     bulkDepositSchema.validate({

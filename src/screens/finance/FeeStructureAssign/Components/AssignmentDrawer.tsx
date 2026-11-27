@@ -116,7 +116,7 @@ export default function AssignmentDrawer({
             'aria-modal': true,
             sx: {
               width: compactForm
-                ? { xs: '100%', sm: 'min(640px, 92vw)' }
+                ? { xs: '100%', sm: 'min(900px, 95vw)' }
                 : viewing
                   ? { xs: '100%', sm: 'min(760px, 92vw)' }
                   : { xs: '100%', md: students.length > 1 ? 1200 : 960 },

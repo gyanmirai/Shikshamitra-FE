@@ -15,7 +15,6 @@ import {
   Box,
   Card,
   Stack,
-  Alert,
   Button,
   TextField,
   Typography,
@@ -513,14 +512,9 @@ const ChargesManagement = () => {
         hasForm={false}
         guardUnsavedChanges={false}
         disableClose={isVoiding}
-        aria-describedby="cancel-charge-description"
       >
         <DialogScrollContent>
           <Stack spacing={2}>
-            <Typography id="cancel-charge-description" variant="body2">
-              Cancel the approved, uncollected charges in this batch. Cancelled charges will no
-              longer be available for collection.
-            </Typography>
             <Box component="dl" sx={{ m: 0 }}>
               {[
                 [
@@ -557,10 +551,6 @@ const ChargesManagement = () => {
                 </Box>
               ))}
             </Box>
-            <Alert severity="warning">
-              Charges with a collection cannot be cancelled. Use reconciliation to reverse the
-              collection, or use the refund workflow to return a payment.
-            </Alert>
             <TextField
               autoFocus
               fullWidth

@@ -157,6 +157,8 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   useAssignmentOptionalServiceRestartContextQuery: mocks.restartContext,
   useAssignmentOptionalServiceRestartPreviewMutation: () => [mocks.previewRestart, {}],
   useAssignmentOptionalServiceRestartMutation: () => [mocks.restart, {}],
+  usePreviewVariableFeeChangeMutation: () => [vi.fn(), {}],
+  useCommitVariableFeeChangeMutation: () => [vi.fn(), {}],
   assignmentError: () => 'Preview again',
   assignmentErrorCode: (error: any) => error?.data?.error?.code ?? '',
   useAssignmentCandidatesQuery: () => ({
@@ -209,7 +211,8 @@ function mount(
   canOverride = false,
   editAssignedPolicies = false,
   canStop = false,
-  canAssign = true
+  canAssign = true,
+  canOverrideDates = false
 ) {
   const store = configureStore({
     reducer: (
@@ -219,11 +222,16 @@ function mount(
         },
         auth: {
           permissions: [
-            'View',
-            ...(canAssign ? ['Add'] : []),
-            ...(canOverride ? ['OverridePolicies'] : []),
-            ...(canStop ? ['StopOptionalService'] : []),
-          ].map((name) => ({ name: `Finance.Fees.StructureAssign.${name}`, isGranted: true })),
+            ...[
+              'View',
+              ...(canAssign ? ['Add'] : []),
+              ...(canOverride ? ['OverridePolicies'] : []),
+              ...(canStop ? ['StopOptionalService'] : []),
+            ].map((name) => ({ name: `Finance.Fees.StructureAssign.${name}`, isGranted: true })),
+            ...(canOverrideDates
+              ? [{ name: 'Finance.Policies.ProrationPolicy.OverrideChargePeriod', isGranted: true }]
+              : []),
+          ],
         },
         confirmPopup: { isChanges: false },
       }
@@ -285,6 +293,32 @@ it('opens the existing assignment when server context corrects a stale unassigne
   expect(screen.queryByRole('combobox', { name: 'Fee structure' })).not.toBeInTheDocument();
   expect(mocks.preview).not.toHaveBeenCalled();
   expect(mocks.commit).not.toHaveBeenCalled();
+});
+
+it('keeps the edit drawer actions visible while the context and saved assignment load', () => {
+  mocks.contextState = { isFetching: true };
+  const view = mount(
+    [{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }],
+    true,
+    true
+  );
+
+  expect(screen.getByRole('status', { name: 'Loading fee assignment' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
+
+  mocks.contextState = { data: [{ studentId: 'one', status: 'Assigned' }] };
+  mocks.details.mockReturnValue({ isFetching: true });
+  view.refresh();
+
+  expect(screen.getByRole('status', { name: 'Loading fee assignment' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
+
+  mocks.details.mockReturnValue({ data: { assignment: unpaidContext().assignedAssignment } });
+  view.refresh();
+
+  expect(screen.queryByRole('status', { name: 'Loading fee assignment' })).not.toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Assigned policy fields' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Preview' })).toBeEnabled();
 });
 
 it.each([
@@ -402,7 +436,8 @@ it.each([
     ).not.toBeInTheDocument();
     const action = screen.getByRole('button', { name: `Cancel service for ${feeName}` });
     if (recorded) {
-      expect(screen.getByText('Cancellation recorded')).toBeVisible();
+      expect(screen.queryByText('Cancellation recorded')).not.toBeInTheDocument();
+      expect(screen.getByText('Cancellation effective date')).toBeVisible();
       expect(action).toBeDisabled();
       expect(screen.getByRole('button', { name: 'Enable service for Transport' })).toBeEnabled();
       fireEvent.click(action);
@@ -413,6 +448,9 @@ it.each([
     }
 
     fireEvent.click(action);
+    expect(
+      screen.getByRole('button', { name: `Cancel ${feeName} Service information` })
+    ).toBeVisible();
     const date = await screen.findByLabelText('Cancellation effective date');
     fireEvent.change(date, { target: { value: '2026-11-30' } });
     fireEvent.change(screen.getByRole('textbox', { name: /Reason for stopping service/ }), {
@@ -666,7 +704,7 @@ it('prefills the admission selection without asking staff to choose the structur
   const proration = await screen.findByRole('heading', { name: 'Fee Proration' });
   expect(proration).toBeVisible();
   expect(screen.getByText('Student Applications')).toBeVisible();
-  expect(screen.getByText('Monthly school fees · v3')).toBeVisible();
+  expect(screen.getByText('Monthly school fees')).toBeVisible();
   fireEvent.click(await screen.findByRole('button', { name: 'Preview' }));
   await waitFor(() =>
     expect(mocks.preview).toHaveBeenCalledWith(
@@ -987,6 +1025,32 @@ describe('assignment review and commit boundaries', () => {
     await screen.findByText('Committed amount 12000');
   });
 
+  it('shows a skeleton in the preview dialog until the server returns the totals', async () => {
+    let finish!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    mocks.preview.mockImplementation(() => ({
+      unwrap: async () => {
+        await pending;
+        return result();
+      },
+    }));
+    mount();
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Assignment Preview' });
+    expect(
+      within(dialog).getByRole('status', { name: 'Loading assignment preview' })
+    ).toBeVisible();
+    expect(within(dialog).queryByRole('button', { name: 'Assign fees' })).not.toBeInTheDocument();
+
+    finish();
+    expect(await within(dialog).findByText('Preview amount 12000')).toBeVisible();
+    expect(within(dialog).getByRole('button', { name: 'Assign fees' })).toBeEnabled();
+  });
+
   it('retrieves the saved result with the same token after a lost response and expiry', async () => {
     const reviewedAt = Date.now();
     mocks.preview.mockImplementation(() => ({
@@ -1292,7 +1356,7 @@ describe('assignment review and commit boundaries', () => {
   it('shows defaults and locks policy selectors without override access', async () => {
     mount();
     await chooseStructure();
-    expect(screen.getByText('School collection · v2')).toBeInTheDocument();
+    expect(screen.getByText('School collection')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit policies' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Collection policy' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
@@ -1434,9 +1498,11 @@ describe('assignment review and commit boundaries', () => {
     await chooseStructure();
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Include transport for one' })).toBeDisabled();
+    const dialog = screen.getByRole('dialog', { name: 'Assignment Preview' });
+    expect(within(dialog).getByRole('button', { name: 'Close' })).toBeDisabled();
+    expect(screen.getByText('Cancel', { selector: 'button' })).toBeDisabled();
+    expect(screen.getByText('Preview', { selector: 'button' })).toBeDisabled();
+    expect(screen.getByText('Include transport for one', { selector: 'button' })).toBeDisabled();
     resolve(result());
     await screen.findByText('Preview amount 12000');
     expect(mocks.preview).toHaveBeenCalledTimes(1);
@@ -1793,4 +1859,60 @@ it('falls back to policy editing when a refreshed unpaid context becomes paid', 
   expect(await screen.findByText('Required Fee Heads')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Edit fees' })).not.toBeInTheDocument();
   expect(mocks.commit).not.toHaveBeenCalled();
+});
+
+it('opens the dated variable fee editor when payment locks full-assignment correction', async () => {
+  const context = unpaidContext();
+  const assignment = {
+    ...context.assignedAssignment,
+    academicYearId: 'year',
+    heads: context.assignedAssignment.heads.map((head) => ({
+      ...head,
+      isVariable: true,
+      canChangeVariableFee: true,
+    })),
+  };
+  mocks.contextState = {
+    data: [{ ...context, canEditStructure: false, assignedAssignment: assignment }],
+  };
+  mocks.details.mockReturnValue({
+    data: { assignment, concurrencyStamp: 'paid-stamp', canEditStructure: false },
+  });
+  mount(
+    [{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }],
+    false,
+    true,
+    false,
+    true,
+    true
+  );
+  fireEvent.click(await screen.findByRole('button', { name: 'Edit fees' }));
+  const editor = await screen.findByRole('region', { name: 'Edit variable fee' });
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(within(editor).getByRole('combobox', { name: 'Variable fee' })).toHaveValue('tuition');
+  expect(within(editor).getByRole('textbox', { name: 'New monthly amount' })).toBeVisible();
+  expect(within(editor).getByText(/Earlier installments keep their amounts/)).toBeVisible();
+  expect(mocks.commit).not.toHaveBeenCalled();
+});
+
+it('explains why Edit fees is unavailable when the user cannot change service dates', async () => {
+  const context = unpaidContext();
+  const assignment = {
+    ...context.assignedAssignment,
+    heads: context.assignedAssignment.heads.map((head) => ({
+      ...head,
+      isVariable: true,
+      canChangeVariableFee: true,
+    })),
+  };
+  mocks.contextState = { data: [{ ...context, canEditStructure: false }] };
+  mocks.details.mockReturnValue({ data: { assignment, canEditStructure: false } });
+  mount([{ studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: true }], true, true);
+  const editFees = await screen.findByRole('button', { name: 'Edit fees' });
+  expect(editFees).toBeDisabled();
+  expect(screen.queryByText(/permission to edit service dates/)).not.toBeInTheDocument();
+  const tooltipTrigger = editFees.parentElement!;
+  expect(tooltipTrigger).toHaveAttribute('tabindex', '0');
+  fireEvent.mouseOver(tooltipTrigger);
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(/permission to edit service dates/);
 });

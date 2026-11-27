@@ -95,15 +95,7 @@ export default function AssignmentPolicies({
                 options={available.map((p) => ({
                   value: p.versionId,
                   label: `${p.name}${p.versionId === inherited?.versionId ? ' · default' : ''}`,
-                  version: `v${p.version}`,
                 }))}
-                optionEndLabelKey="version"
-                renderValue={(selectedValue) => {
-                  const policy = available.find((p) => p.versionId === selectedValue);
-                  return policy
-                    ? `${policy.name} · v${policy.version}${policy.versionId === inherited?.versionId ? ' · default' : ''}`
-                    : '';
-                }}
                 onChange={(next) => {
                   const nextVersionId = String(next) || null;
                   const nextSelections = [
@@ -210,7 +202,7 @@ export default function AssignmentPolicies({
                 label={family === 'refund' ? 'Refund policy' : 'Collection policy'}
                 value={
                   policy
-                    ? `${policy.name} · v${policy.version}`
+                    ? policy.name
                     : selected?.versionId
                       ? 'Unavailable policy'
                       : 'No policy assigned'

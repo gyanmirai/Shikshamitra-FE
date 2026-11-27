@@ -5,7 +5,7 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { useRef, useMemo, useState } from 'react';
 import { useDebounceEffect } from 'src/hooks/use-debounce';
-import { TextField, Autocomplete, CircularProgress } from '@mui/material';
+import { Skeleton, TextField, Autocomplete } from '@mui/material';
 import { useLazyGetFinanceAuditStudentLookupQuery } from 'src/redux/finance/audit/financeAuditApi';
 
 import type { FinanceAuditStudentLookup } from '../types/financeAudit.types';
@@ -99,7 +99,15 @@ const AuditStudentAutocomplete = ({
             ...params.InputProps,
             endAdornment: (
               <>
-                {isFetching ? <CircularProgress color="inherit" size={18} /> : null}
+                {isFetching && (
+                  <Skeleton
+                    variant="rounded"
+                    width={18}
+                    height={18}
+                    role="status"
+                    aria-label="Loading students"
+                  />
+                )}
                 {params.InputProps.endAdornment}
               </>
             ),

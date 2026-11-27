@@ -21,6 +21,7 @@ import { financePermissions } from 'src/constants/finance-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetCashOptionsQuery,
@@ -41,7 +42,13 @@ import { isFinancePrerequisiteMissing } from '../../components/financePrerequisi
 import { useRefreshFinancePrerequisites } from '../../hooks/useRefreshFinancePrerequisites';
 
 const types = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+const depositAmountSchema = Yup.string()
+  .required('Enter a deposit amount.')
+  .matches(/^\d+(?:\.\d{0,2})?$/, 'Use up to two decimal places for the deposit amount.')
+  .test('positive', 'Enter an amount greater than zero.', (value) => !value || Number(value) > 0);
+
 export const bulkDepositSchema = Yup.object({
+  amount: depositAmountSchema,
   bankAccountId: Yup.string().required('Select a receiving school bank account.'),
   notes: Yup.string().trim().max(1000, 'Notes must be 1,000 characters or fewer.'),
   file: Yup.mixed<File>()
@@ -91,11 +98,20 @@ export default function CashBulkDepositDialog({
   const [save] = useBulkDepositCashMutation();
   const formik = useFormik({
     initialValues: {
+      amount: amount.toString(),
       bankAccountId: initialBankAccountId ?? '',
       notes: '',
       file: null as File | null,
     },
-    validationSchema: uncertain ? undefined : bulkDepositSchema,
+    validationSchema: uncertain
+      ? undefined
+      : bulkDepositSchema.shape({
+          amount: depositAmountSchema.test(
+            'available-cash',
+            'Deposit amount cannot exceed available cash.',
+            (value) => !value || Number(value) <= expectedAmount
+          ),
+        }),
     onSubmit: async (values) => {
       if (
         inFlight.current ||
@@ -120,6 +136,7 @@ export default function CashBulkDepositDialog({
           academicYearId,
           bankAccountId: values.bankAccountId,
           expectedAmount,
+          amount: Number(values.amount),
           notes: values.notes.trim() || undefined,
           file: values.file || undefined,
           idempotencyKey: crypto.randomUUID(),
@@ -162,6 +179,8 @@ export default function CashBulkDepositDialog({
     setRefreshing(true);
     try {
       const [latest] = await Promise.all([onRefresh(), options.refetch().unwrap()]);
+      if (Number(formik.values.amount) === expectedAmount || Number(formik.values.amount) > latest)
+        await formik.setFieldValue('amount', latest.toString(), false);
       setExpectedAmount(latest);
       setStale(false);
       setFailure('');
@@ -174,6 +193,9 @@ export default function CashBulkDepositDialog({
   };
   const bankError = Boolean(
     (formik.touched.bankAccountId || formik.submitCount > 0) && formik.errors.bankAccountId
+  );
+  const amountError = Boolean(
+    (formik.touched.amount || formik.submitCount > 0) && formik.errors.amount
   );
   const missingBank =
     allowed &&
@@ -194,7 +216,7 @@ export default function CashBulkDepositDialog({
         open
         title="Deposit Cash"
         maxWidth="sm"
-        titleInfo="Deposit all available cash in the selected academic year. Table filters do not change this amount."
+        titleInfo="Deposit cash from the selected academic year. Available cash covers the whole academic year."
         handleClose={requestClose}
         guardUnsavedChanges={false}
         hasUnsavedChanges={formik.dirty}
@@ -257,17 +279,37 @@ export default function CashBulkDepositDialog({
               <FormSectionCard
                 title="Deposit Details"
                 icon={GlobalIcons.bankAccount}
-                descriptionTooltip="The amount includes all available cash for this academic year after paid cash expenses and previous deposits."
+                descriptionTooltip="Available cash is the balance after paid cash expenses and previous deposits."
               >
                 <Stack spacing={2}>
                   <Stack spacing={0.5}>
                     <Typography variant="body2" color="text.secondary">
-                      Total academic-year cash to deposit
+                      Available cash for this academic year
                     </Typography>
                     <Typography variant="subtitle1">
                       {formatNumber(expectedAmount, 'INR')}
                     </Typography>
                   </Stack>
+                  <ShakingTextField error={amountError}>
+                    <NumericFormatCustom
+                      fullWidth
+                      size="small"
+                      required
+                      name="amount"
+                      label="Deposit amount"
+                      value={formik.values.amount}
+                      valueIsNumericString
+                      roundToWholeRupees={false}
+                      decimalScale={2}
+                      onValueChange={(value, source) => {
+                        if (source.source === 'event') formik.setFieldValue('amount', value.value);
+                      }}
+                      disabled={fieldsBlocked || expectedAmount <= 0}
+                      onBlur={formik.handleBlur}
+                      error={amountError}
+                      helperText={amountError ? formik.errors.amount : undefined}
+                    />
+                  </ShakingTextField>
                   <ShakingTextField error={bankError}>
                     <CustomSelect
                       required
@@ -315,9 +357,7 @@ export default function CashBulkDepositDialog({
                 descriptionTooltip="Optionally attach a deposit slip or supporting document to this deposit."
               >
                 <Stack spacing={1}>
-                  <FormLabel id="cash-deposit-document-label">
-                    Supporting document
-                  </FormLabel>
+                  <FormLabel id="cash-deposit-document-label">Supporting document</FormLabel>
                   <CustomUpload
                     multiple={false}
                     value={formik.values.file ?? undefined}

@@ -6,7 +6,7 @@ import { it, vi, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import AssignmentReview from './AssignmentReview';
 
@@ -67,6 +67,8 @@ const preview: AssignmentPreview = {
     feeHeadName: 'Tuition',
     sequence: i + 1,
     installmentLabel: `Installment ${i + 1}`,
+    coverageStartDate: i === 0 ? '2026-04-05' : undefined,
+    coverageEndDate: i === 0 ? '2026-04-30' : undefined,
     dueDate: '2026-04-10',
     demandDate: '2026-04-01',
     allocationPercentage: 8.33,
@@ -103,37 +105,42 @@ const mount = (data = preview, committed = false) =>
 describe('assignment review evidence', () => {
   it('shows canonical totals, skipped heads and every installment without hidden paging', () => {
     mount();
-    expect(screen.getByText('Total to assign').nextElementSibling).toHaveTextContent('₹ 1,000');
-    expect(screen.getByText('Scheduled fees').nextElementSibling).toHaveTextContent('₹ 1,200');
+    expect(screen.getByText('Final amount').nextElementSibling).toHaveTextContent('₹ 1,000');
+    expect(screen.getByText('Total fees').nextElementSibling).toHaveTextContent('₹ 1,200');
     expect(screen.getByText('Proration reduction').nextElementSibling).toHaveTextContent('₹ 200');
-    expect(
-      screen.getByText('Proration reduction').parentElement?.nextElementSibling
-    ).toHaveTextContent('Total to assign');
+    expect(screen.getByRole('group', { name: 'Assignment total calculation' })).toHaveTextContent(
+      /Total fees\s*₹ 1,200\s*−\s*Proration reduction\s*₹ 200\s*=\s*Final amount\s*₹ 1,000/
+    );
     expect(screen.queryByText('Before service adjustment')).not.toBeInTheDocument();
     expect(screen.queryByText('Service reduction')).not.toBeInTheDocument();
-    const heads = within(
-      screen.getByRole('table', { name: 'Assignment fee-head breakdown table' })
-    );
+    const heads = within(screen.getByRole('region', { name: 'Fee Breakdown' }));
     expect(heads.getByText('Not selected')).toBeInTheDocument();
     expect(heads.queryByText('Not assigned')).not.toBeInTheDocument();
-    expect(heads.getByText('Monthly · v3')).toBeInTheDocument();
-    const tuition = within(heads.getByRole('row', { name: /tuition/i }));
-    expect(tuition.getByText('Daily proration')).toBeVisible();
-    expect(tuition.getByText('Scheduled ₹ 1,200')).toBeVisible();
-    expect(tuition.getByText('Reduction ₹ 200')).toBeVisible();
-    expect(tuition.getByText('₹ 1,000')).toBeVisible();
-    const transport = within(heads.getByRole('row', { name: /transport/i }));
-    expect(transport.queryByText(/reduction/i)).not.toBeInTheDocument();
-    expect(
-      heads.queryByRole('button', { name: 'Tuition service details' })
-    ).not.toBeInTheDocument();
+    expect(heads.getByText('Monthly')).toBeInTheDocument();
+    expect(heads.getByText('₹ 1,000')).toBeVisible();
+    expect(heads.queryByText('Daily proration')).not.toBeInTheDocument();
     expect(screen.queryByText('Configured dates are in the past.')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Expand installment schedule' }));
-    const schedule = within(
-      screen.getByRole('table', { name: 'Assignment installment schedule table' })
-    );
+    const tuition = heads.getByRole('button', { name: 'View Tuition installments' });
+    expect(heads.getByText('Service dates')).toBeInTheDocument();
+    expect(tuition).toHaveAttribute('aria-expanded', 'false');
+    expect(tuition).toHaveAccessibleDescription('01 Apr 2026 – 31 Mar 2027');
+    expect(within(tuition).getByText('01 Apr 2026 – 31 Mar 2027')).toBeVisible();
+    fireEvent.click(tuition);
+    const schedule = within(screen.getByRole('table', { name: 'Tuition installments' }));
     expect(schedule.getAllByRole('row')).toHaveLength(13);
     expect(schedule.getByText('Installment 12')).toBeInTheDocument();
+    expect(schedule.getByRole('columnheader', { name: 'Service dates' })).toBeVisible();
+    expect(
+      within(schedule.getByRole('row', { name: /^Installment 1 / })).getByRole('cell', {
+        name: '05 Apr 2026 – 30 Apr 2026',
+      })
+    ).toBeVisible();
+    expect(
+      within(schedule.getByRole('row', { name: /^Installment 2 / })).getByRole('cell', {
+        name: '—',
+      })
+    ).toBeVisible();
+    expect(schedule.getByRole('columnheader', { name: 'Available from' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'View all' })).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
@@ -141,7 +148,7 @@ describe('assignment review evidence', () => {
   it('shows policy names and versions with read-only policy view fields', () => {
     mount();
     expect(screen.getByText('Collection policy')).toBeVisible();
-    expect(screen.getByText('School collection · v2')).toBeVisible();
+    expect(screen.getByText('School collection')).toBeVisible();
     expect(screen.queryByRole('button', { name: /edit|service details/i })).not.toBeInTheDocument();
   });
 
@@ -168,9 +175,8 @@ describe('assignment review evidence', () => {
       },
       true
     );
-    const heads = within(
-      screen.getByRole('table', { name: 'Assignment fee-head breakdown table' })
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'View Tuition installments' }));
+    const heads = within(screen.getByRole('region', { name: 'Fee Breakdown' }));
     expect(heads.getByText('Monthly cutoff', { exact: true })).toBeVisible();
     expect(
       heads.getByText('₹ 10,000 × 46.875% → ₹ 4,688 (rounded up to a whole rupee)')
@@ -201,9 +207,8 @@ describe('assignment review evidence', () => {
         },
       ],
     });
-    const heads = within(
-      screen.getByRole('table', { name: 'Assignment fee-head breakdown table' })
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'View Tuition installments' }));
+    const heads = within(screen.getByRole('region', { name: 'Fee Breakdown' }));
     expect(heads.getByText('₹ 200 − ₹ 50 = ₹ 150')).toBeVisible();
     const details = heads.getByText('Calculation by installment').closest('details')!;
     expect(within(details).getByText('Installment 1 ₹ 100 × 50% → ₹ 50')).toBeInTheDocument();
@@ -211,56 +216,28 @@ describe('assignment review evidence', () => {
     expect(within(details).getAllByText('Reviewed service charge')).toHaveLength(1);
   });
 
-  it('collapses evidence tables independently while keeping totals and policies available', async () => {
+  it('keeps installment details closed until the head is opened', () => {
     mount();
-    const heads = screen.getByRole('button', { name: 'Collapse fee breakdown' });
-    const schedule = screen.getByRole('button', { name: 'Expand installment schedule' });
-    expect(heads).toHaveAttribute('aria-expanded', 'true');
+    const schedule = screen.getByRole('button', { name: 'View Tuition installments' });
     expect(schedule).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('table', { name: 'Tuition installments' })).not.toBeInTheDocument();
     fireEvent.click(schedule);
-    fireEvent.click(heads);
-    await waitFor(
-      () =>
-        expect(
-          screen.queryByRole('table', { name: 'Assignment fee-head breakdown table' })
-        ).not.toBeInTheDocument(),
-      { timeout: 10000 }
-    );
-    expect(
-      screen.getByRole('table', { name: 'Assignment installment schedule table' })
-    ).toBeVisible();
+    expect(schedule).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('table', { name: 'Tuition installments' })).toBeVisible();
     fireEvent.click(schedule);
-    await waitFor(
-      () =>
-        expect(
-          screen.queryByRole('table', { name: 'Assignment installment schedule table' })
-        ).not.toBeInTheDocument(),
-      { timeout: 10000 }
-    );
-    expect(screen.getByText('Total to assign')).toBeVisible();
-    expect(screen.getByText('School collection · v2')).toBeVisible();
-    const expand = screen.getByRole('button', { name: 'Expand fee breakdown' });
-    expect(expand).toHaveAttribute('aria-expanded', 'false');
-    expect(document.getElementById(expand.getAttribute('aria-controls')!)).toBeInTheDocument();
-    fireEvent.click(expand);
-    expect(
-      await screen.findByRole('table', { name: 'Assignment fee-head breakdown table' })
-    ).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Expand installment schedule' })).toHaveAttribute(
-      'aria-expanded',
-      'false'
-    );
+    expect(screen.queryByRole('table', { name: 'Tuition installments' })).not.toBeInTheDocument();
+    expect(screen.getByText('Final amount')).toBeVisible();
+    expect(screen.getByText('School collection')).toBeVisible();
   });
 
   it('preserves saved balances and does not invent legacy schedule evidence', () => {
     mount({ ...preview, calculationVersion: 'LegacyUnknown' }, true);
     expect(screen.queryByText('Before service adjustment')).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: 'Coverage amount' })).not.toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Recorded Amount' })).toBeInTheDocument();
+    expect(screen.getByText('Recorded amount')).toBeInTheDocument();
     expect(screen.queryByText('Daily proration')).not.toBeInTheDocument();
-    const schedule = within(
-      screen.getByRole('table', { name: 'Assignment installment schedule table' })
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'View Tuition installments' }));
+    const schedule = within(screen.getByRole('table', { name: 'Tuition installments' }));
     expect(schedule.getByRole('columnheader', { name: 'Paid' })).toBeInTheDocument();
     expect(schedule.getByRole('columnheader', { name: 'Outstanding' })).toBeInTheDocument();
     expect(schedule.getAllByText('₹ 30')).toHaveLength(12);

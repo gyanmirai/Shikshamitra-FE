@@ -15,6 +15,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -245,7 +246,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
         const category = availableChargeCategories.find(
           (item: { id: string }) => item.id === values.chargeCategoryId
         );
-        const categoryName = category?.name ?? values.chargeName;
+        const categoryName = category?.name ?? (values.chargeCategoryName || values.chargeName);
         const needsAdminConfirmation = isAdminCreator;
 
         if (values.selectionMode === 'all' && candidateStudentIdsRef.current.length === 0) {
@@ -343,6 +344,12 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched, setValues } = formik;
+  const chargeCategoryOptions =
+    isEditMode &&
+    values.chargeCategoryId &&
+    !availableChargeCategories.some((category: { id: string }) => category.id === values.chargeCategoryId)
+      ? [{ id: values.chargeCategoryId, name: values.chargeCategoryName }]
+      : availableChargeCategories;
   const isDirty = useDirtyState(initialValues, values);
   const {
     classes,
@@ -680,17 +687,11 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           height="100%"
           minHeight={0}
         >
-          <Box
-            role="region"
-            aria-label="Charge form fields"
-            tabIndex={0}
+          <Scrollbar
+            ariaLabel="Charge form fields"
             sx={{
               flex: 1,
               minHeight: 0,
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
             }}
           >
             {missingChargeCategory ? (
@@ -743,8 +744,8 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                               disabled={isEditMode}
                               name="chargeCategoryId"
                               label="Charge category *"
-                              isLoading={chargeCategoriesLoading}
-                              options={availableChargeCategories}
+                              isLoading={!isEditMode && chargeCategoriesLoading}
+                              options={chargeCategoryOptions}
                               labelKey="name"
                               valueKey="id"
                               value={values.chargeCategoryId}
@@ -1436,7 +1437,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                 </Grid>
               </Box>
             )}
-          </Box>
+          </Scrollbar>
 
           {/* Sticky Action Bar */}
           <Box

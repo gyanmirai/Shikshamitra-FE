@@ -19,6 +19,7 @@ import {
   FormHelperText,
   CircularProgress,
 } from '@mui/material';
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 
 import {
   getFileAccept,
@@ -168,9 +169,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
   return (
     <Box aria-label={`${concessionName} supporting documents`}>
       {isLoadingDetails ? (
-        <Box display="flex" justifyContent="center" py={3}>
-          <CircularProgress size={24} />
-        </Box>
+          <FinanceListSkeleton label="Loading supporting documents" rows={2} />
       ) : (
         <Stack spacing={1}>
           {(documents || []).map((doc: any) => {

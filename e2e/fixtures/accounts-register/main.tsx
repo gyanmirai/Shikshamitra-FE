@@ -12,7 +12,7 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import AccountsRegister from 'src/screens/finance/accounts/Registers';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { financeModuleType } from 'src/redux/tagTypes';
-import { api, confirmRefund, returnRefund, fixtureState } from './api';
+import { api, confirmRefund, returnRefund, fixtureState, expenseDemo } from './api';
 import 'simplebar-react/dist/simplebar.min.css';
 const years = [
   { id: 'year-2026', startDate: '2026-06-15', endDate: '2027-05-10' },
@@ -47,7 +47,9 @@ const store = configureStore({
   middleware: (getDefault) => getDefault().concat(api.middleware),
 });
 function Fixture() {
-  const [direction, setDirection] = React.useState<'income' | 'expense'>('income');
+  const [direction, setDirection] = React.useState<'income' | 'expense'>(
+    expenseDemo ? 'expense' : 'income'
+  );
   return (
     <Provider store={store}>
       <ThemeProvider

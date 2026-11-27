@@ -40,7 +40,6 @@ export interface IBankAccountTableProps {
   onEdit: (data: IBankAccount) => void;
   onView: (data: IBankAccount) => void;
   isLoading?: boolean;
-  isRefreshing?: boolean;
   error?: unknown;
   onRetry?: () => void;
   totalCount?: number;

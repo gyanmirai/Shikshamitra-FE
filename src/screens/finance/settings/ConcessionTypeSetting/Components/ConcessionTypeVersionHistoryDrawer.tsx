@@ -9,7 +9,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useGetConcessionTypeVersionHistoryQuery } from 'src/redux/finance/concessionType';
 import VersionSidebar from 'src/screens/finance/policies/components/version/VersionSidebar';
-import { Box, Alert, Stack, Button, Drawer, Typography, LinearProgress } from '@mui/material';
+import { Box, Alert, Stack, Button, Drawer, Typography } from '@mui/material';
 import VersionDiffTable from 'src/screens/finance/policies/components/version/VersionDiffTable';
 import FinancePolicySkeleton from 'src/screens/finance/policies/components/FinancePolicySkeleton';
 import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
@@ -155,7 +155,6 @@ export default function ConcessionTypeVersionHistoryDrawer({
           helpText={`Review recorded changes${concessionTypeName ? ` for ${concessionTypeName}` : ''}. Select a version to see its author, date, and Before/After values. Viewing history does not change the concession type.`}
           onClose={onClose}
         />
-        {isFetching && <LinearProgress aria-label="Loading concession type version history" />}
         {isError ? (
           <Box sx={{ p: 3, flex: 1 }}>
             <Alert
@@ -169,7 +168,7 @@ export default function ConcessionTypeVersionHistoryDrawer({
               Unable to load concession type version history.
             </Alert>
           </Box>
-        ) : !data && isFetching ? (
+        ) : isFetching ? (
           <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
             <Box sx={{ p: 2 }}>
               <FinancePolicySkeleton label="Loading concession type versions" />

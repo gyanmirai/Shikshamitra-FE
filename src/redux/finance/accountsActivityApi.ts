@@ -1,3 +1,5 @@
+import type { PaymentMethod } from 'src/enums/finance-payment-method';
+
 import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from './financeModuleApi';
@@ -31,6 +33,22 @@ export type AccountsActivityPage = {
   categories?: { id: string; label: string }[];
 };
 
+export type AccountsActivityQuery = {
+  academicYearId: string;
+  direction?: 'income' | 'expense';
+  source?: string;
+  month?: number;
+  year?: number;
+  categoryId?: string;
+  paymentMethod?: PaymentMethod;
+  sortBy?: string;
+  sortDescending?: boolean;
+  search?: string;
+  filters?: string;
+  page: number;
+  pageSize: number;
+};
+
 export const accountsActivityApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getAccountsActivityDetail: builder.query<
@@ -60,23 +78,7 @@ export const accountsActivityApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: (_, error) => error ? [] : [financeModuleType.incomeTracking, financeModuleType.expenseDetails, financeModuleType.cashManagement],
     }),
-    getAccountsActivity: builder.query<
-      AccountsActivityPage,
-      {
-        academicYearId: string;
-        direction?: 'income' | 'expense';
-        source?: string;
-        month?: number;
-        year?: number;
-        categoryId?: string;
-        sortBy?: string;
-        sortDescending?: boolean;
-        search?: string;
-        filters?: string;
-        page: number;
-        pageSize: number;
-      }
-    >({
+    getAccountsActivity: builder.query<AccountsActivityPage, AccountsActivityQuery>({
       query: (params) => ({ url: '/accounts/register', method: 'GET', params }),
       providesTags: [
         financeModuleType.incomeTracking,

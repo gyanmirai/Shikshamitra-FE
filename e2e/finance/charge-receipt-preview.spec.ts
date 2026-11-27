@@ -83,6 +83,13 @@ test('charge-only collection announces its receipt, closes, and refreshes balanc
   await expect(page.getByRole('checkbox', { name: /Select Receipt Regression Charge/ })).toBeDisabled();
   await expect(page.getByRole('heading', { name: '₹ 0', exact: true }).first()).toBeVisible();
   await expect(page.getByText(/exceeds the payable amount/)).toHaveCount(0);
+  const chargeRow = page.getByRole('row', { name: 'Open Receipt Regression Charge, 2026-11-28' });
+  await expect(chargeRow.getByRole('cell', { name: '28 Nov 2026' })).toBeVisible();
+  await chargeRow.getByText('Receipt Regression Charge', { exact: true }).click();
+  await expect(
+    page.getByRole('dialog', { name: 'Receipt Regression Charge', exact: true })
+      .getByText('28 November 2026', { exact: true })
+  ).toBeVisible();
 });
 
 test('receipt PDF availability does not affect a successful collection', async ({ page }) => {

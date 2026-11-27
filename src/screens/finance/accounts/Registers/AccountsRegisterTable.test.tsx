@@ -1,6 +1,7 @@
 import React from 'react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { financePermissions } from 'src/constants/finance-menu';
+import { PaymentMethod } from 'src/enums/finance-payment-method';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import AccountsRegister from '.';
@@ -15,12 +16,15 @@ const state = vi.hoisted(() => ({
   url: '',
   push: vi.fn(),
   form: {} as any,
+  exportPage: vi.fn(),
+  saveExport: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(state.url),
   useRouter: () => ({ push: state.push }),
 }));
 vi.mock('react-redux', () => ({
+  useDispatch: () => (action: unknown) => action,
   useSelector: (selector: any) =>
     selector({
       globalState: { currentYear: { id: 'year', startDate: '2026-04-01', endDate: '2027-03-31' } },
@@ -34,7 +38,20 @@ vi.mock('react-redux', () => ({
       },
     }),
 }));
-vi.mock('src/components/custom-select', () => ({ default: () => null }));
+vi.mock('src/components/custom-select', () => ({
+  default: ({ label, value, options, onChange }: any) => (
+    <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
+      {options.map((option: any) => (
+        <option value={option.value ?? option.id} key={option.value ?? option.id}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  ),
+}));
+vi.mock('src/components/customizabaleTable/table-export', () => ({
+  exportTable: state.saveExport,
+}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ action }: any) => <>{action}</>,
@@ -62,6 +79,17 @@ vi.mock('src/components/three-dots-actions', () => ({
   ),
 }));
 vi.mock('src/redux/finance/accountsActivityApi', () => ({
+  accountsActivityApi: {
+    endpoints: {
+      getAccountsActivity: {
+        initiate: (params: any) => ({
+          unwrap: () => state.exportPage(params),
+          abort: vi.fn(),
+          unsubscribe: vi.fn(),
+        }),
+      },
+    },
+  },
   useGetAccountsActivityQuery: (params: any) => {
     state.params = params;
     const data = {
@@ -163,6 +191,57 @@ describe('Accounts register table', () => {
     state.refetch.mockClear();
     state.url = '';
     state.push.mockClear();
+    state.exportPage.mockReset();
+    state.saveExport.mockClear();
+  });
+
+  it('filters expenses by payment method before pagination, including cash', () => {
+    render(<AccountsRegister direction="expense" />);
+    fireEvent.click(screen.getByText('Next page'));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Payment method' }), {
+      target: { value: String(PaymentMethod.CASH) },
+    });
+    expect(state.params).toMatchObject({ paymentMethod: PaymentMethod.CASH, page: 1 });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Payment method' }), {
+      target: { value: 'all' },
+    });
+    expect(state.params.paymentMethod).toBeUndefined();
+  });
+
+  it('exports all filtered expenses using the same search, sort, and visible columns', async () => {
+    const rows = Array.from({ length: 101 }, (_, index) => ({
+      id: `expense-${index}`,
+      reference: `Supplier ${index}`,
+      source: 'Expense',
+    }));
+    state.exportPage
+      .mockResolvedValueOnce({ items: rows.slice(0, 100), totalCount: rows.length })
+      .mockResolvedValueOnce({ items: rows.slice(100), totalCount: rows.length });
+    render(<AccountsRegister direction="expense" />);
+    fireEvent.click(screen.getByText('Search payee'));
+    fireEvent.click(screen.getByText('Sort students'));
+    fireEvent.click(screen.getByText('Filter rows'));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Payment method' }), {
+      target: { value: String(PaymentMethod.CASH) },
+    });
+    fireEvent.click(screen.getByText('Next page'));
+
+    const columns = [state.table.columns[0]];
+    expect(state.table.exportLabel).toBe('Export');
+    expect(state.table.exportScope).toBe('all');
+    await state.table.onExport({ format: 'excel', columns });
+    expect(state.exportPage.mock.calls).toEqual([
+      [{ ...state.params, page: 1, pageSize: 100 }],
+      [{ ...state.params, page: 2, pageSize: 100 }],
+    ]);
+    expect(state.saveExport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        columns,
+        rows: expect.arrayContaining([expect.objectContaining({ id: 'expense-100' })]),
+      })
+    );
+    const [{ rows: exportedRows }] = state.saveExport.mock.calls[0];
+    expect(exportedRows).toHaveLength(101);
   });
 
   it('opens the existing entry flow for a bank and returns to the preserved dialog', () => {

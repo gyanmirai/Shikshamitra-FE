@@ -18,8 +18,8 @@ import {
   Skeleton,
   Typography,
   DialogActions,
-  CircularProgress,
 } from '@mui/material';
+import { FinanceDocumentSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 import {
   FEE_RECEIPT_KIND_COLORS,
   FEE_RECEIPT_KIND_LABELS,
@@ -242,18 +242,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
               helpText="Preview and download the printable PDF for this receipt number."
             >
               {isPdfLoading ? (
-                <Stack
-                  alignItems="center"
-                  justifyContent="center"
-                  spacing={1}
-                  sx={{ minHeight: 240 }}
-                  role="status"
-                >
-                  <CircularProgress size={28} />
-                  <Typography variant="body2" color="text.secondary">
-                    Loading receipt preview...
-                  </Typography>
-                </Stack>
+                <FinanceDocumentSkeleton label="Loading receipt preview" />
               ) : receiptBlobUrl ? (
                 <PdfPreview
                   url={receiptBlobUrl}

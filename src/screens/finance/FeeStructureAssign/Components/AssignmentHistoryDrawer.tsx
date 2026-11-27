@@ -80,7 +80,6 @@ export default function AssignmentHistoryDrawer({
         titleId={titleId}
         description="Review when this student's fee assignment changed, who saved it, and the values recorded at the time."
         descriptionDisplay="tooltip"
-        badges={<Label>Read only</Label>}
         onClose={onClose}
       />
       <Stack spacing={0.5} sx={{ px: 2, py: 1.5, bgcolor: 'background.paper', flexShrink: 0 }}>
@@ -200,7 +199,7 @@ function AssignmentHistoryTimeline({
     (groups[date] ||= []).push(item);
     return groups;
   }, {});
-  return Object.entries(days).map(([date, entries]) => (
+  return Object.entries(days).map(([date, entries], dayIndex) => (
     <Accordion key={date} disableGutters defaultExpanded variant="outlined">
       <AccordionSummary
         id={`assignment-history-${date}`}
@@ -220,8 +219,13 @@ function AssignmentHistoryTimeline({
       </AccordionSummary>
       <AccordionDetails sx={{ p: 1.5 }}>
         <Stack spacing={1}>
-          {entries.map((item) => (
-            <Accordion key={item.id} disableGutters variant="outlined">
+          {entries.map((item, entryIndex) => (
+            <Accordion
+              key={item.id}
+              disableGutters
+              variant="outlined"
+              defaultExpanded={dayIndex === 0 && entryIndex === 0}
+            >
               <AccordionSummary
                 id={`assignment-event-${item.id}`}
                 aria-controls={`assignment-changes-${item.id}`}
@@ -360,21 +364,63 @@ function HistoryFields({
         gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
       }}
     >
-      {fields.map(({ field, before, after, format }, index) => (
-        <Box key={`${field}:${index}`} sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-          <Typography component="dt" variant="caption" color="text.secondary">
-            {field.charAt(0).toUpperCase() + field.slice(1)}
-          </Typography>
-          <Typography component="dd" variant="body2" sx={{ m: 0 }}>
-            {after == null ? 'Removed' : formatChange(after, format, currency)}
-          </Typography>
-          {before != null && before !== after && (
-            <Typography component="dd" variant="caption" color="text.secondary" sx={{ m: 0 }}>
-              Previously {formatChange(before, format, currency)}
+      {fields.map(({ field, before, after, format }, index) => {
+        const label = /^demand date$/i.test(field)
+          ? 'Available from'
+          : field.charAt(0).toUpperCase() + field.slice(1);
+        const isVersionedName =
+          /^(fee structure|payment term|(?:collection|proration|refund) policy)$/i.test(field);
+        const display = (value: typeof before) =>
+          isVersionedName && typeof value === 'string'
+            ? value.replace(/ · [vr]\d+$/i, '')
+            : formatChange(value, format, currency);
+        const hasBefore = before != null && before !== after;
+        const versionUpdated = hasBefore && isVersionedName && display(before) === display(after);
+        return (
+          <Box key={`${field}:${index}`} sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+            <Typography component="dt" variant="caption" color="text.secondary">
+              {label}
             </Typography>
-          )}
-        </Box>
-      ))}
+            <Stack
+              component="dd"
+              direction="row"
+              useFlexGap
+              flexWrap="wrap"
+              alignItems="center"
+              spacing={0.75}
+              sx={{ m: 0 }}
+            >
+              {hasBefore && !versionUpdated && (
+                <>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    aria-label={`Before: ${display(before)}`}
+                  >
+                    {display(before)}
+                  </Typography>
+                  <Iconify
+                    icon="mdi:arrow-right"
+                    width={14}
+                    sx={{ color: 'primary.main', flexShrink: 0 }}
+                  />
+                </>
+              )}
+              <Typography
+                variant="subtitle2"
+                color={after == null ? 'text.secondary' : 'text.primary'}
+              >
+                {after == null ? 'Removed' : display(after)}
+              </Typography>
+              {versionUpdated && (
+                <Typography variant="caption" color="text.secondary">
+                  Version updated
+                </Typography>
+              )}
+            </Stack>
+          </Box>
+        );
+      })}
     </Box>
   );
 }

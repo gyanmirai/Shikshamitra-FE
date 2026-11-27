@@ -3,7 +3,7 @@ module: finance
 domain: cash-management
 content_type: Reference
 status: active
-updated_on: 2026-10-30
+updated_on: 2026-11-26
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -18,33 +18,31 @@ Finance / Accounts / Cash Management at `/finance/accounts/cash-management` requ
 ## Academic-year cash and display filters
 
 The globally selected academic year owns the available cash balance. Board, dependent Medium,
-Month, search and column filters affect the displayed records only. Month options come from the
-selected year's actual start/end dates, using the shared Accounts register helper; the current
-month is selected when it belongs to that year, otherwise the first academic month is selected.
-All months is available. Changing Board clears Medium; changing a display filter resets pagination.
-Filters, sorting, search and page selection remain URL-backed. Retired approval-status criteria in
-saved URLs are ignored.
+Date range, search and column filters affect the displayed records and activity metrics. The shared
+`CustomDateRangePicker` starts with the current month when it belongs to the academic year, or the
+first academic month otherwise. Saved month links remain valid. Clear date range shows all dates.
+Changing Board clears Medium, and changing a display filter resets pagination. Filters, sorting,
+search and page selection remain URL-backed.
 
-The compact Board, Medium and Month dropdowns share one card with the left-aligned Collected,
-Spent, Deposited and Academic-year cash available metrics and the Deposit cash action. The action
-aligns with the dropdowns on wide screens and wraps below them on smaller screens. Metrics use
-the server's year-wide summary. Monetary table values remain right-aligned. The available amount
-and deposit action are independent of the visible page and every display filter. The table retains
-receipt/source, payer, collected, spent,
-deposited, remaining cash, receiving bank and collection date, with optional legacy transit through
-Columns. It has no Status or Actions column. Row activation opens the shared details drawer.
+The header shows Collected, Spent, Deposited and Academic-year cash available. The available amount
+and Deposit cash action use the academic-year balance across all pages and display filters.
+View expenses opens a paged drawer with the cash expense allocations behind Spent and carries
+the current date and source filters. Monetary table values are right-aligned. The table shows
+receipt/source, payer, collected, deposited, remaining cash, receiving bank and collection date,
+with optional legacy transit through Columns. Row activation opens the shared details drawer.
 
 ## Deposit cash
 
 The single Deposit cash action requires the exact `Finance.Accounts.CashManagement.Deposit`
-grant and a fresh, positive year-wide balance. Its shared `CustomDialog` shows the total as a
-read-only value, requires an active receiving school bank account, and accepts optional notes and
-one PDF/JPG/JPEG/PNG document up to 5 MB. Notes are limited to 1,000 characters.
+grant and a fresh, positive year-wide balance. The dialog pre-fills the editable Deposit amount
+with the available balance and permits a positive partial amount up to that balance. It requires
+an active receiving school bank account and accepts optional notes and one PDF/JPG/JPEG/PNG
+document up to 5 MB. Notes are limited to 1,000 characters.
 
 Submit sends one multipart `POST /finance/cash-management/bulk-deposit` containing
-`academicYearId`, `bankAccountId`, `expectedAmount`, `idempotencyKey`, optional `notes` and
-optional `file`. It sends no table filters or page selection. The server recalculates the available
-amount and deposits all eligible academic-year cash atomically. No manual approval is involved.
+`academicYearId`, `bankAccountId`, `expectedAmount`, `amount`, `idempotencyKey`, optional
+`notes` and optional `file`. The server verifies the year-wide balance and deposits the requested
+amount atomically.
 
 The form uses Formik/Yup, `CustomSelect`, the shared required-field wrapper, `CustomUpload`,
 section cards, shared feedback and the existing dialog footer pattern. Upload selection does not
@@ -70,7 +68,7 @@ Business rules, authority, persistence and endpoints: [backend Cash Management c
 
 ## Validation
 
-Focused tests cover the list/display-filter versus deposit-scope distinction, academic months,
+Focused tests cover date-range metrics, the cash expense drawer, partial amount validation,
 absence of approval controls, details, multipart transport, required bank, document types/size,
 dirty cancellation, busy locks, stale balances and exact uncertain retries. Run the owning
 Cash Management and Accounts register suites, TypeScript, focused lint and Finance docs validation.

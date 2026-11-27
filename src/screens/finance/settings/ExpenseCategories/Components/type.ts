@@ -29,7 +29,6 @@ export interface IExpenseCategoryTableProps {
   onDelete: (row: IExpenseCategory) => void;
   onEdit: (row: IExpenseCategory) => void;
   isLoading?: boolean;
-  isRefreshing?: boolean;
   error?: unknown;
   onRetry?: () => void;
   totalCount?: number;

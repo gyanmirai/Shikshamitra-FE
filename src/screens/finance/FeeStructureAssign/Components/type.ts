@@ -20,6 +20,7 @@ export interface IFeeStructureData {
   name?: string;
   isFeeStructureAssigned?: boolean;
   canEditStructure?: boolean;
+  canChangeVariableFees?: boolean;
   structureEditBlocker?: string;
   structureId?: string;
   structureRevision?: number;

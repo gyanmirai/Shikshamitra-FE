@@ -112,6 +112,29 @@ const ledgerProps = (): FeeLedgerListProps => ({
 });
 
 describe('collection ledger schedule display', () => {
+  it.each(['by-month', 'by-fee-head'] as const)(
+    'replaces the pending header amount with the allocated amount and selected count in %s',
+    (activeTab) => {
+      const props = ledgerProps();
+      const month = props.data.monthWise[0];
+      const [first] = month.items;
+      month.items.push({ ...first, dueFeeId: 'due-two', lateFeeAmount: 0 });
+      const view = (selected: boolean) => (
+        <CollectionLedgerTable
+          {...props}
+          layout="ledger"
+          activeTab={activeTab}
+          selectedItems={selected ? [{ ...first, period: '2026-06', dueAmount: 500 }] : []}
+          getAllocatedAmount={() => 200}
+        />
+      );
+      const { rerender } = render(view(false), { wrapper: LedgerTestProviders });
+      expect(screen.getByRole('button', { name: /₹ 1,050/ })).not.toHaveTextContent('2 fees');
+      rerender(view(true));
+      expect(screen.getByRole('button', { name: /₹ 200 \(1\/2 selected\)/ })).toBeVisible();
+    }
+  );
+
   it('shows a cancelled installment as unselected history', () => {
     const props = ledgerProps();
     props.chargesData = [];

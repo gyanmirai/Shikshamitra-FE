@@ -60,7 +60,7 @@ import type { IFeeCategoryFormProps } from './type';
 
 const FormInfoIcon = ({ label, title }: { label: string; title: string }) => (
   <CustomTooltip arrow placement="right" title={title}>
-    <IconButton aria-label={label} size="small">
+    <IconButton aria-label={label} size="small" sx={{ marginInlineStart: '-1px' }}>
       <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
     </IconButton>
   </CustomTooltip>

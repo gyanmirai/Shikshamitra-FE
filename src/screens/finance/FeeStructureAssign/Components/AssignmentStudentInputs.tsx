@@ -466,6 +466,7 @@ export default function AssignmentStudentInputs({
             <FeeHeadSelectionRow
               key={feeHeadId}
               name={feeHeadName}
+              datesBeforeAmount
               selection={
                 head.isOptional
                   ? {
@@ -477,9 +478,12 @@ export default function AssignmentStudentInputs({
               }
               labelAdornment={
                 <>
-                  <Label color={head.isOptional ? 'info' : 'default'}>
-                    {head.isOptional ? 'Optional' : 'Required'}
-                  </Label>
+                  {!head.isOptional && (
+                    <Typography component="span" color="error.main">
+                      *
+                    </Typography>
+                  )}
+                  {head.isVariable && <Label>Variable</Label>}
                   {head.isOptional && optionalServiceAction?.(feeHeadId)}
                   {!flat && included && !expanded && (
                     <CustomTooltip title={`Expand ${feeHeadName}`}>

@@ -24,7 +24,6 @@ import {
   Drawer,
   Typography,
   DialogActions,
-  CircularProgress,
 } from '@mui/material';
 
 import { FormFooter } from './FormFooter';
@@ -178,7 +177,6 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
                   bgcolor: (theme) => alpha(theme.palette.background.paper, 0.72),
                 }}
               >
-                <CircularProgress size={28} />
                 <Typography variant="body2">Saving payment term…</Typography>
               </Stack>
             )}

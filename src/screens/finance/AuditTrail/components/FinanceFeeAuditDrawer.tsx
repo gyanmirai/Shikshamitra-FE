@@ -5,7 +5,8 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { Box, Alert, Drawer, IconButton, Typography, CircularProgress } from '@mui/material';
+import { Box, Alert, Drawer, IconButton, Typography } from '@mui/material';
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 import { useLazyGetFinanceStudentAuditEventsQuery } from 'src/redux/finance/audit/financeAuditApi';
 import { useFinancePermissions } from 'src/screens/finance/hooks/useFinancePermissions';
 
@@ -250,15 +251,13 @@ function AuthorizedFinanceFeeAuditDrawer({
         <Box ref={topSentinelRef} sx={{ height: 2, visibility: 'hidden' }} />
 
         {isFetchingNewer && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-            <CircularProgress size={20} thickness={3} />
+          <Box sx={{ py: 1 }}>
+            <FinanceListSkeleton label="Loading newer audit events" rows={1} />
           </Box>
         )}
 
         {isInitialLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress size={28} />
-          </Box>
+          <FinanceListSkeleton label="Loading fee audit events" />
         ) : isError ? (
           <Alert
             severity="error"
@@ -275,10 +274,8 @@ function AuthorizedFinanceFeeAuditDrawer({
             <AuditTimeline logs={logs} cardVariant="compact" />
 
             {/* Bottom Sentinel */}
-            <Box ref={bottomSentinelRef} sx={{ py: 2, display: 'flex', justifyContent: 'center' }}>
-              {accumulatedEvents.length < totalCount && (
-                <CircularProgress size={24} thickness={3} />
-              )}
+            <Box ref={bottomSentinelRef} sx={{ py: 2 }}>
+              {isFetchingOlder && <FinanceListSkeleton label="Loading older audit events" rows={1} />}
             </Box>
           </>
         )}

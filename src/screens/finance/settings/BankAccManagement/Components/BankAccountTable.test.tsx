@@ -71,12 +71,13 @@ function show() {
   return props;
 }
 describe('bank list activity entry', () => {
-  it('opens through the bank name and the explicit View action', () => {
+  it('shows the bank name as text and opens through the explicit View action', () => {
     const props = show();
-    fireEvent.click(screen.getByRole('button', { name: 'School Bank' }));
-    expect(props.onView).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('School Bank')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'School Bank' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'School Bank' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'View activity' }));
-    expect(props.onView).toHaveBeenCalledTimes(2);
+    expect(props.onView).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('row-actions')).toHaveAttribute('data-limit', '2');
   });
   it('isolates history, edit, delete and active switch from row opening', () => {

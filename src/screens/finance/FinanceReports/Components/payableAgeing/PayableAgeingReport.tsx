@@ -13,9 +13,9 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  Skeleton,
   Typography,
   TableContainer,
-  CircularProgress,
 } from '@mui/material';
 
 export default function PayableAgeingReport({ report }: { report?: string }) {
@@ -49,21 +49,13 @@ export default function PayableAgeingReport({ report }: { report?: string }) {
 
   const tableData = rawData || mockData;
 
-  if (isLoading) {
-    return (
-      <Card sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-        <CircularProgress />
-      </Card>
-    );
-  }
-
   return (
     <Card sx={{ p: 2 }}>
       <Typography variant="h6" mb={2}>
         Payable Ageing Report
       </Typography>
       <TableContainer>
-        <Table>
+        <Table aria-label="Payable ageing report" aria-busy={isLoading || undefined}>
           <TableHead>
             <TableRow>
               <TableCell>Vendor / Entity</TableCell>
@@ -75,18 +67,28 @@ export default function PayableAgeingReport({ report }: { report?: string }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {tableData.map((row: any) => (
-              <TableRow key={row.vendorId || row.id}>
-                <TableCell>{row.vendorName || row.name}</TableCell>
-                <TableCell align="right">{fCurrency(row.days0_30 || 0)}</TableCell>
-                <TableCell align="right">{fCurrency(row.days31_60 || 0)}</TableCell>
-                <TableCell align="right">{fCurrency(row.days61_90 || 0)}</TableCell>
-                <TableCell align="right">{fCurrency(row.days90Plus || 0)}</TableCell>
-                <TableCell align="right">
-                  <strong>{fCurrency(row.total || 0)}</strong>
-                </TableCell>
-              </TableRow>
-            ))}
+            {isLoading
+              ? Array.from({ length: 3 }, (_, row) => (
+                  <TableRow key={row} aria-hidden="true">
+                    {Array.from({ length: 6 }, (_, column) => (
+                      <TableCell key={column}>
+                        <Skeleton variant="text" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              : tableData.map((row: any) => (
+                  <TableRow key={row.vendorId || row.id}>
+                    <TableCell>{row.vendorName || row.name}</TableCell>
+                    <TableCell align="right">{fCurrency(row.days0_30 || 0)}</TableCell>
+                    <TableCell align="right">{fCurrency(row.days31_60 || 0)}</TableCell>
+                    <TableCell align="right">{fCurrency(row.days61_90 || 0)}</TableCell>
+                    <TableCell align="right">{fCurrency(row.days90Plus || 0)}</TableCell>
+                    <TableCell align="right">
+                      <strong>{fCurrency(row.total || 0)}</strong>
+                    </TableCell>
+                  </TableRow>
+                ))}
           </TableBody>
         </Table>
       </TableContainer>

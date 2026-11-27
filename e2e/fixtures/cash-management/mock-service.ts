@@ -28,6 +28,16 @@ const row: CashDetail = {
   deposits: [],
   expenses: [],
 };
+if (new URLSearchParams(window.location.search).has('withExpense')) {
+  row.spentAmount = 200;
+  row.remainingAmount = 9800;
+  row.expenses.push({
+    id: 'supply-expense',
+    name: 'School supplies',
+    amount: 200,
+    paymentDate: '2026-10-21T11:00:00+05:30',
+  });
+}
 if (new URLSearchParams(window.location.search).has('legacy'))
   Object.assign(row, {
     status: 1,
@@ -76,7 +86,7 @@ export const api = createApi({
               : [],
         },
       };
-    if (url === '/finance/cash-management') {
+    if (url === '/finance/cash-management' || url === '/finance/cash-management/expenses') {
       const filters = JSON.parse(params.filters || '[]');
       const matches =
         (!params.search ||
@@ -96,15 +106,33 @@ export const api = createApi({
           if (filter.type === 'equals') return text === String(expected).toLowerCase();
           return text.includes(String(expected).toLowerCase());
         });
-      const visible = matches && (!params.month || params.month === 10);
       const inPeriod = (date: string | null) => {
-        if (!params.month) return true;
+        if (!params.month && !params.startDate) return true;
         if (!date) return false;
         const indiaDate = new Date(new Date(date).getTime() + 330 * 60 * 1000);
+        if (params.startDate) {
+          const day = indiaDate.toISOString().slice(0, 10);
+          return day >= params.startDate && day <= params.endDate;
+        }
         return (
           indiaDate.getUTCMonth() + 1 === params.month && indiaDate.getUTCFullYear() === params.year
         );
       };
+      const visible = matches && inPeriod(row.collectedAt);
+      if (url.endsWith('/expenses')) {
+        const items = matches
+          ? row.expenses
+              .filter((expense) => inPeriod(expense.paymentDate))
+              .map((expense) => ({
+                ...expense,
+                sourceReference: row.reference,
+              }))
+          : [];
+        const skip = (params.page - 1) * params.pageSize;
+        return {
+          data: { items: items.slice(skip, skip + params.pageSize), totalCount: items.length },
+        };
+      }
       return {
         data: {
           availableCash: row.remainingAmount,
@@ -158,18 +186,19 @@ export const api = createApi({
         return invalid('Cash changed. Refresh cash balance.', 'Finance:CashManagement:Stale');
       if (row.remainingAmount <= 0 || body.get('bankAccountId') !== 'bank')
         return invalid('Select a bank and positive balance.');
-      const amount = row.remainingAmount;
+      const amount = Number(body.get('amount') ?? row.remainingAmount);
+      if (!(amount > 0 && amount <= row.remainingAmount)) return invalid('Invalid deposit amount.');
       const date = new Date().toISOString();
       Object.assign(row, {
-        status: 1,
+        status: row.remainingAmount === amount ? 1 : row.status,
         bankAccountId: 'bank',
         bankLabel: 'School current account • 4321',
-        remainingAmount: 0,
+        remainingAmount: row.remainingAmount - amount,
         depositedAmount: row.depositedAmount + amount,
         notes: body.get('notes') || undefined,
       });
       row.deposits.push({
-        id: `deposit-${version++}`,
+        id: `deposit-${version}`,
         amount,
         creditedAmount: amount,
         status: 1,
@@ -179,6 +208,7 @@ export const api = createApi({
         createdBy: 'reviewer',
         canConfirm: false,
       });
+      version += 1;
       const result = { amount, sourceCount: 1 };
       completed.set(key, result);
       return { data: result };

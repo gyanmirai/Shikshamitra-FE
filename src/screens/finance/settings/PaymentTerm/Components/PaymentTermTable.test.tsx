@@ -217,6 +217,19 @@ describe('PaymentTermTable', () => {
     expect(getPaymentTermDisplayStatus({ ...archived, status: 'Draft' })).toBe('Draft');
   });
 
+  it('offers Archive for a referenced term while keeping Delete disabled', () => {
+    const term = createTerm({ referencedStructureCount: 1 });
+
+    render(<PaymentTermTable {...baseProps} data={[term]} totalCount={1} />);
+
+    const row = within(screen.getByTestId('row-term-draft'));
+    const archive = row.getByRole('menuitem', { name: 'Archive' });
+    expect(archive).not.toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(archive);
+    expect(callbacks.onArchive).toHaveBeenCalledWith(term);
+    expect(row.getByRole('menuitem', { name: 'Delete' })).toHaveAttribute('aria-disabled', 'true');
+  });
+
   it('permits deleting an unused Draft even when it is a revision', () => {
     const draft = createTerm();
     const revisionDraft = createTerm({ currentVersionNumber: 2, hasPublishedVersion: true });

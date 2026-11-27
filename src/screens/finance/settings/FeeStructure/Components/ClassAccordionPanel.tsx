@@ -22,7 +22,6 @@ import {
   TextField,
   Typography,
   IconButton,
-  LinearProgress,
   ListItemButton,
   InputAdornment,
 } from '@mui/material';
@@ -302,10 +301,21 @@ export default function ClassAccordionPanel({
       >
         <Typography component="h2" variant="subtitle2">
           Structures{' '}
-          {!initialLoading && (
+          {!initialLoading && !isFetching && (
             <Typography component="span" variant="caption" color="text.secondary">
               ({cards.length})
             </Typography>
+          )}
+          {isFetching && !initialLoading && (
+            <Skeleton
+              component="span"
+              variant="rounded"
+              width={24}
+              height={12}
+              role="status"
+              aria-label="Refreshing fee structures"
+              sx={{ display: 'inline-block', verticalAlign: 'middle' }}
+            />
           )}
         </Typography>
         {!desktop && (
@@ -487,9 +497,6 @@ export default function ClassAccordionPanel({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, minWidth: 0 }}>
-      {isFetching && !initialLoading && (
-        <LinearProgress aria-label="Refreshing fee structures" sx={{ flexShrink: 0 }} />
-      )}
       {isError && (
         <Alert
           severity="error"

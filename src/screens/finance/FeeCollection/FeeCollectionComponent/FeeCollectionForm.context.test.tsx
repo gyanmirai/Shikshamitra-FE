@@ -470,10 +470,12 @@ describe('embedded Finance collection context', () => {
     expect(checkout).not.toContainElement(footer);
     expect(footer).toContainElement(screen.getByRole('button', { name: 'Collect Payment' }));
     expect(footer).toContainElement(screen.getByRole('button', { name: 'Cancel' }));
-    expect(footer).toContainElement(screen.getByText('Collecting now'));
+    expect(screen.queryByText('Collecting now')).not.toBeInTheDocument();
     const details = screen.getByRole('region', { name: 'Payment details' });
     expect(details).not.toContainElement(screen.getByRole('heading', { name: 'Payment summary' }));
-    expect(details).not.toContainElement(screen.getByText('Collecting now'));
+    expect(details).not.toHaveTextContent(
+      /Enter an amount to preview|Select fees or charges from the ledger/i
+    );
     expect(details).not.toContainElement(screen.getByRole('button', { name: 'Collect Payment' }));
     expect(details).not.toContainElement(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('button', { name: 'Cancel' })).toHaveClass('MuiButton-outlined');

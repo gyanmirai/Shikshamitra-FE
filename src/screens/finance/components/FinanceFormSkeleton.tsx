@@ -78,7 +78,10 @@ export function FinanceSkeletonRows({
           key={row}
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr 1fr', sm: `repeat(${columns}, minmax(0, 1fr))` },
+            gridTemplateColumns: {
+              xs: `repeat(${Math.min(columns, 2)}, minmax(0, 1fr))`,
+              sm: `repeat(${columns}, minmax(0, 1fr))`,
+            },
             gap: 1.5,
             p: 1.5,
             border: 1,

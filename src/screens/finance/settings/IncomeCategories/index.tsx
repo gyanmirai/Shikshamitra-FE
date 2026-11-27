@@ -32,6 +32,7 @@ import type { IIncomeCategory } from './Components/type';
 const FinanceIncomeCategoriesScreen = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const access = useAccountSettingPermissions('IncomeCategory');
+  const academicYearId = currentYear?.id;
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
   const [filters, setFilters] = useState<IParams['filters']>([]);
@@ -52,10 +53,10 @@ const FinanceIncomeCategoriesScreen = () => {
     error: incomeCategoryError,
     refetch,
   } = useGetIncomeCategoriesQuery({
-      academicYearId: currentYear?.id,
+      academicYearId,
       ...queryParams,
       filters: serializeFinanceTableFilters(filters),
-    }, { skip: !currentYear?.id || !access.canView, refetchOnMountOrArgChange: 60 });
+    }, { skip: !academicYearId || !access.canView, refetchOnMountOrArgChange: 60 });
 
   // DELETE mutation
   const [deleteIncomeCategory, { isLoading: isDeleting }] = useQueryAndMutation({
@@ -110,7 +111,7 @@ const FinanceIncomeCategoriesScreen = () => {
         ]}
         action={
           <Button
-            disabled={!access.canAdd}
+            disabled={!access.canAdd || !academicYearId}
             onClick={() => addIncomeCategoryDialog.onTrue()}
             size="small"
             startIcon={<Add />}
@@ -122,46 +123,49 @@ const FinanceIncomeCategoriesScreen = () => {
         }
       />
 
-      <IncomeCategoryTable
-        onDelete={(data) => {
-          if (
-            !access.canDelete ||
-            !data.canDelete ||
-            data.isSystemCategory ||
-            data.isActive ||
-            data.isUsedInDownstream
-          ) {
-            return;
-          }
-          setDeleteError('');
-          setSelectedIncomeCategory(data);
-          deleteIncomeCategoryDialog.onTrue();
-        }}
-        onEdit={(data) => {
-          setSelectedIncomeCategory(data);
-          addIncomeCategoryDialog.onTrue();
-        }}
-        open={open}
-        onAddIncomeCategory={addIncomeCategoryDialog}
-        setOpenDialog={setOpen}
-        editData={selectedIncomeCategory}
-        setEditData={setSelectedIncomeCategory}
-        data={incomeCategoryData?.items || []}
-        isLoading={incomeCategoryLoading || (incomeCategoryFetching && !incomeCategoryData)}
-        isRefreshing={incomeCategoryFetching && Boolean(incomeCategoryData)}
-        error={incomeCategoryError}
-        onRetry={() => refetch()}
-        totalCount={incomeCategoryData?.totalCount}
-        onServerPagination={handleServerPagination}
-        onServerSearch={handleServerSearch}
-        filters={filters}
-        page={queryParams.page - 1}
-        rowsPerPage={queryParams.pageSize}
-        onServerFilter={(next) => {
-          setFilters(next);
-          setQueryParams((current) => ({ ...current, page: 1 }));
-        }}
-      />
+      {academicYearId ? (
+        <IncomeCategoryTable
+          onDelete={(data) => {
+            if (
+              !access.canDelete ||
+              !data.canDelete ||
+              data.isSystemCategory ||
+              data.isActive ||
+              data.isUsedInDownstream
+            ) {
+              return;
+            }
+            setDeleteError('');
+            setSelectedIncomeCategory(data);
+            deleteIncomeCategoryDialog.onTrue();
+          }}
+          onEdit={(data) => {
+            setSelectedIncomeCategory(data);
+            addIncomeCategoryDialog.onTrue();
+          }}
+          open={open}
+          onAddIncomeCategory={addIncomeCategoryDialog}
+          setOpenDialog={setOpen}
+          editData={selectedIncomeCategory}
+          setEditData={setSelectedIncomeCategory}
+          data={incomeCategoryData?.items || []}
+          isLoading={incomeCategoryLoading || incomeCategoryFetching}
+          error={incomeCategoryError}
+          onRetry={() => refetch()}
+          totalCount={incomeCategoryData?.totalCount}
+          onServerPagination={handleServerPagination}
+          onServerSearch={handleServerSearch}
+          filters={filters}
+          page={queryParams.page - 1}
+          rowsPerPage={queryParams.pageSize}
+          onServerFilter={(next) => {
+            setFilters(next);
+            setQueryParams((current) => ({ ...current, page: 1 }));
+          }}
+        />
+      ) : (
+        <Alert severity="info">Select an academic year to manage income categories.</Alert>
+      )}
 
       <CustomDialog
         titleInfo="Maintain the category name and description used to organize Finance records."

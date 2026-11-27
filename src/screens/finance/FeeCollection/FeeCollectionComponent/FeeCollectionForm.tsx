@@ -53,8 +53,8 @@ import {
   TextField,
   Typography,
   DialogActions,
-  CircularProgress,
 } from '@mui/material';
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 
 import { toPeriod } from './FeeLedgerShared';
 import { normalizeLedgerStatus } from './feeLedgerStatus';
@@ -918,9 +918,7 @@ const FeeCollectComponentForm = ({
       0
     );
   const optionalServiceCredit = formData?.summary?.optionalServiceCredit ?? 0;
-  const studentMetrics = [
-    { label: 'Total fees', amount: formData?.summary?.totalFee ?? 0 },
-    { label: 'Paid fees', amount: formData?.summary?.paidFee ?? 0, tone: 'success' },
+  const studentAdjustmentMetrics = [
     {
       label: 'Total concessions',
       amount: ledgerData.monthWise.reduce(
@@ -936,6 +934,12 @@ const FeeCollectComponentForm = ({
         0
       ),
     },
+    { label: 'Total refunds', amount: formData?.summary?.refundedAmount ?? 0 },
+  ].filter(({ amount }) => amount > 0);
+  const studentMetrics: { label: string; amount: number; tone?: string }[] = [
+    { label: 'Total fees', amount: formData?.summary?.totalFee ?? 0 },
+    { label: 'Paid fees', amount: formData?.summary?.paidFee ?? 0, tone: 'success' },
+    ...studentAdjustmentMetrics,
     { label: 'Total outstanding', amount: overallOutstanding, tone: 'warning' },
     ...(optionalServiceCredit > 0
       ? [{ label: 'Available service credit', amount: optionalServiceCredit, tone: 'success' }]
@@ -1746,17 +1750,14 @@ const FeeCollectComponentForm = ({
                     sx={{ overflowWrap: 'anywhere' }}
                   >
                     {[
-                      `GR ${formData?.student?.grNo || student?.grNumber || '—'}`,
                       [
                         formData?.student?.standardName || student?.className,
                         formData?.student?.divisionName || student?.division,
                       ]
                         .filter(Boolean)
-                        .join(' '),
-                      currentYear?.name,
-                      formData?.student?.rollNo || student?.rollNumber
-                        ? `Roll ${formData?.student?.rollNo || student?.rollNumber}`
-                        : null,
+                        .join(' / '),
+                      `GR ${formData?.student?.grNo || student?.grNumber || '—'}`,
+                      `Roll ${formData?.student?.rollNo || student?.rollNumber || '—'}`,
                     ]
                       .filter(Boolean)
                       .join(' · ')}
@@ -2332,9 +2333,7 @@ const FeeCollectComponentForm = ({
                       emptyText={
                         !hasCollectibleItems
                           ? 'No payment is needed. There is no outstanding amount to collect.'
-                          : usesAutomaticAllocation
-                            ? 'Enter an amount to preview automatic fee allocation, or select specific items from the ledger.'
-                            : undefined
+                          : undefined
                       }
                       fixedFeeOrder={usesAutomaticAllocation}
                       disabled={collectLoading || adaptedOutcomeUnresolved || collectionReadBlocked}
@@ -2442,14 +2441,6 @@ const FeeCollectComponentForm = ({
             </Box>
           )}
 
-          <Box aria-live="polite" sx={{ mr: 'auto', minWidth: 0 }}>
-            <Typography variant="caption" color="text.secondary">
-              Collecting now
-            </Typography>
-            <Typography variant="subtitle1" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-              {formatNumber(Number(formik.values.payment.amount || 0), 'INR')}
-            </Typography>
-          </Box>
           <Button
             type="button"
             variant="outlined"
@@ -2500,7 +2491,6 @@ const FeeCollectComponentForm = ({
             gap: 1,
           }}
         >
-          <CircularProgress size={24} />
           <Typography variant="body2">Recording payment…</Typography>
         </Box>
       )}
@@ -2553,16 +2543,7 @@ const FeeCollectComponentForm = ({
                                 {receipt.receiptNumber ? ` · ${receipt.receiptNumber}` : ''}
                               </Typography>
                               {status === 'loading' && (
-                                <Stack
-                                  direction="row"
-                                  alignItems="center"
-                                  spacing={1}
-                                  role="status"
-                                  aria-label={`Loading ${scope} receipt`}
-                                >
-                                  <CircularProgress size={16} />
-                                  <Typography variant="body2">Preparing download…</Typography>
-                                </Stack>
+                                <FinanceListSkeleton label={`Loading ${scope} receipt`} rows={1} />
                               )}
                               {status === 'error' && (
                                 <Alert

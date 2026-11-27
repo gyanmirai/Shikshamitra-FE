@@ -7,7 +7,11 @@ import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Stack, Button, Typography, DialogActions, CircularProgress } from '@mui/material';
+import { Stack, Button, Typography, DialogActions } from '@mui/material';
+import {
+  FinanceListSkeleton,
+  FinanceDocumentSkeleton,
+} from 'src/screens/finance/components/FinanceContentSkeletons';
 import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 
 interface ReconciliationReceiptData {
@@ -68,9 +72,7 @@ const ReconciliationReceiptDialog = ({
     >
       <DialogScrollContent>
         {!receiptData ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress aria-label="Loading receipt details" />
-          </Box>
+          <FinanceListSkeleton label="Loading receipt details" columns={3} rows={2} />
         ) : (
           <Stack spacing={2}>
             <DetailSection
@@ -127,9 +129,7 @@ const ReconciliationReceiptDialog = ({
               helpText="Preview the receipt document. Use the footer actions to open or download it."
             >
               {isLoading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                  <CircularProgress size={40} aria-label="Loading receipt PDF" />
-                </Box>
+                <FinanceDocumentSkeleton label="Loading receipt PDF" />
               ) : receiptBlobUrl ? (
                 <PdfPreview url={receiptBlobUrl} title="Receipt" showPageText={false} />
               ) : (

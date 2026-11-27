@@ -1,4 +1,8 @@
-import type { AssignmentHead, AssignmentPreview } from 'src/redux/finance/studentFeeAssignment';
+import type {
+  AssignmentHead,
+  AssignmentLine,
+  AssignmentPreview,
+} from 'src/redux/finance/studentFeeAssignment';
 
 import { useId } from 'react';
 import { Label } from 'src/components/label';
@@ -6,27 +10,49 @@ import { fDate } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Stack, Collapse, IconButton, Typography } from '@mui/material';
-import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 import { DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import { selectableAssignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
+import {
+  Box,
+  Stack,
+  Table,
+  Divider,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
+  Typography,
+  ButtonBase,
+  TableContainer,
+} from '@mui/material';
 
 import { optionalServiceStatus } from './optionalServiceStatus';
 import AssignmentProrationDetails from './AssignmentProrationDetails';
-import { groupFeeHeadProration, groupAssignmentInstallments } from './assignmentReviewPresentation';
+import { groupFeeHeadProration } from './assignmentReviewPresentation';
 
-// Embedded evidence tables: the drawer body owns vertical scrolling, while each
-// shared table contains horizontal overflow at narrow widths.
-const embeddedTableProps = {
-  showToolbar: false,
-  isPagination: false,
-  isSearch: false,
-  isFilter: false,
-  isShowedDense: false,
-  wrapperProps: { sx: { flex: 'none', minWidth: 0 } },
-  tableContainerProps: { sx: { height: 'auto', flex: 'none' } },
-} as const;
+const summaryGrid = {
+  display: 'grid',
+  gap: 1.5,
+  gridTemplateColumns: 'minmax(0, 1fr)',
+  '@container (min-width: 420px)': { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
+};
+const headGrid = {
+  display: 'grid',
+  gap: 0.75,
+  alignItems: 'center',
+  gridTemplateColumns: 'minmax(0, 1fr) auto 18px',
+  gridTemplateAreas: '"name amount toggle" "term amount toggle" "dates dates dates"',
+  '@container (min-width: 560px)': {
+    gridTemplateColumns:
+      'minmax(0, 1.15fr) minmax(0, 0.95fr) minmax(0, 1.2fr) minmax(7rem, 17%) 18px',
+    gridTemplateAreas: '"name term dates amount toggle"',
+  },
+};
+
+const headColumnHeading = {
+  display: 'none',
+  '@container (min-width: 560px)': { display: 'block' },
+};
 
 export default function AssignmentReview({
   data,
@@ -35,467 +61,386 @@ export default function AssignmentReview({
   data: AssignmentPreview;
   committed?: boolean;
 }) {
-  const headsExpanded = useBoolean(true);
-  const scheduleExpanded = useBoolean(committed);
-  const regionId = useId();
-  const headsRegion = `${regionId}-heads`;
-  const scheduleRegion = `${regionId}-schedule`;
-  const expansionAction = (label: string, id: string, expanded: ReturnType<typeof useBoolean>) => (
-    <IconButton
-      size="small"
-      color="inherit"
-      aria-label={`${expanded.value ? 'Collapse' : 'Expand'} ${label}`}
-      aria-expanded={expanded.value}
-      aria-controls={id}
-      onClick={expanded.onToggle}
-    >
-      <Iconify icon={expanded.value ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
-    </IconButton>
-  );
-  const installments = groupAssignmentInstallments(data.lines);
-  const stoppedFeeHeadIds = new Set(
-    data.lines
-      .filter((line) => (line.optionalServiceCancellationAmount ?? 0) > 0)
-      .map((line) => line.feeHeadId)
-  );
-  const cancelledAmount = data.lines.reduce(
+  const legacy = data.calculationVersion === 'LegacyUnknown';
+  const cancelled = data.lines.reduce(
     (sum, line) => sum + (line.optionalServiceCancellationAmount ?? 0),
     0
   );
-  const legacy = data.calculationVersion === 'LegacyUnknown';
-  const hasProration =
-    data.reductionTotal > 0 || data.policies.some((policy) => policy.family === 'proration');
-  const feeHeadProration =
-    hasProration && !legacy
-      ? groupFeeHeadProration(data.lines.filter((line) => !line.optionalServicePeriodId))
-      : null;
-  const tableId = `assignment-${data.studentId}-${data.structureId}-${committed ? 'saved' : 'preview'}`;
   const money = (value: number) => formatNumber(value, data.currency);
-  const showProrationTotals = hasProration && (committed || data.reductionTotal !== 0);
-  const summary = (
-    <DetailSection
-      helpText="The total amount is calculated by the server for the selected fees and service dates."
-      icon="mdi:cash-multiple"
-      title="Assignment Total"
-    >
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr)',
-          '@container (min-width: 360px)': { gridTemplateColumns: 'minmax(0, 1fr) auto' },
-          gap: 1.5,
-          alignItems: 'start',
-        }}
-      >
-        <Stack spacing={1.5} sx={{ minWidth: 0 }}>
-          <DetailField
-            label="Fee structure"
-            value={`${data.structureName} · ${data.revisionNumber ? `r${data.revisionNumber}` : 'Historical'}`}
-          />
-          {data.registrationJoiningDate && (
-            <DetailField label="Joining date" value={fDate(data.registrationJoiningDate)} />
-          )}
-          {committed && data.assignmentSource === 'Admission' && (
-            <DetailField label="Assignment source" value="Admission" />
-          )}
-        </Stack>
-        <Stack
-          spacing={1.5}
-          sx={{
-            minWidth: 0,
-            fontVariantNumeric: 'tabular-nums',
-            '@container (min-width: 360px)': { textAlign: 'right' },
-          }}
-        >
-          {committed && cancelledAmount > 0 && (
-            <DetailField label="Cancelled installments" value={money(cancelledAmount)} />
-          )}
-          {showProrationTotals && (
-            <>
-              <DetailField label="Scheduled fees" value={money(data.scheduledTotal)} />
-              <DetailField label="Proration reduction" value={money(data.reductionTotal)} />
-            </>
-          )}
-          <DetailField
-            label={committed ? 'Assigned amount' : 'Total to assign'}
-            value={<Box component="strong">{money(data.proratedTotal)}</Box>}
-          />
-        </Stack>
-      </Box>
+  const linesByHead = new Map<string, AssignmentLine[]>();
+  data.lines.forEach((line) => {
+    const lines = linesByHead.get(line.feeHeadId);
+    if (lines) lines.push(line);
+    else linesByHead.set(line.feeHeadId, [line]);
+  });
 
-      {data.overrideReason && (
-        <DetailField label="Amount override reason" value={data.overrideReason} />
-      )}
-      {data.policyOverrideReason && (
-        <DetailField label="Policy override reason" value={data.policyOverrideReason} />
-      )}
-    </DetailSection>
-  );
   return (
-    <Box sx={{ minWidth: 0, containerType: 'inline-size' }}>
-      <Stack spacing={2}>
+    <Stack spacing={2} sx={{ minWidth: 0 }}>
+      <DetailSection
+        title="Assignment Total"
+        icon="mdi:cash-multiple"
+        helpText="Finance calculates these amounts from the selected fee heads, service dates and proration policy."
+      >
+        <Box sx={summaryGrid}>
+          <DetailField label="Fee structure" value={data.structureName} />
+          <DetailField
+            label="Joining date"
+            value={data.registrationJoiningDate ? fDate(data.registrationJoiningDate) : undefined}
+          />
+          <DetailField label="Assignment source" value={data.assignmentSource} />
+        </Box>
+        <Divider />
         <Box
+          role="group"
+          aria-label="Assignment total calculation"
           sx={{
             display: 'grid',
-            gap: 2,
-            gridTemplateColumns: 'minmax(0, 1fr)',
-            gridTemplateAreas: '"summary" "details"',
-            alignItems: 'start',
+            alignItems: 'center',
+            gap: 1,
+            gridTemplateColumns: '20px minmax(0, 1fr)',
+            gridTemplateAreas: '". total" "minus reduction" "equals final"',
+            fontVariantNumeric: 'tabular-nums',
+            '@container (min-width: 440px)': {
+              gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr)',
+              gridTemplateAreas: '"total minus reduction equals final"',
+            },
+            '& [data-operator]': { color: 'text.secondary', typography: 'h6', textAlign: 'center' },
           }}
+        >
+          <Box sx={{ gridArea: 'total' }}>
+            <DetailField label="Total fees" value={money(data.scheduledTotal)} />
+          </Box>
+          <Box data-operator sx={{ gridArea: 'minus' }}>
+            −
+          </Box>
+          <Box sx={{ gridArea: 'reduction' }}>
+            <DetailField label="Proration reduction" value={money(data.reductionTotal)} />
+          </Box>
+          <Box data-operator sx={{ gridArea: 'equals' }}>
+            =
+          </Box>
+          <Box sx={{ gridArea: 'final', bgcolor: 'action.hover', borderRadius: 1, px: 1.5, py: 1 }}>
+            <DetailField
+              label="Final amount"
+              value={<Box component="strong">{money(data.proratedTotal)}</Box>}
+            />
+          </Box>
+        </Box>
+        {committed && cancelled > 0 && (
+          <DetailField label="Cancelled installments" value={money(cancelled)} />
+        )}
+        {data.overrideReason && (
+          <DetailField label="Amount override reason" value={data.overrideReason} />
+        )}
+        {data.policyOverrideReason && (
+          <DetailField label="Policy override reason" value={data.policyOverrideReason} />
+        )}
+      </DetailSection>
+
+      <Box component="section" aria-label="Fee Breakdown">
+        <DetailSection
+          title="Fee Breakdown"
+          icon="mdi:format-list-bulleted"
+          helpText="Select a fee head to see its installment dates, amounts, and calculation details."
         >
           <Box
             sx={{
-              gridArea: 'summary',
-              minWidth: 0,
-              display: 'grid',
-              gap: 2,
-              gridTemplateColumns: 'minmax(0, 1fr)',
-              alignItems: 'start',
-              '@container (min-width: 720px)': {
-                gridTemplateColumns: 'minmax(0, 1.3fr) minmax(0, 1fr)',
-              },
+              ...headGrid,
+              rowGap: 0,
+              px: 1.25,
+              color: 'text.secondary',
+              typography: 'caption',
             }}
           >
-            {summary}
-            <DetailSection
-              icon="mdi:shield-check-outline"
-              title="Applicable Policies"
-              helpText="Policies saved for this student, including the admission proration version used for the recorded calculation."
-            >
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: 'minmax(0, 1fr)',
-                  '@container (min-width: 440px)': {
-                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                  },
-                  gap: 1.5,
-                }}
-              >
-                {selectableAssignmentPolicyFamilies.map((family) => {
-                  const policy = data.policies.find((p) => p.family === family);
-                  return (
-                    <DetailField
-                      key={family}
-                      label={family === 'refund' ? 'Refund policy' : 'Collection policy'}
-                      value={policy ? `${policy.name} · v${policy.version}` : 'No policy assigned'}
-                    />
-                  );
-                })}
-                {data.policies
-                  .filter((policy) => policy.family === 'proration')
-                  .map((policy) => (
-                    <DetailField
-                      key={policy.versionId}
-                      label="Proration policy"
-                      value={`${policy.name} · v${policy.version}`}
-                    />
-                  ))}
-              </Box>
-            </DetailSection>
+            <Box sx={{ gridArea: 'name' }}>Fee head</Box>
+            <Box sx={{ ...headColumnHeading, gridArea: 'term' }}>Payment term</Box>
+            <Box sx={{ ...headColumnHeading, gridArea: 'dates' }}>Service dates</Box>
+            <Box sx={{ gridArea: 'amount', textAlign: 'right' }}>
+              {legacy ? 'Recorded amount' : 'Assigned amount'}
+            </Box>
           </Box>
-          <Stack spacing={2} sx={{ gridArea: 'details', minWidth: 0 }}>
-            <DetailSection
-              icon="mdi:format-list-bulleted"
-              title="Fee Breakdown"
-              action={expansionAction('fee breakdown', headsRegion, headsExpanded)}
-              helpText="Selected fees, payment terms, and service dates. When proration applies, the breakdown shows the scheduled amount, reduction, and rule used."
-            >
-              <Collapse in={headsExpanded.value} id={headsRegion}>
-                <CustomizableTable
-                  {...embeddedTableProps}
-                  tableId={`${tableId}-heads`}
-                  tableTitle="Assignment fee-head breakdown"
-                  data={data.heads.map((head) => ({
-                    ...head,
-                    _id: head.feeHeadId,
-                    proration: feeHeadProration?.get(head.feeHeadId),
-                    serviceStatus: optionalServiceStatus(
-                      head,
-                      stoppedFeeHeadIds.has(head.feeHeadId)
-                    ),
-                  }))}
-                  noDataText="No fee heads recorded for this assignment."
-                  columns={[
-                    {
-                      id: 'feeHeadName',
-                      label: 'Fee Head',
-                      filterType: 'string' as const,
-                      minWidth: 180,
-                      width: '40%',
-                      isSort: false,
-                      isFilter: committed,
-                      cellSx: { verticalAlign: 'top' },
-                      render: (_value, head) => (
-                        <Stack spacing={0.5}>
-                          <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                            {head.feeHeadName}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {head.isOptional ? 'Optional' : 'Required'}
-                            {!head.included && <Label>Not selected</Label>}
-                            {head.serviceStatus.label && (
-                              <Label
-                                color={
-                                  head.serviceStatus.stopped || head.serviceStatus.label === 'Ended'
-                                    ? 'default'
-                                    : 'success'
-                                }
-                              >
-                                {head.serviceStatus.label}
-                              </Label>
-                            )}
-                          </Typography>
-                          {head.included && head.zeroAmountReason && (
-                            <Typography variant="caption" color="text.secondary">
-                              Zero amount: {head.zeroAmountReason}
-                            </Typography>
-                          )}
-                        </Stack>
-                      ),
-                    },
-                    {
-                      id: 'paymentTermName',
-                      label: 'Payment Term',
-                      filterType: 'string' as const,
-                      minWidth: 180,
-                      isSort: false,
-                      isFilter: committed,
-                      cellSx: { verticalAlign: 'top' },
-                      render: (_value, head) =>
-                        head.included ? (
-                          <Stack spacing={0.5}>
-                            {head.paymentTermName && (
-                              <Typography variant="body2">
-                                {head.paymentTermName} · v{head.paymentTermVersionNumber ?? '—'}
-                              </Typography>
-                            )}
-                            {head.servicePeriod?.reason && (
-                              <Typography variant="caption" color="text.secondary">
-                                {head.servicePeriod.reason}
-                              </Typography>
-                            )}
-                            {(!head.serviceStatus.latestPeriod ||
-                              head.originalOptionalServiceEndDate) &&
-                              (head.servicePeriod?.startDate || head.servicePeriod?.endDate) && (
-                                <Typography variant="caption" color="text.secondary">
-                                  Service period:{' '}
-                                  {head.servicePeriod.startDate
-                                    ? fDate(head.servicePeriod.startDate)
-                                    : '—'}{' '}
-                                  –{' '}
-                                  {head.servicePeriod.endDate
-                                    ? fDate(head.servicePeriod.endDate)
-                                    : '—'}
-                                </Typography>
-                              )}
-                            <AssignmentProrationDetails
-                              head={head as AssignmentHead}
-                              calculation={head.proration}
-                              currency={data.currency}
-                            />
-                            {head.serviceStatus.stopped && head.optionalServiceEndDate && (
-                              <Typography variant="caption" color="text.secondary">
-                                Cancellation effective {fDate(head.optionalServiceEndDate)}
-                              </Typography>
-                            )}
-                            {!head.serviceStatus.stopped && head.serviceStatus.latestPeriod && (
-                              <Typography variant="caption" color="text.secondary">
-                                {head.originalOptionalServiceEndDate ||
-                                (head.optionalServicePeriods?.length ?? 0) > 1
-                                  ? 'Restarted'
-                                  : 'Service dates'}{' '}
-                                {fDate(head.serviceStatus.latestPeriod.startDate)} to{' '}
-                                {fDate(head.serviceStatus.latestPeriod.endDate)}
-                              </Typography>
-                            )}
-                            {head.serviceStatus.latestPeriod && (
-                              <Typography variant="caption" color="text.secondary">
-                                {money(head.serviceStatus.latestPeriod.monthlyRate)} / month ·{' '}
-                                {head.serviceStatus.latestPeriod.prorationPolicyName} v
-                                {head.serviceStatus.latestPeriod.prorationPolicyVersion}
-                              </Typography>
-                            )}
-                            {head.originalOptionalServiceEndDate &&
-                              head.serviceStatus.latestPeriod && (
-                                <Typography variant="caption" color="text.secondary">
-                                  Original cancellation effective{' '}
-                                  {fDate(head.originalOptionalServiceEndDate)}
-                                </Typography>
-                              )}
-                          </Stack>
-                        ) : (
-                          '—'
-                        ),
-                    },
-                    {
-                      id: 'obligation',
-                      label: legacy ? 'Recorded Amount' : 'Assigned Amount',
-                      filterType: 'number' as const,
-                      minWidth: 130,
-                      align: 'left',
-                      cellSx: {
-                        textAlign: 'right',
-                        fontVariantNumeric: 'tabular-nums',
-                        verticalAlign: 'top',
-                      },
-                      isSort: false,
-                      isFilter: committed,
-                      render: (value, head) => (
-                        <Stack spacing={0.5}>
-                          <Typography
-                            variant="subtitle2"
-                            sx={{ fontVariantNumeric: 'tabular-nums' }}
-                          >
-                            {head.included || committed ? money(value) : '—'}
-                          </Typography>
-                          {head.included && head.amountBasis === 'MonthlyRate' && (
-                            <Typography variant="caption" color="text.secondary">
-                              {money(head.effectiveAmount)} / month
-                            </Typography>
-                          )}
-                          {head.included &&
-                            head.proration &&
-                            (committed || head.proration.reduction !== 0) && (
-                              <>
-                                <Typography variant="caption" color="text.secondary">
-                                  Scheduled {money(head.proration.scheduled)}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  Reduction {money(head.proration.reduction)}
-                                </Typography>
-                              </>
-                            )}
-                          {committed && !head.included && (
-                            <Typography variant="caption" color="text.secondary">
-                              Not assigned
-                            </Typography>
-                          )}
-                        </Stack>
-                      ),
-                    },
-                  ]}
-                  searchFieldProps={{ placeholder: 'Search' }}
-                />
-              </Collapse>
-            </DetailSection>
-
-            <DetailSection
-              icon="mdi:calendar-clock-outline"
-              title="Installment Schedule"
-              helpText="Recorded installments with demand dates, payment deadlines and assigned amounts. Saved assignments also show paid and outstanding balances."
-              action={expansionAction('installment schedule', scheduleRegion, scheduleExpanded)}
-            >
-              <Collapse in={scheduleExpanded.value} id={scheduleRegion}>
-                <CustomizableTable
-                  {...embeddedTableProps}
-                  tableId={`${tableId}-schedule-ledger`}
-                  tableTitle="Assignment installment schedule"
-                  data={installments.map((item) => ({ ...item, _id: item.id }))}
-                  noDataText="No installments recorded for this assignment."
-                  columns={[
-                    {
-                      id: 'label',
-                      label: 'Installment',
-                      filterType: 'string' as const,
-                      minWidth: 145,
-                      isSort: false,
-                      isFilter: true,
-                      render: (value, row) => {
-                        const headCount = new Set(
-                          row.lines.map((line: { feeHeadId: string }) => line.feeHeadId)
-                        ).size;
-                        return (
-                          <Stack spacing={0.5}>
-                            <Typography variant="body2">{value}</Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {headCount} {headCount === 1 ? 'fee head' : 'fee heads'}
-                            </Typography>
-                          </Stack>
-                        );
-                      },
-                    },
-                    {
-                      id: 'demandDate',
-                      label: 'Demand date',
-                      filterType: 'date' as const,
-                      renderColumn: () => (
-                        <InfoTooltipIcon
-                          label="About demand dates"
-                          title="The date this installment becomes available for collection."
-                        />
-                      ),
-                      minWidth: 110,
-                      isSort: false,
-                      isFilter: true,
-                      render: (value) => (value ? fDate(value) : '—'),
-                    },
-                    {
-                      id: 'dueDate',
-                      label: 'Due date',
-                      filterType: 'date' as const,
-                      renderColumn: () => (
-                        <InfoTooltipIcon
-                          label="About due dates"
-                          title="The payment deadline for this installment. Assignment preserves the configured date."
-                        />
-                      ),
-                      minWidth: 110,
-                      isSort: false,
-                      isFilter: true,
-                      render: (value) => (value ? fDate(value) : '—'),
-                    },
-                    {
-                      id: 'obligation',
-                      label: 'Assigned Amount',
-                      filterType: 'number' as const,
-                      minWidth: 110,
-                      align: 'left',
-                      cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
-                      isSort: false,
-                      isFilter: true,
-                      render: (value) => money(value),
-                    },
-                    ...(committed
-                      ? [
-                          {
-                            id: 'paid',
-                            label: 'Paid',
-                            filterType: 'number' as const,
-                            minWidth: 100,
-                            align: 'left' as const,
-                            cellSx: {
-                              textAlign: 'right' as const,
-                              fontVariantNumeric: 'tabular-nums',
-                            },
-                            isSort: false,
-                            isFilter: true,
-                            render: (value: number) => money(value),
-                          },
-                          {
-                            id: 'outstanding',
-                            label: 'Outstanding',
-                            filterType: 'number' as const,
-                            minWidth: 110,
-                            align: 'left' as const,
-                            cellSx: {
-                              textAlign: 'right' as const,
-                              fontVariantNumeric: 'tabular-nums',
-                            },
-                            isSort: false,
-                            isFilter: true,
-                            render: (value: number) => money(value),
-                          },
-                        ]
-                      : []),
-                  ]}
-                  searchFieldProps={{ placeholder: 'Search' }}
-                />
-              </Collapse>
-            </DetailSection>
+          <Stack divider={<Divider />} sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}>
+            {data.heads.map((head) => (
+              <FeeHeadReview
+                key={head.feeHeadId}
+                head={head}
+                lines={linesByHead.get(head.feeHeadId) ?? []}
+                currency={data.currency}
+                committed={committed}
+                legacy={legacy}
+              />
+            ))}
           </Stack>
+          {!data.heads.length && (
+            <Typography variant="body2" color="text.secondary">
+              No fee heads recorded.
+            </Typography>
+          )}
+        </DetailSection>
+      </Box>
+
+      <DetailSection
+        title="Applicable Policies"
+        icon="mdi:shield-check-outline"
+        helpText="The policies applied to this assignment."
+      >
+        <Box sx={summaryGrid}>
+          {[...selectableAssignmentPolicyFamilies, 'proration' as const].map((family) => {
+            const policy = data.policies.find((item) => item.family === family);
+            if (family === 'proration' && !policy) return null;
+            return (
+              <DetailField
+                key={family}
+                label={`${family.charAt(0).toUpperCase()}${family.slice(1)} policy`}
+                value={policy?.name ?? 'No policy assigned'}
+              />
+            );
+          })}
         </Box>
+      </DetailSection>
+    </Stack>
+  );
+}
+
+function FeeHeadReview({
+  head,
+  lines,
+  currency,
+  committed,
+  legacy,
+}: {
+  head: AssignmentHead;
+  lines: AssignmentLine[];
+  currency: string;
+  committed: boolean;
+  legacy: boolean;
+}) {
+  const expanded = useBoolean();
+  const detailsId = useId();
+  const status = optionalServiceStatus(
+    head,
+    lines.some((line) => (line.optionalServiceCancellationAmount ?? 0) > 0)
+  );
+  const chosen = head.included;
+  const { startDate, endDate } = head.servicePeriod ?? {};
+  const serviceDates =
+    chosen && startDate ? `${fDate(startDate)} – ${endDate ? fDate(endDate) : '—'}` : '—';
+  const serviceDatesId = `${detailsId}-service-dates`;
+  const row = (
+    <>
+      <Stack
+        component="span"
+        spacing={0.25}
+        sx={{ gridArea: 'name', minWidth: 0, alignItems: 'flex-start' }}
+      >
+        <Typography component="span" variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+          {head.feeHeadName}
+          {!head.isOptional && (
+            <Box component="span" sx={{ color: 'error.main' }}>
+              {' '}
+              *
+            </Box>
+          )}
+        </Typography>
+        {status.label && status.label !== 'Cancellation recorded' && <Label>{status.label}</Label>}
+        {!status.label && !chosen && <Label>Not selected</Label>}
       </Stack>
+      <Typography
+        component="span"
+        variant="body2"
+        color="text.secondary"
+        sx={{
+          gridArea: 'term',
+          overflowWrap: 'anywhere',
+        }}
+      >
+        {chosen ? head.paymentTermName || '—' : '—'}
+      </Typography>
+      <Typography
+        id={serviceDatesId}
+        component="span"
+        variant="body2"
+        color="text.secondary"
+        sx={{ gridArea: 'dates' }}
+      >
+        {serviceDates}
+      </Typography>
+      <Typography
+        component="span"
+        variant="subtitle2"
+        sx={{ gridArea: 'amount', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}
+      >
+        {chosen ? formatNumber(head.obligation, currency) : '—'}
+      </Typography>
+      {chosen && (
+        <Box component="span" sx={{ gridArea: 'toggle', display: 'flex' }} aria-hidden="true">
+          <Iconify icon={expanded.value ? 'mdi:chevron-up' : 'mdi:chevron-down'} width={18} />
+        </Box>
+      )}
+    </>
+  );
+  return (
+    <Box sx={{ minWidth: 0 }}>
+      {chosen ? (
+        <ButtonBase
+          aria-label={`View ${head.feeHeadName} installments`}
+          aria-describedby={serviceDates === '—' ? undefined : serviceDatesId}
+          aria-expanded={expanded.value}
+          aria-controls={detailsId}
+          onClick={expanded.onToggle}
+          sx={{
+            ...headGrid,
+            width: '100%',
+            textAlign: 'left',
+            p: 1.25,
+            '&.Mui-focusVisible': { bgcolor: 'action.focus' },
+          }}
+        >
+          {row}
+        </ButtonBase>
+      ) : (
+        <Box sx={{ ...headGrid, p: 1.25 }}>{row}</Box>
+      )}
+      <Box id={detailsId} hidden={!expanded.value}>
+        {expanded.value && (
+          <FeeHeadInstallments
+            head={head}
+            lines={lines}
+            currency={currency}
+            committed={committed}
+            legacy={legacy}
+          />
+        )}
+      </Box>
     </Box>
+  );
+}
+
+function FeeHeadInstallments({
+  head,
+  lines,
+  currency,
+  committed,
+  legacy,
+}: {
+  head: AssignmentHead;
+  lines: AssignmentLine[];
+  currency: string;
+  committed: boolean;
+  legacy: boolean;
+}) {
+  const { servicePeriod } = head;
+  const { latestPeriod, stopped } = optionalServiceStatus(
+    head,
+    lines.some((line) => (line.optionalServiceCancellationAmount ?? 0) > 0)
+  );
+  const calculation = legacy
+    ? undefined
+    : groupFeeHeadProration(lines.filter((line) => !line.optionalServicePeriodId)).get(
+        head.feeHeadId
+      );
+  const money = (value: number) => formatNumber(value, currency);
+  const date = (value?: string | null) => (value ? fDate(value) : '—');
+
+  return (
+    <Stack spacing={1} sx={{ px: 1.25, pb: 1.25, minWidth: 0 }}>
+      {latestPeriod && (
+        <DetailField
+          label="Latest service period"
+          value={`${date(latestPeriod.startDate)} – ${date(latestPeriod.endDate)}`}
+        />
+      )}
+      {stopped && head.optionalServiceEndDate && (
+        <DetailField
+          label="Cancellation effective date"
+          value={date(head.optionalServiceEndDate)}
+        />
+      )}
+      {head.originalOptionalServiceEndDate && latestPeriod && (
+        <DetailField
+          label="Original cancellation date"
+          value={date(head.originalOptionalServiceEndDate)}
+        />
+      )}
+      {head.amountBasis === 'MonthlyRate' && head.effectiveAmount != null && (
+        <DetailField
+          label={
+            head.monthlyRateEffectiveDate
+              ? `Monthly amount from ${date(head.monthlyRateEffectiveDate)}`
+              : 'Monthly amount'
+          }
+          value={money(head.effectiveAmount)}
+        />
+      )}
+      {head.zeroAmountReason && (
+        <DetailField label="Zero amount reason" value={head.zeroAmountReason} />
+      )}
+      {servicePeriod?.reason && (
+        <DetailField label="Service date reason" value={servicePeriod.reason} />
+      )}
+      <AssignmentProrationDetails head={head} calculation={calculation} currency={currency} />
+      {lines.length ? (
+        <TableContainer sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}>
+          <Table
+            size="small"
+            aria-label={`${head.feeHeadName} installments`}
+            sx={{
+              tableLayout: 'fixed',
+              minWidth: committed ? 740 : 580,
+              whiteSpace: 'nowrap',
+              '& td, & th': { px: 1.25 },
+              '& td': { fontVariantNumeric: 'tabular-nums' },
+              '& tbody th': { whiteSpace: 'normal', overflowWrap: 'anywhere' },
+            }}
+          >
+            <colgroup>
+              {(committed ? [14, 25, 14, 12, 11, 10, 14] : [24, 32, 17, 15, 12]).map(
+                (width, index) => (
+                  <col key={index} style={{ width: `${width}%` }} />
+                )
+              )}
+            </colgroup>
+            <TableHead>
+              <TableRow>
+                <TableCell>Installment</TableCell>
+                <TableCell>Service dates</TableCell>
+                <TableCell title="When this installment becomes available for collection">
+                  Available from
+                </TableCell>
+                <TableCell>Due date</TableCell>
+                <TableCell align="right">Amount</TableCell>
+                {committed && <TableCell align="right">Paid</TableCell>}
+                {committed && <TableCell align="right">Outstanding</TableCell>}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {lines.map((line, index) => (
+                <TableRow key={line.dueFeeId ?? index}>
+                  <TableCell component="th" scope="row">
+                    {line.installmentLabel}
+                  </TableCell>
+                  <TableCell>
+                    {line.coverageStartDate && line.coverageEndDate
+                      ? `${date(line.coverageStartDate)} – ${date(line.coverageEndDate)}`
+                      : '—'}
+                  </TableCell>
+                  <TableCell>{date(line.demandDate)}</TableCell>
+                  <TableCell>{date(line.dueDate)}</TableCell>
+                  <TableCell align="right">{money(line.proratedAmount)}</TableCell>
+                  {committed && <TableCell align="right">{money(line.paidAmount)}</TableCell>}
+                  {committed && (
+                    <TableCell align="right">{money(line.outstandingAmount)}</TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      ) : (
+        <Typography variant="body2" color="text.secondary">
+          No installments recorded.
+        </Typography>
+      )}
+    </Stack>
   );
 }

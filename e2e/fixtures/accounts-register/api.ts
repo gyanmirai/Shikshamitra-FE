@@ -1,21 +1,28 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { tagTypes } from 'src/redux/tagTypes';
+import { PaymentMethod } from 'src/enums/finance-payment-method';
+import { matchesTableRowFilters } from 'src/components/customizabaleTable/hooks/table-row-filter';
+import { toRegisterTableRow } from 'src/screens/finance/accounts/Registers/registerTablePresentation';
 import type {
   AccountsActivityRow,
   AccountsActivityDetail,
 } from 'src/redux/finance/accountsActivityApi';
 export const fixtureState = { failList: false, failOptions: false };
+export const expenseDemo = new URLSearchParams(globalThis.location?.search).has('expenseDemo');
+type FixtureRow = AccountsActivityRow & { paymentMethod: PaymentMethod };
 const row = (
   id: string,
   source: AccountsActivityRow['source'],
   reference: string,
-  amount: number
-): AccountsActivityRow => ({
+  amount: number,
+  paymentMethod = PaymentMethod.BANK_TRANSFER
+): FixtureRow => ({
   id,
   sourceId: id,
   source,
   reference,
   amount,
+  paymentMethod,
   studentId: source === 'Collection' || source === 'Refund' ? 'student' : null,
   studentName:
     source === 'Collection' || source === 'Refund'
@@ -30,8 +37,8 @@ const row = (
       : source === 'Expense'
         ? 'School supplies'
         : 'Tuition fee income',
-  bankLabel: 'SBI • 9384',
-  bankAccountId: 'bank',
+  bankLabel: paymentMethod === PaymentMethod.CASH ? '' : 'SBI • 9384',
+  bankAccountId: paymentMethod === PaymentMethod.CASH ? undefined : 'bank',
   sourceStatus:
     source === 'Refund' ? 'Awaiting payout' : source === 'Expense' ? 'Paid' : 'Received',
   accountingStatus: 'Not posted',
@@ -43,6 +50,12 @@ export const rows = [
   row('donation', 'Income', 'Parent association donation', 1000),
   row('supplies', 'Expense', 'Stationery purchase', 500),
   row('refund', 'Refund', 'REF-2026-000001', 200),
+  ...(expenseDemo
+    ? Array.from({ length: 101 }, (_, index) => {
+        const reference = `Cash supplies ${String(index + 1).padStart(3, '0')}`;
+        return row(reference, 'Expense', reference, 100 + index, PaymentMethod.CASH);
+      })
+    : []),
 ];
 export function confirmRefund() {
   const index = rows.findIndex((x) => x.id === 'refund');
@@ -70,6 +83,23 @@ export const api = createApi({
               bankAccounts: [{ id: 'bank', label: 'SBI • 9384' }],
             },
           };
+    if (args.url === '/finance/cash-management/options')
+      return {
+        data: {
+          bankAccounts: [],
+          cashSources:
+            params.academicYearId === 'year-2026'
+              ? [
+                  {
+                    id: 'cash-balance',
+                    label: 'Synthetic available cash',
+                    remainingAmount: 39919,
+                    concurrencyStamp: 'cash-stamp',
+                  },
+                ]
+              : [],
+        },
+      };
     if (args.url === '/accounts/register') {
       if (fixtureState.failList) return { error: { status: 500, data: {} } };
       let result =
@@ -93,12 +123,22 @@ export const api = createApi({
             Number(x.occurredAt.slice(0, 4)) === params.year
         );
       if (params.categoryId) result = result.filter((x) => x.categoryId === params.categoryId);
+      if (params.paymentMethod !== undefined)
+        result = result.filter((x) => x.paymentMethod === Number(params.paymentMethod));
       if (params.search)
         result = result.filter((x) =>
           (x.reference + x.studentName + x.categoryName)
             .toLowerCase()
             .includes(params.search.toLowerCase())
         );
+      if (params.filters) {
+        const filters = JSON.parse(params.filters).map((filter: { column: string }) => ({
+          ...filter,
+          valueType:
+            filter.column === 'amount' ? 'number' : filter.column === 'occurredAt' ? 'date' : 'string',
+        }));
+        result = result.filter((x) => matchesTableRowFilters(toRegisterTableRow(x), filters, []));
+      }
       const sortBy = (params.sortBy ?? 'occurredAt') as keyof AccountsActivityRow;
       const descending = params.sortDescending !== false;
       result = [...result].sort((left, right) => {
@@ -161,7 +201,7 @@ export const api = createApi({
             ? []
             : [
                 {
-                  method: 'BankTransfer',
+                  method: item.paymentMethod === PaymentMethod.CASH ? 'Cash' : 'BankTransfer',
                   date: item.occurredAt,
                   amount: item.amount,
                   bankLabel: item.bankLabel,
@@ -176,7 +216,13 @@ export const api = createApi({
       if (saved.has(args.body.idempotencyKey)) return { data: saved.get(args.body.idempotencyKey) };
       const source = args.url === '/incomes' ? 'Income' : 'Expense';
       const item = {
-        ...row(args.body.idempotencyKey, source, args.body.name, args.body.amount),
+        ...row(
+          args.body.idempotencyKey,
+          source,
+          args.body.name,
+          args.body.amount,
+          args.body.paymentMethod
+        ),
         occurredAt: args.body.paymentDate,
         bankLabel: args.body.bankAccountId ? 'SBI • 9384' : '',
         bankAccountId: args.body.bankAccountId,

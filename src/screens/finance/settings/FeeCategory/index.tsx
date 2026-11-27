@@ -7,7 +7,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, Button, DialogActions } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
@@ -113,20 +113,14 @@ const FeeCategoryCreation = () => {
         titleInfo="View this fee category, its mapped fee heads, and their concession settings."
         hasForm={false}
         guardUnsavedChanges={false}
+        closeOnBackdropClick
       >
-        <DialogScrollContent sx={{ p: 2 }} scrollBarProps={{ sx: { flex: 1, minHeight: 0 } }}>
+        <DialogScrollContent
+          sx={{ p: { xs: 2, sm: 2.5 } }}
+          scrollBarProps={{ sx: { flex: 1, minHeight: 0 } }}
+        >
           {selectedFeeCategory?.id && <FeeCategoryView id={selectedFeeCategory.id} />}
         </DialogScrollContent>
-        <DialogActions>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={handleCloseDetails}
-          >
-            Close
-          </Button>
-        </DialogActions>
       </CustomDialog>
     </Box>
   );

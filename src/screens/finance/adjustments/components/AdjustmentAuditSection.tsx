@@ -1,7 +1,8 @@
 'use client';
 
-import { Box, Alert, Typography, CircularProgress } from '@mui/material';
+import { Box, Alert, Typography } from '@mui/material';
 import AuditTimeline from 'src/screens/finance/AuditTrail/components/AuditTimeline';
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 import { useGetFinanceEntityAuditEventsQuery } from 'src/redux/finance/audit/financeAuditApi';
 import { mapFinanceAuditEventsToLogs } from 'src/screens/finance/AuditTrail/utils/financeAudit.mapper';
 import { useFinancePermissions } from 'src/screens/finance/hooks/useFinancePermissions';
@@ -46,11 +47,7 @@ export default function AdjustmentAuditSection({
 
   if (isGuid) {
     if (isLoading) {
-      return (
-        <Box sx={{ py: 2, display: 'flex', justifyContent: 'center' }}>
-          <CircularProgress size={24} />
-        </Box>
-      );
+      return <FinanceListSkeleton label="Loading adjustment audit events" />;
     }
     if (isError) {
       return <Alert severity="error">Unable to load adjustment audit events.</Alert>;

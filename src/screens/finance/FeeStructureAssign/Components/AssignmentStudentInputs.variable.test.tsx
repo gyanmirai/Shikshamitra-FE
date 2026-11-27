@@ -106,7 +106,7 @@ describe('variable student inputs', () => {
     render(<Harness changed={vi.fn()} />);
     const hostel = within(screen.getByRole('region', { name: 'Hostel' }));
     const transport = within(screen.getByRole('region', { name: 'Transport' }));
-    expect(transport.getByText('Optional', { exact: true })).toBeVisible();
+    expect(transport.queryByText('Optional', { exact: true })).not.toBeInTheDocument();
     expect(hostel.getByRole('textbox', { name: 'Monthly amount' })).toHaveAccessibleDescription(
       'Charged for each covered month.'
     );
@@ -119,7 +119,7 @@ describe('variable student inputs', () => {
     expect(transport.getByRole('textbox', { name: 'Monthly amount' })).toHaveValue('');
     const tuition = within(screen.getByRole('region', { name: 'Tuition' }));
     expect(tuition.getByText('₹ 5,000')).toBeInTheDocument();
-    expect(tuition.getByText('Required')).toBeInTheDocument();
+    expect(tuition.getByText('*', { exact: true })).toBeVisible();
     expect(tuition.queryByRole('textbox')).not.toBeInTheDocument();
     expect(tuition.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Transport service' })).not.toBeInTheDocument();

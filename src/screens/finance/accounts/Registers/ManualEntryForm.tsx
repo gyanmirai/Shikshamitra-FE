@@ -37,7 +37,6 @@ import {
   Button,
   TextField,
   Typography,
-  CircularProgress,
 } from '@mui/material';
 
 import { entryDate } from './academicMonths';
@@ -256,6 +255,7 @@ export default function ManualEntryForm({
       ) / 100
     : undefined;
   const locked = isLoading || formik.isSubmitting;
+  const loadingOptions = options.isFetching && !locked;
   const blocking = !access.canAdd || locked || options.isFetching || refreshingCash;
   const fieldsBlocked = blocking || uncertain || stale;
   const refreshCashBalance = async () => {
@@ -441,7 +441,7 @@ export default function ManualEntryForm({
                 Categories and bank accounts could not be loaded.
               </Alert>
             )}
-            {options.isFetching && !options.currentData && !locked ? (
+            {loadingOptions ? (
               <AccountEntryFormSkeleton />
             ) : missingCategory ? (
               <FinancePrerequisiteState
@@ -631,7 +631,17 @@ export default function ManualEntryForm({
                               <FinanceSkeletonFields fields={[{ columns: 6, height: 24 }]} />
                             </FinanceFormSkeleton>
                           ) : !cashOptions.isError && availableCash !== undefined ? (
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography
+                              variant="subtitle2"
+                              color="text.primary"
+                              sx={{
+                                display: 'inline-block',
+                                px: 1.5,
+                                py: 0.75,
+                                borderRadius: 1,
+                                bgcolor: 'background.neutral',
+                              }}
+                            >
                               Available cash: {formatNumber(availableCash, 'INR')}
                             </Typography>
                           ) : null}
@@ -697,7 +707,7 @@ export default function ManualEntryForm({
               </Box>
             )}
           </Stack>
-          {blocking && !(options.isFetching && !options.currentData && !locked) && (
+          {(locked || refreshingCash) && !loadingOptions && (
             <Box
               role="status"
               aria-live="polite"
@@ -712,9 +722,8 @@ export default function ManualEntryForm({
                 gap: 1,
               }}
             >
-              <CircularProgress size={24} />
               <Typography variant="body2">
-                {locked ? 'Saving entry...' : 'Loading categories and bank accounts...'}
+                {locked ? 'Saving entry…' : 'Refreshing cash balance…'}
               </Typography>
             </Box>
           )}

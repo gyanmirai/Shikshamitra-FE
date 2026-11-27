@@ -15,6 +15,8 @@ import { useRouter, usePathname, useSearchParams } from 'src/routes/hooks';
 
 type PushStateInput = [data: any, unused: string, url?: string | URL | null | undefined];
 
+const financeRoot = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/finance`;
+
 export function ProgressBar() {
   // const [currentPoint, setCurrentPoint] = useState(0);
   // const [point, setPoint] = useState(0);
@@ -29,7 +31,7 @@ export function ProgressBar() {
     const registeredAnchors = new Map<HTMLAnchorElement, EventListener>();
 
     const handleAnchorClick = (event: MouseEvent) => {
-      const targetUrl = (event.currentTarget as HTMLAnchorElement).href;
+      const { href: targetUrl, origin, pathname } = event.currentTarget as HTMLAnchorElement;
 
       const currentUrl = window.location.href;
 
@@ -42,7 +44,10 @@ export function ProgressBar() {
         event.stopPropagation();
       } else {
         dispatch(setIsChanges(false));
-        if (targetUrl !== currentUrl) {
+        const usesFinanceSkeleton =
+          origin === window.location.origin &&
+          (pathname === financeRoot || pathname.startsWith(`${financeRoot}/`));
+        if (targetUrl !== currentUrl && !usesFinanceSkeleton) {
           NProgress.start();
         }
       }

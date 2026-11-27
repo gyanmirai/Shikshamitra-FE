@@ -158,6 +158,7 @@ export function resetFixture(scenario?: 'statuses' | 'selection' | 'settled' | '
     charges = [{
       chargeId: 'receipt-regression-charge', sourceId: 'receipt-regression-charge',
       sourceType: 'Charge', name: 'Receipt Regression Charge', isSystemGenerated: false,
+      dueDate: '2026-11-28',
       amount: 1000, paidAmount: 0, pendingAmount: 1000, waivedAmount: 0,
       canWaive: false, status: 0,
     }];

@@ -7,8 +7,8 @@ import { Alert } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { SplashScreen } from 'src/components/loading-screen';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
+import { FinancePageSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 
 export default function IncomeAndExpense() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function IncomeAndExpense() {
     if (!loading && permissionsInitialized && destination) router.replace(destination);
   }, [destination, loading, permissionsInitialized, router]);
   return loading || !permissionsInitialized || destination ? (
-    <SplashScreen />
+    <FinancePageSkeleton label="Loading Income and Expenses" />
   ) : (
     <Alert severity="error">You do not have permission to view Income or Expenses.</Alert>
   );

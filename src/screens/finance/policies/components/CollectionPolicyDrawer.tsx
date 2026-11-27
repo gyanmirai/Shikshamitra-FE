@@ -18,7 +18,6 @@ import {
   Button,
   Switch,
   Typography,
-  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 
@@ -245,7 +244,6 @@ function CollectionPolicyDrawerSession({
                 bgcolor: (theme) => varAlpha(theme.vars.palette.background.paperChannel, 0.72),
               }}
             >
-              <CircularProgress size={28} />
               <Typography variant="body2">Saving policy…</Typography>
             </Stack>
           )}

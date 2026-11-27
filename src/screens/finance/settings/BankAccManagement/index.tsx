@@ -14,6 +14,7 @@ import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import React, { lazy, Suspense, useRef, useState, useEffect, useCallback } from 'react';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 import { FinanceSetupManagerHeader } from 'src/screens/finance/setup/embedding/FinanceSetupManagerHeader';
 import {
   useGetBankAccountQuery,
@@ -206,7 +207,9 @@ const BankAccountManagement: React.FC = () => {
         sx={{ px: 1 }}
       />
 
-      {activitySelectionLoading && <Box role="status">Loading selected bank account…</Box>}
+      {activitySelectionLoading && (
+        <FinanceListSkeleton label="Loading selected bank account" columns={3} rows={1} />
+      )}
       {activitySelectionError && (
         <Alert
           severity={activitySelectionError === 'failed' ? 'error' : 'info'}
@@ -249,8 +252,7 @@ const BankAccountManagement: React.FC = () => {
           editData={selectedBankAccount}
           setEditData={setSelectedBankAccount}
           data={bankAccountData?.items || []}
-          isLoading={bankAccountsLoading || (bankAccountFetching && !bankAccountData)}
-          isRefreshing={bankAccountFetching && Boolean(bankAccountData)}
+          isLoading={bankAccountsLoading || bankAccountFetching}
           error={bankAccountError}
           onRetry={() => refetch()}
           totalCount={bankAccountData?.totalCount}
@@ -267,7 +269,7 @@ const BankAccountManagement: React.FC = () => {
         />
       )}
 
-      <Suspense fallback={<Box role="status">Loading bank activity…</Box>}>
+      <Suspense fallback={<FinanceListSkeleton label="Loading bank activity" columns={3} />}>
       {activityBank && currentYear?.id && previousYear.current === currentYear.id && (
         <BankAccountActivityDrawer
           open

@@ -5,7 +5,8 @@ import { Iconify } from 'src/components/iconify';
 import 'src/redux/finance/audit/financeAuditApi';
 import { useSearchParams } from 'next/navigation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Chip, Alert, Button, Skeleton, Typography, CircularProgress } from '@mui/material';
+import { Box, Chip, Alert, Button, Skeleton, Typography } from '@mui/material';
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 
 import AuditFilter from './components/AuditFilter';
 import AuditTimeline from './components/AuditTimeline';
@@ -187,8 +188,10 @@ const AuditTrail = () => {
           </>
         )}
 
-        <Box ref={sentinelRef} sx={{ py: 2, display: 'flex', justifyContent: 'center' }}>
-          {hasMore && <CircularProgress size={24} thickness={3} />}
+        <Box ref={sentinelRef} sx={{ py: 2 }}>
+          {hasMore && isFetching && !isLoading && (
+            <FinanceListSkeleton label="Loading more audit events" rows={1} />
+          )}
         </Box>
       </Box>
     </Box>
