@@ -4,13 +4,19 @@ import { floorRoomLimitMessage } from '../services/floor-room-capacity';
 
 import type { IFloor } from '../types';
 
+export const BUILDING_DESCRIPTION_MAX_LENGTH = 500;
+export const BUILDING_DESCRIPTION_LENGTH_ERROR = `Use ${BUILDING_DESCRIPTION_MAX_LENGTH} characters or fewer`;
+
 export const createBuildingValidationSchema = (floors?: IFloor[]) =>
   Yup.object().shape({
     buildingName: Yup.string()
       .trim()
       .required('Building name is required')
       .max(128, 'Use 128 characters or fewer'),
-    description: Yup.string().max(500, 'Use 500 characters or fewer'),
+    description: Yup.string().max(
+      BUILDING_DESCRIPTION_MAX_LENGTH,
+      BUILDING_DESCRIPTION_LENGTH_ERROR
+    ),
     floors: Yup.array()
       .min(1, 'Add at least one floor')
       .of(

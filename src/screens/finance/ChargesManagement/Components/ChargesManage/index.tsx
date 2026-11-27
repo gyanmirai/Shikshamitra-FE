@@ -313,9 +313,6 @@ const ChargesManagement = () => {
               editChargeDialog.onTrue();
               setSelectedChargeData(data);
             }}
-            onAddCharge={() => {
-              addChargeDialog.onTrue();
-            }}
             onApprove={(data) => {
               openApprovalReview(data, 'Approve');
             }}

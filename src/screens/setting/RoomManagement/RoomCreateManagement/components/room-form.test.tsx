@@ -67,8 +67,8 @@ it('adds row fields per column, preserves existing counts, and previews the exac
   expect(screen.getByRole('dialog', { name: 'Update Room' })).toBeInTheDocument();
   expect(screen.getByLabelText(/^Column 4 rows/)).toHaveValue(1);
   await waitFor(() => expect(previewButton).toHaveFocus());
-  expect(screen.getByLabelText('Total benches')).toHaveValue('10');
-  expect(screen.getByLabelText('Total student capacity')).toHaveValue('20');
+  expect(screen.getByRole('status', { name: 'Total benches' })).toHaveTextContent(/^10$/);
+  expect(screen.getByRole('status', { name: 'Total student capacity' })).toHaveTextContent(/^20$/);
 });
 
 it('adjusts each column independently and respects the row limits', async () => {

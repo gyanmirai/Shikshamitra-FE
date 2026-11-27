@@ -62,7 +62,7 @@ export function InstituteFieldFormattingPopover({ scope }: { scope: InstituteFor
           loadSettings();
         }}
       >
-        Field settings
+        Field formatting
       </Button>
       {anchorEl &&
         (settings ? (

@@ -63,8 +63,8 @@ it.each([0, 2])(
       fireEvent.change(screen.getByLabelText(/^Columns/), { target: { value: '0' } });
     });
     expect(screen.queryByLabelText('Column 1 rows')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Total benches')).toHaveValue('0');
-    expect(screen.getByLabelText('Total student capacity')).toHaveValue('0');
+    expect(screen.getByRole('status', { name: 'Total benches' })).toHaveTextContent(/^0$/);
+    expect(screen.getByRole('status', { name: 'Total student capacity' })).toHaveTextContent(/^0$/);
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(saved).toMatchObject({
@@ -85,8 +85,8 @@ it('keeps configured rows with zero students, previews zero totals and restores 
     fireEvent.change(screen.getByLabelText(/^Students per bench/), { target: { value: '0' } });
   });
   expect(screen.getByLabelText('Column 1 rows')).toHaveValue(3);
-  expect(screen.getByLabelText('Total benches')).toHaveValue('0');
-  expect(screen.getByLabelText('Total student capacity')).toHaveValue('0');
+  expect(screen.getByRole('status', { name: 'Total benches' })).toHaveTextContent(/^0$/);
+  expect(screen.getByRole('status', { name: 'Total student capacity' })).toHaveTextContent(/^0$/);
   fireEvent.click(screen.getByRole('button', { name: 'Preview room' }));
   expect(await screen.findByText('This room has no bench seating.')).toBeInTheDocument();
   expect(screen.queryByRole('region', { name: 'Room seating diagram' })).not.toBeInTheDocument();
@@ -97,8 +97,8 @@ it('keeps configured rows with zero students, previews zero totals and restores 
   await act(async () => {
     fireEvent.change(screen.getByLabelText(/^Students per bench/), { target: { value: '2' } });
   });
-  expect(screen.getByLabelText('Total benches')).toHaveValue('5');
-  expect(screen.getByLabelText('Total student capacity')).toHaveValue('10');
+  expect(screen.getByRole('status', { name: 'Total benches' })).toHaveTextContent(/^5$/);
+  expect(screen.getByRole('status', { name: 'Total student capacity' })).toHaveTextContent(/^10$/);
 });
 
 it('opens a saved non-bench room with zero values and saves it unchanged', async () => {

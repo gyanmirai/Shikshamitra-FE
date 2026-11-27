@@ -105,8 +105,8 @@ export const TableBody = ({
   if (data.length === 0) {
     return (
       <MuiTableBody>
-        <TableRow>
-          <TableCell colSpan={columns.length} sx={{ p: 0 }}>
+        <TableRow sx={{ height: '100%' }}>
+          <TableCell colSpan={columns.length} sx={{ p: 0, verticalAlign: 'middle' }}>
             <TableEmptyState
               noDataText={noDataText}
               tableWidth={tableRef}

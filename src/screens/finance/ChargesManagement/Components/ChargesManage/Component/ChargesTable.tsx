@@ -32,7 +32,6 @@ const PENDING = ChargeWorkflowStatus.Pending;
 const ChargesTable = ({
   onView,
   onEdit,
-  onAddCharge,
   onApprove,
   onReject,
   onVoid,
@@ -44,7 +43,6 @@ const ChargesTable = ({
 }: {
   onView: (data: IChargeData) => void;
   onEdit: (data: IChargeData) => void;
-  onAddCharge: () => void;
   onApprove: (data: IChargeData) => void;
   onReject: (data: IChargeData) => void;
   onVoid: (data: IChargeData) => void;
@@ -262,14 +260,10 @@ const ChargesTable = ({
           ) : undefined
         }
         noDataText={
-          <>
-            No Charges Found{' '}
-            {permissions.canAdd && (
-              <Button size="small" onClick={onAddCharge}>
-                Add Charge
-              </Button>
-            )}
-          </>
+          <Box component="span" display="flex" flexDirection="column" alignItems="center" gap={1}>
+            <span>No charges found.</span>
+            {permissions.canAdd && primaryAction}
+          </Box>
         }
         columns={[
           {

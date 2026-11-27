@@ -19,11 +19,11 @@ test.beforeEach(async ({ request }) => {
   }) => {
     await page.goto(`/?scope=${scope}`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+    await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
     await expect(dialog.getByRole('radio', { name: /^Default/ })).toBeChecked();
     await dialog.getByRole('radio', { name: /^Uppercase/ }).check();
-    const input = dialog.getByRole('textbox', { name: 'You type', exact: true });
+    const input = dialog.getByRole('textbox', { name: 'Example text', exact: true });
     await input.fill('mixed entry');
     await expect(dialog.getByLabel('New entry will be saved as', { exact: true })).toHaveText(
       'MIXED ENTRY'
@@ -31,7 +31,7 @@ test.beforeEach(async ({ request }) => {
     await dialog.getByRole('button', { name: 'Submit', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+    await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
     await expect(dialog.getByRole('radio', { name: /^Uppercase/ })).toBeChecked();
     if (scope === 'rooms') {
       await dialog.getByRole('combobox', { name: 'Field', exact: true }).click();
@@ -69,7 +69,7 @@ test('a failed save preserves the draft and retries without affecting another sc
   request,
 }) => {
   await page.goto('/?scope=rooms&theme=dark', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
   await dialog.getByRole('radio', { name: /PascalCase/ }).check();
   await request.post('/fixture/fail-next-save');
@@ -86,10 +86,10 @@ test('a failed save preserves the draft and retries without affecting another sc
 
 test('Unicode preview uses the owning module and keeps raw input', async ({ page, request }) => {
   await page.goto('/?scope=schoolDocuments', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
   await dialog.getByRole('radio', { name: /^Uppercase/ }).check();
-  const input = dialog.getByRole('textbox', { name: 'You type', exact: true });
+  const input = dialog.getByRole('textbox', { name: 'Example text', exact: true });
   await input.fill('école primaire');
   await expect(dialog.getByLabel('New entry will be saved as', { exact: true })).toHaveText(
     'ÉCOLE PRIMAIRE'
@@ -107,14 +107,14 @@ test('Unicode preview uses the owning module and keeps raw input', async ({ page
 test('view-only users cannot change field settings', async ({ page, request }) => {
   await page.goto('/?scope=buildings&access=view', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Buildings', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Field settings', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Field formatting', exact: true })).toHaveCount(0);
   const state = await (await request.get('/fixture/state')).json();
   expect(state.writes).toEqual([]);
 });
 
 test('secondary fields save independently from the main name field', async ({ page, request }) => {
   await page.goto('/?scope=buildings&theme=dark', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
   await dialog.getByRole('combobox', { name: 'Field', exact: true }).click();
   await page.getByRole('option', { name: 'Building name', exact: true }).click();
@@ -138,7 +138,7 @@ test('checkbox batch selection saves all fields once and reloads each rule', asy
   await page.goto('/?scope=buildings&theme=dark');
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
   const field = dialog.getByRole('combobox', { name: 'Field', exact: true });
   await field.click();
@@ -167,7 +167,7 @@ test('checkbox batch selection saves all fields once and reloads each rule', asy
   expect(state.rules.roomTypes).toEqual({ roomTypeName: 0, shortName: 0 });
   expect(state.writes).toHaveLength(1);
   await page.reload();
-  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
   await field.click();
   await page.getByRole('option', { name: 'Select All', exact: true }).click();
   await page.keyboard.press('Escape');
@@ -190,7 +190,7 @@ test('mixed batch drafts survive a save failure and preserve the unselected fiel
   request,
 }) => {
   await page.goto('/?scope=buildings');
-  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
   await dialog.getByRole('radio', { name: /^Uppercase/ }).check();
   await dialog.getByRole('combobox', { name: 'Field', exact: true }).click();
@@ -215,7 +215,7 @@ test('keyboard dismissal protects dirty changes and restores trigger focus', asy
   request,
 }) => {
   await page.goto('/?scope=shifts&theme=dark', { waitUntil: 'domcontentloaded' });
-  const trigger = page.getByRole('button', { name: 'Field settings', exact: true });
+  const trigger = page.getByRole('button', { name: 'Field formatting', exact: true });
   await trigger.focus();
   await trigger.press('Enter');
   const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });

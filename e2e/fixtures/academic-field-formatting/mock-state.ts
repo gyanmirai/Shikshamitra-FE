@@ -104,6 +104,8 @@ export function createAcademicFormattingFixture() {
       }
       if (method === 'GET' && path === '/api/app/academic-year')
         return { status: 200, json: { items: [year], totalCount: 1 } };
+      if (method === 'GET' && path === '/api/app/education-board/hierarchy')
+        return { status: 200, json: { items: boards } };
       if (method === 'GET' && path === '/api/app/education-board')
         return { status: 200, json: { items: boards, totalCount: 1 } };
       if (method === 'GET' && path === '/api/app/education-board/options')

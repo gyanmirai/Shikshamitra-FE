@@ -1,3 +1,4 @@
+import { instituteSetupPaths } from 'src/constants/institute-setup';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { useAcademicSetupContext } from './academic-setup-context';
@@ -6,20 +7,21 @@ import { AcademicYearContext, type AcademicYearContextProps } from './academic-y
 
 export const AcademicSetupHeader = (props: AcademicYearContextProps) => {
   const { isOnboarding } = useAcademicSetupContext();
+  const pageTitle = 'Academic Setup';
 
   return (
     <>
       <CustomBreadcrumbs
         action={<AcademicFieldFormattingPopover />}
-        heading={isOnboarding ? undefined : 'Academic Setup'}
+        heading={isOnboarding ? undefined : pageTitle}
         description={
           isOnboarding
             ? undefined
             : 'Build the school structure used by admissions, timetables, attendance, exams, and reporting.'
         }
         links={[
-          { name: 'Institute setup', href: '/setting/academic-setup' },
-          { name: isOnboarding ? 'Academic structure' : 'Academic hierarchy' },
+          { name: 'Institute Setup', href: instituteSetupPaths.academicSetup },
+          { name: isOnboarding ? 'Academic structure' : pageTitle },
         ]}
         slotProps={{
           action: {},

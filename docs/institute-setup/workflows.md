@@ -3,7 +3,7 @@ module: institute-setup
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-11-02
+updated_on: 2026-11-27
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,15 +12,15 @@ audience: humans-and-agents
 
 ## Institute form field formatting
 
-Open **Field settings** in the header of Buildings, Room Types, Rooms, Shift Management, School Identity or School Documents. Check one or more fields, or use **Select All** in the Field menu, then choose a case to apply to the selected fields together. **Deselect All** clears only the selection. Selecting fields preserves the draft; Submit saves all field rules in one request and keeps unselected rules unchanged. Settings load afresh when the popover opens; failed saves keep the draft, and closing a changed draft asks whether to keep editing or discard it. The control requires the owning form's configuration permissions.
+Open **Field formatting** in the header of Buildings, Room Types, Rooms, Shift Management, School Identity or School Documents. Check one or more fields, or use **Select All** in the Field menu, then choose a case to apply to the selected fields together. **Deselect All** clears only the selection. Selecting fields preserves the draft; Submit saves all field rules in one request and keeps unselected rules unchanged. Settings load afresh when the popover opens; failed saves keep the draft, and closing a changed draft asks whether to keep editing or discard it. The control requires the owning form's configuration permissions.
 
-Selections with different rules show no selected case until a case is chosen. Empty selections disable the case controls. A common rule enables the live example; it never rewrites the entered sample.
+Selections with different rules show no selected case until a case is chosen. Empty selections disable the case controls. With a common rule, enter **Example text** to preview the result. The sample stays as entered.
 
 New-entry fields show the expected saved value without changing the text being typed. The same settings apply to new floors added while editing a building, new room features and new or changed School Identity signature details. Existing saved entries keep their case. Numeric fields, dates, dropdown choices and uploaded files are unaffected. See [clients](./clients.md#institute-form-field-formatting) for frontend ownership and the [backend rules](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#institute-form-field-formatting) for saved behavior.
 
 ## Academic field formatting
 
-Open **Field settings** in Academic Setup to configure the school's new academic names in an anchored popover.
+Open **Field formatting** in Academic Setup to configure the school's new academic names in an anchored popover.
 Check one or more fields, choose Default, Capitalize each word, camelCase, PascalCase, or Uppercase, and review the live example before Submit. Select All includes only editable fields; official board codes remain disabled and are excluded from batch changes.
 Uppercase changes letters to capitals without removing spaces or punctuation.
 Default starts selected and keeps entered casing; official board codes are read-only and keep their spelling.
@@ -34,6 +34,7 @@ See the [backend rules](../../../Shikshamitra-BE/docs/modules/institute-setup/pr
 Open the building form to edit an unused floor. The first floor stays in the building and remains editable while unused.
 The form loads current room counts and makes floors with assigned rooms read-only, including their order and removal controls. A rejected save retains the draft.
 After deleting or reassigning rooms in the room workflow, choose `Refresh room counts` to validate the current draft against refreshed usage, then submit again.
+The refresh button shows progress while counts load. Submit becomes available when the counts are ready and shows its own progress during the save.
 A failed refresh keeps the previous validation state and offers `Retry`; saving remains blocked until counts load.
 The [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families) owns the room-capacity rule and error contract.
 

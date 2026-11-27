@@ -51,7 +51,7 @@ export function AcademicFieldFormattingPopover() {
           loadSettings();
         }}
       >
-        Field settings
+        Field formatting
       </Button>
       {anchorEl &&
         (settings ? (

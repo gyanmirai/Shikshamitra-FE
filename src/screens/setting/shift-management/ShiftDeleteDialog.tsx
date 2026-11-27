@@ -18,7 +18,7 @@ export function ShiftDeleteDialog({ open, name, busy, onClose, onDelete }: Props
       disableBackdropClick
       onClose={onClose}
       title="Delete Shift"
-      icon={<Iconify icon={GlobalIcons.delete} />}
+      icon={<Iconify icon={GlobalIcons.delete} sx={{ color: 'error.main' }} />}
       content={
         <>
           Delete the shift <strong>{name}</strong>?
@@ -34,7 +34,7 @@ export function ShiftDeleteDialog({ open, name, busy, onClose, onDelete }: Props
           startIcon={<Iconify icon={GlobalIcons.delete} />}
           onClick={onDelete}
         >
-          Delete shift
+          Delete
         </LoadingButton>
       }
     />
