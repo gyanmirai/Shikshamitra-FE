@@ -19,7 +19,7 @@ import {
 } from 'src/redux/hr/hr-policy-api';
 
 import { InfoTooltipIcon } from './HRPolicySharedUI';
-import { getErrorMessage } from '../hr-policy-workspace-utils';
+import { POLICY_PAGE_SIZE } from '../hr-policy-workspace.constants';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
@@ -31,22 +31,30 @@ type PolicyType = 'payroll' | 'attendance';
 
 function ArchiveToggle({
   current,
-  archivedCount,
   onCurrent,
   onArchived,
 }: {
   current: boolean;
-  archivedCount: number;
   onCurrent: () => void;
   onArchived: () => void;
 }) {
   return (
     <Stack direction="row" spacing={1}>
-      <Button size="small" variant={current ? 'contained' : 'outlined'} onClick={onCurrent}>
+      <Button
+        size="small"
+        aria-pressed={current}
+        variant={current ? 'contained' : 'outlined'}
+        onClick={onCurrent}
+      >
         Current
       </Button>
-      <Button size="small" variant={!current ? 'contained' : 'outlined'} onClick={onArchived}>
-        Archived ({archivedCount})
+      <Button
+        size="small"
+        aria-pressed={!current}
+        variant={!current ? 'contained' : 'outlined'}
+        onClick={onArchived}
+      >
+        Archived
       </Button>
     </Stack>
   );
@@ -59,6 +67,9 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
     academicYearId,
     calendars,
     activeCalendars,
+    calendarsLoading,
+    calendarsError,
+    refetchCalendars,
     policyArchiveView,
     setPolicyArchiveView,
     canCreatePolicy,
@@ -87,7 +98,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
     setDefaultWithImpact,
   } = ctx;
 
-  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 10, search: '' });
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: POLICY_PAGE_SIZE, search: '' });
   const isCurrent = policyArchiveView[type] === 'current';
   const listArgs = {
     academicYearId,
@@ -103,14 +114,6 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
   const attendancePage = useGetAttendancePoliciesQuery(listArgs, {
     skip: !academicYearId || type !== 'attendance',
   });
-  const payrollArchiveSummary = useGetPayrollPoliciesQuery(
-    { academicYearId, maxResultCount: 1, isArchived: true },
-    { skip: !academicYearId || type !== 'payroll' }
-  );
-  const attendanceArchiveSummary = useGetAttendancePoliciesQuery(
-    { academicYearId, maxResultCount: 1, isArchived: true },
-    { skip: !academicYearId || type !== 'attendance' }
-  );
   const pageResult = useHrTableQuery(
     {
       table: `hr-policy-${type}`,
@@ -122,12 +125,9 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
     },
     type === 'payroll' ? payrollPage : attendancePage
   );
-  const archiveSummary =
-    type === 'payroll' ? payrollArchiveSummary.data : attendanceArchiveSummary.data;
   const items = (pageResult.currentData?.items || []) as Array<PayrollPolicy | AttendancePolicy>;
   const { error } = pageResult;
   const isLoading = pageResult.isFetching && !pageResult.currentData;
-  const archivedCount = archiveSummary?.totalCount || 0;
 
   const columns: IColumn[] = [
     {
@@ -357,7 +357,6 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
           <Stack spacing={0.25}>
             <ArchiveToggle
               current={isCurrent}
-              archivedCount={archivedCount}
               onCurrent={() => {
                 setTableQuery((current) => ({ ...current, page: 1 }));
                 setPolicyArchiveView((cur) => ({ ...cur, [type]: 'current' }));
@@ -373,7 +372,12 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
               variant="contained"
               startIcon={<Iconify icon="mdi:plus" />}
               onClick={() => (type === 'payroll' ? openPayrollDrawer() : openAttendanceDrawer())}
-              disabled={!academicYearId || activeCalendars.length === 0 || !canCreatePolicy}
+              disabled={
+                !academicYearId ||
+                Boolean(calendarsError) ||
+                activeCalendars.length === 0 ||
+                !canCreatePolicy
+              }
               size="small"
               sx={{ borderRadius: 1, flexShrink: 0 }}
             >
@@ -381,14 +385,22 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
             </Button>
           ) : null}
         </Stack>
-        {activeCalendars.length === 0 ? (
+        {academicYearId && !calendarsLoading && !calendarsError && activeCalendars.length === 0 ? (
           <Alert severity="warning" sx={{ mt: 1.5 }}>
             Create an active work calendar first.
           </Alert>
         ) : null}
-        {error ? (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            {getErrorMessage(error, `Could not load ${type} policies.`)}
+        {calendarsError ? (
+          <Alert
+            severity="error"
+            sx={{ mt: 1 }}
+            action={
+              <Button color="inherit" size="small" onClick={refetchCalendars}>
+                Retry
+              </Button>
+            }
+          >
+            Could not load work calendars.
           </Alert>
         ) : null}
       </Card>
@@ -412,7 +424,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         isSearch
         serverSidePagination
         serverSideSearch
-        totalCount={pageResult.data?.totalCount || 0}
+        totalCount={pageResult.currentData?.totalCount || 0}
         page={tableQuery.page - 1}
         rowsPerPage={tableQuery.pageSize}
         searchTerm={tableQuery.search}

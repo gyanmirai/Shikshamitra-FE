@@ -8,6 +8,9 @@ import type {
   WorkCalendarForm,
   AttendanceAdvancedKey,
 } from './types/hr-policy-workspace.types';
+
+export const POLICY_PAGE_SIZE = 10;
+
 // Tab configuration
 // --- Tab Configuration --------------------------------------------------------
 
