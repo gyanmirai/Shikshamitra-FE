@@ -5,6 +5,7 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { useRef } from 'react';
 import { Box, Stack } from '@mui/material';
 import { StudentFeedback } from 'src/components/student-feedback';
 
@@ -43,6 +44,7 @@ export function FormBuilderWizardContent({
   onPublishIssueHandled,
 }: Props) {
   const contentRef = useFormWizardFocus(activeStep);
+  const starter = useRef(formik.initialValues);
   return (
     <FormInheritanceProvider
       formik={formik}
@@ -65,6 +67,7 @@ export function FormBuilderWizardContent({
           <FormBuilderDetails
             formik={formik}
             editing={Boolean(editing)}
+            starter={starter}
             nameConflictMessage={nameConflictMessage}
             checkingName={checkingName}
           />

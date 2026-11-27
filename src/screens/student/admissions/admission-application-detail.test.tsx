@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionApplicationDetailScreen from './admission-application-detail';
 
@@ -312,10 +312,6 @@ vi.mock('./application-detail/application-decision-card', () => ({
   },
 }));
 
-vi.mock('./application-detail/form-history-card', () => ({ FormHistoryCard: () => null }));
-vi.mock('./application-detail/transition-history-card', () => ({
-  TransitionHistoryCard: () => null,
-}));
 vi.mock('./application-detail/admission-stage-completion-dialog', () => ({
   AdmissionStageCompletionDialog: () => null,
 }));
@@ -1018,7 +1014,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     expect(screen.getByRole('button', { name: 'Focus Mode' })).toBeInTheDocument();
     expect(detailState.discardUnsavedAnswers).not.toHaveBeenCalled();
   });
-  it('hands a decision-phase case back to Applications instead of keeping it in the Pipeline drawer', () => {
+  it('hands a decision-phase case back to Applications instead of keeping it in the Pipeline drawer', async () => {
     loadPaymentDetail();
     detailState.applicationQuery.data.hasReachedDecision = true;
     render(
@@ -1028,9 +1024,11 @@ describe('AdmissionApplicationDetailScreen', () => {
         onClose={vi.fn()}
       />
     );
-    expect(replace).toHaveBeenCalledWith(
-      '/student/admissions/applications/application-1?returnTo=%2Fstudent%2Fadmissions%2Fapplications',
-      { scroll: false }
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith(
+        '/student/admissions/applications/application-1?returnTo=%2Fstudent%2Fadmissions%2Fapplications',
+        { scroll: false }
+      )
     );
   });
   beforeEach(() => {
@@ -1074,15 +1072,64 @@ describe('AdmissionApplicationDetailScreen', () => {
 
   it('shows loading instead of empty history while the on-demand history request is pending', () => {
     loadPaymentDetail();
-    detailState.formQuery = query();
+    detailState.workflowQuery.data.stages[0].stageType = 1;
+    detailState.formQuery = query({ isLoading: true });
     detailState.formHistoryQuery = query({ isLoading: true });
     render(<AdmissionApplicationDetailScreen />);
+    expect(screen.getByLabelText('Loading Admission Form')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Application History' }));
     expect(screen.getByLabelText('Loading Application History')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Loading Admission Form')).not.toBeInTheDocument();
     expect(
       screen.queryByText('No Application History has been recorded yet.')
     ).not.toBeInTheDocument();
   });
+
+  it.each(['page', 'drawer'] as const)(
+    'keeps the activity and journey summary together in the %s history view',
+    (presentation) => {
+      loadPaymentDetail();
+      detailState.applicationQuery.data.applicantId = 'applicant-1';
+      detailState.workflowQuery.data.history = [
+        {
+          id: 'transition-1',
+          fromStageInstanceId: 'registration',
+          toStageInstanceId: 'payment',
+          reason: 'Reviewed by the admissions team',
+          occurredAt: '2026-10-10T12:00:00Z',
+        },
+      ];
+      detailState.formHistoryQuery = query({
+        currentData: [
+          {
+            id: 'form-entry',
+            changeType: 'DraftSaved',
+            occurredAt: '2026-10-10T11:30:00Z',
+          },
+        ],
+      });
+      render(<AdmissionApplicationDetailScreen presentation={presentation} />);
+      expect(screen.getByRole('button', { name: 'End Journey' })).toBeVisible();
+      fireEvent.click(screen.getByRole('button', { name: 'Application History' }));
+
+      expect(screen.getByRole('heading', { name: 'Application History' })).toBeVisible();
+      expect(screen.queryByRole('button', { name: 'End Journey' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Continue Admission' })).not.toBeInTheDocument();
+      expect(screen.getByText('Handling history for applicant-1')).toBeVisible();
+      const currentStep = within(screen.getByRole('region', { name: 'Current Step' }));
+      expect(currentStep.getByText('Fee structure confirmation')).toBeVisible();
+      expect(currentStep.getByText('In progress')).toBeVisible();
+      expect(screen.getByText('Reviewed by the admissions team', { exact: false })).toBeVisible();
+      expect(screen.getByText('Draft saved')).toBeVisible();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Go to current step' }));
+      expect(screen.getByRole('region', { name: 'Fee structure confirmation' })).toBeVisible();
+      expect(
+        screen.queryByRole('heading', { name: 'Application History' })
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'End Journey' })).toBeVisible();
+    }
+  );
 
   it('retries failed history independently of the unopened form', () => {
     loadPaymentDetail();
@@ -1371,6 +1418,10 @@ describe('Applicant 360 full-page workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Application History' }));
     expect(screen.getByText('Admission Journey Ended')).toBeInTheDocument();
     expect(screen.getByText('Parent selected another school')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: 'Journey Status' })).getByText('Cancelled')
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Back to journey' })).toBeVisible();
     expect(screen.getByText(/10\/10\/2026/)).toBeInTheDocument();
     expect(
       screen.queryByText('No Application History has been recorded yet.')

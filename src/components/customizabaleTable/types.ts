@@ -137,6 +137,8 @@ export interface ICustomizableTableProps {
   isLoading?: boolean;
   /** Same-scope refresh: retain safe rows and show a labelled progress indicator. */
   isRefreshing?: boolean;
+  /** Circular refresh feedback uses a reserved toolbar slot. The shared default is linear. */
+  refreshIndicator?: 'linear' | 'circular';
   isPagination?: boolean;
   isFilter?: boolean;
   isSearch?: boolean;

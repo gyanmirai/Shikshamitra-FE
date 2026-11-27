@@ -433,6 +433,7 @@ export default function AdmissionInquiriesScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
           data={skipList || scopeLoading ? [] : (data?.items ?? [])}
+          refreshIndicator="circular"
           isRefreshing={
             Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving
           }
@@ -537,6 +538,7 @@ export default function AdmissionInquiriesScreen() {
           guardUnsavedChanges={false}
           title={`Handling History: ${historyInquiry.applicantName}`}
           titleInfo="Review recorded staff handling, follow-up notes and communications for this inquiry."
+          titleInfoPlacement="right"
           handleClose={() => setHistoryInquiry(null)}
         >
           <DialogScrollContent>

@@ -42,13 +42,15 @@ it('adds a Radio field in Build form and edits its option name through Field set
   await user.click(screen.getByRole('button', { name: 'Add Radio' }));
   await user.click(screen.getByRole('tab', { name: 'Your Form' }));
   await user.click(screen.getByRole('button', { name: 'Edit Radio Field' }));
+  expect(screen.getByRole('dialog', { name: 'Field Settings' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Field Settings', level: 2 })).toBeVisible();
   expect(screen.getByRole('tab', { name: 'Basic' })).toBeVisible();
   expect(screen.getByRole('tab', { name: 'Rules' })).toBeVisible();
   expect(screen.queryByRole('tab', { name: 'Data' })).not.toBeInTheDocument();
   const settingsHelp = screen.getByRole('button', { name: 'About Field Settings' });
   await user.hover(settingsHelp);
   expect(await screen.findByRole('tooltip')).toHaveTextContent(
-    'Configure the Field, Answer Options, and Visibility.'
+    'Configure the field, answer options and visibility.'
   );
   await user.unhover(settingsHelp);
   await user.click(screen.getByRole('button', { name: 'Add Choice' }));

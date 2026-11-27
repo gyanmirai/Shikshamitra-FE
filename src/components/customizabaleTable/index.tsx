@@ -20,6 +20,7 @@ import {
   TableContainer,
   LinearProgress,
   TablePagination,
+  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 
@@ -91,6 +92,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   getRowAction,
   isLoading = false,
   isRefreshing = false,
+  refreshIndicator = 'linear',
   isPagination = true,
   isFilter = true,
   isSearch = true,
@@ -484,6 +486,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   }, [memoizedColumns, setTableConfig]);
 
   const theme = useTheme();
+  const refreshLabel =
+    isRefreshing && !isLoading && !errorContent
+      ? `Refreshing ${typeof tableTitle === 'string' ? tableTitle : 'table'}`
+      : undefined;
 
   const tableContent = useMemo(
     () => (
@@ -515,6 +521,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           {!fullScreenDialog.value && headerContent}
           {showToolbar && (
             <TableToolbar
+              showRefreshSlot={refreshIndicator === 'circular'}
+              refreshLabel={refreshLabel}
               exportLabel={exportLabel}
               isSearch={isSearch}
               showColumns={showColumns ?? isFilter}
@@ -592,6 +600,34 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               onToggleFullScreen={fullScreenDialog.onToggle}
             />
           )}
+          {!showToolbar && refreshIndicator === 'circular' && (
+            <Box
+              sx={{
+                height: 24,
+                flexShrink: 0,
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                px: 1,
+              }}
+            >
+              <Box data-testid="table-refresh-slot" sx={{ width: 16, height: 16 }}>
+                {refreshLabel && (
+                  <CircularProgress
+                    size={16}
+                    color="inherit"
+                    aria-label={refreshLabel}
+                    sx={{
+                      '@media (prefers-reduced-motion: reduce)': {
+                        animation: 'none',
+                        '& .MuiCircularProgress-circle': { animation: 'none' },
+                      },
+                    }}
+                  />
+                )}
+              </Box>
+            </Box>
+          )}
           {exportError && (
             <StudentScopedFeedback
               notificationKey={`student-table:${tableId}:export`}
@@ -632,12 +668,12 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               isolation: 'isolate',
             }}
           >
-            {isRefreshing && !isLoading && !errorContent && (
+            {refreshIndicator === 'linear' && refreshLabel && (
               <LinearProgress
-                aria-label={`Refreshing ${typeof tableTitle === 'string' ? tableTitle : 'table'}`}
+                aria-label={refreshLabel}
                 sx={{
                   position: 'absolute',
-                  bottom: 0,
+                  top: 0,
                   left: 0,
                   right: 0,
                   zIndex: 1,
@@ -803,22 +839,26 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 }}
               >
                 {isShowedDense && (
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        size="small"
-                        checked={dense}
-                        onChange={(e) => handleChangeParams({ dense: e.target.checked })}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {isShowedDense && (
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            size="small"
+                            checked={dense}
+                            onChange={(e) => handleChangeParams({ dense: e.target.checked })}
+                          />
+                        }
+                        label="Dense"
+                        sx={{
+                          ml: 0,
+                          mr: 0,
+                          minHeight: 40,
+                          '& .MuiTypography-root': { fontSize: '13px', fontWeight: 500 },
+                        }}
                       />
-                    }
-                    label="Dense"
-                    sx={{
-                      ml: 0,
-                      mr: 0,
-                      minHeight: 40,
-                      '& .MuiTypography-root': { fontSize: '13px', fontWeight: 500 },
-                    }}
-                  />
+                    )}
+                  </Box>
                 )}
                 {footerActions && (
                   <Box sx={{ ml: 'auto', minWidth: 0, maxWidth: 1 }}>{footerActions}</Box>
@@ -917,6 +957,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       getStickyStyle,
       isLoading,
       isRefreshing,
+      refreshIndicator,
+      refreshLabel,
       paginatedData,
       handleRowClick,
       getRowAction,

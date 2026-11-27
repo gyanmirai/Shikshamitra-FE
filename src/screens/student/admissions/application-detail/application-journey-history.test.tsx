@@ -40,7 +40,7 @@ beforeEach(() => {
 it('shows history for the actual applicant with the recorded staff name', () => {
   render(<ApplicationJourneyHistory applicantId="applicant-1" />);
   expect(state.query).toHaveBeenCalledWith('applicant-1');
-  expect(screen.getByText(/Handled By: Asha Sharma/)).toBeInTheDocument();
+  expect(screen.getByText(/Handled by: Asha Sharma/i)).toBeInTheDocument();
 });
 it('keeps pending history distinct from an empty history', () => {
   state.loading = true;
@@ -51,11 +51,11 @@ it('keeps pending history distinct from an empty history', () => {
 it('announces a failed history read and restores current history after recovery', async () => {
   state.error = true;
   const view = render(<ApplicationJourneyHistory applicantId="applicant-1" />);
-  expect(screen.queryByText(/Handled By: Asha Sharma/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Handled by: Asha Sharma/i)).not.toBeInTheDocument();
   await expectStudentErrorToast('Journey activity could not be loaded.');
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   expect(state.refetch).not.toHaveBeenCalled();
   state.error = false;
   view.rerender(<ApplicationJourneyHistory applicantId="applicant-1" />);
-  expect(screen.getByText(/Handled By: Asha Sharma/)).toBeInTheDocument();
+  expect(screen.getByText(/Handled by: Asha Sharma/i)).toBeInTheDocument();
 });

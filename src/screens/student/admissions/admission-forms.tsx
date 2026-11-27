@@ -255,6 +255,7 @@ export default function AdmissionFormsScreen() {
           searchTerm={search}
           filters={filters}
           isLoading={query.isLoading || (query.isFetching && !currentData)}
+          refreshIndicator="circular"
           isRefreshing={query.isFetching && Boolean(currentData)}
           isPagination
           isSearch

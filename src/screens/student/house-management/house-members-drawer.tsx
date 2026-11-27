@@ -14,6 +14,7 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { Alert, Stack, Drawer, Button, Typography, IconButton } from '@mui/material';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { useGetHouseStudentsQuery } from 'src/redux/student/house-management/house-management-api';
 
 import HouseLeaderDialog from './house-leader-dialog';
@@ -39,6 +40,7 @@ export default function HouseMembersDrawer({
 }: Props) {
   const titleId = useId();
   const rosterTitleId = useId();
+  const exit = useStudentDrawerExit();
   const [editing, setEditing] = useState<House | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
@@ -59,7 +61,7 @@ export default function HouseMembersDrawer({
   }, [total, roster.isFetching, roster.isError, page, pageSize]);
   const error = roster.isError ? parseApiProblemDetail(roster.error).detail : undefined;
   const close = () => {
-    if (!editing) onClose();
+    if (!editing) exit.closeAfterExit(onClose);
   };
   const inset = { xs: 2, sm: 3 };
 
@@ -67,9 +69,11 @@ export default function HouseMembersDrawer({
     <>
       <Drawer
         anchor="right"
-        open
+        open={!exit.closing}
         onClose={close}
+        onTransitionExited={exit.onExited}
         PaperProps={{
+          inert: exit.closing || undefined,
           role: 'dialog',
           'aria-modal': true,
           'aria-labelledby': titleId,

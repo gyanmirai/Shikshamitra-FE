@@ -197,12 +197,16 @@ vi.mock('./use-student-setup-assignment', () => ({
 vi.mock('./student-setup-drawer', () => ({
   default: ({
     canCancel,
+    exiting,
     open,
     onClose,
+    onExited,
   }: {
     canCancel: boolean;
+    exiting: boolean;
     open: boolean;
     onClose: () => void;
+    onExited?: () => void;
   }) => (
     <>
       <output data-testid="cancel-onboarding-permission">{String(canCancel)}</output>
@@ -212,6 +216,11 @@ vi.mock('./student-setup-drawer', () => ({
             Close history
           </button>
         </section>
+      )}
+      {exiting && onExited && (
+        <button type="button" onClick={onExited}>
+          Complete drawer exit
+        </button>
       )}
     </>
   ),
@@ -538,6 +547,9 @@ describe('Student Setup workspace selection wiring', () => {
     expect(draft).toHaveValue('Unsaved GR change');
     expect(screen.getByTestId('student-setup-worklist')).not.toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Close history' }));
+    expect(draft.closest('[inert]')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Complete drawer exit' }));
+    expect(draft.closest('[inert]')).toBeNull();
     expect(screen.getByRole('textbox', { name: 'Quick setup draft' })).toBe(draft);
     expect(draft).toHaveValue('Unsaved GR change');
     expect(screen.getByTestId('quick-case')).toHaveTextContent('case-1');

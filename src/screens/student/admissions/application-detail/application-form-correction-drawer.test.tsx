@@ -33,8 +33,23 @@ vi.mock('src/components/customDialog', () => ({
   DialogScrollContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('./application-form-correction-frame', () => ({
-  ApplicationFormCorrectionFrame: ({ children }: { children: ReactNode }) => (
-    <div data-testid="correction-frame">{children}</div>
+  ApplicationFormCorrectionFrame: ({
+    children,
+    onClose,
+    closing,
+    onExited,
+  }: {
+    children: ReactNode;
+    onClose: () => void;
+    closing?: boolean;
+    onExited?: () => void;
+  }) => (
+    <div data-testid="correction-frame" onTransitionEnd={closing ? onExited : undefined}>
+      <button type="button" onClick={onClose}>
+        Close Edit Application Form
+      </button>
+      {children}
+    </div>
   ),
 }));
 vi.mock('./application-form-correction-editor', () => ({
@@ -69,7 +84,8 @@ const props = { open: true, applicationId: 'app', onClose: vi.fn(), onSaved: vi.
 it('waits for fresh reads before freezing a correction snapshot', async () => {
   state.form.isFetching = true;
   const { rerender } = render(<ApplicationFormCorrectionDrawer {...props} />);
-  expect(screen.getByRole('status', { name: 'Loading Application Form' })).toBeVisible();
+  expect(screen.getByRole('status', { name: 'Loading application form' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
   expect(screen.queryByText('original-stamp')).not.toBeInTheDocument();
   state.form.isFetching = false;
   rerender(<ApplicationFormCorrectionDrawer {...props} />);
@@ -111,7 +127,8 @@ it('does not fetch form data when existing view/edit permissions are missing', (
   state.application = {};
   state.form = {};
   render(<ApplicationFormCorrectionDrawer {...props} />);
-  expect(screen.getByText('You Do Not Have Permission to Correct This Application.')).toBeVisible();
+  expect(screen.getByText('You do not have permission to correct this application.')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
   expect(state.applicationOptions.skip).toBe(true);
   expect(state.formOptions.skip).toBe(true);
 });
@@ -136,12 +153,17 @@ it('keeps the correction frame and Close available while the editor chunk is loa
   });
   const onClose = vi.fn();
   render(<ApplicationFormCorrectionDrawer {...props} onClose={onClose} />);
-  expect(await screen.findByRole('status', { name: 'Loading Application Editor' })).toBeVisible();
-  expect(screen.getByTestId('correction-frame')).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-  expect(onClose).toHaveBeenCalledOnce();
+  expect(await screen.findByRole('status', { name: 'Loading application editor' })).toBeVisible();
+  const frame = screen.getByTestId('correction-frame');
+  expect(frame).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Close Edit Application Form' }));
+  expect(onClose).not.toHaveBeenCalled();
   state.editorPending = null;
   await act(async () => finish());
   expect(await screen.findByText('original-stamp')).toBeVisible();
   expect(screen.getByText('Original answer')).toBeVisible();
+  expect(screen.getByTestId('correction-frame')).toBe(frame);
+  fireEvent.transitionEnd(frame);
+  expect(onClose).toHaveBeenCalledOnce();
 });

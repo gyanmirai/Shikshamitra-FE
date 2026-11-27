@@ -16,6 +16,37 @@ vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
 
+it('keeps the existing eligibility result visible and shows loading in the Refresh button', async () => {
+  let releaseRefresh = () => {};
+  const refreshPending = new Promise<void>((resolve) => {
+    releaseRefresh = resolve;
+  });
+  let reads = 0;
+  mswServer.use(
+    http.get(eligibilityPath, async () => {
+      reads += 1;
+      if (reads > 1) await refreshPending;
+      return HttpResponse.json(eligibilitySummary);
+    })
+  );
+  renderEligibilityUi(
+    <ApplicationEligibilityPanel applicationId="application-1" stage={eligibilityStage} />
+  );
+  expect(await screen.findByText('Not Checked')).toBeInTheDocument();
+  const refresh = screen.getByRole('button', { name: 'Refresh' });
+  try {
+    await userEvent.click(refresh);
+    expect(within(refresh).getByRole('progressbar')).toBeVisible();
+    expect(refresh).toBeDisabled();
+    expect(screen.getByText('Not Checked')).toBeInTheDocument();
+    expect(document.querySelector('.MuiLinearProgress-root')).not.toBeInTheDocument();
+  } finally {
+    releaseRefresh();
+  }
+  await waitFor(() => expect(refresh).toBeEnabled());
+  expect(within(refresh).queryByRole('progressbar')).not.toBeInTheDocument();
+});
+
 it('checks saved information explicitly, shows the evidence, and waits for staff to continue', async () => {
   let evaluated = false;
   let historyReads = 0;

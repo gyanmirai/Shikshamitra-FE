@@ -189,10 +189,7 @@ it('uses concise overflow action labels while retaining the selected inquiry han
   const onMove = vi.fn();
   const row = inquiry({ status: 2, applicantId: 'applicant', admissionOfferingId: 'offering' });
   const actions = getAdmissionInquiryActions(row, { ...columnOptions, onMove, onHistory: vi.fn() });
-  expect(actions.slice(2).map((action) => action.label)).toEqual([
-    'Start Application',
-    'Handling History',
-  ]);
+  expect(actions.map((action) => action.id)).toEqual(['edit', 'move', 'follow-up', 'history']);
   actions.find((action) => action.id === 'move')?.onClick?.();
   expect(onMove).toHaveBeenCalledWith(row);
 });

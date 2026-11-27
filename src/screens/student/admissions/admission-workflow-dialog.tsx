@@ -24,6 +24,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { useRef, useMemo, useState, useEffect, useImperativeHandle } from 'react';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
@@ -83,7 +84,7 @@ type Props = {
   closeRequestRef?: Ref<() => void>;
   resetFormRef?: Ref<() => void>;
   onFormStateChange?: (state: WorkflowDetailsFormState) => void;
-  onSave: (value: WorkflowDetails) => Promise<void>;
+  onSave: (value: WorkflowDetails) => Promise<void | (() => void)>;
 };
 
 const schema = Yup.object({
@@ -673,16 +674,20 @@ function WorkflowCloneDrawer({
   const previewOpen = useBoolean(false);
   const descriptionOpen = useBoolean(false);
   const isMobile = useResponsive('down', 'sm');
+  const { closing, closeAfterExit, onExited, reopen } = useStudentDrawerExit();
   const formik = useFormik<WorkflowDetails>({
     enableReinitialize: true,
     initialValues: { ...initialValues, description: initialValues.description ?? '' },
     validationSchema: schema,
     onSubmit: async (values, helpers) => {
       try {
-        await onSave(normalizeWorkflowDetails(values));
+        const continueAfterClose = await onSave(normalizeWorkflowDetails(values));
         if (closeOnSave) {
-          helpers.resetForm();
-          onClose();
+          closeAfterExit(() => {
+            helpers.resetForm();
+            onClose();
+            continueAfterClose?.();
+          });
         }
       } catch (error) {
         showWorkflowNameError(error, helpers);
@@ -690,15 +695,21 @@ function WorkflowCloneDrawer({
     },
   });
 
+  useEffect(() => {
+    if (!open) reopen();
+  }, [open, reopen]);
+
   const close = () => {
     discard.onFalse();
-    previewOpen.onFalse();
-    descriptionOpen.onFalse();
-    formik.resetForm();
-    onClose();
+    closeAfterExit(() => {
+      previewOpen.onFalse();
+      descriptionOpen.onFalse();
+      formik.resetForm();
+      onClose();
+    });
   };
   const requestClose = () => {
-    if (saving) return;
+    if (saving || formik.isSubmitting || closing) return;
     if (formik.dirty) discard.onTrue();
     else close();
   };
@@ -968,9 +979,11 @@ function WorkflowCloneDrawer({
       ) : (
         <Drawer
           anchor="right"
-          open={open}
+          open={open && !closing}
           onClose={requestClose}
+          onTransitionExited={onExited}
           PaperProps={{
+            inert: closing,
             sx: {
               width: { xs: 1, sm: showStarterJourney ? 680 : 560 },
               maxWidth: 1,

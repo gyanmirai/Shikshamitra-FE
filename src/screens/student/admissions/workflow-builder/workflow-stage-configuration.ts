@@ -1,13 +1,14 @@
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
 import {
-  DEFAULT_DOCUMENT_POLICY,
-  readAdmissionDocumentPolicy,
-} from 'src/redux/student/admissions/admission-document-policy';
-import {
   DEFAULT_FORM_STAGE_POLICY,
   readAdmissionFormStagePolicy,
 } from 'src/redux/student/admissions/admission-form-stage-policy';
+import {
+  DEFAULT_DOCUMENT_POLICY,
+  assignMissingDocumentCodes,
+  readAdmissionDocumentPolicy,
+} from 'src/redux/student/admissions/admission-document-policy';
 import {
   readStageConfiguration,
   DEFAULT_ASSESSMENT_POLICY,
@@ -52,7 +53,9 @@ export function normalizeStageConfiguration(stage: AdmissionWorkflowStage): Admi
       allowWaivers: false,
       requireIndependentReview: false,
       collectionFormStageCode: null,
-      requirements: (policy ?? DEFAULT_DOCUMENT_POLICY).requirements.map((requirement) => ({
+      requirements: assignMissingDocumentCodes(
+        (policy ?? DEFAULT_DOCUMENT_POLICY).requirements
+      ).map((requirement) => ({
         ...requirement,
         collectionMode: 'upload',
       })),

@@ -21,19 +21,18 @@ import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { Box, Stack, Paper, Button, Drawer, Skeleton, Typography } from '@mui/material';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { useGetAdmissionOfferingQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import { admissionParentRegistrationApi } from 'src/redux/student/admissions/admission-parent-registration-api';
 
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
-import { FormHistoryCard } from './application-detail/form-history-card';
 import { useApplicationDetail } from './application-detail/use-application-detail';
-import { TransitionHistoryCard } from './application-detail/transition-history-card';
+import { ApplicationHistoryView } from './application-detail/application-history-view';
 import { ApplicationManagedStages } from './application-detail/application-managed-stages';
 import { ApplicationResumeJourney } from './application-detail/application-resume-journey';
 import { ApplicationJourneySidebar } from './application-detail/application-journey-sidebar';
-import { ApplicationJourneyHistory } from './application-detail/application-journey-history';
 import { ApplicationActivityDrawer } from './application-detail/application-activity-drawer';
 import { ApplicationWorkspaceActions } from './application-detail/application-workspace-actions';
 import { ApplicationFinalizedActions } from './application-detail/application-finalized-summary';
@@ -80,16 +79,24 @@ export default function AdmissionApplicationDetailScreen({
   applicationId,
   onClose,
   presentation = 'page',
+  drawerOpen = true,
+  onDrawerExited,
+  returnTo,
   openAssessmentBooking,
   onAssessmentBookingOpened,
 }: {
   applicationId?: string;
   onClose?: () => void;
   presentation?: 'page' | 'drawer';
+  drawerOpen?: boolean;
+  onDrawerExited?: () => void;
+  returnTo?: string;
   openAssessmentBooking?: boolean;
   onAssessmentBookingOpened?: () => void;
 } = {}) {
   const isDrawer = presentation === 'drawer';
+  const { closing: drawerClosing, closeAfterExit, onExited } = useStudentDrawerExit();
+  const drawerPaper = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const focusMode = useBoolean();
   const router = useRouter();
@@ -97,7 +104,9 @@ export default function AdmissionApplicationDetailScreen({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const requestedReturnUrl =
-    searchParams.get('returnTo') ?? (isDrawer ? studentPaths.enrollment.pipeline : null);
+    returnTo ??
+    searchParams.get('returnTo') ??
+    (isDrawer ? studentPaths.enrollment.pipeline : null);
   const [workspace, setWorkspace] = useState<WorkspaceView>({ view: 'journey' });
   const [assessmentBookingOpened, setAssessmentBookingOpened] = useState(false);
   useEffect(() => {
@@ -278,6 +287,7 @@ export default function AdmissionApplicationDetailScreen({
   useEffect(() => {
     if (
       closedWorkspace.current ||
+      (isDrawer && !drawerOpen) ||
       ((applicationId || onClose) && !isDrawer) ||
       !application ||
       !workspaceKnown ||
@@ -301,10 +311,19 @@ export default function AdmissionApplicationDetailScreen({
       decisionWorkspace
     );
     const currentUrl = `${pathname}${searchParams.size ? `?${searchParams}` : ''}`;
-    if (currentUrl !== destination) router.replace(destination, { scroll: false });
+    if (currentUrl !== destination) {
+      if (isDrawer && drawerPaper.current) {
+        closedWorkspace.current = true;
+        closeAfterExit(() => router.replace(destination, { scroll: false }));
+      } else {
+        router.replace(destination, { scroll: false });
+      }
+    }
   }, [
     applicationId,
     isDrawer,
+    drawerOpen,
+    closeAfterExit,
     onClose,
     application,
     workspaceKnown,
@@ -366,8 +385,16 @@ export default function AdmissionApplicationDetailScreen({
     )
       return;
     leaveGuard.requestNavigation(() => {
-      if (detail.hasUnsavedAnswers) detail.discardUnsavedAnswers();
-      navigate(target);
+      const proceed = () => {
+        if (detail.hasUnsavedAnswers) detail.discardUnsavedAnswers();
+        navigate(target);
+      };
+      if (isDrawer && target.view === 'close') {
+        closedWorkspace.current = true;
+        closeAfterExit(proceed);
+      } else {
+        proceed();
+      }
     });
   };
   const closeDetail = () => requestNavigation({ view: 'close' });
@@ -608,6 +635,21 @@ export default function AdmissionApplicationDetailScreen({
     );
   const renderLoadedContent = () => {
     if (!application) return null;
+    if (workspace.view === 'history') {
+      const historyQuery = detail.formHistoryQuery;
+      const formHistory = historyQuery.currentData;
+      return (
+        <ApplicationHistoryView
+          application={application}
+          workflow={workflow}
+          currentStage={currentStage}
+          formHistory={formHistory ?? []}
+          formHistoryLoading={historyQuery.isLoading || (historyQuery.isFetching && !formHistory)}
+          retryFormHistory={historyQuery.isError ? historyQuery.refetch : undefined}
+          onReturnToJourney={() => requestNavigation({ view: 'journey' })}
+        />
+      );
+    }
     if (formLoading)
       return (
         <Stack spacing={1.5} role="status" aria-label="Loading Admission Form">
@@ -618,56 +660,6 @@ export default function AdmissionApplicationDetailScreen({
       );
     if (requiresForm && formQuery.isError)
       return <AdmissionQueryError onRetry={formQuery.refetch} />;
-    if (workspace.view === 'history') {
-      const hasJourneyClosure =
-        application.status === 2 && Boolean(application.decisionReason?.trim());
-      const hasHistory = Boolean(
-        hasJourneyClosure || workflow?.history.length || detail.formHistoryQuery.data?.length
-      );
-      return (
-        <Stack spacing={1.5}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography variant="h6">Application History</Typography>
-            <Button size="small" onClick={() => requestNavigation({ view: 'journey' })}>
-              Current Step
-            </Button>
-          </Stack>
-          <ApplicationJourneyHistory applicantId={application.applicantId} />
-          {detail.formHistoryQuery.isLoading ? (
-            <Skeleton variant="rounded" height={160} aria-label="Loading Application History" />
-          ) : detail.formHistoryQuery.isError ? (
-            <AdmissionQueryError onRetry={detail.formHistoryQuery.refetch} />
-          ) : hasHistory ? (
-            <>
-              {hasJourneyClosure && (
-                <StudentFeedback notificationKey="STU-0014" presentation="inline" severity="info">
-                  <Stack spacing={0.5}>
-                    <Typography variant="subtitle2">Admission Journey Ended</Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}
-                    >
-                      {application.decisionReason}
-                    </Typography>
-                    {application.decisionAt && (
-                      <Typography variant="caption" color="text.secondary">
-                        {fDateTime(application.decisionAt, ADMISSION_DATE_TIME_FORMAT)}
-                      </Typography>
-                    )}
-                  </Stack>
-                </StudentFeedback>
-              )}
-              <TransitionHistoryCard workflow={workflow} />
-              <FormHistoryCard history={detail.formHistoryQuery.data ?? []} />
-            </>
-          ) : (
-            <StudentFeedback notificationKey="STU-0015" presentation="inline" severity="info">
-              No application history has been recorded yet.
-            </StudentFeedback>
-          )}
-        </Stack>
-      );
-    }
     return (
       <Stack
         id={selectedStage ? `application-stage-panel-${selectedStage.id}` : undefined}
@@ -1103,7 +1095,7 @@ export default function AdmissionApplicationDetailScreen({
             }}
           />
         )}
-        {!finalizationOpen && !showDecisionReview && (
+        {workspace.view === 'journey' && !finalizationOpen && !showDecisionReview && (
           <Stack
             component="footer"
             direction="row"
@@ -1198,7 +1190,6 @@ export default function AdmissionApplicationDetailScreen({
                         !active ||
                         !selectedCurrentStage ||
                         historical ||
-                        workspace.view !== 'journey' ||
                         !(canComplete || managedCanComplete || canRetryFormHandoff)
                       }
                       onClick={continueAdmission}
@@ -1222,13 +1213,19 @@ export default function AdmissionApplicationDetailScreen({
       {isDrawer ? (
         <Drawer
           anchor="right"
-          open
+          open={drawerOpen && !drawerClosing}
           onClose={closeDetail}
+          onTransitionExited={() => {
+            onExited();
+            onDrawerExited?.();
+          }}
           slotProps={{
             paper: {
+              ref: drawerPaper,
               role: 'dialog',
               'aria-modal': true,
               'aria-labelledby': titleId,
+              inert: !drawerOpen || drawerClosing || undefined,
               sx: {
                 width: { xs: '100%', md: focusMode.value ? '100%' : 'min(1600px, 84vw)' },
                 maxWidth: '100%',

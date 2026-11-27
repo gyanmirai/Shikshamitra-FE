@@ -5,7 +5,9 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import * as Yup from 'yup';
+import { useEffect } from 'react';
 import { useFormik } from 'formik';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { getDocumentConfigurationError } from 'src/redux/student/admissions/admission-document-policy-validation';
 import { getAdmissionFormStageConfigurationError } from 'src/redux/student/admissions/admission-form-stage-policy';
 import {
@@ -66,6 +68,7 @@ export function useWorkflowStageEditor({
   onClose,
   onSave,
 }: Props) {
+  const { closing, closeAfterExit, onExited, reopen } = useStudentDrawerExit();
   const isLastStage = isLastWorkflowStage(stages, stage?.id ?? '', insertionSourceId);
   const formik = useFormik<AdmissionWorkflowStage>({
     enableReinitialize: true,
@@ -89,22 +92,29 @@ export function useWorkflowStageEditor({
         helpers.setSubmitting(false);
         return;
       }
-      helpers.resetForm({ values });
-      onClose();
+      closeAfterExit(() => {
+        helpers.resetForm({ values });
+        onClose();
+      });
     },
   });
 
   const guard = useAdmissionDraftGuard({
     active: open && !readOnly,
     dirty: formik.dirty,
-    busy: formik.isSubmitting,
+    busy: formik.isSubmitting || closing,
     reset: formik.resetForm,
   });
 
-  const close = () => {
-    formik.resetForm();
-    onClose();
-  };
+  useEffect(() => {
+    if (!open) reopen();
+  }, [open, reopen]);
+
+  const close = () =>
+    closeAfterExit(() => {
+      formik.resetForm();
+      onClose();
+    });
 
   const metadata = stageTypes.find((item) => item.type === formik.values.stageType);
   const formId = readStageConfiguration(formik.values.configurationJson)?.formDefinitionId;
@@ -119,7 +129,9 @@ export function useWorkflowStageEditor({
     formDefinitionId,
     forms,
     isLastStage,
-    requestClose: () => guard.requestNavigation(close),
+    closing,
+    onExited,
+    requestClose: () => guard.requestNavigationWithoutReset(close),
   };
 }
 

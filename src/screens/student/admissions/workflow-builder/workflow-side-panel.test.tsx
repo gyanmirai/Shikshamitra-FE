@@ -1,7 +1,7 @@
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { vi, it, expect } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { WorkflowSidePanel } from './components/workflow-side-panel';
@@ -15,7 +15,7 @@ const workflow = {
   status: 1,
   version: 1,
 } as AdmissionWorkflow;
-it('names the read-only usage panel, retains metrics/help and closes through the stationary footer', async () => {
+it('names the read-only usage panel, retains metrics and help, and closes through the header', async () => {
   const user = userEvent.setup();
   const onClose = vi.fn();
   renderDocumentUi(
@@ -42,10 +42,13 @@ it('names the read-only usage panel, retains metrics/help and closes through the
   expect(screen.getByRole('button', { name: 'Workflow Usage information' })).toBeVisible();
   expect(screen.getByText('3')).toBeVisible();
   expect(screen.getByText('2')).toBeVisible();
-  const close = screen.getByRole('button', { name: 'Close' });
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+  const close = screen.getByRole('button', { name: 'Close Panel' });
   expect(close).toBeVisible();
   await user.click(close);
-  expect(onClose).toHaveBeenCalledOnce();
+  expect(onClose).not.toHaveBeenCalled();
+  expect(screen.getByText('Admission journey · Version 1')).toBeInTheDocument();
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
 });
 it('keeps simulation controls outside the read-only footer treatment', () => {
   renderDocumentUi(

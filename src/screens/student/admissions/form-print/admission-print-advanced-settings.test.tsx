@@ -246,6 +246,29 @@ describe('Advanced registration print settings', () => {
     );
   });
 
+  it('updates instruction typography in the saved settings', () => {
+    render(
+      <Harness
+        initial={{
+          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
+          advanced: { content: { showInstructions: true } },
+        }}
+      />
+    );
+    selectSettingsTab('Content & copies');
+    openSettingsCard('Instructions');
+    choose('Heading font size', '16 pt');
+    choose('Instruction font size', '14 pt');
+    choose('Instruction text weight', 'Bold');
+    choose('Instruction text color', 'Gray');
+    expect(payload().advanced.content).toMatchObject({
+      instructionHeadingSize: '16',
+      instructionTextSize: '14',
+      instructionTextWeight: 'bold',
+      instructionTextColor: 'gray',
+    });
+  });
+
   it('places content guidance beside the related setting labels', () => {
     render(<Harness />);
     selectSettingsTab('Content & copies');

@@ -145,13 +145,13 @@ export default function StudentICardTemplateEditor({
   };
 
   return (
-    <Stack spacing={designerOpen ? 1 : 2} sx={{ height: 1, minHeight: 0, minWidth: 0 }}>
+    <Stack spacing={designerOpen ? 1 : 1.5} sx={{ height: 1, minHeight: 0, minWidth: 0 }}>
       <Box sx={{ display: { xs: 'none', sm: 'block' }, flexShrink: 0 }}>
         <CustomStepper
           steps={steps}
           activeStep={designerOpen ? 1 : 0}
           ariaLabel="I-Card template steps"
-          density={designerOpen ? 'compact' : 'standard'}
+          density="compact"
         />
       </Box>
       <Typography variant="subtitle2" sx={{ display: { sm: 'none' } }} aria-live="polite">
@@ -187,8 +187,8 @@ export default function StudentICardTemplateEditor({
             onChange={patchDraft}
           />
         ) : (
-          <Grid container spacing={2} sx={{ maxWidth: 1200, mx: 'auto' }}>
-            <Grid size={{ xs: 12, md: 7 }} sx={{ minWidth: 0 }}>
+          <Grid container spacing={1.5}>
+            <Grid size={{ xs: 12, md: 8 }} sx={{ minWidth: 0 }}>
               <StudentICardTemplateStep
                 template={draft}
                 nameError={nameError}
@@ -196,14 +196,15 @@ export default function StudentICardTemplateEditor({
                 onChange={patchDraft}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 5 }} sx={{ minWidth: 0 }}>
+            <Grid size={{ xs: 12, md: 4 }} sx={{ minWidth: 0 }}>
               <FormSectionCard
                 title="Template Preview"
                 aria-label="Template Preview"
                 icon={GlobalIcons.fullPreview}
                 descriptionTooltip="The preview uses sample fields. The size shown is the finished print size."
+                contentSpacing={1.5}
               >
-                <Stack spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
+                <Stack spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
                   <Box sx={{ width: 1, maxWidth: portrait ? 176 : 320 }}>
                     <StudentCardPreview template={draft} previewLegacyBack />
                   </Box>

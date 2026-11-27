@@ -5,6 +5,7 @@ import type { AcademicAiReportModule } from 'src/redux/academicAPI/AcademicRepor
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Box, Alert, Stack, Drawer, Divider } from '@mui/material';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
@@ -71,6 +72,8 @@ export default function ShikshaMitraAiReportDrawer({
   module = 'Curriculum',
   protectUnsavedChanges = false,
 }: Props) {
+  const studentReport = module === 'Student Records' || module === 'Student Attendance';
+  const resetPending = useRef(false);
   const { currentYear, currentBoard, currentMedium } = useSelector(
     (state: RootState) => state.globalState
   );
@@ -88,10 +91,19 @@ export default function ShikshaMitraAiReportDrawer({
     onSubmit: async ({ prompt }) => workflow.planReport(prompt.trim()),
   });
 
-  const handleClose = () => {
-    if (disableClose) return;
+  const resetReport = () => {
     formik.resetForm();
     workflow.reset();
+  };
+  const resetClosedReport = () => {
+    if (!resetPending.current) return;
+    resetPending.current = false;
+    resetReport();
+  };
+  const handleClose = () => {
+    if (disableClose) return;
+    if (studentReport) resetPending.current = true;
+    else resetReport();
     onClose();
   };
   const { requestNavigation, confirmation } = useUnsavedNavigation(
@@ -113,8 +125,11 @@ export default function ShikshaMitraAiReportDrawer({
       anchor="right"
       open={open}
       onClose={requestClose}
+      onTransitionEnter={studentReport ? resetClosedReport : undefined}
+      onTransitionExited={studentReport ? resetClosedReport : undefined}
       PaperProps={{
         'aria-labelledby': 'shikshamitra-ai-drawer-title',
+        inert: (studentReport && !open) || undefined,
         sx: {
           width: { xs: '100%', sm: 560, md: 600 },
           maxWidth: '100%',

@@ -7,10 +7,13 @@ import type {
 
 import { lockNewInquiryStarter } from './inquiry-default-fields';
 import { templateStudentBinding } from './template-student-fields';
-import { getAdmissionFormPrintSettings } from './form-dialog-model';
 import { getRegistrationFormTemplate } from './registration-form-template';
 import { ensureAdmissionCustomFieldIdentities } from './form-field-identity';
 import { configureStudentField, connectStudentAddressFields } from './student-field-configuration';
+import {
+  getAdmissionFormPrintSettings,
+  getBlankAdmissionFormInitialValues,
+} from './form-dialog-model';
 
 export type AdmissionFormTemplateCategory =
   | 'Admissions'
@@ -978,6 +981,64 @@ export function getSystemAdmissionFormTemplate(id: SystemAdmissionFormTemplateId
     ...form,
     printSettings: { ...getAdmissionFormPrintSettings(form.printSettings), template: 'boxed-grid' },
   });
+}
+
+export function getNewAdmissionFormInitialValues(
+  purpose: CreateUpdateAdmissionForm['purpose'] = 0
+) {
+  const template = getSystemAdmissionFormTemplate(
+    purpose === 1 ? 'admission-application' : 'admission-inquiry'
+  );
+  const initial = { ...template, name: '', code: '', description: '' };
+  if (purpose === 0) {
+    const coreFields = getBlankAdmissionFormInitialValues(0).sections.flatMap(
+      (section) => section.fields
+    );
+    return {
+      ...initial,
+      layoutType: 0 as const,
+      sections: template.sections.map((section, index) => ({
+        ...section,
+        name: index === 0 ? 'Student details' : 'Parent details',
+        fields: coreFields
+          .filter(
+            (field) => (field.bindingKey?.startsWith('Applicant.') ?? false) === (index === 0)
+          )
+          .map((field, displayOrder) => ({ ...field, sectionId: section.id, displayOrder })),
+      })),
+    };
+  }
+
+  const emergencyContactFields: FieldInput[] = [
+    { code: 'EMERGENCY_NAME', label: 'Emergency contact name' },
+    { code: 'EMERGENCY_RELATION', label: 'Emergency contact relationship' },
+    { code: 'EMERGENCY_PHONE', label: 'Emergency contact number', fieldType: 4 },
+  ];
+  return {
+    ...initial,
+    sections: template.sections
+      .filter((section) => section.code !== 'DECLARATION')
+      .map((section) => {
+        let { fields } = section;
+        if (section.code === 'HOME_ADDRESS')
+          fields = fields.map((field) => ({ ...field, required: false }));
+        if (section.code === 'ACADEMIC_BACKGROUND')
+          fields = fields.filter((field) => field.code !== 'CLASS_APPLYING_FOR');
+        if (section.code === 'PARENT_GUARDIAN') {
+          fields = fields.filter((field) => field.bindingKey !== 'Guardian.Relationship');
+          fields = [
+            ...fields,
+            ...emergencyContactFields.map((field, index) =>
+              createField(section.id, fields.length + index, field)
+            ),
+          ];
+        }
+        return {
+          ...section,
+          fields: fields.map((field, displayOrder) => ({ ...field, displayOrder })),
+        };
+      }),
+  };
 }
 
 export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdmissionForm {

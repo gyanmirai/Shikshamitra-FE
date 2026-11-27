@@ -96,6 +96,8 @@ export default function StudentRecordReports() {
     skip: tab !== 'preview' || !canRead(reportType),
     refetchOnMountOrArgChange: true,
   });
+  const previewLoadFailed =
+    tab === 'preview' && canRead(reportType) && preview.isError && !preview.currentData;
   const [pollingInterval, setPollingInterval] = useState(0);
   const jobs = useGetRecordsReportJobsQuery(
     { skipCount: page * 25, maxResultCount: 25 },
@@ -347,7 +349,7 @@ export default function StudentRecordReports() {
           You need permission to view the source module for this report.
         </StudentFeedback>
       )}
-      {(tab === 'preview' ? preview.isError : jobs.isError) && (
+      {!previewLoadFailed && (tab === 'preview' ? preview.isError : jobs.isError) && (
         <StudentFeedback
           notificationKey="STU-0903"
           presentation="toast"
@@ -402,7 +404,25 @@ export default function StudentRecordReports() {
               ? (preview.currentData?.totalCount ?? 0)
               : (jobs.currentData?.totalCount ?? 0)
           }
-          isLoading={tab === 'preview' ? preview.isLoading : jobs.isLoading}
+          isLoading={
+            tab === 'preview' ? preview.isFetching && !preview.currentData : jobs.isLoading
+          }
+          errorContent={
+            previewLoadFailed && !preview.isFetching ? (
+              <StudentFeedback
+                notificationKey="STU-0903"
+                presentation="persistent"
+                severity="error"
+                action={
+                  <Button size="small" color="inherit" onClick={preview.refetch}>
+                    Retry
+                  </Button>
+                }
+              >
+                Report preview could not be loaded. Your selected scope has been kept.
+              </StudentFeedback>
+            ) : undefined
+          }
           isSearch={false}
           isFilter={false}
           serverSidePagination

@@ -52,8 +52,14 @@ const context = vi.hoisted(() => ({
   table: {} as Record<string, any>,
 }));
 vi.mock('../admission-application-detail', () => ({
-  default: ({ applicationId, presentation, onClose }: any) => (
-    <div role="dialog" aria-label="Applicant workspace" data-presentation={presentation}>
+  default: ({ applicationId, presentation, onClose, drawerOpen, onDrawerExited }: any) => (
+    <div
+      role="dialog"
+      aria-label="Applicant workspace"
+      data-presentation={presentation}
+      data-open={drawerOpen}
+      onTransitionEnd={onDrawerExited}
+    >
       <span>{applicationId}</span>
       <button type="button" onClick={onClose}>
         Close applicant
@@ -256,6 +262,24 @@ describe('Pipeline worklist', () => {
     );
     context.params.delete('application');
     view.rerender(<AdmissionInquiryPipelineScreen />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Open row' })).toHaveFocus());
+  });
+
+  it('retains the outgoing record after URL traversal until the drawer exits', async () => {
+    context.params = new URLSearchParams('board=board-1&medium=medium-1&application=app-1');
+    const view = render(<AdmissionInquiryPipelineScreen />);
+    const drawer = screen.getByRole('dialog', { name: 'Applicant workspace' });
+    expect(drawer).toHaveAttribute('data-open', 'true');
+
+    context.params.delete('application');
+    view.rerender(<AdmissionInquiryPipelineScreen />);
+    expect(drawer).toHaveAttribute('data-open', 'false');
+    expect(drawer).toHaveTextContent('app-1');
+    expect(screen.getByRole('button', { name: 'Open row' })).not.toHaveFocus();
+
+    fireEvent.transitionEnd(drawer);
+    expect(drawer).not.toBeInTheDocument();
+    expect(context.replace).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Open row' })).toHaveFocus());
   });
 

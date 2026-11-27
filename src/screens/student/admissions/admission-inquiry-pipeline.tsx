@@ -48,6 +48,8 @@ export default function AdmissionInquiryPipelineScreen() {
   const { pendingKey, isPending, navigate } = usePendingNavigation(router.push);
   const params = useSearchParams();
   const applicationId = params.get('application');
+  const [retainedApplicationId, setRetainedApplicationId] = useState(applicationId);
+  const drawerApplicationId = applicationId ?? retainedApplicationId;
   const openAssessmentBooking = params.get('assessment') === 'book';
   const [printApplicationId, setPrintApplicationId] = useState<string | null>(null);
   const worklistRef = useRef<HTMLDivElement>(null);
@@ -58,6 +60,9 @@ export default function AdmissionInquiryPipelineScreen() {
   const tenantId = useSelector((value: RootState) => value.auth.sessionContext?.tenantId);
   const userId = useSelector((value: RootState) => value.auth.user?.sub);
   const canView = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.view);
+  useEffect(() => {
+    if (!canView || applicationId) setRetainedApplicationId(canView ? applicationId : null);
+  }, [applicationId, canView]);
   const interactionLocked = useRef(false);
   interactionLocked.current = isPending;
   const update = useCallback(
@@ -138,7 +143,12 @@ export default function AdmissionInquiryPipelineScreen() {
     if (previousApplication.current && !applicationId)
       restoreApplicationFocus.current = previousApplication.current;
     previousApplication.current = applicationId;
-    if (applicationId || !restoreApplicationFocus.current || listQuery.isFetching || scopeLoading)
+    if (
+      drawerApplicationId ||
+      !restoreApplicationFocus.current ||
+      listQuery.isFetching ||
+      scopeLoading
+    )
       return undefined;
     const frame = requestAnimationFrame(() => {
       const row = Array.from(
@@ -152,7 +162,7 @@ export default function AdmissionInquiryPipelineScreen() {
       restoreApplicationFocus.current = null;
     });
     return () => cancelAnimationFrame(frame);
-  }, [applicationId, listQuery.isFetching, scopeLoading, data]);
+  }, [applicationId, drawerApplicationId, listQuery.isFetching, scopeLoading, data]);
   const options = optionsQuery.currentData;
   const myCases = false;
   const updateInteractive = useCallback(
@@ -343,24 +353,16 @@ export default function AdmissionInquiryPipelineScreen() {
                   flex: 1,
                   minHeight: 0,
                   minWidth: 0,
-                  '& .MuiLinearProgress-root': {
-                    height: 2,
-                    bgcolor: 'transparent',
-                    '& .MuiLinearProgress-bar': { bgcolor: 'text.disabled' },
-                  },
                 },
               }}
               tableContainerProps={{ sx: { height: 1 } }}
               columns={columns}
               data={skip ? [] : (displayData?.items ?? [])}
               isLoading={
-                yearChanging ||
-                scopeLoading ||
-                (!skip && !listQuery.isError && !displayData)
+                yearChanging || scopeLoading || (!skip && !listQuery.isError && !displayData)
               }
-              isRefreshing={
-                Boolean(displayData) && listQuery.isFetching && !skip && !applicationId
-              }
+              refreshIndicator="circular"
+              isRefreshing={Boolean(displayData) && listQuery.isFetching && !skip && !applicationId}
               errorContent={
                 listQuery.isError && !skip && !displayData?.items.length ? (
                   <AdmissionQueryError
@@ -473,14 +475,21 @@ export default function AdmissionInquiryPipelineScreen() {
           onClose={() => setPrintApplicationId(null)}
         />
       )}
-      {canView && applicationId && (
+      {canView && drawerApplicationId && (
         <AdmissionApplicationDetailScreen
-          key={applicationId}
-          applicationId={applicationId}
+          key={drawerApplicationId}
+          applicationId={drawerApplicationId}
           presentation="drawer"
+          drawerOpen={Boolean(applicationId)}
+          onDrawerExited={() => {
+            if (!applicationId) setRetainedApplicationId(null);
+          }}
           openAssessmentBooking={openAssessmentBooking}
           onAssessmentBookingOpened={() => update({ assessment: undefined }, false)}
-          onClose={() => update({ application: undefined, assessment: undefined }, false)}
+          onClose={() => {
+            setRetainedApplicationId(null);
+            update({ application: undefined, assessment: undefined }, false);
+          }}
         />
       )}
     </Box>

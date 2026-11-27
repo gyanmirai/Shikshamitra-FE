@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 
 import { Tabs } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
 import { shikshaMitraToast } from 'src/components/toast';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
@@ -42,6 +43,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
+vi.mock('src/redux/student/records/student-record-photo-api', () => ({
+  useGetStudentRecordPhotoQuery: () => ({}),
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
@@ -350,6 +354,7 @@ describe('Student Setup drawer readiness UI', () => {
     expect(screen.queryByRole('button', { name: 'Activate Student' })).not.toBeInTheDocument();
   });
   it('shows the focused onboarding sections and keeps unlinked record actions disabled', () => {
+    const studentName = 'Ananya Riddhishree Lakshmipriyadarshini Venkatanarayanan Shah';
     const onAssignDivision = vi.fn();
     const onAssignGrNumber = vi.fn();
     const onAssignRollNumber = vi.fn();
@@ -357,7 +362,7 @@ describe('Student Setup drawer readiness UI', () => {
       <StudentSetupDrawer
         open
         canManage
-        student={student}
+        student={{ ...student, studentName }}
         onClose={vi.fn()}
         onAssignDivision={onAssignDivision}
         onAssignGrNumber={onAssignGrNumber}
@@ -365,7 +370,12 @@ describe('Student Setup drawer readiness UI', () => {
       />
     );
 
-    expect(screen.getByRole('heading', { name: student.studentName })).toBeInTheDocument();
+    const title = screen.getByRole('heading', { name: studentName, level: 2 });
+    expect(title).toHaveClass('MuiTypography-h6');
+    expect(title).toHaveStyle({ overflowWrap: 'anywhere' });
+    expect(title).not.toHaveClass('MuiTypography-noWrap');
+    const close = screen.getByRole('button', { name: 'Close Student Setup' });
+    expect(close.querySelector(`[data-icon="${GlobalIcons.cancel}"]`)).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Tasks' })).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Details & Checks' })).toHaveAttribute(
       'aria-selected',
@@ -979,6 +989,13 @@ it('loads full event history even when the paged worklist has no events', () => 
       occurredAt: '2026-10-22T09:00:00Z',
       actorName: 'Asha Sharma',
     },
+    {
+      id: 'event-2',
+      eventType: 'ActivationFailed',
+      description: 'A prerequisite changed before activation',
+      occurredAt: '2026-10-22T10:00:00Z',
+      actorName: 'Another staff member',
+    },
   ];
   render(
     <StudentSetupDrawer
@@ -988,8 +1005,16 @@ it('loads full event history even when the paged worklist has no events', () => 
     />
   );
   fireEvent.click(screen.getByRole('tab', { name: 'History' }));
-  expect(screen.getByText(/Handled by: Asha Sharma/)).toBeInTheDocument();
-  expect(screen.getByText(/^22\/10\/2026 \d{1,2}:\d{2} (am|pm)$/)).toBeInTheDocument();
+  expect(screen.getByText('Handled by: Asha Sharma')).toBeVisible();
+  expect(screen.getByText('Prepared without an owner')).toBeVisible();
+  const newest = screen.getByText('Activation failed');
+  const oldest = screen.getByText('Readiness refreshed');
+  expect(newest.compareDocumentPosition(oldest)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  expect(oldest.closest('li')?.querySelector('time')).toHaveAttribute(
+    'datetime',
+    '2026-10-22T09:00:00Z'
+  );
+  expect(screen.getByText('A prerequisite changed before activation')).toBeVisible();
   expect(screen.getByRole('heading', { name: 'Activity & Audit' })).toBeInTheDocument();
 });
 
@@ -1010,7 +1035,15 @@ it('shows a pending history read instead of treating the paged worklist as empty
 });
 
 it('uses the standard history-error toast and withholds stale events after a failed case read', async () => {
-  mocks.caseEvents = null;
+  mocks.caseEvents = [
+    {
+      id: 'stale-event',
+      eventType: 'ReadinessRefreshed',
+      description: 'Stale case detail',
+      occurredAt: '2026-10-22T09:00:00Z',
+      actorName: 'Previous Staff Member',
+    },
+  ];
   mocks.capturedFieldsLoading = false;
   mocks.capturedFieldsError = true;
   mocks.refetchCapturedFields.mockClear();
@@ -1030,7 +1063,8 @@ it('uses the standard history-error toast and withholds stale events after a fai
   expect(screen.queryByText('Handling history could not be loaded.')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   expect(screen.queryByText('No onboarding activity recorded yet.')).not.toBeInTheDocument();
-  expect(screen.queryByText(/Handled by:/)).not.toBeInTheDocument();
+  expect(screen.queryByText('Stale case detail')).not.toBeInTheDocument();
+  expect(screen.queryByRole('list', { name: 'Onboarding activity and audit' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
   expect(mocks.refetchCapturedFields).not.toHaveBeenCalled();
 });

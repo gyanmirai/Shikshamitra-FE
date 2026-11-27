@@ -7,6 +7,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { studentPaths } from 'src/constants/student-menu';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { useGetStudentRecordSnapshotQuery } from 'src/redux/student/records/student-record-changes-api';
 import {
   Box,
@@ -32,12 +33,13 @@ export function StudentCustomChangeDrawer({
 }) {
   const titleId = useId();
   const formId = useId();
+  const exit = useStudentDrawerExit();
   const router = useRouter();
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [formReady, setFormReady] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
-  const guard = useUnsavedNavigation(dirty, {
+  const guard = useUnsavedNavigation(dirty && !exit.closing, {
     push: router.push,
     blockNavigation: busy,
     title: 'Discard unsaved changes?',
@@ -47,7 +49,7 @@ export function StudentCustomChangeDrawer({
     { studentId, section: 'custom-details' },
     { refetchOnMountOrArgChange: true }
   );
-  const close = () => guard.requestNavigation(onClose);
+  const close = () => guard.requestNavigation(() => exit.closeAfterExit(onClose));
   const errorStatus =
     snapshot.error && typeof snapshot.error === 'object' && 'status' in snapshot.error
       ? snapshot.error.status
@@ -57,10 +59,12 @@ export function StudentCustomChangeDrawer({
     <>
       <Drawer
         anchor="right"
-        open
+        open={!exit.closing}
         onClose={close}
+        onTransitionExited={exit.onExited}
         slotProps={{
           paper: {
+            inert: exit.closing || undefined,
             role: 'dialog',
             'aria-modal': true,
             'aria-labelledby': titleId,

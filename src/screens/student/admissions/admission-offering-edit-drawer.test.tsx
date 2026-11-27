@@ -162,6 +162,21 @@ describe('Offering edit drawer experience', () => {
     expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeDisabled();
     expect(props.onClose).not.toHaveBeenCalled();
   });
+  it('keeps one drawer until exit when the edit details arrive late', async () => {
+    const onExited = vi.fn();
+    const view = show({ offering: null, loadingDetail: true, onExited });
+    const drawer = screen.getByRole('dialog', { name: 'Edit Admission Offering' });
+    view.rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionOfferingEditDrawer {...props} closing onExited={onExited} />
+      </ThemeProvider>
+    );
+    expect(drawer).toBeInTheDocument();
+    expect(drawer).toHaveAttribute('inert');
+    expect(onExited).not.toHaveBeenCalled();
+    await waitFor(() => expect(onExited).toHaveBeenCalledOnce());
+    expect(drawer).not.toBeInTheDocument();
+  });
   it('merges class and configuration, shows cycle below two steps and preserves choices after Preview/Back', async () => {
     const user = userEvent.setup();
     show({

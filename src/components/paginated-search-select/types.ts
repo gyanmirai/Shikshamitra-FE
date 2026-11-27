@@ -27,4 +27,5 @@ export type PaginatedSearchSelectProps<
   error?: boolean;
   isLoading?: boolean;
   loadingLabel?: string;
+  clearSearchOnOpen?: boolean;
 };

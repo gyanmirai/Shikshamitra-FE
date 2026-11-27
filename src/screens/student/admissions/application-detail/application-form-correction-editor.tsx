@@ -1,5 +1,6 @@
 'use client';
 
+import type { Ref } from 'react';
 import type {
   AdmissionApplication,
   AdmissionApplicationForm,
@@ -11,12 +12,12 @@ import { Box, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { useRef, useState, useEffect, useImperativeHandle } from 'react';
 import { useCorrectAdmissionApplicationFormMutation } from 'src/redux/student/admissions/admission-applications-api';
 
 import { ApplicationRuntimeForm } from './application-runtime-form';
@@ -44,6 +45,8 @@ export function ApplicationFormCorrectionEditor({
   onClose,
   onSaved,
   onRefresh,
+  frameCloseRef,
+  onFrameBusyChange,
 }: {
   application: AdmissionApplication;
   form: AdmissionApplicationForm;
@@ -53,6 +56,8 @@ export function ApplicationFormCorrectionEditor({
   onClose: () => void;
   onSaved: () => void;
   onRefresh: () => void;
+  frameCloseRef?: Ref<() => void>;
+  onFrameBusyChange?: (busy: boolean) => void;
 }) {
   const [initialValues] = useState(() =>
     Object.fromEntries(
@@ -138,6 +143,8 @@ export function ApplicationFormCorrectionEditor({
     if (locked || savingRef.current) return;
     guard.requestNavigation(onClose);
   };
+  useImperativeHandle(frameCloseRef, () => close);
+  useEffect(() => onFrameBusyChange?.(locked), [locked, onFrameBusyChange]);
   const validate = (sectionId?: string) => {
     const next = getCorrectionValidationErrors(form.definition, latestValues.current, sectionId);
     focusRequested.current = Object.values(next).some(Boolean);
@@ -202,107 +209,113 @@ export function ApplicationFormCorrectionEditor({
     shikshaMitraToast.success({
       message: 'Application corrected. Review finalization checks again.',
     });
+    setReasonOpen(false);
     onSaved();
   };
   const formError = conflict
     ? `${error} Close this editor and reopen the latest application before making another correction.`
     : error;
+  const editor = (
+    <Box ref={fieldsRef} sx={{ display: 'contents' }}>
+      <FormBusyRegion
+        busy={saving || validating}
+        fillContent
+        showOverlay={validating}
+        label={validating ? 'Checking form…' : 'Saving…'}
+      >
+        <ApplicationRuntimeForm
+          application={application}
+          form={form}
+          values={formik.values}
+          errors={[
+            formError,
+            !allowed && !unconfirmed
+              ? blockedReason ||
+                'This form can no longer be corrected. Close and refresh the application.'
+              : '',
+          ].filter(Boolean)}
+          fieldErrors={fieldErrors}
+          correctionMode
+          submitLabel="Save changes"
+          compact
+          readOnly={!allowed || conflict || Boolean(unconfirmed)}
+          saving={saving}
+          submitting={false}
+          canSubmitForm={!cannotSave}
+          showSaveDraft={false}
+          managedFormStage={false}
+          canReopen={false}
+          reopening={false}
+          onReopen={() => undefined}
+          onSave={async () => false}
+          onPhotoReadingChange={setReadingPhoto}
+          onValidateStep={validate}
+          onValidationBusyChange={setValidating}
+          onSubmit={requestSave}
+          onChange={(code, value) => {
+            // Async field callbacks may hold props from before the save began.
+            // A completed photo read can supply its answer while the reader locks other controls.
+            if (savingRef.current || !acceptsChanges.current) return;
+            const nextValues = getEffectiveCorrectionValues(form.definition, initialValues, {
+              ...latestValues.current,
+              [code]: value,
+            });
+            latestValues.current = nextValues;
+            formik.setValues(nextValues, false);
+            setFieldErrors((previous) => ({ ...previous, [code]: '' }));
+          }}
+          onBlur={(code) => {
+            const errors = getCorrectionValidationErrors(form.definition, latestValues.current);
+            setFieldErrors((previous) => ({
+              ...Object.fromEntries(
+                Object.entries(previous).filter(
+                  ([key]) => key !== code && !key.startsWith(`${code}[`)
+                )
+              ),
+              ...Object.fromEntries(
+                Object.entries(errors).filter(([key]) => key === code || key.startsWith(`${code}[`))
+              ),
+            }));
+          }}
+          footerActions={
+            <>
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                disabled={locked}
+                onClick={close}
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              >
+                Cancel
+              </Button>
+              {unconfirmed && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="inherit"
+                  disabled={cannotSave}
+                  onClick={() => setReasonOpen(true)}
+                  startIcon={<Iconify icon={GlobalIcons.submit} />}
+                >
+                  Retry Save
+                </Button>
+              )}
+            </>
+          }
+        />
+      </FormBusyRegion>
+    </Box>
+  );
   return (
     <>
-      <ApplicationFormCorrectionFrame busy={locked} onClose={close}>
-        <Box ref={fieldsRef} sx={{ display: 'contents' }}>
-          <FormBusyRegion
-            busy={saving || validating}
-            fillContent
-            showOverlay={validating}
-            label={validating ? 'Checking form…' : 'Saving…'}
-          >
-            <ApplicationRuntimeForm
-              application={application}
-              form={form}
-              values={formik.values}
-              errors={[
-                formError,
-                !allowed && !unconfirmed
-                  ? blockedReason ||
-                    'This form can no longer be corrected. Close and refresh the application.'
-                  : '',
-              ].filter(Boolean)}
-              fieldErrors={fieldErrors}
-              correctionMode
-              submitLabel="Save changes"
-              compact
-              readOnly={!allowed || conflict || Boolean(unconfirmed)}
-              saving={saving}
-              submitting={false}
-              canSubmitForm={!cannotSave}
-              showSaveDraft={false}
-              managedFormStage={false}
-              canReopen={false}
-              reopening={false}
-              onReopen={() => undefined}
-              onSave={async () => false}
-              onPhotoReadingChange={setReadingPhoto}
-              onValidateStep={validate}
-              onValidationBusyChange={setValidating}
-              onSubmit={requestSave}
-              onChange={(code, value) => {
-                // Async field callbacks may hold props from before the save began.
-                // A completed photo read can supply its answer while the reader locks other controls.
-                if (savingRef.current || !acceptsChanges.current) return;
-                const nextValues = getEffectiveCorrectionValues(form.definition, initialValues, {
-                  ...latestValues.current,
-                  [code]: value,
-                });
-                latestValues.current = nextValues;
-                formik.setValues(nextValues, false);
-                setFieldErrors((previous) => ({ ...previous, [code]: '' }));
-              }}
-              onBlur={(code) => {
-                const errors = getCorrectionValidationErrors(form.definition, latestValues.current);
-                setFieldErrors((previous) => ({
-                  ...Object.fromEntries(
-                    Object.entries(previous).filter(
-                      ([key]) => key !== code && !key.startsWith(`${code}[`)
-                    )
-                  ),
-                  ...Object.fromEntries(
-                    Object.entries(errors).filter(
-                      ([key]) => key === code || key.startsWith(`${code}[`)
-                    )
-                  ),
-                }));
-              }}
-              footerActions={
-                <>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="inherit"
-                    disabled={locked}
-                    onClick={close}
-                    startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                  >
-                    Cancel
-                  </Button>
-                  {unconfirmed && (
-                    <Button
-                      size="small"
-                      variant="contained"
-                      color="inherit"
-                      disabled={cannotSave}
-                      onClick={() => setReasonOpen(true)}
-                      startIcon={<Iconify icon={GlobalIcons.submit} />}
-                    >
-                      Retry Save
-                    </Button>
-                  )}
-                </>
-              }
-            />
-          </FormBusyRegion>
-        </Box>
-      </ApplicationFormCorrectionFrame>
+      {frameCloseRef ? (
+        editor
+      ) : (
+        <ApplicationFormCorrectionFrame busy={locked} onClose={close}>
+          {editor}
+        </ApplicationFormCorrectionFrame>
+      )}
       <ApplicationFormCorrectionReasonDialog
         open={reasonOpen}
         busy={saving}

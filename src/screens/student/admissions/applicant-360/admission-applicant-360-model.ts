@@ -86,6 +86,36 @@ const activityPresentation: Record<string, { title: string; icon: string; color:
     icon: 'mdi:file-document-edit-outline',
     color: 'primary',
   },
+  ApplicationSubmitted: {
+    title: 'Application submitted',
+    icon: 'mdi:file-check-outline',
+    color: 'default',
+  },
+  AdmissionJoiningDateConfirmed: {
+    title: 'Joining date confirmed',
+    icon: 'mdi:calendar-check-outline',
+    color: 'default',
+  },
+  AdmissionFeeSelectionSaved: {
+    title: 'Admission fee selection saved',
+    icon: 'mdi:cash-multiple',
+    color: 'default',
+  },
+  WorkflowStageEntered: {
+    title: 'Stage entered',
+    icon: 'mdi:arrow-right-circle-outline',
+    color: 'default',
+  },
+  WorkflowStageCompleted: {
+    title: 'Stage completed',
+    icon: 'mdi:check-circle-outline',
+    color: 'default',
+  },
+  WorkflowTransitioned: {
+    title: 'Stage changed',
+    icon: 'mdi:source-branch',
+    color: 'default',
+  },
   ApplicantProfileUpdated: {
     title: 'Applicant Profile Updated',
     icon: 'mdi:account-edit-outline',

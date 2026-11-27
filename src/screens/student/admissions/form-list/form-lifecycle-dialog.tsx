@@ -107,7 +107,7 @@ export function FormLifecycleDialog({
         <Button
           type="button"
           variant="contained"
-          color={restoring ? 'primary' : 'inherit'}
+          color="inherit"
           size="small"
           disabled={!canConfirm || busy || loading}
           loading={loading || busy}

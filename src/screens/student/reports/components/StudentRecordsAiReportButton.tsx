@@ -29,6 +29,7 @@ export function StudentRecordsAiReportButton() {
         open={workspace.value && canGenerate}
         onClose={workspace.onFalse}
         module="Student Records"
+        protectUnsavedChanges
       />
     </>
   );

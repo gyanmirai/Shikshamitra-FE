@@ -36,7 +36,7 @@ const fields = [
 ];
 
 describe('StudentFieldPalette', () => {
-  it('omits the context banner while keeping inherited fields disabled and previous school fields available', async () => {
+  it('offers each academic selector and keeps standalone preferences out of the bulk section', async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
     const onAddSection = vi.fn();
@@ -66,10 +66,9 @@ describe('StudentFieldPalette', () => {
     expect(screen.queryByRole('note')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Admission preferences (4)' }));
     catalogue.slice(0, 3).forEach((field) => {
-      expect(
-        screen.getByRole('button', { name: `${field.displayName} captured in inquiry` })
-      ).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: `Add ${field.displayName}` }));
     });
+    expect(onAdd.mock.calls).toEqual(catalogue.slice(0, 3).map((field) => [field]));
     await user.click(screen.getByRole('button', { name: 'Add Admission preferences Section' }));
     expect(onAddSection).toHaveBeenCalledWith('Admission preferences', [catalogue[3]]);
     await user.click(screen.getByRole('button', { name: 'Add Transport preferences Section' }));
@@ -133,7 +132,7 @@ describe('StudentFieldPalette', () => {
       screen.getByRole('button', { name: 'Add Transport preferences Section' })
     ).toBeDisabled();
   });
-  it('keeps address packs inside the related expandable category', async () => {
+  it('shows individual address fields without the full address shortcuts', async () => {
     const user = userEvent.setup();
     const onAddSection = vi.fn();
     const addressFields = ['Address.Country', 'Address.State', 'PermanentAddress.Country'].map(
@@ -157,10 +156,12 @@ describe('StudentFieldPalette', () => {
     );
     expect(screen.queryByRole('button', { name: 'Current address Pack' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Contact and addresses (3)' }));
-    expect(screen.getByText(/country must come before state, and state before city/i)).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Permanent address Pack' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Current address Pack' }));
-    expect(onAddSection).toHaveBeenCalledWith('Current address', addressFields.slice(0, 2));
+    expect(
+      screen.getByText(/country must come before state, and state before city/i)
+    ).toBeVisible();
+    expect(screen.queryAllByRole('button', { name: /address pack/i })).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'Add Address.Country' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Add PermanentAddress.Country' })).toBeVisible();
   });
   it('groups linked fields, marks used fields, and filters by group or name', async () => {
     const user = userEvent.setup();

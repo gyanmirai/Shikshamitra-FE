@@ -7,12 +7,11 @@ import type {
 import { useId } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { RouterLink } from 'src/routes/components';
 import { Scrollbar } from 'src/components/scrollbar';
-import { studentPaths } from 'src/constants/student-menu';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { useGetApplicationAssessmentQuery } from 'src/redux/student/admissions/admission-assessments-api';
 import {
   Box,
@@ -37,12 +36,16 @@ import type { AssessmentAction } from './assessment-action-model';
 function WorkbenchDrawer({
   title,
   onClose,
+  onExited,
+  closing = false,
   children,
   detailView = false,
   helpText,
 }: {
   title: string;
   onClose: () => void;
+  onExited?: () => void;
+  closing?: boolean;
   children: React.ReactNode;
   detailView?: boolean;
   helpText?: string;
@@ -51,9 +54,11 @@ function WorkbenchDrawer({
   return (
     <Drawer
       anchor="right"
-      open
+      open={!closing}
       onClose={onClose}
+      onTransitionExited={onExited}
       PaperProps={{
+        inert: closing || undefined,
         role: 'dialog',
         'aria-modal': true,
         'aria-labelledby': titleId,
@@ -162,16 +167,17 @@ export function AssessmentApplicantDrawer({
   canViewApplication,
   canAdvance,
   onAction,
-  returnUrl,
+  onOpenApplication,
   onClose,
 }: {
   row: AssessmentRosterItem;
   canViewApplication: boolean;
   canAdvance: boolean;
   onAction: (row: AssessmentRosterItem, action: AssessmentAction | 'continue') => void;
-  returnUrl: string;
+  onOpenApplication: (applicationId: string) => void;
   onClose: () => void;
 }) {
+  const { closing, closeAfterExit, onExited } = useStudentDrawerExit();
   const query = useGetApplicationAssessmentQuery(
     { applicationId: row.applicationId, stageInstanceId: row.stageInstanceId },
     { refetchOnMountOrArgChange: true }
@@ -179,7 +185,9 @@ export function AssessmentApplicantDrawer({
   return (
     <WorkbenchDrawer
       title="Assessment Details"
-      onClose={onClose}
+      onClose={() => closeAfterExit(onClose)}
+      onExited={onExited}
+      closing={closing}
       detailView
       helpText="View the student's assessment, available actions and recorded attempts."
     >
@@ -195,12 +203,11 @@ export function AssessmentApplicantDrawer({
               <Button
                 size="small"
                 variant="outlined"
-                component={RouterLink}
                 sx={{ width: { xs: 1, md: 'auto' } }}
-                href={`${studentPaths.enrollment.applications}/${row.applicationId}?returnTo=${encodeURIComponent(returnUrl)}`}
+                onClick={() => closeAfterExit(() => onOpenApplication(row.applicationId))}
                 startIcon={<Iconify icon={GlobalIcons.openInNew} />}
               >
-                Open Application
+                Open application
               </Button>
             )
           }
@@ -250,10 +257,14 @@ export function AssessmentApplicantDrawer({
                       </Typography>
                     }
                     onAction={(action) =>
-                      onAction({ ...row, assessment: query.currentData! }, action)
+                      closeAfterExit(() =>
+                        onAction({ ...row, assessment: query.currentData! }, action)
+                      )
                     }
                     onComplete={() =>
-                      onAction({ ...row, assessment: query.currentData! }, 'continue')
+                      closeAfterExit(() =>
+                        onAction({ ...row, assessment: query.currentData! }, 'continue')
+                      )
                     }
                   />
                 )}
@@ -282,7 +293,11 @@ export function AssessmentApplicantDrawer({
               descriptionTooltip="Previous and current attempts, attendance, results and scheduled session details."
             >
               {query.currentData.attempts.length ? (
-                <AssessmentAttemptHistory attempts={query.currentData.attempts} compact />
+                <AssessmentAttemptHistory
+                  attempts={query.currentData.attempts}
+                  className={row.className}
+                  compact
+                />
               ) : (
                 <Typography variant="body2" color="text.secondary">
                   No attempts recorded yet.

@@ -31,6 +31,8 @@ type Props = {
   displaySection?: AdmissionFormSection;
   readOnly?: boolean;
   navigationRequest?: BuilderNavigationRequest;
+  linkedFieldLocks?: ReadonlyMap<string, string>;
+  onFieldAction?: (fieldId: string, type: 'move' | 'delete') => void;
   onSelectSection: (sectionId: string) => void;
   onSelectField: (fieldId: string) => void;
 };
@@ -44,6 +46,8 @@ export function FormBuilderSection({
   displaySection,
   readOnly = false,
   navigationRequest,
+  linkedFieldLocks,
+  onFieldAction,
   onSelectSection,
   onSelectField,
 }: Props) {
@@ -98,8 +102,12 @@ export function FormBuilderSection({
     section,
     formik.values.coreFieldPolicyVersion
   );
+  const linkedFieldReason = [section, formik.values.sections[sectionIndex]]
+    .flatMap((item) => item.fields)
+    .map((field) => linkedFieldLocks?.get(field.id))
+    .find(Boolean);
   const removeSection = () => {
-    if (deleteDisabled) return;
+    if (deleteDisabled || linkedFieldReason) return;
     formik.setFieldValue(
       'sections',
       formik.values.sections.filter((_, index) => index !== sectionIndex)
@@ -146,6 +154,7 @@ export function FormBuilderSection({
               contentId={contentId}
               readOnly={readOnly}
               deleteDisabled={deleteDisabled}
+              deleteBlockedReason={linkedFieldReason}
               onToggleExpanded={() => {
                 if (settingsOpen) settings.onFalse();
                 expansion.setValue(!expanded);
@@ -197,6 +206,8 @@ export function FormBuilderSection({
               formik={formik}
               sectionIndex={sectionIndex}
               displaySection={section}
+              linkedFieldLocks={linkedFieldLocks}
+              onFieldAction={readOnly ? undefined : onFieldAction}
               selectedFieldId={selectedFieldId}
               onSelectField={onSelectField}
             />

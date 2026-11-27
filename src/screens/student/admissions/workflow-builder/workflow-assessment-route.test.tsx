@@ -74,7 +74,7 @@ describe('assessment route interactions', { timeout: 15000 }, () => {
     await waitFor(() =>
       expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
     );
-    await user.click(screen.getByRole('button', { name: 'Save Path' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toEqual({
       id: 'transition-1',
@@ -97,7 +97,7 @@ describe('assessment route interactions', { timeout: 15000 }, () => {
     const { user, onSave } = setup(condition);
     expect(screen.getByRole('heading', { name: 'Entrance assessment' })).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'From Stage *' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save Path' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     const saved = onSave.mock.calls[0][0];
     expect(saved.fromStageId).toBe(source.id);
@@ -115,7 +115,7 @@ describe('assessment route interactions', { timeout: 15000 }, () => {
     await waitFor(() =>
       expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
     );
-    await user.click(screen.getByRole('button', { name: 'Save Path' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
       isDefault: true,

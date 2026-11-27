@@ -25,6 +25,7 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { FormSectionCard, FormFieldSpacing } from 'src/components/form-section-card';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { useLazyGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
@@ -169,6 +170,7 @@ export default function AdmissionDirectRegistrationDialog({ open, ...props }: Pr
 
 function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open'>) {
   const router = useRouter();
+  const { closing, closeAfterExit, onExited } = useStudentDrawerExit();
   const [requestId] = useState(() => crypto.randomUUID());
   const discard = useBoolean();
   const [selectedOffering, setSelectedOffering] = useState<AdmissionOfferingListItem | null>(null);
@@ -261,10 +263,12 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         }).unwrap();
         if (!application.id)
           throw new Error('Registration response did not include an application.');
-        formik.resetForm();
         shikshaMitraToast.success({ message: 'Registration started.' });
-        onClose();
-        router.push(`${studentPaths.enrollment.applications}/${application.id}`);
+        closeAfterExit(() => {
+          formik.resetForm();
+          onClose();
+          router.push(`${studentPaths.enrollment.applications}/${application.id}`);
+        });
       } catch (error) {
         shikshaMitraToast.error({
           message: parseApiProblemDetail(error).detail || 'Registration could not be started.',
@@ -298,11 +302,11 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
     requestErrorRef.current?.scrollIntoView?.({ block: 'nearest' });
   }, [requestError, busy]);
   const requestClose = () => {
-    if (busy) return;
+    if (busy || closing) return;
     if (formik.dirty) discard.onTrue();
-    else onClose();
+    else closeAfterExit(onClose);
   };
-  useAdmissionUnsavedChanges(true, formik.dirty);
+  useAdmissionUnsavedChanges(!closing, formik.dirty);
   const fetchCycles = useCallback(
     async (search: string, page: number) => {
       const skipCount = (page - 1) * 25;
@@ -440,9 +444,11 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
     <>
       <Drawer
         anchor="right"
-        open
+        open={!closing}
         onClose={requestClose}
+        onTransitionExited={onExited}
         PaperProps={{
+          inert: closing,
           component: 'form',
           role: 'dialog',
           'aria-modal': true,
@@ -483,7 +489,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         <Scrollbar sx={{ flex: 1, bgcolor: 'background.neutral' }}>
           <FormBusyRegion
             busy={busy}
-            label={familyLookup.isFetching ? 'Checking Families…' : 'Starting Registration…'}
+            label={familyLookup.isFetching ? 'Checking families…' : 'Starting registration…'}
           >
             <FormFieldSpacing>
               <Stack ref={fieldsRef} spacing={2} sx={{ p: 2 }}>
@@ -934,7 +940,9 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         renderUnsavedConfirmation(
           discard.onFalse,
           () => {
-            if (!busy) onClose();
+            if (busy) return;
+            discard.onFalse();
+            closeAfterExit(onClose);
           },
           {
             busy,

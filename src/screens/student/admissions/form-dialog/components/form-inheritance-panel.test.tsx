@@ -9,7 +9,11 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { changeNewFormInheritance } from '../inquiry-default-fields';
 import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
-import { FormInheritancePanel, InheritedFieldSettings } from './form-inheritance-panel';
+import {
+  InheritedFieldDrawer,
+  FormInheritancePanel,
+  InheritedFieldSettings,
+} from './form-inheritance-panel';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
 const inheritanceContext = vi.hoisted(() => ({ value: null as unknown }));
@@ -196,7 +200,7 @@ describe('Inherited Registration field settings', () => {
   it('shows the captured full-name reference as non-required during Registration', () => {
     setup(true, false, true, false, true);
     expect(screen.getByRole('switch', { name: 'Required During Registration' })).not.toBeChecked();
-    expect(screen.getByText('The Captured Inquiry Answer Is a Read-only Reference.')).toBeVisible();
+    expect(screen.getByText('The captured inquiry answer is a read-only reference.')).toBeVisible();
   });
 
   it('keeps connection-load recovery reachable before a source has been selected', async () => {
@@ -400,13 +404,13 @@ describe('Inherited Registration field settings', () => {
     expect(screen.getByLabelText('Field Label')).toBeDisabled();
     expect(screen.getByLabelText('Field Label')).toHaveValue('DOB');
     expect(screen.getByLabelText('Field Type')).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Delete Field' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Delete field' })).toBeDisabled();
     expect(screen.getByText('Inherited fields are managed in Inquiry.')).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Open Inquiry Form' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Open inquiry form' })).toHaveAttribute(
       'href',
       '/student/admissions/settings/forms/inquiry-b/preview'
     );
-    expect(screen.getByRole('link', { name: 'Open Inquiry Form' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Open inquiry form' })).toHaveAttribute(
       'target',
       '_blank'
     );
@@ -434,6 +438,26 @@ describe('Inherited Registration field settings', () => {
     setup(false, true);
     expect(screen.getByRole('switch', { name: 'Required During Registration' })).not.toBeChecked();
     expect(screen.getByRole('switch', { name: 'Required During Registration' })).toBeDisabled();
-    expect(screen.getByText('Optional in the Source Inquiry.')).toBeVisible();
+    expect(screen.getByText('Optional in the source inquiry.')).toBeVisible();
   });
+});
+
+it('gives the inherited question drawer an accessible title and retains its selection during close', async () => {
+  const selectField = vi.fn();
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <Formik initialValues={getBlankAdmissionFormInitialValues(1)} onSubmit={() => undefined}>
+        {(formik) => {
+          inheritanceContext.value = { formik, selectedField: inherited, selectField };
+          return <InheritedFieldDrawer />;
+        }}
+      </Formik>
+    </ThemeProvider>
+  );
+  expect(screen.getByRole('dialog', { name: 'Inquiry Question Settings' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Inquiry Question Settings', level: 2 })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Inquiry question settings information' })).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Close Inherited Field Settings' }));
+  expect(selectField).not.toHaveBeenCalled();
+  await waitFor(() => expect(selectField).toHaveBeenCalledWith(null));
 });

@@ -217,7 +217,7 @@ The shared table owns its toolbar, active filter chips, sticky header, body load
 Every table has a contextual accessible name that identifies its records.
 Initial table loading uses table-shaped skeleton rows through `isLoading`.
 The animated character loader is retained in `src/assets/illustrations/table-loading-illustration.tsx` and `src/components/table-loading-state/` for future use. It is not wired into any active table or screen.
-Server refetches retain the current rows when safe and add a thin labelled progress indicator.
+Server refetches retain the current rows when safe and show a labelled progress indicator at the top of the table. Admissions tables use `refreshIndicator="circular"` for a compact spinner in the toolbar, outside the table header. The shared default uses a thin indicator.
 Pass `isRefreshing` for a same-scope refetch with safe current data; keep `isLoading` for the initial request or a new scope without current data.
 Column headings default to left alignment independently of body-cell `align`; use the explicit `headerAlign` column option only for a documented specialized control.
 Finance monetary body cells align right, including embedded tables and report previews. The shared
@@ -1065,7 +1065,7 @@ Use `ThreeDotsActions` from `src/components/three-dots-actions/` for row actions
 | Direct actions   | Show at most three frequent row actions directly. Use built-in view/edit/delete props first and `directActions` for a feature-specific `mdi:` action; place every remaining action in the three-dot menu. |
 | Server-side data | When the API supports server-side pagination, search, sorting, or filtering, enable the corresponding `serverSide*` props and provide the matching callbacks.     |
 | Loading          | Pass the API loading state through `isLoading`; retain the table geometry while the request is in progress.                                                       |
-| Scoped refresh   | Use `isRefreshing` to retain safe current rows and show a thin labelled progress indicator along the bottom edge of the table without shifting rows or headings. |
+| Scoped refresh   | Use `isRefreshing` to retain safe current rows and show labelled progress without shifting rows or headings. Use `refreshIndicator="circular"` in Admissions tables. |
 | Pagination       | Use server-side pagination for API-backed collections that can grow; pass `totalCount` and handle `onServerPagination`.                                           |
 
 **Field-to-filter mapping**

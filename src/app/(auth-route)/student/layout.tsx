@@ -9,6 +9,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { studentPermissions } from 'src/constants/student-menu';
 import StudentSetupEntry from 'src/screens/student/setup/StudentSetupEntry';
 import { StudentFeedbackScope } from 'src/screens/student/student-feedback-scope';
+import { StudentDrawerMotionProvider } from 'src/screens/student/components/student-drawer-motion-provider';
 
 const StudentLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -21,7 +22,15 @@ const StudentLayout: React.FC<{ children: React.ReactNode }> = ({
 
   const hasPermission = hasGrantedPermission(permissions, studentPermissions.root);
   if (loading || !permissionsInitialized) return <SplashScreen />;
-  return hasPermission ? <StudentFeedbackScope><StudentSetupEntry>{children}</StudentSetupEntry></StudentFeedbackScope> : <View403 />;
+  return hasPermission ? (
+    <StudentDrawerMotionProvider>
+      <StudentFeedbackScope>
+        <StudentSetupEntry>{children}</StudentSetupEntry>
+      </StudentFeedbackScope>
+    </StudentDrawerMotionProvider>
+  ) : (
+    <View403 />
+  );
 };
 
 export default StudentLayout;

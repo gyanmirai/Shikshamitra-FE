@@ -288,7 +288,7 @@ it('keeps route guidance and independent setup errors after Save Draft', async (
   expect(
     screen.queryByText(`Stage '${entry.name}' cannot reach a terminal stage.`)
   ).not.toBeInTheDocument();
-  expect(card().getByText(documentSetup.message)).toBeVisible();
+  expect(card().getByText('At least one document is required for this stage.')).toBeVisible();
   const save = screen.getByRole('button', { name: 'Save Draft' });
   fireEvent.click(save);
   await waitFor(() => expect(save).toBeDisabled());
@@ -309,9 +309,9 @@ it('keeps route guidance and independent setup errors after Save Draft', async (
   expect(await screen.findByRole('combobox', { name: 'Continue To *' })).toHaveTextContent(
     documents.name
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Save Path' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save path' }));
   await waitFor(() => expect(previewedConnection).toHaveBeenLastCalledWith(true));
-  expect(await card().findByText(documentSetup.message)).toBeVisible();
+  expect(await card().findByText('At least one document is required for this stage.')).toBeVisible();
   expect(card().queryByText(connectionHint)).not.toBeInTheDocument();
   expect(screen.getByRole('status', { name: 'Journey Validation Summary' })).toHaveTextContent(
     'Journey Needs Attention'
@@ -384,10 +384,10 @@ it('shows missing document requirements when opening a connected standard draft'
   );
   await setup(false, { ...workflow, ...journey });
   const card = within(document.getElementById(`workflow-stage-${documents.id}`)!);
-  expect(await card.findByText('Configure between 1 and 30 document requirements.')).toBeVisible();
-  expect(
-    card.getByRole('button', { name: 'Edit Document Setup for Document verification' })
-  ).toBeEnabled();
+  expect(await card.findByText('At least one document is required for this stage.')).toBeVisible();
+  expect(card.queryByRole('alert')).not.toBeInTheDocument();
+  expect(card.queryByText('1 Issue')).not.toBeInTheDocument();
+  expect(card.getByRole('button', { name: 'Edit Document verification' })).toBeEnabled();
 });
 
 it('reconnects the standard document stage when Payment is inserted after Admission Form', async () => {
@@ -408,9 +408,9 @@ it('reconnects the standard document stage when Payment is inserted after Admiss
   fireEvent.change(await screen.findByRole('textbox', { name: 'Stage name *' }), {
     target: { value: 'Inserted payment' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Apply Changes' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
   await waitFor(() =>
-    expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument()
   );
   fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
   await waitFor(() => expect(saves).toHaveLength(1));
@@ -430,9 +430,9 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
       target: { value: 'Additional assessment' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(
-      () => expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument(),
+      () => expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument(),
       { timeout: 10000 }
     );
     const sequence = await screen.findByRole(
@@ -467,9 +467,9 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
       target: { value: 'Inserted assessment' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument()
     );
     fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     await waitFor(() => expect(saves).toHaveLength(1));
@@ -504,10 +504,10 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
       target: { value: 'Unsaved assessment' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
     await waitFor(
-      () => expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument(),
+      () => expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument(),
       { timeout: 10000 }
     );
     const sequence = await screen.findByRole(
@@ -547,9 +547,9 @@ describe('Choose next step creates and configures a connected stage', { timeout:
     fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
       target: { value: 'Chosen position assessment' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument()
     );
     fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     await waitFor(() => expect(saves).toHaveLength(1));
@@ -575,9 +575,9 @@ it('guards leaving the main workflow draft after a staged edit is applied', asyn
   fireEvent.change(screen.getByRole('textbox', { name: 'Stage name *' }), {
     target: { value: 'Unsaved graph stage' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Apply Changes' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
   await waitFor(() =>
-    expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument()
   );
   fireEvent.click(screen.getByRole('button', { name: 'Back to workflows' }));
   fireEvent.click(screen.getByRole('button', { name: 'Back to workflows' }));

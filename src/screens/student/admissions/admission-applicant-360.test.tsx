@@ -1,7 +1,7 @@
 import type { AdmissionApplicant360 } from 'src/redux/student/admissions/admission-applicants-api';
 
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { expectStudentErrorToast } from 'src/test/student-toast-test-fixture';
 
 import AdmissionApplicant360Screen from './admission-applicant-360';
@@ -90,14 +90,16 @@ describe('saved applicant URL recovery', () => {
     expect(state.refetch).not.toHaveBeenCalled();
     expect(screen.queryByText('Applicant essentials')).not.toBeInTheDocument();
   });
-  it('opens the single application workspace with its filtered list return context', () => {
+  it('opens the single application workspace with its filtered list return context', async () => {
     state.search = new URLSearchParams({
       returnTo: '/student/admissions/pipeline?page=2&owner=mine',
     }).toString();
     state.result = { currentData: { ...fixture, applications: [application('one')] } };
     render(<AdmissionApplicant360Screen />);
-    expect(state.replace).toHaveBeenCalledWith(
-      '/student/admissions/pipeline/applications/one?returnTo=%2Fstudent%2Fadmissions%2Fpipeline%3Fpage%3D2%26owner%3Dmine'
+    await waitFor(() =>
+      expect(state.replace).toHaveBeenCalledWith(
+        '/student/admissions/pipeline/applications/one?returnTo=%2Fstudent%2Fadmissions%2Fpipeline%3Fpage%3D2%26owner%3Dmine'
+      )
     );
   });
   it('requires an explicit selection when multiple applications exist', () => {
@@ -116,7 +118,7 @@ describe('saved applicant URL recovery', () => {
     ]);
     expect(screen.getByRole('button', { name: 'Edit Identity' })).toBeDisabled();
   });
-  it('retains Inquiry recovery for applicants with no application and does not start direct admission', () => {
+  it('retains Inquiry recovery for applicants with no application and does not start direct admission', async () => {
     state.search = 'inquiryId=inquiry-1';
     render(<AdmissionApplicant360Screen />);
     expect(screen.getByText(/Start Application/)).toBeInTheDocument();
@@ -126,7 +128,8 @@ describe('saved applicant URL recovery', () => {
     );
     expect(screen.queryByRole('button', { name: /Start Admission/i })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Applicant Notes' }));
-    expect(screen.getByText('Focused applicant notes')).toBeInTheDocument();
+    expect(screen.queryByText('Focused applicant notes')).not.toBeInTheDocument();
+    expect(await screen.findByText('Focused applicant notes')).toBeInTheDocument();
   });
   it('opens an old identity repair bookmark directly and closes to a safe list', () => {
     state.search = new URLSearchParams({

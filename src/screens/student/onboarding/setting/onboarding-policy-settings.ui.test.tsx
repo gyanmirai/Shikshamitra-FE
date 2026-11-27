@@ -1,4 +1,5 @@
 import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { GlobalIcons } from 'src/utils/icons';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
@@ -229,6 +230,24 @@ const renderSettings = (children: React.ReactNode, onPersist?: any, initialSetti
 );
 
 describe('Onboarding numbering settings', () => {
+  it.each([
+    { Screen: GrNumberSettingsScreen, action: 'Add series', title: 'Add GR Number Series' },
+    {
+      Screen: RollNumberSettingsScreen,
+      action: 'Add roll number rule',
+      title: 'Add Roll Number Rule',
+    },
+  ])('uses the standard drawer heading and close icon for $title', ({ Screen, action, title }) => {
+    renderSettings(<Screen />);
+    fireEvent.click(screen.getByRole('button', { name: action }));
+    const drawer = screen.getByRole('dialog', { name: title });
+    expect(within(drawer).getByRole('heading', { name: title, level: 2 })).toHaveClass(
+      'MuiTypography-h6'
+    );
+    const close = within(drawer).getByRole('button', { name: `Close ${title}` });
+    expect(close.querySelector(`[data-icon="${GlobalIcons.cancel}"]`)).toBeInTheDocument();
+  });
+
   it.each([false, true])(
     'shows the saved next number or exhausted limit instead of the starting sample (exhausted=%s)',
     (exhausted) => {

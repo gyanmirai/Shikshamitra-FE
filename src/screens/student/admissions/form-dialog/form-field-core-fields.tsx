@@ -23,7 +23,12 @@ import {
 
 import type { FieldSettingsProps } from './types/field-settings';
 
-export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldSettingsProps) {
+export function FormFieldCoreFields({
+  formik,
+  sectionIndex,
+  fieldIndex,
+  linkedFieldReason,
+}: FieldSettingsProps) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
   const locked = isLockedInquiryField(
     formik.values.purpose,
@@ -76,14 +81,21 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
               label,
               value,
             }))}
-            disabled={isLinked || isClassInterest || isAcademic || field.fieldType === 10}
+            disabled={
+              Boolean(linkedFieldReason) ||
+              isLinked ||
+              isClassInterest ||
+              isAcademic ||
+              field.fieldType === 10
+            }
             error={
               needsClassRepair ||
               needsTypeRepair ||
               Boolean(isLinked && catalogueReady && !linkedField)
             }
             helperText={
-              isClassInterest
+              linkedFieldReason ||
+              (isClassInterest
                 ? 'Class choices come from Institute Setup.'
                 : isLinked
                   ? catalogue.isError
@@ -95,7 +107,7 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
                         : 'This student field connection is unavailable. Review this field before publishing.'
                   : field.fieldType === 10
                     ? 'File upload is not available yet. Replace this field before publishing.'
-                    : undefined
+                    : undefined)
             }
             onChange={(value) => formik.setFieldValue(`${path}.fieldType`, Number(value))}
           />

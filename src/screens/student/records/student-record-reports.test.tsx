@@ -85,15 +85,18 @@ vi.mock('src/components/custom-select', () => ({
 vi.mock('src/components/customizabaleTable', () => ({
   default: (props: any) => (
     <section aria-label={props.tableTitle}>
-      {props.data.map((row: any, index: number) => (
-        <div key={row.id ?? index}>
-          {props.columns.map((column: any) => (
-            <span key={column.id}>
-              {column.render ? column.render(row[column.id], row) : row[column.id]}
-            </span>
-          ))}
-        </div>
-      ))}
+      {props.errorContent ??
+        (props.data.length === 0
+          ? props.noDataText
+          : props.data.map((row: any, index: number) => (
+              <div key={row.id ?? index}>
+                {props.columns.map((column: any) => (
+                  <span key={column.id}>
+                    {column.render ? column.render(row[column.id], row) : row[column.id]}
+                  </span>
+                ))}
+              </div>
+            )))}
     </section>
   ),
 }));
@@ -129,6 +132,20 @@ beforeEach(() => {
   mocks.create.mockImplementation(() => ({ unwrap: () => Promise.resolve({ id: 'job-1' }) }));
 });
 describe('Student Records reports', () => {
+  it('shows a retryable preview error instead of reporting an empty scope', () => {
+    mocks.params = new URLSearchParams('type=Directory&year=year-2&student=student-9');
+    mocks.preview = { isError: true, isFetching: false, refetch: vi.fn() };
+    render(<StudentRecordReports />);
+
+    expect(
+      screen.getByText('Report preview could not be loaded. Your selected scope has been kept.')
+    ).toBeVisible();
+    expect(screen.queryByText('No student records match this scope.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(mocks.preview.refetch).toHaveBeenCalledTimes(1);
+    expect(mocks.previewInput).toMatchObject({ academicYearId: 'year-2', studentId: 'student-9' });
+  });
+
   it('provides accessible tab links that preserve report scope', () => {
     mocks.params = new URLSearchParams('type=Directory&year=year-2&student=student-9');
     render(<StudentRecordReports />);

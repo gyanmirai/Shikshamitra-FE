@@ -1,19 +1,17 @@
-import type { FormikProps } from 'formik';
-import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
-
 import { Grid, Stack } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { parseFieldConfiguration, writeFieldConfiguration } from './form-field-presets';
 
-type Props = {
-  formik: FormikProps<CreateUpdateAdmissionForm>;
-  sectionIndex: number;
-  fieldIndex: number;
-};
+import type { FieldSettingsProps } from './types/field-settings';
 
-export function FormFieldLocationSettings({ formik, sectionIndex, fieldIndex }: Props) {
+export function FormFieldLocationSettings({
+  formik,
+  sectionIndex,
+  fieldIndex,
+  linkedFieldReason,
+}: FieldSettingsProps) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
   const path = `sections[${sectionIndex}].fields[${fieldIndex}].validationJson`;
   const configuration = parseFieldConfiguration(field.validationJson);
@@ -46,6 +44,7 @@ export function FormFieldLocationSettings({ formik, sectionIndex, fieldIndex }: 
         <Stack spacing={1.5}>
           <CustomSelect
             required
+            disabled={Boolean(linkedFieldReason)}
             size="small"
             label="Country Field"
             value={configuration.countryField ?? ''}
@@ -63,18 +62,20 @@ export function FormFieldLocationSettings({ formik, sectionIndex, fieldIndex }: 
                   : { stateField: configuration.stateField }),
               })
             }
-            error={countryFieldMissing}
+            error={countryFieldMissing && !linkedFieldReason}
             helperText={
-              countryFieldMissing
+              linkedFieldReason ||
+              (countryFieldMissing
                 ? 'Select an available country field.'
                 : countryFields.length
                   ? undefined
-                  : 'Add a Country common field first.'
+                  : 'Add a Country common field first.')
             }
           />
           {configuration.format === 'city' && (
             <CustomSelect
               required
+              disabled={Boolean(linkedFieldReason)}
               size="small"
               label="State Field"
               value={configuration.stateField ?? ''}
@@ -85,13 +86,14 @@ export function FormFieldLocationSettings({ formik, sectionIndex, fieldIndex }: 
                   : []),
               ]}
               onChange={(value) => update({ stateField: String(value) })}
-              error={stateFieldMissing}
+              error={stateFieldMissing && !linkedFieldReason}
               helperText={
-                stateFieldMissing
+                linkedFieldReason ||
+                (stateFieldMissing
                   ? 'Select an available state field.'
                   : stateFields.length
                     ? undefined
-                    : 'Add a State common field first.'
+                    : 'Add a State common field first.')
               }
             />
           )}

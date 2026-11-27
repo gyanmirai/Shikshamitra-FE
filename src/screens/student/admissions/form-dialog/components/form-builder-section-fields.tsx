@@ -12,6 +12,7 @@ import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 
 import { FormBuilderField } from '../form-builder-field';
 import { isLockedInquiryField } from '../inquiry-default-fields';
+import { addressFieldLockReason } from '../form-builder-linked-fields';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
@@ -19,6 +20,8 @@ type Props = {
   displaySection?: AdmissionFormSection;
   selectedFieldId: string | null;
   onSelectField: (fieldId: string) => void;
+  linkedFieldLocks?: ReadonlyMap<string, string>;
+  onFieldAction?: (fieldId: string, type: 'move' | 'delete') => void;
 };
 
 export function FormBuilderSectionFields({
@@ -27,6 +30,8 @@ export function FormBuilderSectionFields({
   displaySection,
   selectedFieldId,
   onSelectField,
+  linkedFieldLocks,
+  onFieldAction,
 }: Props) {
   const section = displaySection ?? formik.values.sections[sectionIndex];
   const columns = section.fieldsPerRow ?? formik.values.fieldsPerRow;
@@ -47,6 +52,7 @@ export function FormBuilderSectionFields({
     if (
       !field ||
       field.inheritedFrom ||
+      linkedFieldLocks?.has(field.id) ||
       isLockedInquiryField(formik.values.purpose, field, formik.values.coreFieldPolicyVersion)
     )
       return;
@@ -80,7 +86,19 @@ export function FormBuilderSectionFields({
               fieldIndex={fieldIndex}
               selected={selectedFieldId === field.id}
               onSelect={() => onSelectField(field.id)}
-              onDelete={() => removeField(field.id)}
+              onDelete={() =>
+                onFieldAction ? onFieldAction(field.id, 'delete') : removeField(field.id)
+              }
+              onMove={
+                onFieldAction && !field.inheritedFrom
+                  ? () => onFieldAction(field.id, 'move')
+                  : undefined
+              }
+              deleteBlockedReason={
+                onFieldAction && linkedFieldLocks?.get(field.id) === addressFieldLockReason
+                  ? undefined
+                  : linkedFieldLocks?.get(field.id)
+              }
               reorderEnabled={!field.inheritedFrom}
             />
           ))}

@@ -12,7 +12,7 @@ it('retires Review settings and requires explicit replacement', async () => {
   expect(screen.getByText(/This saved stage type is no longer available/)).toBeInTheDocument();
   expect(screen.queryByRole('radio', { name: 'Review Timing' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Review Timing' })).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Apply changes' })).toBeDisabled();
   const user = userEvent.setup();
   await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
   await user.click(screen.getByRole('option', { name: 'Admission Decision' }));
@@ -22,7 +22,7 @@ it('retires Review settings and requires explicit replacement', async () => {
   await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
   await user.click(screen.getByRole('option', { name: 'Admission Decision' }));
   await user.click(screen.getByRole('button', { name: 'Change Type' }));
-  await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+  await user.click(screen.getByRole('button', { name: 'Apply changes' }));
   await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
   expect(onSave.mock.calls[0][0]).toMatchObject({
     stageType: 7,

@@ -2,7 +2,7 @@ import type { ApplicationAssessment } from 'src/redux/student/admissions/admissi
 import type { AssessmentRosterItem } from 'src/redux/student/admissions/admission-assessment-roster-api';
 
 import { vi, it, expect, beforeEach } from 'vitest';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 import { DEFAULT_ASSESSMENT_POLICY } from 'src/redux/student/admissions/admission-assessment-policy';
 
 import { AssessmentApplicantDrawer } from './assessment-workbench-drawers';
@@ -87,7 +87,7 @@ const drawer = (overrides = {}) => {
     canViewApplication: true,
     canAdvance: true,
     onAction: vi.fn(),
-    returnUrl: '/student/admissions/assessments?assessmentTab=students',
+    onOpenApplication: vi.fn(),
     onClose: vi.fn(),
     ...overrides,
   };
@@ -103,7 +103,7 @@ beforeEach(() => {
   mocks.query.mockReturnValue(query());
 });
 
-it('uses the existing drawer section anatomy and keeps both close controls reachable', () => {
+it('uses the existing drawer section anatomy and dismisses through the header', async () => {
   const { props } = drawer();
   expect(screen.getByRole('dialog', { name: 'Assessment Details' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Assessment Details information' })).toBeVisible();
@@ -115,16 +115,49 @@ it('uses the existing drawer section anatomy and keeps both close controls reach
   ['QA Student', 'APP-2026-000001', 'Entrance assessment'].forEach((text) =>
     expect(identity.getByText(text)).toBeVisible()
   );
-  expect(identity.getByRole('link', { name: 'Open Application' })).toHaveAttribute(
-    'href',
-    '/student/admissions/applications/application-1?returnTo=%2Fstudent%2Fadmissions%2Fassessments%3FassessmentTab%3Dstudents'
+  expect(identity.getByRole('button', { name: 'Open application' })).toBeVisible();
+  expect(identity.getByText('Application Number').parentElement).not.toContainElement(
+    identity.getByRole('button', { name: 'Open application' })
   );
   expect(
     within(screen.getByRole('region', { name: 'Attempt History' })).getByText('Attempt 1')
   ).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Close Assessment Details' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-  expect(props.onClose).toHaveBeenCalledTimes(2);
+  await waitFor(() => expect(props.onClose).toHaveBeenCalledOnce());
+});
+
+it('opens the application after the assessment drawer closes', async () => {
+  const { props } = drawer();
+  fireEvent.click(screen.getByRole('button', { name: 'Open application' }));
+  await waitFor(() =>
+    expect(props.onOpenApplication).toHaveBeenCalledExactlyOnceWith('application-1')
+  );
+});
+
+it('groups attempt details into labelled fields without losing session or review information', () => {
+  mocks.query.mockReturnValue(
+    query({
+      ...assessment,
+      attempts: [
+        {
+          ...assessment.attempts[0],
+          reviewNotes: 'Checked by staff',
+          reviewedAt: '2026-11-19T09:00:00Z',
+        },
+      ],
+    })
+  );
+  drawer();
+  const history = within(screen.getByRole('region', { name: 'Attempt History' }));
+  [
+    'Session',
+    'Attendance',
+    'Created',
+    'Passing marks',
+    'Entrance exam',
+    'Checked by staff',
+  ].forEach((text) => expect(history.getByText(text)).toBeVisible());
 });
 
 it('shows one short session instruction in its owning section without opening a toast', () => {
@@ -137,7 +170,7 @@ it('shows one short session instruction in its owning section without opening a 
   expect(mocks.info).not.toHaveBeenCalled();
 });
 
-it('keeps unknown backend blockers visible and passes the freshest assessment to action callbacks', () => {
+it('keeps unknown backend blockers visible and passes the freshest assessment to action callbacks', async () => {
   mocks.query.mockReturnValue(
     query({ ...assessment, blockers: ['A required document is unavailable.'] })
   );
@@ -145,11 +178,14 @@ it('keeps unknown backend blockers visible and passes the freshest assessment to
   expect(screen.getByText('A required document is unavailable.')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Complete Assessment Step' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Cancel Attempt' }));
-  expect(props.onAction).toHaveBeenCalledWith(
-    expect.objectContaining({
-      assessment: expect.objectContaining({ concurrencyStamp: 'fresh-stamp' }),
-    }),
-    'cancel'
+  expect(props.onAction).not.toHaveBeenCalled();
+  await waitFor(() =>
+    expect(props.onAction).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        assessment: expect.objectContaining({ concurrencyStamp: 'fresh-stamp' }),
+      }),
+      'cancel'
+    )
   );
   expect(mocks.query).toHaveBeenCalledWith(
     { applicationId: row.applicationId, stageInstanceId: row.stageInstanceId },
@@ -162,7 +198,7 @@ it('keeps current permissions and background-refresh locks on existing actions',
   mocks.permissions.waive = false;
   mocks.query.mockReturnValue(query({ ...assessment, blockers: [] }));
   const { rerender, props } = drawer({ canViewApplication: false, canAdvance: false });
-  expect(screen.queryByRole('link', { name: 'Open Application' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Open application' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Cancel Attempt' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Waive Assessment' })).not.toBeInTheDocument();
   expect(
@@ -180,13 +216,13 @@ it('keeps current permissions and background-refresh locks on existing actions',
   ).not.toBeInTheDocument();
 });
 
-it('retains the record header and close controls while detail data loads', () => {
+it('retains the record header and close control while detail data loads', () => {
   mocks.query.mockReturnValue({ ...query(), currentData: undefined, isFetching: true });
   drawer();
   expect(screen.getByText('QA Student')).toBeVisible();
   expect(screen.getByRole('status', { name: 'Loading Assessment Details' })).toBeVisible();
   expect(screen.queryByText('Attempt 1')).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Close Assessment Details' })).toBeEnabled();
 });
 
 it('keeps request failure feedback with the existing retry owner and displays no stale attempts', () => {
@@ -198,7 +234,7 @@ it('keeps request failure feedback with the existing retry owner and displays no
   expect(screen.getByRole('button', { name: 'Close Assessment Details' })).toBeEnabled();
 });
 
-it('shows a clear empty attempt history and preserves the authorized completion callback', () => {
+it('shows a clear empty attempt history and preserves the authorized completion callback', async () => {
   mocks.query.mockReturnValue(
     query({ ...assessment, attempts: [], blockers: [], canComplete: true })
   );
@@ -209,8 +245,10 @@ it('shows a clear empty attempt history and preserves the authorized completion 
     )
   ).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Complete Assessment Step' }));
-  expect(props.onAction).toHaveBeenCalledWith(
-    expect.objectContaining({ applicationId: row.applicationId }),
-    'continue'
+  await waitFor(() =>
+    expect(props.onAction).toHaveBeenCalledWith(
+      expect.objectContaining({ applicationId: row.applicationId }),
+      'continue'
+    )
   );
 });

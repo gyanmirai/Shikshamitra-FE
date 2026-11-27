@@ -304,10 +304,11 @@ describe('workflow clone name validation', () => {
     const user = userEvent.setup();
     const store = configureStore({ reducer: { confirmPopup } });
     const onClose = vi.fn();
+    const navigate = vi.fn();
     const onSave = vi
       .fn()
       .mockRejectedValueOnce({ data: { errorCode: 'Admissions.WorkflowNameAlreadyExists' } })
-      .mockResolvedValue(undefined);
+      .mockResolvedValue(navigate);
     render(
       <Provider store={store}>
         <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -338,7 +339,11 @@ describe('workflow clone name validation', () => {
     fireEvent.change(name, { target: { value: 'New copy' } });
     await waitFor(() => expect(screen.queryByText(duplicateNameMessage)).not.toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'Clone' }));
+    expect(name).toHaveValue('New copy');
+    expect(navigate).not.toHaveBeenCalled();
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledAfter(onClose);
     expect(onSave).toHaveBeenLastCalledWith(
       expect.objectContaining({ name: 'New copy', description: 'Keep this description' })
     );

@@ -9,12 +9,14 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { conflictsWithInquiryDefaultName } from '../inquiry-default-fields';
+import { addAddressFieldGroup, getAddressGroupChoice } from '../address-field-group';
 import { newField, nextFieldOrder, nextFieldDisplayOrder } from '../form-dialog-model';
 import { addressOrderMessage, getAddressLocationField } from '../form-address-dependencies';
 import { classInterestOptions, isClassInterestQuestion } from '../../admission-class-question';
 import { nextStepNumber, nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
 import { configureStudentField, connectStudentAddressFields } from '../student-field-configuration';
 import {
+  getAcademicGroupChoice,
   addAcademicClassSelector,
   findAcademicClassSelectorField,
 } from '../academic-class-selector';
@@ -169,12 +171,49 @@ export function useFormBuilderCommands(
     systemBinding?: string,
     preset?: AdmissionFieldPreset
   ) => {
-    if (preset?.key === 'class-selector') {
-      const result = addAcademicClassSelector(formik.values, selectedSectionId, inheritedFields);
-      if (result.inheritedField) onSelectInherited?.(result.inheritedField);
-      else {
+    const academicChoice = getAcademicGroupChoice(systemBinding);
+    if (preset?.key === 'class-selector' || academicChoice) {
+      const result = addAcademicClassSelector(
+        formik.values,
+        selectedSectionId,
+        inheritedFields,
+        academicChoice
+      );
+      if (result.incompatibleSource) {
+        shikshaMitraToast.warning({
+          message: 'Complete Board, Medium and Class in the source Inquiry form first.',
+        });
+        return;
+      }
+      if (result.form.sections !== formik.values.sections)
         formik.setFieldValue('sections', result.form.sections);
-        if (result.sectionId) onSelect(result.sectionId, result.fieldId);
+      if (result.inheritedField) onSelectInherited?.(result.inheritedField);
+      else if (result.sectionId && result.fieldId) onSelect(result.sectionId, result.fieldId);
+      return;
+    }
+    const addressChoice = getAddressGroupChoice(systemBinding, preset?.key);
+    if (addressChoice) {
+      const result = addAddressFieldGroup(
+        formik.values,
+        selectedSectionId,
+        addressChoice,
+        systemFields,
+        inheritedFields
+      );
+      if (result.incompatibleSource) {
+        shikshaMitraToast.warning({
+          message: 'Complete Country, State and City in the source Inquiry form first.',
+        });
+        return;
+      }
+      if (result.sections !== formik.values.sections)
+        formik.setFieldValue('sections', result.sections);
+      if (result.inheritedField) onSelectInherited?.(result.inheritedField);
+      else if (result.selected) {
+        const section = result.sections.find((item) =>
+          item.fields.some((field) => field.id === result.selected?.id)
+        );
+        if (section) onSelect(section.id, result.selected.id);
       }
       return;
     }
@@ -184,7 +223,9 @@ export function useFormBuilderCommands(
       isClassInterestQuestion({ code: '', label: preset.label, bindingType: 1 });
     if (isClassInterest) {
       const inheritedAcademic = findAcademicClassSelectorField(inheritedFields, false);
-      const inherited = inheritedFields.find(field => field.id === inheritedAcademic?.id) ?? inheritedFields.find(isClassInterestQuestion);
+      const inherited =
+        inheritedFields.find((field) => field.id === inheritedAcademic?.id) ??
+        inheritedFields.find(isClassInterestQuestion);
       if (inherited) {
         shikshaMitraToast.info({
           message: 'Class interested in is already included from Inquiry.',
@@ -192,11 +233,18 @@ export function useFormBuilderCommands(
         onSelectInherited?.(inherited);
         return;
       }
-      const existingAcademic = findAcademicClassSelectorField(formik.values.sections.flatMap(section => section.fields), false);
-      const existingSection = formik.values.sections.find((section) =>
-        section.fields.some(field => field.id === existingAcademic?.id || isClassInterestQuestion(field))
+      const existingAcademic = findAcademicClassSelectorField(
+        formik.values.sections.flatMap((section) => section.fields),
+        false
       );
-      const existing = existingSection?.fields.find(field => field.id === existingAcademic?.id || isClassInterestQuestion(field));
+      const existingSection = formik.values.sections.find((section) =>
+        section.fields.some(
+          (field) => field.id === existingAcademic?.id || isClassInterestQuestion(field)
+        )
+      );
+      const existing = existingSection?.fields.find(
+        (field) => field.id === existingAcademic?.id || isClassInterestQuestion(field)
+      );
       if (existing && existingSection) {
         shikshaMitraToast.info({ message: 'Class interested in is already included in the form.' });
         onSelect(existingSection.id, existing.id);

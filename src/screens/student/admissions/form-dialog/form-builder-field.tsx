@@ -46,6 +46,8 @@ type Props = {
   selected: boolean;
   onSelect: () => void;
   onDelete: () => void;
+  onMove?: () => void;
+  deleteBlockedReason?: string;
   reorderEnabled?: boolean;
 };
 
@@ -56,6 +58,8 @@ export function FormBuilderField({
   selected,
   onSelect,
   onDelete,
+  onMove,
+  deleteBlockedReason,
   reorderEnabled = true,
 }: Props) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
@@ -165,6 +169,13 @@ export function FormBuilderField({
                   </Box>
                 )}
               </Typography>
+              {locked && onMove && (
+                <Iconify
+                  icon="mdi:lock-outline"
+                  width={14}
+                  sx={{ ml: 0.75, color: 'text.secondary' }}
+                />
+              )}
             </Box>
             <Stack
               direction="row"
@@ -221,7 +232,7 @@ export function FormBuilderField({
             zIndex: 1,
           }}
         >
-          {locked ? (
+          {locked && !onMove ? (
             <CustomTooltip title={INQUIRY_FIELD_LOCK_HELP}>
               <IconButton
                 size="small"
@@ -237,8 +248,11 @@ export function FormBuilderField({
               unit="field"
               onEdit={onSelect}
               onDelete={onDelete}
+              onMove={onMove}
+              moreLabel={locked ? `Locked ${name} Field` : undefined}
               disabled={formik.isSubmitting}
               deleteDisabled={Boolean(field.inheritedFrom)}
+              deleteBlockedReason={locked ? INQUIRY_FIELD_LOCK_HELP : deleteBlockedReason}
             />
           )}
         </Box>

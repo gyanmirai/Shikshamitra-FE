@@ -2,7 +2,8 @@ import type { AdmissionOffering } from 'src/redux/student/admissions/admission-o
 
 import { GlobalIcons } from 'src/utils/icons';
 import { vi, it, expect, describe } from 'vitest';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 
 import { AdmissionOfferingDetailsDrawer } from './admission-offering-details-drawer';
 
@@ -146,7 +147,8 @@ describe('Admission offering details drawer', () => {
     expect(screen.getByRole('region', { name: 'Configuration Readiness' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Assign Class Rooms' })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /^Close$/ }));
+    expect(screen.queryByRole('button', { name: /^Close$/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close Admission Offering Details' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
@@ -231,16 +233,28 @@ describe('Admission offering details drawer', () => {
     expect(readiness.queryByText('Ready', { exact: true })).not.toBeInTheDocument();
   });
 
-  it('retains the loading state and both close controls before details arrive', () => {
+  it('retains the loading state during an exit requested from the header', async () => {
     const onClose = vi.fn();
-    render(<AdmissionOfferingDetailsDrawer open offering={null} loadingDetail onClose={onClose} />);
-    expect(screen.getByRole('status', { name: 'Loading Offering Details' })).toHaveAttribute(
-      'aria-busy',
-      'true'
-    );
+    function ControlledDrawer() {
+      const { closing, closeAfterExit, onExited } = useStudentDrawerExit();
+      return (
+        <AdmissionOfferingDetailsDrawer
+          open={!closing}
+          offering={null}
+          loadingDetail
+          onClose={() => closeAfterExit(onClose)}
+          onExited={onExited}
+        />
+      );
+    }
+    render(<ControlledDrawer />);
+    const loading = screen.getByRole('status', { name: 'Loading Offering Details' });
+    expect(loading).toHaveAttribute('aria-busy', 'true');
     expect(screen.queryByRole('region', { name: 'Academic Scope' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Close Admission Offering Details' }));
-    fireEvent.click(screen.getByRole('button', { name: /^Close$/ }));
-    expect(onClose).toHaveBeenCalledTimes(2);
+    expect(loading).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(loading).not.toBeInTheDocument();
   });
 });

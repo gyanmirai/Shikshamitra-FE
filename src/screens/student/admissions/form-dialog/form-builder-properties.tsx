@@ -24,9 +24,15 @@ type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   selectedLocation: { sectionIndex: number; fieldIndex: number } | null;
   navigationRequest?: BuilderNavigationRequest;
+  linkedFieldReason?: string;
 };
 
-export function FormBuilderProperties({ formik, selectedLocation, navigationRequest }: Props) {
+export function FormBuilderProperties({
+  formik,
+  selectedLocation,
+  navigationRequest,
+  linkedFieldReason,
+}: Props) {
   const settingsId = useId();
   const [activeTab, setActiveTab] = useState<'basic' | 'rules'>('basic');
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -139,7 +145,7 @@ export function FormBuilderProperties({ formik, selectedLocation, navigationRequ
       </Scrollbar>
     );
   }
-  const settingsProps = { formik, ...selectedLocation };
+  const settingsProps = { formik, ...selectedLocation, linkedFieldReason };
   return (
     <Stack ref={settingsRef} sx={{ height: 1, minHeight: 0, bgcolor: 'background.paper' }}>
       <FieldPropertiesHeader field={field} sectionName={section?.name} />

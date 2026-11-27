@@ -5,6 +5,7 @@ import Stack from '@mui/material/Stack';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import CustomSelect from 'src/components/custom-select';
 import { useGetSchoolIdentityQuery, useUploadSchoolIdentityAssetMutation } from 'src/redux/InstituteSetup/schoolIdentityApi';
 
 import { IDENTITY_LABELS } from '../types';
@@ -14,6 +15,11 @@ import { useIdentityPermissions } from '../hooks/use-identity-permissions';
 
 import type { IdentityKind, IdentitySelection } from '../types';
 
+export type SavedTemplateSignature = {
+  selection: IdentitySelection & { assetId: string };
+  source: string;
+};
+
 export function TemplateIdentityAsset({
   kind,
   value,
@@ -22,6 +28,8 @@ export function TemplateIdentityAsset({
   onChange,
   onBusy,
   showInheritanceHelp = true,
+  savedSignatures,
+  loadingSavedSignatures,
 }: {
   kind: IdentityKind;
   value?: IdentitySelection | null;
@@ -30,6 +38,8 @@ export function TemplateIdentityAsset({
   onChange: (next: IdentitySelection) => void;
   onBusy?: (busy: boolean) => void;
   showInheritanceHelp?: boolean;
+  savedSignatures?: SavedTemplateSignature[];
+  loadingSavedSignatures?: boolean;
 }) {
   const permissions = useIdentityPermissions();
   const defaults = useGetSchoolIdentityQuery({}, { skip: !permissions.canView });
@@ -38,6 +48,56 @@ export function TemplateIdentityAsset({
   const canUpload = permissions.canView && permissions.canManageDefaults && defaults.currentData?.canManage === true
     && (kind !== 'signature' || permissions.canAccessSignature);
   if (kind === 'signature' && !permissions.canAccessSignature) return null;
+  const currentSaved = savedSignatures?.find(({ selection }) =>
+    selection.assetId === value?.assetId && selection.principalName === value?.principalName &&
+    selection.designation === value?.designation
+  );
+  const setting = savedSignatures && (
+    <CustomSelect
+      name="principalSignatureSetting"
+      label={`${IDENTITY_LABELS.signature} setting`}
+      size="small"
+      fullWidth
+      isLoading={loadingSavedSignatures}
+      disabled={disabled || uploading.isLoading}
+      value={currentSaved?.selection.assetId ?? value?.mode ?? 0}
+      labelKey="label"
+      valueKey="value"
+      optionEndLabelKey="source"
+      MenuProps={{
+        slotProps: {
+          paper: {
+            sx: {
+              '& .MuiMenuItem-root > .MuiTypography-caption': {
+                maxWidth: '40%', whiteSpace: 'normal', overflowWrap: 'anywhere',
+              },
+            },
+          },
+        },
+      }}
+      disabledValues={canUpload ? [] : [1]}
+      disabledLabel="Requires permission to manage School Identity"
+      options={[
+        { value: 0, label: 'Use School Identity', source: '' },
+        ...savedSignatures.map(({ selection, source }) => ({
+          value: selection.assetId,
+          label: `${selection.principalName} · ${selection.designation}`,
+          source,
+        })),
+        { value: 1, label: 'Upload custom signature', source: '' },
+        { value: 2, label: 'Do not display', source: '' },
+      ]}
+      onChange={(next) => {
+        setError('');
+        if (next === 0 || next === 2 || (next === 1 && canUpload)) {
+          onChange(changedSelection(next, 'signature'));
+          return;
+        }
+        const saved = savedSignatures.find(({ selection }) => selection.assetId === next);
+        if (saved) onChange(saved.selection);
+      }}
+    />
+  );
   if (!value && legacy) return <TextField select label={`${IDENTITY_LABELS[kind]} setting`} value={3} disabled={disabled}
     helperText="The existing custom asset is preserved until you choose a replacement."
     onChange={(event) => onChange(changedSelection(Number(event.target.value) as 0 | 1 | 2, kind))}>
@@ -51,6 +111,9 @@ export function TemplateIdentityAsset({
       </Typography>
     )}
     <IdentityAssetField kind={kind} value={value ?? { mode: 0 }} context={{}} inheritLabel="Use School Identity" allowCustom={canUpload} disabled={disabled || uploading.isLoading}
+      settingControl={setting}
+      description={savedSignatures && 'Choose the signature for both sides of this template. School Identity follows each student’s board and medium.'}
+      showCustomEditor={!currentSaved || canUpload}
       onChange={(next) => {
         if (next.mode === 1 && !canUpload) { setError('Your account cannot upload custom school assets.'); return; }
         onChange(next);

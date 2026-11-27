@@ -430,6 +430,7 @@ export function InquiryOverviewForm({
         <FormBusyRegion
           busy={operationBusy || formik.isSubmitting || updateState.isLoading || readingPhoto}
           label={readingPhoto ? 'Reading Photo…' : 'Saving Inquiry…'}
+          showLabel={readingPhoto}
         >
           <Stack spacing={2}>
             {readOnly && (

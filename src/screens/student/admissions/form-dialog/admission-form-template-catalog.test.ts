@@ -11,7 +11,66 @@ import {
   cloneSchoolFormAsStarter,
   getSystemAdmissionFormTemplate,
   SYSTEM_ADMISSION_FORM_TEMPLATES,
+  getNewAdmissionFormInitialValues,
 } from './admission-form-template-catalog';
+
+it('starts a new Inquiry with only the six core questions and a two-column grid', () => {
+  const form = getNewAdmissionFormInitialValues(0);
+  const fields = form.sections.flatMap((section) => section.fields);
+  expect(form).toMatchObject({ purpose: 0, layoutType: 0, fieldsPerRow: 2, name: '', code: '' });
+  expect(fields.map(({ bindingKey, required }) => [bindingKey, required])).toEqual([
+    ['Applicant.FirstName', true],
+    ['Applicant.LastName', false],
+    ['Guardian.FirstName', true],
+    ['Guardian.Mobile', true],
+    ['Guardian.Email', true],
+    ['Inquiry.ParentRelationship', true],
+  ]);
+});
+
+it('starts Registration with four steps, linked optional address, and optional emergency contact fields', () => {
+  const form = getNewAdmissionFormInitialValues(1);
+  expect(form).toMatchObject({ purpose: 1, layoutType: 1, fieldsPerRow: 2 });
+  expect(form.sections.map(({ stepName }) => stepName)).toEqual([
+    'Student',
+    'Family',
+    'Address',
+    'Academic history',
+  ]);
+  const [student, family, address, history] = form.sections;
+  expect(student.fields).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ bindingKey: 'Applicant.DateOfBirth', required: true }),
+      expect.objectContaining({ bindingKey: 'Applicant.Gender', required: true }),
+    ])
+  );
+  expect(
+    family.fields
+      .filter((field) => field.bindingKey?.startsWith('Emergency.'))
+      .map(({ bindingKey, fieldType, required }) => [bindingKey, fieldType, required])
+  ).toEqual([
+    ['Emergency.ContactName', 0, false],
+    ['Emergency.Relationship', 0, false],
+    ['Emergency.ContactPhone', 4, false],
+  ]);
+  expect(address.fields).toHaveLength(6);
+  expect(address.fields.every((field) => !field.required)).toBe(true);
+  const [country, state, city] = address.fields.slice(2, 5);
+  expect([country.bindingKey, state.bindingKey, city.bindingKey]).toEqual([
+    'Address.Country',
+    'Address.State',
+    'Address.City',
+  ]);
+  expect(JSON.parse(city.validationJson ?? '{}')).toMatchObject({
+    countryField: country.code,
+    stateField: state.code,
+  });
+  expect(history.fields.map((field) => field.code)).toEqual([
+    'PREVIOUS_SCHOOL',
+    'LAST_CLASS_COMPLETED',
+    'ACADEMIC_NOTES',
+  ]);
+});
 
 describe('admission form template catalogue', () => {
   it('creates the Inquiry campus question without persisting a builder instruction as help', () => {

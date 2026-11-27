@@ -29,11 +29,11 @@ function table(props: Partial<ICustomizableTableProps> = {}) {
   );
 }
 
-it('overlays the refresh indicator at the bottom without taking space from the table', () => {
+it('overlays the refresh indicator at the top without taking space from the table', () => {
   renderWithProviders(table());
   const progress = screen.getByRole('progressbar', { name: 'Refreshing Admission Inquiries' });
   expect(progress).toBeVisible();
-  expect(progress).toHaveStyle({ position: 'absolute', bottom: '0px' });
+  expect(progress).toHaveStyle({ position: 'absolute', top: '0px' });
   expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
   expect(screen.getByText('Saved applicant')).toBeVisible();
   expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
@@ -45,6 +45,31 @@ it('clears refresh feedback after the request settles', () => {
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   expect(screen.getByRole('table')).not.toHaveAttribute('aria-busy');
   expect(screen.getByText('Saved applicant')).toBeVisible();
+});
+
+it('uses a compact spinner outside the table header for Admissions refreshes', () => {
+  const view = renderWithProviders(table({ refreshIndicator: 'circular' }));
+  const progress = screen.getByRole('progressbar', { name: 'Refreshing Admission Inquiries' });
+  expect(progress).toHaveClass('MuiCircularProgress-root');
+  expect(screen.getByRole('table')).not.toContainElement(progress);
+  expect(progress.parentElement).toHaveAttribute('data-testid', 'table-refresh-slot');
+  expect(document.querySelector('.MuiLinearProgress-root')).not.toBeInTheDocument();
+  expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
+  expect(screen.getByText('Saved applicant')).toBeVisible();
+  expect(screen.getByText('Dense')).toBeVisible();
+
+  view.rerender(table({ refreshIndicator: 'circular', isRefreshing: false }));
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  expect(screen.getByRole('table')).not.toHaveAttribute('aria-busy');
+  expect(screen.getByText('Saved applicant')).toBeVisible();
+});
+
+it('keeps the refresh spinner in the toolbar without a green bar or header overlap', () => {
+  renderWithProviders(table({ refreshIndicator: 'circular', showToolbar: true }));
+  const progress = screen.getByRole('progressbar', { name: 'Refreshing Admission Inquiries' });
+  expect(progress.parentElement).toHaveAttribute('data-testid', 'table-refresh-slot');
+  expect(screen.getByRole('table')).not.toContainElement(progress);
+  expect(document.querySelector('.MuiLinearProgress-root')).not.toBeInTheDocument();
 });
 
 it('keeps initial table skeleton ownership and avoids an empty-state flash', () => {

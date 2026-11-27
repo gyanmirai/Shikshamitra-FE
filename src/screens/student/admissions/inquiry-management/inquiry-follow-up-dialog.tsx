@@ -234,6 +234,7 @@ function InquiryFollowUpContent({
         open
         title="Follow-Up"
         titleInfo="Review contact history and record a note, reminder and follow-up status for this inquiry."
+        titleInfoPlacement="right"
         maxWidth="sm"
         hasForm={false}
         handleClose={close}
@@ -245,6 +246,7 @@ function InquiryFollowUpContent({
           <FormBusyRegion
             busy={busy}
             label={saving ? 'Saving Follow-Up' : 'Loading Follow-Up'}
+            showLabel={false}
             fillContent
             flattenFieldset
           >

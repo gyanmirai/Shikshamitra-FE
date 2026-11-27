@@ -110,5 +110,10 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
       />
     ) : null;
 
-  return { requestNavigation: localRequestNavigation, cancelNavigation, confirmation };
+  return {
+    requestNavigation: localRequestNavigation,
+    requestNavigationWithoutReset: requestNavigation,
+    cancelNavigation,
+    confirmation,
+  };
 }

@@ -3,7 +3,7 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 import { useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Stack, Button, Typography, LinearProgress } from '@mui/material';
+import { Stack, Button, Typography, CircularProgress } from '@mui/material';
 import { emptyCondition } from 'src/redux/student/admissions/admission-condition-rule';
 import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
 
@@ -87,7 +87,13 @@ export function AdmissionConditionFormPicker({
             : 'Choose the published form used for this answer source. This changes suggestions only; saved conditions stay unchanged.'
         }
       />
-      {formId && query.isFetching && <LinearProgress aria-label="Loading Published Form Fields" />}
+      {formId && query.isFetching && (
+        <CircularProgress
+          size={16}
+          aria-label="Loading published form fields"
+          sx={{ alignSelf: 'flex-start', color: 'text.secondary' }}
+        />
+      )}
       {formId && query.isError && (
         <StudentFeedback
           notificationKey="STU-0502"

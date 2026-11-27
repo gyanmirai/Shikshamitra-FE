@@ -12,7 +12,7 @@ import { render, screen } from '@testing-library/react';
 import { getAdmissionFormStepGroups } from '../form-step-groups';
 import { useFormBuilderCommands } from './use-form-builder-commands';
 import { addAcademicClassSelector } from '../academic-class-selector';
-import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
+import { newField, getBlankAdmissionFormInitialValues } from '../form-dialog-model';
 import { getSystemAdmissionFormTemplate } from '../admission-form-template-catalog';
 
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
@@ -67,6 +67,13 @@ function Commands({
       <button type="button" onClick={() => commands.addField(0, 'Applicant.FirstName')}>
         Add separate name
       </button>
+      {['Address.City', 'Address.Country', 'PermanentAddress.State', 'Preference.Medium'].map(
+        (key) => (
+          <button key={key} type="button" onClick={() => commands.addField(0, key)}>
+            Add {key}
+          </button>
+        )
+      )}
       <button
         type="button"
         onClick={() =>
@@ -170,6 +177,82 @@ function renderCommands(empty = false) {
 }
 
 describe('useFormBuilderCommands', () => {
+  it.each([0, 1] as const)('adds linked groups once in a form of purpose %s', async (purpose) => {
+    const initial = getBlankAdmissionFormInitialValues(purpose);
+    const section = initial.sections[0];
+    render(
+      <Formik initialValues={initial} onSubmit={() => undefined}>
+        {(formik) => <Commands formik={formik} selectedSectionId={section.id} />}
+      </Formik>
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Add Address.City' }));
+    await user.click(screen.getByRole('button', { name: 'Add Address.Country' }));
+    await user.click(screen.getByRole('button', { name: 'Add PermanentAddress.State' }));
+    await user.click(screen.getByRole('button', { name: 'Add Preference.Medium' }));
+    await user.click(screen.getByRole('button', { name: 'Add Preference.Medium' }));
+    const fields: AdmissionFormField[] = JSON.parse(
+      screen.getByTestId('fields').textContent || '[]'
+    );
+    expect(
+      fields
+        .filter(({ bindingKey }) => bindingKey?.startsWith('Address.'))
+        .map(({ bindingKey }) => bindingKey)
+    ).toEqual(['Address.Country', 'Address.State', 'Address.City']);
+    expect(
+      fields
+        .filter(({ bindingKey }) => bindingKey?.startsWith('PermanentAddress.'))
+        .map(({ bindingKey }) => bindingKey)
+    ).toEqual(['PermanentAddress.Country', 'PermanentAddress.State', 'PermanentAddress.City']);
+    expect(
+      fields
+        .filter(
+          ({ optionsJson }) =>
+            optionsJson && /EducationBoards|EducationMediums|StandardsByMedium/.test(optionsJson)
+        )
+        .map(({ label }) => label)
+    ).toEqual(['Board', 'Medium', 'Class']);
+  });
+
+  it('adds the missing address fields around an existing City without changing its identity', async () => {
+    const initial = getBlankAdmissionFormInitialValues(1);
+    const student = initial.sections[0];
+    const address = {
+      ...student,
+      id: 'address',
+      code: 'ADDRESS_SECTION',
+      displayOrder: 1,
+      fields: [] as AdmissionFormField[],
+    };
+    const city = {
+      ...newField(address.id, 0),
+      code: 'LOCAL_CITY',
+      label: 'Home city',
+      bindingType: 0 as const,
+      bindingKey: 'Address.City',
+    };
+    address.fields.push(city);
+    initial.sections.push(address);
+    render(
+      <Formik initialValues={initial} onSubmit={() => undefined}>
+        {(formik) => <Commands formik={formik} selectedSectionId={student.id} />}
+      </Formik>
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add Address.City' }));
+    const updated: CreateUpdateAdmissionForm = JSON.parse(
+      screen.getByTestId('draft').textContent || '{}'
+    );
+    const [country, state, reusedCity] = updated.sections[1].fields;
+    expect(updated.sections[0].fields).toEqual(student.fields);
+    expect(updated.sections[1].fields).toHaveLength(3);
+    expect(reusedCity).toMatchObject({ id: city.id, code: city.code, label: city.label });
+    expect(JSON.parse(reusedCity.validationJson || '{}')).toMatchObject({
+      countryField: country.code,
+      stateField: state.code,
+    });
+  });
+
   it.each(['Step 2', 'My custom step'])(
     'names a bulk group without overwriting %s when custom',
     async (name) => {

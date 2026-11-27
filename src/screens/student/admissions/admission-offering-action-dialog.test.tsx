@@ -63,7 +63,10 @@ it.each(['Cancel', 'Close'])(
         onConfirm={onConfirm}
       />
     );
-    expect(screen.getByRole('status', { name: 'Checking offering requirements' })).toBeVisible();
+    const checking = screen.getByRole('status', { name: 'Checking offering requirements' });
+    expect(checking).toBeVisible();
+    expect(checking.querySelector('.MuiCircularProgress-root')).toBeVisible();
+    expect(checking.querySelector('.MuiLinearProgress-root')).not.toBeInTheDocument();
     expect(screen.queryByText('Activating Offering…')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Activate' })).toBeDisabled();
     expect(screen.getByRole('button', { name: control })).toBeEnabled();

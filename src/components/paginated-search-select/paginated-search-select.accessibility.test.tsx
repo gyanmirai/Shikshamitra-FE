@@ -1,4 +1,5 @@
 import { it, vi, expect, describe } from 'vitest';
+import { useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { render, screen, fireEvent } from '@testing-library/react';
 
@@ -7,6 +8,47 @@ import { PaginatedSearchSelect } from './paginated-search-select';
 type Option = { id: string; name: string };
 
 describe('PaginatedSearchSelect accessibility', () => {
+  it('shows all options when reopening a selected definition and filters typed text', async () => {
+    const user = userEvent.setup();
+    const options = [
+      { id: '1', name: 'First workflow' },
+      { id: '2', name: 'Second workflow' },
+    ];
+    const fetchOptions = vi.fn(async (query: string) => ({
+      data: options.filter((option) => option.name.toLowerCase().includes(query.toLowerCase())),
+      hasMore: false,
+    }));
+    function Picker() {
+      const [value, setValue] = useState<Option | null>(null);
+      return (
+        <PaginatedSearchSelect<Option>
+          label="Workflow"
+          value={value}
+          onChange={(_, option) => setValue(option)}
+          fetchOptions={fetchOptions}
+          getOptionLabel={(option) => option.name}
+          isOptionEqualToValue={(a, b) => a.id === b.id}
+          minChars={0}
+          debounceMs={0}
+          clearSearchOnOpen
+        />
+      );
+    }
+    render(<Picker />);
+    const input = screen.getByRole('combobox', { name: 'Workflow' });
+    await user.click(input);
+    await user.click(await screen.findByRole('option', { name: 'First workflow' }));
+    await user.click(input);
+    expect(await screen.findByRole('option', { name: 'First workflow' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.getByRole('option', { name: 'Second workflow' })).toBeVisible();
+    await user.type(input, 'Second');
+    expect(await screen.findByRole('option', { name: 'Second workflow' })).toBeVisible();
+    expect(screen.queryByRole('option', { name: 'First workflow' })).not.toBeInTheDocument();
+    expect(fetchOptions).toHaveBeenCalledWith('', 1);
+  });
   it('loads subsequent pages when keyboard navigation reaches the last option', async () => {
     const user = userEvent.setup();
     const fetchOptions = vi.fn(async (_query: string, page: number) => ({

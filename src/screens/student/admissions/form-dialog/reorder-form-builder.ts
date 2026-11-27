@@ -6,6 +6,27 @@ import { shikshaMitraToast } from 'src/components/toast';
 
 import { isLockedInquiryField } from './inquiry-default-fields';
 import { addressOrderMessage, getAddressOrderViolations } from './form-address-dependencies';
+import {
+  academicGroupOrderMessage,
+  getAcademicGroupOrderViolations,
+} from './academic-class-selector';
+
+export function getFormBuilderMoveOrderError(
+  current: CreateUpdateAdmissionForm,
+  next: CreateUpdateAdmissionForm
+) {
+  const checks = [
+    [getAddressOrderViolations, addressOrderMessage],
+    [getAcademicGroupOrderViolations, academicGroupOrderMessage],
+  ] as const;
+  return checks.find(([check]) => {
+    const existing = check(current);
+    return check(next).some(
+      ({ fieldId, dependencyId }) =>
+        !existing.some((issue) => issue.fieldId === fieldId && issue.dependencyId === dependencyId)
+    );
+  })?.[1];
+}
 
 export function reorderFormBuilder(
   { active, over }: { active: Pick<Active, 'id'>; over: Pick<Over, 'id'> | null },
@@ -17,21 +38,12 @@ export function reorderFormBuilder(
   const activeId = String(active.id);
   const overId = String(over.id);
   const saveMove = (sections: CreateUpdateAdmissionForm['sections']) => {
-    const nextOrderViolations = getAddressOrderViolations(
-      getEffectiveForm({ ...formik.values, sections })
-    );
-    if (nextOrderViolations.length) {
-      const existingOrderViolations = getAddressOrderViolations(getEffectiveForm(formik.values));
-      const introducesViolation = nextOrderViolations.some(
-        ({ fieldId, dependencyId }) =>
-          !existingOrderViolations.some(
-            (issue) => issue.fieldId === fieldId && issue.dependencyId === dependencyId
-          )
-      );
-      if (introducesViolation) {
-        shikshaMitraToast.warning({ message: `Move canceled. ${addressOrderMessage}` });
-        return false;
-      }
+    const current = getEffectiveForm(formik.values);
+    const next = getEffectiveForm({ ...formik.values, sections });
+    const violation = getFormBuilderMoveOrderError(current, next);
+    if (violation) {
+      shikshaMitraToast.warning({ message: `Move canceled. ${violation}` });
+      return false;
     }
     formik.setFieldValue('sections', sections);
     return true;

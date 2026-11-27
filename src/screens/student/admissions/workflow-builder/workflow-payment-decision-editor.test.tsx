@@ -105,7 +105,7 @@ describe('Finance fee confirmation and admission decision setup', () => {
     expect(screen.queryByRole('textbox', { name: /Purpose Code/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('spinbutton', { name: /Amount/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toEqual({
       extension: 'preserve',
@@ -120,7 +120,7 @@ describe('Finance fee confirmation and admission decision setup', () => {
     expect(ending).toBeChecked();
     expect(ending).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({ stageType: 7, isTerminalStage: true });
   });
@@ -136,7 +136,7 @@ describe('Finance fee confirmation and admission decision setup', () => {
       const ending = screen.getByRole('switch', { name: 'End Of Journey' });
       expect(ending).toBeDisabled();
       expect((ending as HTMLInputElement).checked).toBe(terminal);
-      await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+      await user.click(screen.getByRole('button', { name: 'Apply changes' }));
       await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
       expect(onSave.mock.calls[0][0]).toMatchObject({ stageType: 7, isTerminalStage: terminal });
     }
@@ -147,9 +147,10 @@ describe('Finance fee confirmation and admission decision setup', () => {
     expect(screen.getByText('Stage name', { selector: 'dt' })).toBeVisible();
     expect(screen.getAllByText('Payment', { selector: 'dd' })).toHaveLength(2);
     expect(screen.queryByRole('heading', { name: 'Payment Completion' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Close' }));
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close Stage Editor' }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(onSave).not.toHaveBeenCalled();
   });
 });

@@ -107,7 +107,7 @@ export function AssessmentSessionSetupFields({
         descriptionTooltip={
           pipeline
             ? "Set up a slot for this student's current assessment."
-            : 'Choose the Classes Attending This Session. Assessment Choices Appear Only When a Class Has Multiple Eligible Assessments.'
+            : 'Choose the classes attending this session. Assessment choices appear when a class has multiple eligible assessments.'
         }
       >
         <Grid container spacing={1}>
@@ -414,7 +414,7 @@ export function AssessmentSessionSetupFields({
         <FormSectionCard
           icon="mdi:account-clock-outline"
           title="Interview Arrangement"
-          descriptionTooltip="Individual Interviews Use One Applicant per Generated Slot. Group Interviews Share the Session Time."
+          descriptionTooltip="Individual interviews use one applicant per generated slot. Group interviews share the session time."
         >
           <Grid container spacing={1}>
             <Grid size={12}>

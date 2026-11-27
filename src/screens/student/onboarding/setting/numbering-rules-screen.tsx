@@ -22,6 +22,7 @@ import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { Box, Stack, Button, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetStudentGrNumberPreviewsQuery } from 'src/redux/student/onboarding/student-onboarding-api';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import {
   useStudentSetupFormState,
   useStudentSetupEmbedding,
@@ -170,6 +171,7 @@ function NumberingRulesScreen({
       ? saveGrNumberConfiguration(configuration as GrNumberConfiguration)
       : saveRollNumberConfiguration(configuration as RollNumberConfiguration);
   const [editorOpen, setEditorOpen] = useState(false);
+  const drawerExit = useStudentDrawerExit();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -254,8 +256,10 @@ function NumberingRulesScreen({
           };
       try {
         await save(configuration);
-        helpers.resetForm();
-        setEditorOpen(false);
+        drawerExit.closeAfterExit(() => {
+          helpers.resetForm();
+          setEditorOpen(false);
+        });
       } catch (saveError) {
         const fallback = 'The draft could not be saved. Review the values and try again.';
         const problem = parseApiProblemDetail(saveError);
@@ -291,6 +295,7 @@ function NumberingRulesScreen({
     setEditingId(null);
     focusedSubmit.current = 0;
     formik.resetForm({ values: initialValues() });
+    drawerExit.reopen();
     setEditorOpen(true);
   };
   useEffect(() => {
@@ -341,12 +346,15 @@ function NumberingRulesScreen({
             requireApproval: false,
           },
     });
+    drawerExit.reopen();
     setEditorOpen(true);
   };
   const close = () => {
     navigationGuard.requestNavigation(() => {
-      setEditorOpen(false);
-      formik.resetForm();
+      drawerExit.closeAfterExit(() => {
+        setEditorOpen(false);
+        formik.resetForm();
+      });
     });
   };
   const publish = async (configuration: Configuration) => {
@@ -547,7 +555,8 @@ function NumberingRulesScreen({
         />
       </Box>
       <SettingsDrawer
-        open={editorOpen && canConfigure}
+        open={editorOpen && canConfigure && !drawerExit.closing}
+        onExited={drawerExit.onExited}
         title={drawerTitle}
         description="Save a draft, then publish it from the table. Published changes create a new version and preserve assigned numbers."
         descriptionDisplay="tooltip"

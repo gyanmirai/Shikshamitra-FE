@@ -905,6 +905,33 @@ describe('Advanced Registration paper settings', () => {
     );
     expect(imageCount.length).toBeGreaterThanOrEqual(2);
   }, 30000);
+  it('prints instruction typography at the selected sizes', async () => {
+    const model = buildAdmissionPrintDocument({
+      definition: { name: 'Registration', sections: [section('STUDENT')] },
+      values: {},
+      mode: 'blank',
+      settings: {
+        advanced: {
+          content: {
+            showInstructions: true,
+            instructionHeadingSize: '16',
+            instructionTextSize: '14',
+            instructionTextWeight: 'bold',
+            instructionTextColor: 'gray',
+            translations: { en: { instructions: 'Use black ink.' } },
+          },
+        },
+      },
+    });
+    const result = await artifact('instruction-typography', model);
+    const items = result.pages.flatMap((page) => page.items);
+    const heading = items.find((item) => 'str' in item && item.str === 'Instructions');
+    const instruction = items.find((item) => 'str' in item && item.str.includes('Use black ink.'));
+    expect(heading && 'transform' in heading ? Math.abs(heading.transform[3]) : 0).toBeCloseTo(16);
+    expect(
+      instruction && 'transform' in instruction ? Math.abs(instruction.transform[3]) : 0
+    ).toBeCloseTo(14);
+  }, 30000);
   it.each(
     (['A4', 'A5', 'LETTER', 'LEGAL'] as const).flatMap((paperSize, index) =>
       (['portrait', 'landscape'] as const).map((orientation) => ({

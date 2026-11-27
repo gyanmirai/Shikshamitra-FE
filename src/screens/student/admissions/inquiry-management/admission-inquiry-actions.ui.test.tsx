@@ -45,7 +45,7 @@ it('opens sibling review from eligible name cells without selecting the table ro
   expect(onRowClick).not.toHaveBeenCalled();
 });
 
-it('keeps the move menu open during the request and on failure, then closes on success', async () => {
+it('shows Start Application directly and prevents repeat requests while loading', async () => {
   let finish: (success: boolean) => void = () => {};
   const onMove = vi.fn(
     () =>
@@ -62,12 +62,12 @@ it('keeps the move menu open during the request and on failure, then closes on s
     admissionOfferingId: 'offering',
   } as AdmissionInquiry;
   const theme = createTheme(defaultSettings);
-  function menu(isMoving: boolean) {
+  function actions(isMoving: boolean) {
     const column = buildAdmissionInquiryColumns({
       canManage: true,
       canMove: true,
       isMoving,
-      movingInquiryId: row.id,
+      movingInquiryId: isMoving ? row.id : null,
       counsellorNames: {},
       counsellorOptions: [],
       offeringOptions: [],
@@ -78,26 +78,18 @@ it('keeps the move menu open during the request and on failure, then closes on s
     }).find((item) => item.id === 'actions')!;
     return <ThemeProvider theme={theme}>{column.render?.(null, row)}</ThemeProvider>;
   }
-  const view = render(menu(false));
-  fireEvent.click(screen.getByRole('button', { name: 'Actions For QA Student' }));
-  const move = () => screen.getByTestId('menu-action-move');
-  fireEvent.click(move());
-  view.rerender(menu(true));
-  expect(move()).toBeVisible();
-  expect(move()).toHaveAttribute('aria-busy', 'true');
-  expect(screen.getByLabelText('Starting Application for QA Student')).toBeVisible();
-  fireEvent.keyDown(move(), { key: 'Escape' });
-  expect(move()).toBeVisible();
-  fireEvent.click(move());
+  const view = render(actions(false));
+  fireEvent.click(screen.getByRole('button', { name: 'Start Application' }));
+  view.rerender(actions(true));
+  const button = screen.getByRole('button', { name: 'Start Application' });
+  expect(button).toBeDisabled();
+  expect(button).toHaveAttribute('aria-busy', 'true');
+  expect(document.querySelector('.MuiLinearProgress-root')).not.toBeInTheDocument();
+  fireEvent.click(button);
   expect(onMove).toHaveBeenCalledTimes(1);
   await act(async () => finish(false));
-  view.rerender(menu(false));
-  expect(screen.queryByLabelText('Starting Application for QA Student')).not.toBeInTheDocument();
-  expect(move()).toBeVisible();
-  expect(move()).not.toHaveAttribute('aria-disabled', 'true');
-  fireEvent.click(move());
-  await act(async () => finish(true));
-  await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+  view.rerender(actions(false));
+  expect(screen.getByRole('button', { name: 'Start Application' })).toBeEnabled();
 });
 
 it.each(['below', 'above'] as const)(
@@ -149,7 +141,7 @@ it.each(['below', 'above'] as const)(
     });
     try {
       fireEvent.click(trigger);
-      const move = await screen.findByRole('menuitem', { name: 'Start Application' });
+      const move = await screen.findByRole('menuitem', { name: /Follow-Up/ });
       const menu = screen.getByRole('menu', { name: 'Actions For QA Student' });
       const paper = menu.closest('.MuiPopover-paper')!;
       await waitFor(() =>
@@ -163,7 +155,7 @@ it.each(['below', 'above'] as const)(
         side === 'above' ? { bottom: '-6.5px', right: '17px' } : { top: '-6.5px', right: '17px' }
       );
       fireEvent.click(move);
-      expect(onMove).toHaveBeenCalledWith(row);
+      expect(onMove).not.toHaveBeenCalled();
     } finally {
       if (original) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', original);
       else Reflect.deleteProperty(HTMLElement.prototype, 'offsetHeight');

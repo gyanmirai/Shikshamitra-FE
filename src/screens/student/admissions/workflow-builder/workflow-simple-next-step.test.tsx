@@ -42,7 +42,7 @@ function renderNextStep(conditional = false, creating = false) {
 
 it('creates one usual route for an unconnected stage', async () => {
   const { transition, onSave } = renderNextStep(false, true);
-  await userEvent.setup().click(screen.getByRole('button', { name: 'Save Path' }));
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Save path' }));
   await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
   const saved = onSave.mock.calls[0][0];
   expect(saved.id).toBeTruthy();
@@ -66,7 +66,7 @@ it('saves a usual next step without exposing assessment outcomes or condition fi
   expect(
     screen.getByText(/Failed, Absent or Retake Outcomes Stay at Assessment/)
   ).toBeInTheDocument();
-  await userEvent.setup().click(screen.getByRole('button', { name: 'Save Path' }));
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Save path' }));
   await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
   expect(onSave.mock.calls[0][0]).toMatchObject({
     id: transition.id,
@@ -83,7 +83,7 @@ it('preserves saved special routes as read-only and blocks form submission', asy
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   expect(screen.getByText('Continue to', { selector: 'dt' })).toBeVisible();
   expect(screen.getByRole('heading', { name: 'Saved Condition' })).toBeVisible();
-  expect(screen.queryByRole('button', { name: 'Save Path' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Save path' })).not.toBeInTheDocument();
   expect(screen.getByText('failed', { selector: 'dd' })).toBeVisible();
   expect(screen.getByRole('dialog').querySelector('form')).toBeNull();
   fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Enter' });

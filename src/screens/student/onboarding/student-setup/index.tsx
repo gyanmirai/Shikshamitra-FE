@@ -23,6 +23,7 @@ import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { readOnboardingDashboardQueue } from 'src/utils/student-dashboard-drilldown';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { useGetRollNumberBatchContextQuery } from 'src/redux/student/onboarding/student-roll-number-batches-api';
 import {
   readAcademicFilterIds,
@@ -110,6 +111,9 @@ const assignmentViewMeta: Record<StudentSetupAssignmentView, { title: string }> 
 };
 
 export default function StudentSetupScreen() {
+  const drawerExit = useStudentDrawerExit();
+  const { reopen: reopenSetupDrawer } = drawerExit;
+  const detailsReturnFocus = useRef<HTMLElement | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const [drawerTaskView, setDrawerTaskView] = useState<StudentSetupView | null>(null);
   const [reviewingCaseDetails, setReviewingCaseDetails] = useState(false);
@@ -722,13 +726,16 @@ export default function StudentSetupScreen() {
   }, [sourceRows, focusedCaseId]);
 
   useEffect(() => {
+    reopenSetupDrawer();
     setSelectedStudentIds([]);
     setSelectedStudentId(focusedCaseId);
     setReviewingCaseDetails(false);
+    detailsReturnFocus.current = null;
     if (!focusedCaseId) selectedSnapshot.current = null;
-  }, [activeView, focusedCaseId]);
+  }, [activeView, focusedCaseId, reopenSetupDrawer]);
 
   const openStudentSetup = (id: string, section: StudentSetupView | null = null) => {
+    reopenSetupDrawer();
     if (
       hasGrantedPermission(permissions, 'Students.Onboarding.View') &&
       sourceRows.some((student) => student.id === id && student.source === 'onboarding-case')
@@ -746,15 +753,31 @@ export default function StudentSetupScreen() {
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   };
 
-  const closeStudentSetup = () =>
-    navigate(() => {
-      setSelectedStudentId(null);
+  const finishCloseStudentSetup = () => {
+    setSelectedStudentId(null);
+    setReviewingCaseDetails(false);
+    selectedSnapshot.current = null;
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete('case');
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  };
+  const closeStudentSetup = () => navigate(finishCloseStudentSetup);
+  const closeSetupDrawer = () => {
+    if (!reviewingCaseDetails) {
+      navigate(() => drawerExit.closeAfterExit(finishCloseStudentSetup));
+      return;
+    }
+    drawerExit.closeAfterExit(() => {
       setReviewingCaseDetails(false);
-      selectedSnapshot.current = null;
-      const next = new URLSearchParams(searchParams.toString());
-      next.delete('case');
-      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+      const target = detailsReturnFocus.current;
+      detailsReturnFocus.current = null;
+      window.requestAnimationFrame(() => {
+        if (target?.isConnected && !target.closest('[inert]')) {
+          target.focus({ preventScroll: true });
+        }
+      });
     });
+  };
   const nextSetupStudent = sourceRows.find(
     (row) =>
       row.source === 'onboarding-case' &&
@@ -1336,7 +1359,11 @@ export default function StudentSetupScreen() {
             canManage={canManageOnboarding}
             onClose={closeStudentSetup}
             onShowDetails={() => {
-              if (!interactionBusy) setReviewingCaseDetails(true);
+              if (interactionBusy) return;
+              const opener = document.activeElement;
+              detailsReturnFocus.current = opener instanceof HTMLElement ? opener : null;
+              reopenSetupDrawer();
+              setReviewingCaseDetails(true);
             }}
             onNext={
               nextSetupStudent
@@ -1352,9 +1379,11 @@ export default function StudentSetupScreen() {
           presentation={reviewingCaseDetails ? 'details' : 'workflow'}
           initialView={reviewingCaseDetails ? 'details' : undefined}
           taskView={reviewingCaseDetails ? 'readiness' : (drawerTaskView ?? activeView)}
-          open={Boolean(selectedStudent)}
+          open={Boolean(selectedStudent) && !drawerExit.closing}
+          exiting={drawerExit.closing}
+          onExited={drawerExit.onExited}
           student={selectedStudent}
-          onClose={reviewingCaseDetails ? () => setReviewingCaseDetails(false) : closeStudentSetup}
+          onClose={closeSetupDrawer}
           onAssignDivision={() =>
             selectedStudent && openAssignment('division', [selectedStudent.id])
           }

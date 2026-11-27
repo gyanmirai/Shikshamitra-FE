@@ -98,8 +98,8 @@ export function AssessmentBookingField({
           }))}
           noOptionsMessage={
             inlineBooking
-              ? 'No Slots Available'
-              : 'No Available Sessions. Create a Session Under Admissions → Assessments.'
+              ? 'No slots available'
+              : 'No sessions available. Create a session under Admissions → Assessments.'
           }
         />
       </ShakingTextField>
@@ -109,7 +109,7 @@ export function AssessmentBookingField({
         (available.length ? (
           onAddSlot && (
             <Button
-              aria-label="Add Slot"
+              aria-label="Add slot"
               size="small"
               variant="outlined"
               sx={{ alignSelf: 'flex-end' }}
@@ -122,14 +122,14 @@ export function AssessmentBookingField({
           )
         ) : (
           <EmptyContent
-            title="No Slots Available"
+            title="No slots available"
             sx={{ py: 5, height: 'auto' }}
             slotProps={{ img: { maxWidth: 64 } }}
             action={
               <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
                 {onAddSlot && (
                   <Button
-                    aria-label="Add Slot"
+                    aria-label="Add slot"
                     size="small"
                     variant="contained"
                     disabled={disabled}

@@ -123,7 +123,7 @@ describe('Admission form history dialog', () => {
     props.onRestoreVersion.mockReset();
   });
 
-  it('shows grouped empty states and both standard close actions', async () => {
+  it('shows grouped empty states and a single header close action', async () => {
     const user = userEvent.setup();
     render(<AdmissionFormHistoryDialog {...props} />);
     expect(
@@ -133,9 +133,9 @@ describe('Admission form history dialog', () => {
     expect(screen.getByRole('heading', { name: 'Activity' })).toBeVisible();
     expect(screen.getByText('No other versions are available yet.')).toBeVisible();
     expect(screen.getByText('No recorded form activity is available.')).toBeVisible();
+    expect(screen.getAllByRole('button', { name: 'close' })).toHaveLength(1);
     await user.click(screen.getByRole('button', { name: 'close' }));
-    await user.click(screen.getByRole('button', { name: 'close' }));
-    expect(props.onClose).toHaveBeenCalledTimes(2);
+    expect(props.onClose).toHaveBeenCalledOnce();
   });
 
   it('distinguishes failed reads from empty data and retries each section', async () => {

@@ -2,26 +2,20 @@ import type { StudentRecordProfile } from 'src/redux/student/student-profile-typ
 import type { RecordChange } from 'src/redux/student/records/student-record-changes-api';
 import type { RecordRegistrationSource } from 'src/redux/student/records/student-record-details-api';
 
-import { useId, useState } from 'react';
-import Timeline from '@mui/lab/Timeline';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import TimelineDot from '@mui/lab/TimelineDot';
+import { useId, useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import TimelineContent from '@mui/lab/TimelineContent';
-import TimelineSeparator from '@mui/lab/TimelineSeparator';
-import TimelineConnector from '@mui/lab/TimelineConnector';
 import { EmptyContent } from 'src/components/empty-content';
 import { fDateTime, formatStr } from 'src/utils/format-time';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem';
 import { recordFieldLabel } from 'src/screens/student/records/record-diff';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { useProfileChangeDiff } from 'src/screens/student/records/student-record-change-diff';
 import { useGetStudentRecordChangeQuery } from 'src/redux/student/records/student-record-changes-api';
 import {
-  Box,
   Stack,
   Drawer,
   Button,
@@ -31,9 +25,14 @@ import {
   Pagination,
   Typography,
 } from '@mui/material';
+import {
+  ActivityHistoryTimeline,
+  ActivityHistorySkeleton,
+} from 'src/screens/student/components/activity-history-timeline';
 
 import { ProfileValues } from './student-profile-overview';
 import { PROFILE_SECTIONS } from './student-record-profile-model';
+import { useStudentDrawerExit } from '../components/use-student-drawer-exit';
 
 function changeSectionLabel(change: RecordChange) {
   return change.section === 'registration-form'
@@ -79,6 +78,8 @@ export function StudentRecordHistoryPanel({
   onPageChange?: (page: number) => void;
 }) {
   const [selection, setSelection] = useState<{ studentId: string; changeId: string } | null>(null);
+  const trigger = useRef<HTMLButtonElement | null>(null);
+  const exit = useStudentDrawerExit();
   const selectedId =
     canReadChanges && selection?.studentId === student.studentId ? selection.changeId : null;
   const detail = useGetStudentRecordChangeQuery(selectedId ?? '', {
@@ -98,14 +99,15 @@ export function StudentRecordHistoryPanel({
     isError: labelsError,
     retry: retryLabels,
   } = useProfileChangeDiff(selected, sources);
-  const drawerBusy = detail.isFetching || loadingLabels;
-  const closeDetail = () => {
-    if (!drawerBusy) setSelection(null);
-  };
-  const orderedChanges = [...changes].sort(
-    (left, right) => Date.parse(right.creationTime) - Date.parse(left.creationTime)
-  );
-
+  const closeDetail = () =>
+    exit.closeAfterExit(() => {
+      const opener = trigger.current;
+      trigger.current = null;
+      setSelection(null);
+      window.requestAnimationFrame(() => {
+        if (opener?.isConnected && trigger.current === null) opener.focus();
+      });
+    });
   return (
     <>
       {canReadChanges ? (
@@ -120,12 +122,8 @@ export function StudentRecordHistoryPanel({
             </Typography>
           }
         >
-          {isLoading || (isFetching && !orderedChanges.length) ? (
-            <Stack aria-label="Loading record changes">
-              <Skeleton height={72} />
-              <Skeleton height={72} />
-              <Skeleton height={72} />
-            </Stack>
+          {isLoading || (isFetching && !changes.length) ? (
+            <ActivityHistorySkeleton ariaLabel="Loading record changes" />
           ) : isError ? (
             <StudentFeedback
               notificationKey="STU-0771"
@@ -141,69 +139,45 @@ export function StudentRecordHistoryPanel({
             >
               Record change history could not be loaded.
             </StudentFeedback>
-          ) : orderedChanges.length ? (
-            <Timeline
-              aria-label="Student record audit history"
-              sx={{
-                p: 0,
-                m: 0,
-                [`& .${timelineItemClasses.root}:before`]: { display: 'none' },
-              }}
-            >
-              {orderedChanges.map((change, index) => (
-                <TimelineItem key={change.id}>
-                  <TimelineSeparator>
-                    <TimelineDot variant="outlined" sx={{ mt: 0.5, mb: 0.5 }}>
-                      <Iconify icon="mdi:pencil-outline" width={16} />
-                    </TimelineDot>
-                    {index < orderedChanges.length - 1 && <TimelineConnector />}
-                  </TimelineSeparator>
-                  <TimelineContent sx={{ pt: 0, pb: 2, minWidth: 0 }}>
-                    <Stack spacing={1} sx={{ pb: 1.5, borderBottom: 1, borderColor: 'divider' }}>
-                      <Stack
-                        direction={{ xs: 'column', sm: 'row' }}
-                        spacing={1}
-                        alignItems={{ xs: 'flex-start', sm: 'center' }}
-                      >
-                        <Typography variant="subtitle2" sx={{ flex: 1, overflowWrap: 'anywhere' }}>
-                          {changeSectionLabel(change)}{' '}
-                          {change.status === 'Applied' ? 'updated' : 'change requested'}
-                        </Typography>
-                        <Label color={changeStatusColor(change.status)}>{change.status}</Label>
-                        <Button
-                          size="small"
-                          disabled={isFetching}
-                          onClick={() =>
-                            setSelection({ studentId: student.studentId, changeId: change.id })
-                          }
-                          aria-label={`View ${changeSectionLabel(change)} change history`}
-                          endIcon={<Iconify icon="mdi:chevron-right" />}
-                        >
-                          View Changes
-                        </Button>
-                      </Stack>
-                      <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                        {change.payloadMasked
-                          ? 'Details restricted by school policy.'
-                          : change.reason || 'No reason recorded'}
-                      </Typography>
-                      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                        <Typography variant="caption" color="text.secondary">
-                          Submitted by {change.requestedByName ?? 'Staff member'} ·{' '}
-                          {fDateTime(change.creationTime, formatStr.split.dateTime) ||
-                            'Time not recorded'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {change.appliedAt
-                            ? `Applied ${fDateTime(change.appliedAt, formatStr.split.dateTime)}`
-                            : 'Not applied'}
-                        </Typography>
-                      </Stack>
-                    </Stack>
-                  </TimelineContent>
-                </TimelineItem>
-              ))}
-            </Timeline>
+          ) : changes.length ? (
+            <ActivityHistoryTimeline
+              ariaLabel="Student record audit history"
+              items={changes.map((change) => {
+                const sectionLabel = changeSectionLabel(change);
+
+                return {
+                  id: change.id,
+                  title: `${sectionLabel} ${change.status === 'Applied' ? 'updated' : 'change requested'}`,
+                  occurredAt: change.creationTime,
+                  icon: 'mdi:pencil-outline',
+                  actor: `Submitted by ${change.requestedByName ?? 'Staff member'}`,
+                  description: change.payloadMasked
+                    ? 'Details restricted by school policy.'
+                    : change.reason || 'No reason recorded',
+                  details: change.appliedAt
+                    ? `Applied ${fDateTime(change.appliedAt, formatStr.split.dateTime)}`
+                    : 'Not applied',
+                  badge: <Label color={changeStatusColor(change.status)}>{change.status}</Label>,
+                  action: (
+                    <Button
+                      size="small"
+                      color="inherit"
+                      variant="outlined"
+                      disabled={isFetching}
+                      onClick={(event) => {
+                        trigger.current = event.currentTarget;
+                        exit.reopen();
+                        setSelection({ studentId: student.studentId, changeId: change.id });
+                      }}
+                      aria-label={`View ${sectionLabel} change history`}
+                      endIcon={<Iconify icon="mdi:chevron-right" />}
+                    >
+                      View changes
+                    </Button>
+                  ),
+                };
+              })}
+            />
           ) : (
             <EmptyContent
               title="No record changes yet"
@@ -242,13 +216,16 @@ export function StudentRecordHistoryPanel({
       )}
       <Drawer
         anchor="right"
-        open={Boolean(selectedId)}
+        open={Boolean(selectedId) && !exit.closing}
         onClose={closeDetail}
+        onTransitionExited={exit.onExited}
+        ModalProps={{ disableRestoreFocus: true }}
         slotProps={{
           paper: {
             role: 'dialog',
             'aria-modal': true,
             'aria-labelledby': titleId,
+            inert: exit.closing || undefined,
             sx: {
               width: { xs: 1, sm: 440 },
               maxWidth: 1,
@@ -258,16 +235,29 @@ export function StudentRecordHistoryPanel({
           },
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 2 }}>
-          <Typography id={titleId} variant="h6" sx={{ flex: 1 }}>
-            Record Change History
-          </Typography>
+        <Stack
+          component="header"
+          direction="row"
+          alignItems="center"
+          spacing={1}
+          sx={{ p: 2, flexShrink: 0 }}
+        >
+          <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ flex: 1, minWidth: 0 }}>
+            <Typography id={titleId} component="h2" variant="h6">
+              Record Change History
+            </Typography>
+            <InfoTooltipIcon
+              title="Review who requested this change, its status, and any visible reason and field changes."
+              label="Record Change History information"
+            />
+          </Stack>
           <IconButton
             aria-label="Close record change history"
-            disabled={drawerBusy}
             onClick={closeDetail}
+            disabled={exit.closing}
+            sx={{ width: 44, height: 44, flexShrink: 0 }}
           >
-            <Iconify icon="mdi:close" />
+            <Iconify icon={GlobalIcons.cancel} width={20} />
           </IconButton>
         </Stack>
         <Divider />
@@ -405,18 +395,6 @@ export function StudentRecordHistoryPanel({
             )}
           </Stack>
         </Scrollbar>
-        <Divider />
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={closeDetail}
-            disabled={drawerBusy}
-            startIcon={<Iconify icon="mdi:close" />}
-          >
-            Close
-          </Button>
-        </Box>
       </Drawer>
     </>
   );

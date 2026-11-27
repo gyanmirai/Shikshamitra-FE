@@ -52,7 +52,7 @@ const json = (change = {}) =>
 describe('single managed document checklist', { timeout: 15000 }, () => {
   it('adds a standard requirement and keeps retired review and waiver settings off', async () => {
     const { user, onSave } = await setupDocumentEditor('{"extension":{"source":"existing"}}');
-    expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeDisabled();
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     await chooseDocumentOption(user, 'Add a Standard Document', 'Birth Certificate');
     const dialog = screen.getByRole('dialog', { name: 'Configure Document Requirement' });
@@ -63,11 +63,11 @@ describe('single managed document checklist', { timeout: 15000 }, () => {
       ).not.toBeInTheDocument()
     );
     expect(onSave).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeEnabled();
     expect(
       screen.queryByRole('switch', { name: 'Require a Different Staff Member to Review' })
     ).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
       extension: { source: 'existing' },
@@ -83,8 +83,8 @@ describe('single managed document checklist', { timeout: 15000 }, () => {
   it('requires at least one document and provides no manual completion bypass', async () => {
     const errorToast = vi.spyOn(shikshaMitraToast, 'error');
     const { onSave } = await setupDocumentEditor(json({ requirements: [] }));
-    expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeDisabled();
-    fireEvent.submit(screen.getByRole('button', { name: 'Apply Changes' }).closest('form')!);
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeDisabled();
+    fireEvent.submit(screen.getByRole('button', { name: 'Apply changes' }).closest('form')!);
     expect(
       screen.getByText('Add at Least One Document Before Applying This Stage.')
     ).toBeInTheDocument();
@@ -97,7 +97,7 @@ describe('single managed document checklist', { timeout: 15000 }, () => {
   });
   it('disables Apply again after removing the final document', async () => {
     const { user, onSave } = await setupDocumentEditor(json());
-    expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeEnabled();
     await user.click(screen.getByRole('button', { name: 'Remove Birth certificate' }));
     await user.click(
       within(screen.getByRole('dialog', { name: 'Remove Document Requirement?' })).getByRole(
@@ -105,7 +105,7 @@ describe('single managed document checklist', { timeout: 15000 }, () => {
         { name: 'Remove Requirement' }
       )
     );
-    expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeDisabled();
     expect(onSave).not.toHaveBeenCalled();
   });
   it('requires confirmation before removing a document', async () => {
@@ -121,17 +121,17 @@ describe('single managed document checklist', { timeout: 15000 }, () => {
   });
   it('retains the configured stage when the journey rejects applying it', async () => {
     const { user, onSave, onClose } = await setupDocumentEditor(json(), false, true, false);
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByText('Birth certificate')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeEnabled();
   });
   it('blocks unsupported policies without overwriting them', async () => {
     const { onSave } = await setupDocumentEditor(json({ version: 2 }));
     expect(screen.getByText(/unsupported or incomplete/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeDisabled();
-    fireEvent.submit(screen.getByRole('button', { name: 'Apply Changes' }).closest('form')!);
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeDisabled();
+    fireEvent.submit(screen.getByRole('button', { name: 'Apply changes' }).closest('form')!);
     expect(onSave).not.toHaveBeenCalled();
   });
   it('locks published settings and explains unavailable features', async () => {
@@ -139,7 +139,7 @@ describe('single managed document checklist', { timeout: 15000 }, () => {
     expect(
       screen.queryByRole('button', { name: 'Edit Birth certificate' })
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
     expect(screen.getAllByText('Document verification').find((item) => item.tagName === 'DT')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Document Requirements information' })).toBeVisible();

@@ -2,7 +2,7 @@ import type { AssessmentSession } from 'src/redux/student/admissions/admission-a
 
 import { vi, it, expect } from 'vitest';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { AssessmentSessionDetailsDrawer } from './assessment-session-details-drawer';
 
@@ -55,12 +55,15 @@ const renderDrawer = (onClose = vi.fn()) =>
     </ThemeProvider>
   );
 
-it('shows the selected session details in a read-only drawer', () => {
+it('retains the selected session while the read-only drawer closes', async () => {
   mocks.detail = session;
   mocks.isError = false;
   const onClose = vi.fn();
   renderDrawer(onClose);
   expect(screen.getByRole('dialog', { name: 'Session Details' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Session details information' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Session information' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Schedule information' })).toBeVisible();
   expect(screen.getByText('QA Exam')).toBeVisible();
   expect(screen.getByText('Class 1')).toBeVisible();
   expect(screen.getByText('Primary · Entrance exam')).toBeVisible();
@@ -68,7 +71,9 @@ it('shows the selected session details in a read-only drawer', () => {
   expect(screen.getByText('5 / 20')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Close session details' }));
-  expect(onClose).toHaveBeenCalledOnce();
+  expect(onClose).not.toHaveBeenCalled();
+  expect(screen.getByText('QA Exam')).toBeInTheDocument();
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
 });
 
 it('shows a retry when current session details cannot be loaded', () => {

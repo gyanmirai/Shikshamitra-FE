@@ -3,7 +3,7 @@ import type { AdmissionOfferingValidationError } from 'src/redux/student/admissi
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Stack, Button, Typography, LinearProgress } from '@mui/material';
+import { Box, Stack, Button, Typography, CircularProgress } from '@mui/material';
 
 import { AdmissionOfferingActionImpact } from './admission-offering-action-impact';
 import { AdmissionOfferingConfigurationIssues } from './admission-offering-configuration-issues';
@@ -69,8 +69,6 @@ export function AdmissionOfferingActionDialog({
       disableBackdropClick
       disableCancel={commanding}
       disableEscapeKeyDown={commanding}
-      bodyBusy={activating ? commanding : undefined}
-      busyLabel="Activating Offering…"
       content={
         action && pendingAction ? (
           <Box id="offering-action-description">
@@ -79,8 +77,10 @@ export function AdmissionOfferingActionDialog({
                 <Typography variant="subtitle2">
                   {pendingAction.row.name || pendingAction.row.code}
                 </Typography>
-                <Typography variant="body2">Checking offering requirements…</Typography>
-                <LinearProgress />
+                <Stack direction="row" alignItems="center" spacing={1} color="text.secondary">
+                  <CircularProgress size={16} color="inherit" aria-hidden="true" />
+                  <Typography variant="body2">Checking offering requirements…</Typography>
+                </Stack>
               </Stack>
             ) : blocked ? (
               <Stack spacing={1.5}>
@@ -108,8 +108,8 @@ export function AdmissionOfferingActionDialog({
           type="button"
           variant="contained"
           size="small"
-          color={action === 'delete' ? 'error' : blocked ? 'inherit' : 'primary'}
-          loading={!activating && commanding}
+          color={action === 'delete' ? 'error' : 'inherit'}
+          loading={commanding}
           disabled={commanding || checkingRequirements}
           startIcon={
             <Iconify

@@ -8,11 +8,13 @@ import type {
 
 import { useFormik } from 'formik';
 import { useId, useEffect } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 
 import { serializeSimpleCondition } from './workflow-builder-utils';
 import { getRouteSaveError } from './workflow-builder/workflow-route-diagnostics';
@@ -60,6 +62,7 @@ export function AdmissionWorkflowTransitionDrawer({
 }: Props) {
   const titleId = useId();
   const discard = useBoolean();
+  const { closing, closeAfterExit, onExited, reopen } = useStudentDrawerExit();
   const conditionState = getTransitionConditionEditorState(transition?.conditionRuleJson);
   const creatingConditionalPath = transition?.id === '' && transition.isDefault === false;
   const locked =
@@ -164,24 +167,33 @@ export function AdmissionWorkflowTransitionDrawer({
         return;
       }
       onSave(route);
-      helpers.resetForm({ values });
-      onClose();
+      closeAfterExit(() => {
+        helpers.resetForm({ values });
+        onClose();
+      });
     },
   });
 
   useEffect(() => {
-    if (!open || !formik.dirty) return undefined;
+    if (!open || closing || !formik.dirty) return undefined;
     const warn = (event: BeforeUnloadEvent) => event.preventDefault();
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [open, formik.dirty]);
+  }, [open, closing, formik.dirty]);
+
+  useEffect(() => {
+    if (!open) reopen();
+  }, [open, reopen]);
 
   const close = () => {
     discard.onFalse();
-    formik.resetForm();
-    onClose();
+    closeAfterExit(() => {
+      formik.resetForm();
+      onClose();
+    });
   };
   const requestClose = () => {
+    if (closing || formik.isSubmitting) return;
     if (!locked && formik.dirty) discard.onTrue();
     else close();
   };
@@ -190,9 +202,14 @@ export function AdmissionWorkflowTransitionDrawer({
     <>
       <Drawer
         anchor="right"
-        open={open}
+        open={open && !closing}
         onClose={requestClose}
-        PaperProps={{ 'aria-labelledby': titleId, sx: { width: { xs: 1, sm: 480 }, maxWidth: 1 } }}
+        onTransitionExited={onExited}
+        PaperProps={{
+          'aria-labelledby': titleId,
+          inert: closing,
+          sx: { width: { xs: 1, sm: 480 }, maxWidth: 1 },
+        }}
       >
         <Box
           component={locked ? 'div' : 'form'}
@@ -221,8 +238,8 @@ export function AdmissionWorkflowTransitionDrawer({
               {!locked && (
                 <Typography variant="body2" color="text.secondary">
                   {simpleNextStep
-                    ? 'Choose Where the Applicant Continues After This Stage.'
-                    : 'Choose the Usual Next Step or Add a Path for a Specific Outcome.'}
+                    ? 'Choose where the applicant continues after this stage.'
+                    : 'Choose the usual next step or add a path for a specific outcome.'}
                 </Typography>
               )}
             </Box>
@@ -262,23 +279,7 @@ export function AdmissionWorkflowTransitionDrawer({
               lockFromStage
             />
           )}
-          {locked ? (
-            <Stack
-              direction="row"
-              justifyContent="flex-end"
-              sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}
-            >
-              <Button
-                size="small"
-                variant="outlined"
-                color="inherit"
-                startIcon={<Iconify icon="mdi:close" />}
-                onClick={requestClose}
-              >
-                Close
-              </Button>
-            </Stack>
-          ) : (
+          {!locked && (
             <DrawerActions
               onCancel={requestClose}
               disabled={
@@ -325,13 +326,16 @@ function DrawerActions({ onCancel, disabled }: { onCancel: () => void; disabled:
       <Stack
         direction="row"
         justifyContent="flex-end"
+        alignItems="center"
         spacing={1}
-        sx={{ p: 2, '& .MuiButton-root': { minHeight: 44 } }}
+        sx={{ px: { xs: 2, sm: 3 }, py: 1.75, flexShrink: 0 }}
       >
         <Button
+          type="button"
           variant="outlined"
+          color="inherit"
           size="small"
-          startIcon={<Iconify icon="mdi:close" />}
+          startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
           onClick={onCancel}
         >
           Cancel
@@ -340,10 +344,11 @@ function DrawerActions({ onCancel, disabled }: { onCancel: () => void; disabled:
           type="submit"
           disabled={disabled}
           variant="contained"
+          color="inherit"
           size="small"
-          startIcon={<Iconify icon="mdi:content-save-outline" />}
+          startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
         >
-          Save Path
+          Save path
         </Button>
       </Stack>
     </>

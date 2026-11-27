@@ -78,7 +78,7 @@ async function setup(
       onClose={onClose}
     />
   );
-  await screen.findByRole('button', { name: readOnly ? 'Close' : 'Apply Changes' });
+  await screen.findByRole('button', { name: readOnly ? 'Close Stage Editor' : 'Apply changes' });
   return { onSave, onClose, user: userEvent.setup() };
 }
 describe('combined assessment setup', { timeout: 15000 }, () => {
@@ -88,7 +88,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
     expect(screen.getByRole('textbox', { name: 'Total Marks *' })).toBeVisible();
     expect(screen.getByText('Required Stage')).toBeVisible();
     expect(screen.getByText('End Of Journey')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).assessment).toMatchObject(
       DEFAULT_ASSESSMENT_POLICY
@@ -105,7 +105,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
     expect(screen.getByRole('switch', { name: 'Schedule an Entrance Exam' })).not.toBeChecked();
     expect(screen.getByRole('textbox', { name: 'Maximum Attempts *' })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Entry Stage' })).toBeChecked();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
       extension: { source: 'intake' },
@@ -121,7 +121,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
     await user.click(screen.getByRole('switch', { name: 'Schedule an Entrance Exam' }));
     await user.click(screen.getByRole('switch', { name: 'Require Attendance' }));
     expect(screen.queryByRole('switch', { name: 'Require result review' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).assessment).toMatchObject({
       enabled: true,
@@ -137,7 +137,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
       })
     );
     expect(screen.getByRole('textbox', { name: 'Maximum Attempts *' })).toHaveValue('3');
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).assessment).toMatchObject({
       reviewRequired: false,
@@ -149,12 +149,12 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
     const input = screen.getByRole('textbox', { name: 'Passing Marks *' });
     await user.clear(input);
     await user.type(input, '101');
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(await screen.findByText('Use a value between 0 and total marks.')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
     await user.clear(input);
     await user.type(input, '50');
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).assessment.passingMarks).toBe(50);
   });
@@ -164,7 +164,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
     );
     const attempts = screen.getByRole('textbox', { name: 'Maximum Attempts *' });
     expect(attempts).toHaveValue('1.5');
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(await screen.findByText('Enter a whole number from 1 to 10.')).toBeVisible();
     expect(attempts).toHaveValue('1.5');
     expect(onSave).not.toHaveBeenCalled();
@@ -178,7 +178,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
     const passing = screen.getByRole('textbox', { name: 'Passing Marks *' });
     await user.clear(passing);
     await user.type(passing, '0.25');
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).assessment).toMatchObject({
       maxAttempts: 1,
@@ -193,7 +193,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
     expect(screen.getByText(/unsupported or incomplete/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'assessment settings' })).not.toBeInTheDocument();
     expect(screen.getByText(/unsupported or incomplete/)).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();
   });
   it('keeps all published settings read-only', async () => {
@@ -204,6 +204,6 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
     expect(
       screen.getByText(String(DEFAULT_ASSESSMENT_POLICY.totalMarks), { selector: 'dd' })
     ).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
   });
 });

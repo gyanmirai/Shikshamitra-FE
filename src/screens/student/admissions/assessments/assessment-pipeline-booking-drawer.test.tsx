@@ -174,15 +174,15 @@ beforeEach(() => {
 it('shows an inline empty state and opens shared slot fields in the same small-button drawer', () => {
   draw();
   expect(screen.getByRole('dialog', { name: 'Book Assessment Slot' })).toBeInTheDocument();
-  expect(screen.getByText('No Slots Available')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Book Slot' })).toBeDisabled();
-  const add = screen.getByRole('button', { name: 'Add Slot' });
+  expect(screen.getByText('No slots available')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Book slot' })).toBeDisabled();
+  const add = screen.getByRole('button', { name: 'Add slot' });
   expect(add).toHaveClass('MuiButton-sizeSmall');
   fireEvent.click(add);
   expect(screen.getAllByRole('dialog')).toHaveLength(1);
   expect(screen.getByRole('dialog', { name: 'Add Assessment Slot' })).toBeVisible();
   expect(screen.getByTestId('shared-slot-fields')).toHaveAttribute('data-pipeline', 'true');
-  expect(screen.getByRole('button', { name: 'Create & Book' })).toHaveClass('MuiButton-sizeSmall');
+  expect(screen.getByRole('button', { name: 'Create & book' })).toHaveClass('MuiButton-sizeSmall');
 });
 
 it('books an existing selected session without creating a new slot', async () => {
@@ -195,7 +195,7 @@ it('books an existing selected session without creating a new slot', async () =>
   draw(onClose);
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Assessment Session' }));
   fireEvent.click(await screen.findByRole('option', { name: /Entrance exam/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Book Slot' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Book slot' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   expect(mocks.run).toHaveBeenCalledWith(
     'book',
@@ -220,11 +220,11 @@ it('shows a blocking body loader until booking settles and retains the selection
   draw(onClose);
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Assessment Session' }));
   fireEvent.click(await screen.findByRole('option', { name: /Entrance exam/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Book Slot' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Book slot' }));
   await waitFor(() => expect(mocks.run).toHaveBeenCalledOnce());
 
-  expect(screen.getByRole('status', { name: 'Booking Assessment Slot…' })).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Book Slot' })).toBeDisabled();
+  expect(screen.getByRole('status', { name: 'Booking assessment slot…' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Book slot' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Close Assessment Booking' })).toBeDisabled();
   expect(screen.getByRole('combobox', { name: 'Assessment Session' })).toHaveAttribute(
@@ -234,19 +234,19 @@ it('shows a blocking body loader until booking settles and retains the selection
   fireEvent.keyDown(screen.getByRole('dialog', { name: 'Book Assessment Slot' }), {
     key: 'Escape',
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Book Slot' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Book slot' }));
   expect(onClose).not.toHaveBeenCalled();
   expect(mocks.run).toHaveBeenCalledOnce();
 
   await act(async () => rejectBooking(new Error('Booking failed')));
   expect(
-    screen.queryByRole('status', { name: 'Booking Assessment Slot…' })
+    screen.queryByRole('status', { name: 'Booking assessment slot…' })
   ).not.toBeInTheDocument();
   expect(screen.getByRole('combobox', { name: 'Assessment Session' })).toHaveTextContent(
     'Entrance exam'
   );
-  expect(screen.getByRole('button', { name: 'Book Slot' })).toBeEnabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Book Slot' }));
+  expect(screen.getByRole('button', { name: 'Book slot' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Book slot' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
 });
 
@@ -267,17 +267,17 @@ it('keeps the create-and-book body loader through preview and confirmation', asy
   }));
   const onClose = vi.fn();
   draw(onClose);
-  fireEvent.click(screen.getByRole('button', { name: 'Add Slot' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
   fireEvent.click(screen.getByRole('button', { name: 'Fill slot details' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Create & Book' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create & book' }));
   await waitFor(() => expect(mocks.preview).toHaveBeenCalledOnce());
 
   expect(
-    screen.getByRole('status', { name: 'Creating and Booking Assessment Slot…' })
+    screen.getByRole('status', { name: 'Creating and booking assessment slot…' })
   ).toBeVisible();
   expect(screen.getByRole('textbox', { name: 'Session name' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Back to Booking' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Create & Book' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Back to booking' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Create & book' })).toBeDisabled();
   await act(async () =>
     resolvePreview({
       items: [candidate],
@@ -289,22 +289,24 @@ it('keeps the create-and-book body loader through preview and confirmation', asy
   );
   await waitFor(() => expect(mocks.confirm).toHaveBeenCalledOnce());
   expect(
-    screen.getByRole('status', { name: 'Creating and Booking Assessment Slot…' })
+    screen.getByRole('status', { name: 'Creating and booking assessment slot…' })
   ).toBeVisible();
   expect(onClose).not.toHaveBeenCalled();
 
   await act(async () => resolveConfirmation({ session: sessionResponse, bookedCount: 1 }));
-  expect(onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
 });
 
 it('creates and books exactly the current applicant after validation', async () => {
   const onClose = vi.fn();
   draw(onClose);
-  fireEvent.click(screen.getByRole('button', { name: 'Add Slot' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Create & Book' }));
-  await waitFor(() => expect(mocks.preview).not.toHaveBeenCalled());
+  fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
+  const submit = screen.getByRole('button', { name: 'Create & book' });
+  fireEvent.click(submit);
+  await waitFor(() => expect(submit).toBeEnabled());
+  expect(mocks.preview).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Fill slot details' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Create & Book' }));
+  fireEvent.click(submit);
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   expect(mocks.preview).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -332,17 +334,17 @@ it('shows a room conflict without confirming and keeps the slot form available f
     }),
   }));
   draw(onClose);
-  fireEvent.click(screen.getByRole('button', { name: 'Add Slot' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
   fireEvent.click(screen.getByRole('button', { name: 'Fill slot details' }));
   const name = screen.getByRole('textbox', { name: 'Session name' });
   const originalName = (name as HTMLInputElement).value;
-  fireEvent.click(screen.getByRole('button', { name: 'Create & Book' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create & book' }));
 
   expect(await screen.findByText(reason, { exact: false })).toBeVisible();
   expect(name).toHaveValue(originalName);
   expect(onClose).not.toHaveBeenCalled();
   expect(mocks.confirm).not.toHaveBeenCalled();
-  expect(screen.getByRole('button', { name: 'Create & Book' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Create & book' })).toBeEnabled();
 });
 
 it('preserves the form and replays the same atomic command after a lost confirmation response', async () => {
@@ -351,15 +353,15 @@ it('preserves the form and replays the same atomic command after a lost confirma
     unwrap: () => Promise.reject(new Error('Response lost')),
   }));
   const view = draw(onClose);
-  fireEvent.click(screen.getByRole('button', { name: 'Add Slot' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
   fireEvent.click(screen.getByRole('button', { name: 'Fill slot details' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Create & Book' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create & book' }));
   await screen.findByText(/Response lost|could not|failed|unable/i);
   expect(onClose).not.toHaveBeenCalled();
   const sent = mocks.confirm.mock.calls[0][0];
   view.rerender(content(onClose, false));
-  expect(screen.getByRole('button', { name: 'Create & Book' })).toBeEnabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Create & Book' }));
+  expect(screen.getByRole('button', { name: 'Create & book' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Create & book' }));
   await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   expect(mocks.confirm).toHaveBeenLastCalledWith(sent);
   expect(mocks.preview).toHaveBeenCalledOnce();
@@ -368,42 +370,42 @@ it('preserves the form and replays the same atomic command after a lost confirma
 it('guards unsaved slot changes and returns to booking without leaving Pipeline', async () => {
   const onClose = vi.fn();
   draw(onClose);
-  fireEvent.click(screen.getByRole('button', { name: 'Add Slot' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Session name' }), {
     target: { value: 'My slot' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Back to Booking' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Back to booking' }));
   expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
   expect(screen.getByRole('textbox', { name: 'Session name' })).toHaveValue('My slot');
-  fireEvent.click(screen.getByRole('button', { name: 'Back to Booking' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Back to booking' }));
   fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(await screen.findByRole('dialog', { name: 'Book Assessment Slot' })).toBeInTheDocument();
   expect(onClose).not.toHaveBeenCalled();
 });
 
-it('does not offer Add Slot without session-management permission', () => {
+it('does not offer Add slot without session-management permission', () => {
   mocks.permissions.manageSessions = false;
   draw();
-  expect(screen.queryByRole('button', { name: 'Add Slot' })).not.toBeInTheDocument();
-  expect(screen.getByText('No Slots Available')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Add slot' })).not.toBeInTheDocument();
+  expect(screen.getByText('No slots available')).toBeVisible();
 });
 
-it.each(['Cancel', 'Back to Booking', 'Close Assessment Booking'])(
-  'allows %s while Add Slot resources are still loading without creating a booking',
-  (control) => {
+it.each(['Cancel', 'Back to booking', 'Close Assessment Booking'])(
+  'allows %s while Add slot resources are still loading without creating a booking',
+  async (control) => {
     const onClose = vi.fn();
     mocks.resources.mockReturnValue({ isLoading: true, isError: false, refetch: vi.fn() });
     draw(onClose);
-    fireEvent.click(screen.getByRole('button', { name: 'Add Slot' }));
-    expect(screen.getByRole('button', { name: 'Create & Book' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Add slot' }));
+    expect(screen.getByRole('button', { name: 'Create & book' })).toBeDisabled();
     const button = screen.getByRole('button', { name: control });
     expect(button).toBeEnabled();
     fireEvent.click(button);
-    if (control === 'Back to Booking') {
+    if (control === 'Back to booking') {
       expect(screen.getByRole('dialog', { name: 'Book Assessment Slot' })).toBeVisible();
       expect(onClose).not.toHaveBeenCalled();
-    } else expect(onClose).toHaveBeenCalledOnce();
+    } else await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(mocks.preview).not.toHaveBeenCalled();
     expect(mocks.confirm).not.toHaveBeenCalled();
     expect(mocks.run).not.toHaveBeenCalled();

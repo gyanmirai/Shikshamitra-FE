@@ -141,7 +141,7 @@ it.each(['footer', 'header', 'Escape'])(
           name: control === 'header' ? 'Close Notes & Follow-Ups' : 'Close',
         })
       );
-    expect(onClose).toHaveBeenCalledOnce();
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await act(async () => finishRead());
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -205,7 +205,7 @@ it('does not display a closed read result after another application activity ope
   const store = renderDocumentUi(<Harness />, grants);
   await waitFor(() => expect(oldReads).toHaveBeenCalledTimes(2));
   fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Open other activity' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Open other activity' }));
   expect(await screen.findByText('Other application note')).toBeVisible();
   await act(async () => finishOld());
   await waitFor(() => {
@@ -444,7 +444,7 @@ it('locks closing and duplicate note submissions until the save finishes', async
   finish();
   await waitFor(() => expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled());
   fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-  expect(onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
 });
 
 it('keeps parent and child close locks until a follow-up write finishes', async () => {

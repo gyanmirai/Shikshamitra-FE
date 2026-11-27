@@ -59,5 +59,6 @@ it('shows actual published Payment stage values with help and one Close action, 
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument();
-  expect(screen.getAllByRole('button', { name: 'Close' })).toHaveLength(1);
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Close Stage Editor' })).toBeVisible();
 });

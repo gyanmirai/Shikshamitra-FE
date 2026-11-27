@@ -94,7 +94,15 @@ export function AdmissionPrintContentCopiesSettings({
             disabled={!language}
             onReset={() =>
               resetContentCard(
-                { showInstructions: false, instructionsPlacement: 'first', instructionSection: '' },
+                {
+                  showInstructions: false,
+                  instructionsPlacement: 'first',
+                  instructionSection: '',
+                  instructionHeadingSize: 'default',
+                  instructionTextSize: 'default',
+                  instructionTextWeight: 'regular',
+                  instructionTextColor: 'default',
+                },
                 { instructions: undefined }
               )
             }
@@ -135,6 +143,55 @@ export function AdmissionPrintContentCopiesSettings({
             helperTooltip={!form.sections.length ? 'Add a section in Build form first.' : undefined}
           />
         )}
+        <PrintSettingsGrid>
+          <PrintSettingSelect
+            label="Heading font size"
+            value={content.instructionHeadingSize}
+            disabled={!content.showInstructions}
+            options={[
+              ['default', 'Default'],
+              ['10', '10 pt'],
+              ['12', '12 pt'],
+              ['14', '14 pt'],
+              ['16', '16 pt'],
+            ]}
+            onChange={(instructionHeadingSize) => update('content', { instructionHeadingSize })}
+          />
+          <PrintSettingSelect
+            label="Instruction font size"
+            value={content.instructionTextSize}
+            disabled={!content.showInstructions}
+            options={[
+              ['default', 'Default'],
+              ['10', '10 pt'],
+              ['12', '12 pt'],
+              ['14', '14 pt'],
+              ['16', '16 pt'],
+            ]}
+            onChange={(instructionTextSize) => update('content', { instructionTextSize })}
+          />
+          <PrintSettingSelect
+            label="Instruction text weight"
+            value={content.instructionTextWeight}
+            disabled={!content.showInstructions}
+            options={[
+              ['regular', 'Regular'],
+              ['bold', 'Bold'],
+            ]}
+            onChange={(instructionTextWeight) => update('content', { instructionTextWeight })}
+          />
+          <PrintSettingSelect
+            label="Instruction text color"
+            value={content.instructionTextColor}
+            disabled={!content.showInstructions}
+            options={[
+              ['default', 'Default'],
+              ['black', 'Black'],
+              ['gray', 'Gray'],
+            ]}
+            onChange={(instructionTextColor) => update('content', { instructionTextColor })}
+          />
+        </PrintSettingsGrid>
         <PrintInstructionsListEditor
           value={translation.instructions}
           disabled={!content.showInstructions || !language}

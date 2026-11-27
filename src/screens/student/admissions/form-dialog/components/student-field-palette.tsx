@@ -16,7 +16,9 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { fieldTypeIcon } from '../form-dialog-model';
 import { PaletteFieldButton } from './palette-field-button';
 import { groupStudentFields } from '../student-field-groups';
+import { getAddressGroupChoice } from '../address-field-group';
 import { addressOrderMessage } from '../form-address-dependencies';
+import { getAcademicGroupChoice } from '../academic-class-selector';
 import { matchesStudentField, studentFieldDestination } from '../student-field-configuration';
 
 type Props = {
@@ -29,15 +31,8 @@ type Props = {
   onAddClassSelector?: () => void;
 };
 
-const admissionContextBindings = new Set([
-  'preference.board',
-  'preference.medium',
-  'preference.class',
-]);
 const usesAdmissionContext = (field: AdmissionFormSystemFieldMetadata) =>
-  admissionContextBindings.has(field.key.toLowerCase());
-const admissionContextMessage =
-  'Board, medium and class are already captured when an inquiry selects its admission option. No need to add them again.';
+  Boolean(getAcademicGroupChoice(field.key));
 
 export function StudentFieldPalette({
   fields,
@@ -53,7 +48,7 @@ export function StudentFieldPalette({
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const normalizedSearch = search.trim().toLowerCase();
   const groupedFields = groupStudentFields(fields);
-  if (onAddClassSelector && !groupedFields.some(group => group.name === 'Admission preferences'))
+  if (onAddClassSelector && !groupedFields.some((group) => group.name === 'Admission preferences'))
     groupedFields.push({ name: 'Admission preferences', fields: [] });
   const visibleGroups = groupedFields
     .map((group) => ({
@@ -63,33 +58,15 @@ export function StudentFieldPalette({
         matchesStudentField(field, normalizedSearch, group.name)
       ),
     }))
-    .filter((group) => group.fields.length > 0 || (group.name === 'Admission preferences' && onAddClassSelector &&
-      (!normalizedSearch || 'class selector board medium admission preferences'.includes(normalizedSearch))));
+    .filter(
+      (group) =>
+        group.fields.length > 0 ||
+        (group.name === 'Admission preferences' &&
+          onAddClassSelector &&
+          (!normalizedSearch ||
+            'class selector board medium admission preferences'.includes(normalizedSearch)))
+    );
   const used = new Set(usedBindings.map((key) => key.toLowerCase()));
-  const addressPacks = [
-    {
-      name: 'Current address',
-      keys: [
-        'Address.AddressLine1',
-        'Address.AddressLine2',
-        'Address.Country',
-        'Address.State',
-        'Address.City',
-        'Address.PostalCode',
-      ],
-    },
-    {
-      name: 'Permanent address',
-      keys: [
-        'PermanentAddress.Line1',
-        'PermanentAddress.Line2',
-        'PermanentAddress.Country',
-        'PermanentAddress.State',
-        'PermanentAddress.City',
-        'PermanentAddress.PostalCode',
-      ],
-    },
-  ];
   return (
     <>
       <TextField
@@ -145,7 +122,7 @@ export function StudentFieldPalette({
                 (field) => !used.has(field.key.toLowerCase()) && !usesAdmissionContext(field)
               );
               const showsAddressFields = group.fields.some((field) =>
-                addressPacks.some((pack) => pack.keys.includes(field.key))
+                getAddressGroupChoice(field.key)
               );
               const groupId = `${paletteId}-group-${index}`;
               return (
@@ -178,7 +155,10 @@ export function StudentFieldPalette({
                         component="h3"
                         sx={{ overflowWrap: 'anywhere', mr: 1 }}
                       >
-                        {group.name} ({group.fields.length + (group.name === 'Admission preferences' && onAddClassSelector ? 1 : 0)})
+                        {group.name} (
+                        {group.fields.length +
+                          (group.name === 'Admission preferences' && onAddClassSelector ? 1 : 0)}
+                        )
                       </Typography>
                       <Iconify
                         icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
@@ -223,54 +203,22 @@ export function StudentFieldPalette({
                           {addressOrderMessage}
                         </Typography>
                       )}
-                      {group.name === 'Contact and addresses' &&
-                        onAddSection &&
-                        addressPacks
-                          .filter(
-                            (pack) =>
-                              !normalizedSearch ||
-                              `${pack.name} pack`.toLowerCase().includes(normalizedSearch) ||
-                              pack.keys.some((key) =>
-                                group.fields.some((field) => field.key === key)
-                              )
-                          )
-                          .map((pack) => {
-                            const packFields = pack.keys
-                              .map((key) => fields.find((field) => field.key === key))
-                              .filter((field): field is AdmissionFormSystemFieldMetadata =>
-                                Boolean(field)
-                              );
-                            if (!packFields.length) return null;
-                            return (
-                              <Button
-                                key={pack.name}
-                                variant="outlined"
-                                size="small"
-                                startIcon={<Iconify icon="mdi:plus" />}
-                                disabled={packFields.every((field) =>
-                                  used.has(field.key.toLowerCase())
-                                )}
-                                onClick={() => onAddSection(pack.name, packFields)}
-                              >
-                                {pack.name} Pack
-                              </Button>
-                            );
-                          })}
                       {group.fields.map((field) => (
                         <PaletteFieldButton
                           key={field.key}
                           label={field.displayName}
                           icon={fieldTypeIcon(field.fieldType)}
                           description={
-                            usesAdmissionContext(field)
-                              ? admissionContextMessage
-                              : `${studentFieldDestination(field)}${field.description ? ` · ${field.description}` : ''}`
+                            getAcademicGroupChoice(field.key)
+                              ? 'Adds linked Board, Medium and Class fields from Institute Setup'
+                              : getAddressGroupChoice(field.key)
+                                ? 'Adds linked Country, State and City fields'
+                                : `${studentFieldDestination(field)}${field.description ? ` · ${field.description}` : ''}`
                           }
                           disabled={
-                            used.has(field.key.toLowerCase()) || usesAdmissionContext(field)
-                          }
-                          disabledLabel={
-                            usesAdmissionContext(field) ? 'Captured in inquiry' : 'Added'
+                            used.has(field.key.toLowerCase()) &&
+                            !getAddressGroupChoice(field.key) &&
+                            !getAcademicGroupChoice(field.key)
                           }
                           onClick={() => onAdd(field)}
                         />

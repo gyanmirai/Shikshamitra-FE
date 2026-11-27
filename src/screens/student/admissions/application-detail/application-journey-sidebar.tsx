@@ -21,6 +21,7 @@ export function ApplicationJourneySidebar({ loading, busy, onChange, ...journey 
     if (desktop) setMobileOpen(false);
   }, [desktop]);
   const panelId = useId();
+  const titleId = `${panelId}-title`;
   const collapsed = !desktop || !expanded;
   const title = collapsed ? 'Expand Admission Journey' : 'Collapse Admission Journey';
   const steps = (compact: boolean) =>
@@ -94,14 +95,16 @@ export function ApplicationJourneySidebar({ loading, busy, onChange, ...journey 
         slotProps={{
           paper: {
             id: `${panelId}-mobile`,
-            sx: { width: 280, maxWidth: '100%' },
+            sx: { width: { xs: '100%', sm: 280 }, maxWidth: '100%' },
             role: 'dialog',
-            'aria-label': 'Admission Journey',
+            'aria-labelledby': titleId,
           },
         }}
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 1 }}>
-          <Typography variant="subtitle1">Admission Journey</Typography>
+          <Typography id={titleId} component="h2" variant="h6">
+            Admission Journey
+          </Typography>
           <CustomTooltip title="Collapse Admission Journey" arrow>
             <span>
               <IconButton
