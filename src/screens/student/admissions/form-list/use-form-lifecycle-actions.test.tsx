@@ -71,7 +71,6 @@ describe('form lifecycle commands', () => {
     await act(async () => result.current.confirm());
     expect(mocks.archive).not.toHaveBeenCalled();
     expect(result.current.queryError).toBe(true);
-    expect(result.current.error).toBeNull();
     const denied = renderHook(() => useFormLifecycleActions(false));
     act(() => denied.result.current.request('restore', { ...form, status: 2 }));
     expect(denied.result.current.pending).toBeNull();
@@ -92,8 +91,35 @@ describe('form lifecycle commands', () => {
     act(() => result.current.request('restore', { ...form, status: 2 }));
     await act(async () => result.current.confirm());
     expect(result.current.pending?.action).toBe('restore');
-    expect(result.current.error).toMatch(/form.*changed/i);
-    expect(mocks.toast).not.toHaveBeenCalled();
+    expect(mocks.toast).toHaveBeenCalledExactlyOnceWith({
+      message: 'This form has changed. Select Reload Latest before trying again.',
+    });
+  });
+  it('shows both archived-definition blockers and the draft recovery in one toast', async () => {
+    mocks.impact = { ...mocks.impact, status: 2 };
+    mocks.restore.mockReturnValue({
+      unwrap: vi.fn().mockRejectedValue({
+          status: 400,
+          data: {
+            errorCode: 'Admissions.FormRestoreInvalidDefinition',
+            detail: 'One or more business rules were violated.',
+            data: {
+              Errors: 'Add a required Primary contact selector when both Father and Mother contacts are configured.; Admissions.FormInvalidOptions:APPLICANT_GENDER',
+            },
+          },
+      }),
+    });
+    const { result } = renderHook(() => useFormLifecycleActions(true));
+    act(() => result.current.request('restore', { ...form, status: 2 }));
+    await act(async () => result.current.confirm());
+    expect(result.current.pending).toBeNull();
+    expect(mocks.toast).toHaveBeenCalledOnce();
+    const [{ message }] = mocks.toast.mock.calls[0];
+    expect(message).toContain('Primary contact selector');
+    expect(message).toContain('Student gender needs valid choices.');
+    expect(message).not.toContain('Clone as Draft');
+    expect(message).toContain('Create a new form');
+    expect(message).not.toMatch(/business rule|APPLICANT_GENDER|Admissions\./i);
   });
   it('requires fresh impact review after a concurrency conflict before allowing another command', async () => {
     mocks.archive.mockReturnValue({
@@ -126,7 +152,20 @@ describe('form lifecycle commands', () => {
     act(() => result.current.request('archive', form));
     await act(async () => result.current.confirm());
     expect(result.current.pending?.action).toBe('archive');
-    expect(result.current.error).toBeNull();
     expect(mocks.toast).toHaveBeenCalledWith({ message: 'Network unavailable' });
+  });
+  it('replaces a generic form command rejection with an action-specific toast', async () => {
+    mocks.archive.mockReturnValue({
+      unwrap: vi.fn().mockRejectedValue({
+        status: 400,
+        data: { detail: 'One or more business rules were violated.' },
+      }),
+    });
+    const { result } = renderHook(() => useFormLifecycleActions(true));
+    act(() => result.current.request('archive', form));
+    await act(async () => result.current.confirm());
+    expect(mocks.toast).toHaveBeenCalledExactlyOnceWith({
+      message: 'Unable to archive this form. Please try again.',
+    });
   });
 });

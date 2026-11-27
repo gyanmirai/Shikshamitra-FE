@@ -19,7 +19,9 @@ describe('builder issue destinations', () => {
       );
       expect(issue?.target).toBeDefined();
       expect(getBuilderIssueActionLabel(issue!.target!)).toBe('Review question');
-      expect(getBuilderIssueRecoveryGuidance(issue!.target!)).toContain('cannot be edited here');
+      expect(getBuilderIssueRecoveryGuidance(issue!.target!)).toContain(
+        'restore an earlier form version'
+      );
     }
   );
 
@@ -47,10 +49,14 @@ describe('builder issue destinations', () => {
         validationJson: '{"format":"phone","countryField":"REMOVED_COUNTRY"}',
       },
     ];
-    const issue = getBuilderIssues(form).find((item) => item.message.includes('REMOVED_COUNTRY'));
+    const issue = getBuilderIssues(form).find((item) =>
+      item.message.includes('linked to a missing question')
+    );
     expect(issue?.target).toBeDefined();
     expect(getBuilderIssueActionLabel(issue!.target!)).toBe('Review question');
-    expect(getBuilderIssueRecoveryGuidance(issue!.target!)).toContain('cannot be edited here');
+    expect(getBuilderIssueRecoveryGuidance(issue!.target!)).toContain(
+      'restore an earlier form version'
+    );
   });
 
   it.each(['code', 'bindingKey', 'requiredRuleJson'])(
@@ -60,8 +66,8 @@ describe('builder issue destinations', () => {
       form.sections[0].fields = [newField(form.sections[0].id, 0, 0)];
       const target = getFormikBuilderIssueTarget(form, `sections[0].fields[0].${property}`);
       expect(getBuilderIssueActionLabel(target)).toBe('Review question');
-      expect(getBuilderIssueRecoveryGuidance(target)).toContain('cannot be edited here');
-      expect(getBuilderIssueRecoveryGuidance(target)).toContain('Keep the current question');
+      expect(getBuilderIssueRecoveryGuidance(target)).toContain('restore an earlier form version');
+      expect(getBuilderIssueRecoveryGuidance(target)).toContain('Review this question');
     }
   );
 
@@ -76,7 +82,7 @@ describe('builder issue destinations', () => {
       },
     ];
     const referenceIssues = getBuilderIssues(form).filter((issue) =>
-      issue.message.includes('references missing')
+      issue.message.includes('linked to a missing question')
     );
     expect(referenceIssues.map((issue) => issue.target?.settingPath)).toEqual([
       'sections[0].fields[0].visibilityRuleJson',

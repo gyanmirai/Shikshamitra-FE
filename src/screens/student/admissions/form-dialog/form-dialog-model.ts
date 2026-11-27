@@ -6,10 +6,7 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import * as Yup from 'yup';
-import {
-  ADMISSION_PRINT_PAPER_SIZES,
-  resolveEditableRegistrationPrintTemplate,
-} from 'src/redux/student/admissions/admission-form-print-settings';
+import { ADMISSION_PRINT_PAPER_SIZES } from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { ensureNewInquiryDefaults, withInquiryDefaultTranslations } from './inquiry-default-fields';
 import {
@@ -272,10 +269,9 @@ export function getAdmissionFormInitialValues(
   const stepId = editing?.sections[0]?.stepId ?? crypto.randomUUID();
   const formPurpose = editing?.purpose ?? purpose;
   const initialValues = ensureAdmissionCustomFieldIdentities({
-    printSettings: {
-      ...getAdmissionFormPrintSettings(editing?.printSettings, formPurpose),
-      ...(!editing ? { template: 'boxed-grid' as const } : {}),
-    },
+    printSettings: editing
+      ? getAdmissionFormPrintSettings(editing.printSettings)
+      : getNewAdmissionFormPrintSettings(formPurpose),
     coreFieldPolicyVersion: editing?.coreFieldPolicyVersion,
     name: editing?.name ?? '',
     code: editing?.code ?? '',
@@ -311,20 +307,42 @@ export function getAdmissionFormInitialValues(
 }
 
 export function getAdmissionFormPrintSettings(
-  settings?: AdmissionFormPrintSettings | null,
-  purpose?: CreateUpdateAdmissionForm['purpose']
+  settings?: AdmissionFormPrintSettings | null
 ): AdmissionFormPrintSettings {
   return {
-    template:
-      purpose === 1
-        ? resolveEditableRegistrationPrintTemplate(settings?.template)
-        : (settings?.template ?? 'simple'),
+    template: settings?.template ?? 'simple',
     layout: settings?.layout ?? 'compact',
     paperSize: settings?.paperSize ?? 'A4',
     showSchoolHeader: settings?.showSchoolHeader ?? true,
     showPhoto: settings?.showPhoto ?? true,
     showSignature: settings?.showSignature ?? true,
     ...(settings?.advanced ? { advanced: settings.advanced } : {}),
+  };
+}
+
+export function getNewAdmissionFormPrintSettings(
+  purpose: CreateUpdateAdmissionForm['purpose']
+): AdmissionFormPrintSettings {
+  const defaults = { ...getAdmissionFormPrintSettings(), template: 'boxed-grid' as const };
+  if (purpose !== 1) return defaults;
+
+  return {
+    ...defaults,
+    advanced: {
+      style: { palette: 'school-blue' },
+      branding: { showBanner: false },
+      header: {
+        addressLayout: 'horizontal',
+        phone: true,
+        email: true,
+        board: true,
+        class: true,
+        academicYear: true,
+      },
+      photo: { placement: 'header-top-right' },
+      flow: { stepTitles: false, sectionNumbers: true },
+      content: { officeSignature: false, signatureDate: true },
+    },
   };
 }
 

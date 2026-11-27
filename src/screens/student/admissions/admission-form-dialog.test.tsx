@@ -76,6 +76,57 @@ async function clickContinue(user: { click: (element: HTMLElement) => Promise<vo
   await user.click(button);
 }
 
+it.each([
+  { purpose: 0, title: 'Edit Inquiry Form' },
+  { purpose: 1, title: 'Edit Registration Form' },
+] as const)('opens $title in the full-screen editor while details load', async ({ purpose, title }) => {
+  const user = userEvent.setup();
+  const onClose = vi.fn();
+  const props = {
+    editingId: 'form',
+    initialPurpose: purpose,
+    saving: false,
+    onClose,
+    onSave: vi.fn(),
+    onPublishNow: vi.fn(),
+  };
+  const theme = createTheme(defaultSettings);
+  const { rerender } = render(
+    <ThemeProvider theme={theme}>
+      <AdmissionFormDialog open {...props} />
+    </ThemeProvider>
+  );
+
+  const editor = screen.getByRole('dialog', { name: title });
+  expect(editor).toHaveClass('MuiDialog-paperFullScreen');
+  expect(screen.getByRole('status', { name: 'Loading form details' })).toHaveAttribute(
+    'aria-busy',
+    'true'
+  );
+  expect(editor.querySelector('.MuiSkeleton-rounded')).toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'Form Name *' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'close' }));
+  expect(onClose).toHaveBeenCalledOnce();
+
+  const editing = {
+    ...getBlankAdmissionFormInitialValues(purpose),
+    id: 'form',
+    name: 'Latest form',
+    version: 1,
+    status: 0,
+    concurrencyStamp: 'fresh',
+  } as AdmissionForm;
+  rerender(
+    <ThemeProvider theme={theme}>
+      <AdmissionFormDialog open editing={editing} {...props} />
+    </ThemeProvider>
+  );
+
+  expect(screen.getByRole('dialog', { name: title })).toHaveClass('MuiDialog-paperFullScreen');
+  expect(screen.queryByRole('status', { name: 'Loading form details' })).not.toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'Form Name *' })).toHaveValue('Latest form');
+});
+
 it('keeps the form draft on Keep editing and discards only after an explicit styled decision', async () => {
   const user = userEvent.setup();
   const onClose = vi.fn();
@@ -98,7 +149,7 @@ it('keeps the form draft on Keep editing and discards only after an explicit sty
   await user.click(screen.getByRole('button', { name: 'Keep editing' }));
   expect(screen.getByRole('textbox', { name: 'Form Name *' })).toHaveValue('Unsaved registration');
   await user.click(screen.getByRole('button', { name: 'close' }));
-  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await user.click(screen.getByRole('button', { name: 'Discard' }));
   expect(onClose).toHaveBeenCalledTimes(1);
 });
 
@@ -123,7 +174,7 @@ it('shows duplicate-name guidance on Form details and blocks continuing or savin
 
   expect(await screen.findByText('This form name is already in use.')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Draft' })).toBeDisabled();
   await user.clear(name);
   await user.paste('New registration form');
   await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
@@ -167,7 +218,7 @@ it.each([
     expect(screen.getByRole('heading', { name: new RegExp(`Create ${type} Form`) })).toBeVisible();
     await clickContinue(user);
     await screen.findByRole('heading', { name: 'Build fields' });
-    await user.click(screen.getByRole('button', { name: 'Save draft' }));
+    await user.click(screen.getByRole('button', { name: 'Draft' }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(
         expect.objectContaining({ name, purpose, fieldsPerRow: 2 })
@@ -205,7 +256,7 @@ it.each([
     const progress = formDetailsStep.closest('.MuiStepper-root');
     expect(progress).toHaveClass('MuiStepper-horizontal');
     if (purpose === 1) {
-      expect(progress).not.toHaveClass('MuiStepper-alternativeLabel');
+      expect(progress).toHaveClass('MuiStepper-alternativeLabel');
       expect(screen.getByRole('button', { name: 'Step 4: Print layout' })).toBeDisabled();
     } else {
       expect(progress).toHaveClass('MuiStepper-alternativeLabel');
@@ -219,7 +270,7 @@ it.each([
     await screen.findByRole('heading', { name: 'Review draft' });
     expect(screen.getByRole('heading', { name: new RegExp(`Create ${type} Form`) })).toBeVisible();
     if (purpose === 1) {
-      expect(screen.queryByRole('button', { name: 'Publish now' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
       const printStep = screen.getByRole('button', { name: 'Step 4: Print layout' });
       await user.click(printStep);
       await screen.findByRole('heading', { name: 'Print layout preview' });
@@ -230,7 +281,7 @@ it.each([
         screen.queryByRole('heading', { name: 'Print layout preview' })
       ).not.toBeInTheDocument();
     }
-    await user.click(screen.getByRole('button', { name: 'Publish now' }));
+    await user.click(screen.getByRole('button', { name: 'Publish' }));
     await waitFor(() =>
       expect(onPublishNow).toHaveBeenCalledWith(expect.objectContaining({ purpose }))
     );
@@ -277,11 +328,11 @@ it('restores print choices on reopen, retains them across Back and saves the cha
   await screen.findByRole('heading', { name: 'Review draft' });
   await clickContinue(user);
   expect(await screen.findByRole('checkbox', { name: 'Show student photo' })).toBeChecked();
-  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  await user.click(screen.getByRole('button', { name: 'Draft' }));
   await waitFor(() =>
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        printSettings: { ...editing.printSettings, template: 'boxed-grid', showPhoto: true },
+        printSettings: { ...editing.printSettings, template: 'simple', showPhoto: true },
       })
     )
   );
@@ -314,7 +365,7 @@ it('revalidates earlier stages before publishing from Print layout', async () =>
   await clickContinue(user);
   await clickContinue(user);
   await user.click(await screen.findByRole('button', { name: 'Clear earlier required name' }));
-  await user.click(screen.getByRole('button', { name: 'Publish now' }));
+  await user.click(screen.getByRole('button', { name: 'Publish' }));
   expect(onPublishNow).not.toHaveBeenCalled();
   expect(screen.getByRole('heading', { name: 'Print layout preview' })).toBeVisible();
 });
@@ -350,10 +401,10 @@ it('keeps the version blocker beside the Print layout actions until a print sett
   await clickContinue(user);
 
   expect(await screen.findByText(message)).toBeVisible();
-  const publish = screen.getByRole('button', { name: 'Publish now' });
+  const publish = screen.getByRole('button', { name: 'Publish' });
   expect(publish).toBeDisabled();
   expect(publish).toHaveAccessibleDescription(message);
-  expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Draft' })).toBeEnabled();
 
   await user.click(screen.getByRole('checkbox', { name: 'Show student photo' }));
   expect(screen.queryByText(message)).toBeNull();

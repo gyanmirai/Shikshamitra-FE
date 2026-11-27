@@ -1,5 +1,5 @@
-import Grid from '@mui/material/Grid';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { GlobalIcons } from 'src/utils/icons';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { FieldVisibilitySettings } from './components/field-visibility-settings';
 
@@ -7,14 +7,13 @@ import type { FieldSettingsProps } from './types/field-settings';
 
 export function FormFieldAdvancedFields(props: FieldSettingsProps) {
   return (
-    <SectionCard
+    <FormSectionCard
       title="Visibility Conditions"
-      paperProps={{ sx: { mb: 0, minWidth: 0 } }}
-      gridProps={{ spacing: 1.5 }}
+      icon={GlobalIcons.eye}
+      descriptionTooltip="Show this field only when another answer meets a condition."
+      sx={{ minWidth: 0 }}
     >
-      <Grid size={12}>
-        <FieldVisibilitySettings {...props} />
-      </Grid>
-    </SectionCard>
+      <FieldVisibilitySettings {...props} />
+    </FormSectionCard>
   );
 }

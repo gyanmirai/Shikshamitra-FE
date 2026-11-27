@@ -3,8 +3,8 @@ import type {
   AdmissionFormSystemFieldMetadata,
 } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useId, useState } from 'react';
 import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
 import MenuItem from '@mui/material/MenuItem';
@@ -13,6 +13,7 @@ import TextField from '@mui/material/TextField';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useId, useRef, useState, useEffect } from 'react';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { PaletteFieldButton } from './palette-field-button';
@@ -32,6 +33,7 @@ import type { AdmissionFieldPreset } from '../form-field-presets';
 type Props = {
   systemFields?: AdmissionFormSystemFieldMetadata[];
   usedBindings?: readonly string[];
+  onViewExisting?: (binding: string) => void;
   onAddField: (
     type: AdmissionFormFieldType,
     binding?: string,
@@ -39,23 +41,42 @@ type Props = {
   ) => void;
 };
 
-export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings = [] }: Props) {
+export function CustomFieldPalette({
+  onAddField,
+  onViewExisting,
+  systemFields = [],
+  usedBindings = [],
+}: Props) {
   const [label, setLabel] = useState('');
   const [type, setType] = useState<AdmissionFormFieldType>(0);
   const [required, setRequired] = useState(false);
   const [choices, setChoices] = useState('');
   const [confirmedDifferent, setConfirmedDifferent] = useState<string | null>(null);
+  const [pendingPreset, setPendingPreset] = useState<AdmissionFieldPreset | null>(null);
+  const duplicateNoticeRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (pendingPreset) duplicateNoticeRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [pendingPreset]);
   const isClassInterest = isClassInterestQuestion({ code: '', label, bindingType: 1 });
   const answerType = isClassInterest ? 6 : type;
   const needsChoices = !isClassInterest && [6, 7, 8].includes(type);
   const [showTypes, setShowTypes] = useState(false);
   const formatsId = useId();
   const normalized = label.trim().toLowerCase();
-  const alias = findExistingStudentFieldAlias(label, systemFields);
+  const includedFields = systemFields.filter((field) =>
+    usedBindings.some((key) => key.toLowerCase() === field.key.toLowerCase())
+  );
+  const alias =
+    findExistingStudentFieldAlias(label, includedFields) ??
+    includedFields.find((field) => field.displayName.trim().toLowerCase() === normalized);
   const aliasIncluded = Boolean(
     alias && usedBindings.some((key) => key.toLowerCase() === alias.key.toLowerCase())
   );
   const needsIdentityReview = aliasIncluded && confirmedDifferent !== normalized;
+  const presetMatch =
+    pendingPreset &&
+    includedFields.find((field) => field.key.toLowerCase() === `address.${pendingPreset.key}`);
+  const duplicate = presetMatch || (needsIdentityReview ? alias : undefined);
   const suggestions =
     normalized.length >= 3
       ? systemFields
@@ -87,6 +108,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
           onChange={(event) => {
             setLabel(event.target.value);
             setConfirmedDifferent(null);
+            setPendingPreset(null);
           }}
         />
         {suggestions.length > 0 && (
@@ -108,25 +130,40 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
             ))}
           </Stack>
         )}
-        {needsIdentityReview && alias && (
-          <Stack spacing={0.5}>
-            <Typography variant="caption" color="warning.main">
-              {alias.displayName} is already included. Reuse it unless this asks for different
-              information.
-            </Typography>
+        {duplicate && (
+          <Stack spacing={1} ref={duplicateNoticeRef}>
+            <Alert severity="warning" variant="outlined" sx={{ py: 0 }}>
+              {duplicate.displayName} is already included in this form. Use the existing field, or
+              add a different question.
+            </Alert>
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              {onViewExisting && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => onViewExisting(duplicate.key)}
+                >
+                  View existing field
+                </Button>
+              )}
               <Button
                 size="small"
-                variant="outlined"
-                onClick={() => onAddField(alias.fieldType, alias.key)}
+                onClick={() => {
+                  if (pendingPreset) {
+                    onAddField(pendingPreset.fieldType, undefined, pendingPreset);
+                    setPendingPreset(null);
+                  } else setConfirmedDifferent(normalized);
+                }}
               >
-                Go to Existing Field
-              </Button>
-              <Button size="small" onClick={() => setConfirmedDifferent(normalized)}>
-                Different Question
+                Add a different question
               </Button>
             </Stack>
           </Stack>
+        )}
+        {confirmedDifferent === normalized && normalized && (
+          <Typography variant="caption" color="text.secondary">
+            Give this question a distinct name. Its answer is saved in this admission form only.
+          </Typography>
         )}
         <TextField
           select
@@ -222,7 +259,15 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
                     : preset.description
                 }
                 icon={preset.icon}
-                onClick={() => onAddField(preset.fieldType, undefined, preset)}
+                onClick={() => {
+                  const existing =
+                    getAddressGroupChoice(undefined, preset.key) &&
+                    includedFields.some(
+                      (field) => field.key.toLowerCase() === `address.${preset.key}`
+                    );
+                  if (existing) setPendingPreset(preset);
+                  else onAddField(preset.fieldType, undefined, preset);
+                }}
               />
             ))}
             <Typography variant="overline" color="text.secondary" sx={{ pt: 1 }}>

@@ -3,11 +3,12 @@ import type { FormEvent, KeyboardEvent } from 'react';
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import { useMemo, useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Card, Grid, Stack, Button, Typography, CardContent } from '@mui/material';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
 
 import AdmissionRuntimeField from '../admission-runtime-field';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
@@ -32,6 +33,7 @@ type Props = {
   resolvedOptions: Record<string, string>;
   embedded?: boolean;
   preview?: boolean;
+  fillAvailable?: boolean;
 };
 
 export function FormPreviewContent({
@@ -40,6 +42,7 @@ export function FormPreviewContent({
   resolvedOptions,
   embedded = false,
   preview = false,
+  fillAvailable = false,
 }: Props) {
   const fieldsPerRow = form.fieldsPerRow ?? 1;
   const { values } = formik;
@@ -168,9 +171,11 @@ export function FormPreviewContent({
   const renderSection = (section: (typeof localizedSections)[number]) => {
     if (!section.isRepeatable)
       return (
-        <SectionCard key={section.id} title={section.name} gridProps={{ spacing: 1 }}>
-          {renderFields(section)}
-        </SectionCard>
+        <FormSectionCard key={section.id} title={section.name} icon={GlobalIcons.admissionDetails}>
+          <Grid container spacing={1}>
+            {renderFields(section)}
+          </Grid>
+        </FormSectionCard>
       );
     const count = getRepeatableEntryCount(
       section.fields.map((field) => values[field.code]),
@@ -179,31 +184,36 @@ export function FormPreviewContent({
     const entryLabel = section.entryLabel || section.name.replace(/s$/i, '') || 'Entry';
     return (
       <Stack key={section.id} spacing={1.5}>
-        <Typography variant="subtitle1">{section.name}</Typography>
+        <FormSectionHeader title={section.name} icon={GlobalIcons.admissionDetails} />
         {Array.from({ length: count }, (_, entryIndex) => (
-          <SectionCard
+          <FormSectionCard
             key={`${section.id}-${entryIndex}`}
             title={`${entryLabel} ${entryIndex + 1}`}
-            gridProps={{ spacing: 1 }}
+            icon={GlobalIcons.admissionDetails}
           >
-            {renderFields(section, entryIndex)}
-            {count > Math.max(section.minEntries ?? 0, 1) && (
-              <Grid size={{ xs: 12 }}>
-                <Button
-                  size="small"
-                  color="error"
-                  disabled={readingPhoto}
-                  onClick={() =>
-                    section.fields.forEach((field) =>
-                      updateField(field.code, removeRepeatableEntry(values[field.code], entryIndex))
-                    )
-                  }
-                >
-                  Remove {entryLabel.toLowerCase()}
-                </Button>
-              </Grid>
-            )}
-          </SectionCard>
+            <Grid container spacing={1}>
+              {renderFields(section, entryIndex)}
+              {count > Math.max(section.minEntries ?? 0, 1) && (
+                <Grid size={{ xs: 12 }}>
+                  <Button
+                    size="small"
+                    color="error"
+                    disabled={readingPhoto}
+                    onClick={() =>
+                      section.fields.forEach((field) =>
+                        updateField(
+                          field.code,
+                          removeRepeatableEntry(values[field.code], entryIndex)
+                        )
+                      )
+                    }
+                  >
+                    Remove {entryLabel.toLowerCase()}
+                  </Button>
+                </Grid>
+              )}
+            </Grid>
+          </FormSectionCard>
         ))}
         {count < (section.maxEntries ?? 1) && (
           <Button
@@ -225,9 +235,19 @@ export function FormPreviewContent({
     );
   };
 
+  const stepNavigation = isStepper && visibleSteps.length > 0 && (
+    <AdmissionFormStepNavigation
+      activeStep={safeActiveStep}
+      disabled={readingPhoto}
+      steps={visibleSteps.map((step) => ({ id: step.id, name: step.name }))}
+      onStepChange={setActiveStep}
+    />
+  );
+
   return (
     <Card
       component={embedded ? 'div' : 'form'}
+      sx={fillAvailable ? { display: 'flex', flexDirection: 'column', flex: '1 0 auto' } : undefined}
       onSubmit={embedded ? undefined : (event: FormEvent) => event.preventDefault()}
       onKeyDownCapture={(event: KeyboardEvent<HTMLElement>) => {
         if (
@@ -239,7 +259,7 @@ export function FormPreviewContent({
         }
       }}
     >
-      <CardContent>
+      <CardContent sx={fillAvailable ? { display: 'flex', flexDirection: 'column', flex: 1 } : undefined}>
         <Stack
           component="header"
           direction={{ xs: 'column', sm: 'row' }}
@@ -274,23 +294,48 @@ export function FormPreviewContent({
             />
           )}
         </Stack>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="stretch">
-          {isStepper && visibleSteps.length > 0 && (
-            <Stack sx={{ width: { xs: 1, md: 220 }, flexShrink: 0, minWidth: 0 }}>
-              <AdmissionFormStepNavigation
-                activeStep={safeActiveStep}
-                disabled={readingPhoto}
-                steps={visibleSteps.map((step) => ({ id: step.id, name: step.name }))}
-                onStepChange={setActiveStep}
-              />
-            </Stack>
-          )}
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={fillAvailable ? 2 : 3}
+          alignItems="stretch"
+          sx={fillAvailable ? { flex: 1 } : undefined}
+        >
+          {stepNavigation &&
+            (fillAvailable ? (
+              <Card
+                component="aside"
+                aria-label="Form Step Navigation"
+                variant="outlined"
+                sx={{
+                  width: { xs: 1, md: 220 },
+                  flexShrink: 0,
+                  minWidth: 0,
+                  p: 1.5,
+                  bgcolor: 'background.paper',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                }}
+              >
+                {stepNavigation}
+              </Card>
+            ) : (
+              <Stack sx={{ width: { xs: 1, md: 220 }, flexShrink: 0, minWidth: 0 }}>
+                {stepNavigation}
+              </Stack>
+            ))}
           <Stack spacing={2} sx={{ flex: 1, minWidth: 0 }}>
             {sectionsToRender.map(renderSection)}
           </Stack>
         </Stack>
         {isStepper && visibleSteps.length > 1 && (
-          <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            sx={{
+              mt: 3,
+              ...(fillAvailable && { borderTop: 1, borderColor: 'divider', pt: 2, mx: -3, px: 3 }),
+            }}
+          >
             <Button
               size="small"
               type="button"

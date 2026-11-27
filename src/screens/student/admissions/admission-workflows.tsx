@@ -190,7 +190,7 @@ export default function AdmissionWorkflowsScreen() {
               'aria-busy': actions.pendingNavigationId === row.id || undefined,
             })}
             isLoading={!data && (query.isLoading || query.isFetching)}
-            refreshIndicator="circular"
+            refreshIndicator="none"
             isRefreshing={Boolean(data && query.isFetching && !lifecycleLoading)}
             isPagination
             isSearch

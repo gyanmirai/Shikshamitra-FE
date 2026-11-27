@@ -19,6 +19,7 @@ type Props = {
   purpose?: AdmissionFormPurpose;
   systemFields: AdmissionFormSystemFieldMetadata[];
   usedBindings?: readonly string[];
+  onViewExisting?: (binding: string) => void;
   targetLabel?: string;
   loading?: boolean;
   error?: boolean;
@@ -34,6 +35,7 @@ export function FormBuilderPalette({
   purpose,
   systemFields,
   usedBindings,
+  onViewExisting,
   targetLabel,
   loading,
   error,
@@ -91,6 +93,7 @@ export function FormBuilderPalette({
           ) : (
             <CustomFieldPalette
               onAddField={onAddField}
+              onViewExisting={onViewExisting}
               systemFields={availableSystemFields}
               usedBindings={usedBindings}
             />

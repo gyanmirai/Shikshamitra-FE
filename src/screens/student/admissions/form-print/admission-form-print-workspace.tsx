@@ -6,10 +6,9 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { useId, useRef, useState, useCallback } from 'react';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import PdfPreview from 'src/components/preview-document/pdf-preview';
+import { useId, useRef, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 import {
@@ -44,6 +43,8 @@ import {
 } from './form-print-model';
 
 import type { AdmissionPrintDefinition } from './form-print-model';
+
+const PREVIEW_HIGHLIGHT_DURATION_MS = 5000;
 
 export type AdmissionFormPrintWorkspaceProps = {
   form: AdmissionPrintDefinition;
@@ -178,7 +179,6 @@ export function AdmissionFormPrintWorkspace({
       ? previewChange
       : undefined;
   const revealResult = shownChange?.id === currentChange?.id ? shownChange : undefined;
-  const revealedPage = revealResult?.page;
   const handleSettingsChange = (next: AdmissionFormPrintSettings) => {
     const change = getAdmissionPrintPreviewTarget(model, effectiveSettings, next);
     setPreviewChange(
@@ -197,6 +197,14 @@ export function AdmissionFormPrintWorkspace({
     changeId.current += 1;
     setPreviewChange(undefined);
   }, []);
+  useEffect(() => {
+    if (revealResult?.page === undefined) return undefined;
+    const { id } = revealResult;
+    const timer = window.setTimeout(() => {
+      if (id === changeId.current) clearPreviewChange();
+    }, PREVIEW_HIGHLIGHT_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [clearPreviewChange, revealResult]);
   const onReveal = useCallback((id: number, page?: number, marker?: HTMLDivElement | null) => {
     if (id !== changeId.current) return;
     setShownChange({ id, page });
@@ -417,21 +425,19 @@ export function AdmissionFormPrintWorkspace({
                 aria-controls={settingsId}
                 onClick={() => setSettingsOpen((open) => !open)}
               >
-                Layout settings
+                Layout
               </Button>
-              <CustomTooltip title="Download PDF">
-                <span>
-                  <IconButton
-                    aria-label="Download PDF"
-                    size="small"
-                    disabled={outputDisabled}
-                    onClick={download}
-                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 0.75 }}
-                  >
-                    <Iconify icon={GlobalIcons.download} width={18} />
-                  </IconButton>
-                </span>
-              </CustomTooltip>
+              <Button
+                aria-label="Download PDF"
+                size="small"
+                variant="outlined"
+                color="inherit"
+                startIcon={<Iconify icon={GlobalIcons.download} width={18} />}
+                disabled={outputDisabled}
+                onClick={download}
+              >
+                PDF
+              </Button>
             </>
           )}
         </Stack>
@@ -460,7 +466,7 @@ export function AdmissionFormPrintWorkspace({
             sx={{ px: 1.5, py: 0.75, flexShrink: 0 }}
           >
             <Typography id={settingsTitleId} variant="subtitle1" sx={{ flex: 1, minWidth: 0 }}>
-              Layout Settings
+              Print Settings
             </Typography>
             <ToggleButtonGroup
               exclusive
@@ -495,18 +501,15 @@ export function AdmissionFormPrintWorkspace({
                   form={definition}
                   branding={brand.branding}
                   onEditHeader={openHeaderEditor}
+                  pageCount={previewPages?.context === previewContext ? previewPages.count : undefined}
                 />
               ) : (
                 <AdmissionPrintSettingsPanel
                   settings={effectiveSettings}
                   onChange={handleSettingsChange}
-                  branding={brand.branding}
+                  form={definition}
                   defaultLanguage={form.defaultLanguage}
                   hasPhotoField={hasAdmissionPrintPhotoField(definition.sections)}
-                  onEditHeader={openHeaderEditor}
-                  pageCount={
-                    previewPages?.context === previewContext ? previewPages.count : undefined
-                  }
                 />
               )}
             </Box>
@@ -514,19 +517,6 @@ export function AdmissionFormPrintWorkspace({
         </Stack>
       )}
       <Stack spacing={1} sx={{ gridArea: 'preview', minWidth: 0, minHeight: 0 }}>
-        {usingSample && (
-          <Typography variant="caption" color="text.secondary">
-            Sample answers are used for this preview and its printout.
-          </Typography>
-        )}
-        {canEdit && currentChange && !updatingPreview && !error && revealedPage && (
-          <Stack direction="row" gap={0.75} alignItems="center" role="status">
-            <Iconify icon="mdi:check-circle-outline" width={16} sx={{ color: 'success.main' }} />
-            <Typography variant="caption" color="text.secondary">
-              {`Preview updated · ${currentChange.label} · Page ${revealedPage}`}
-            </Typography>
-          </Stack>
-        )}
         {error && (
           <Alert
             severity="error"
@@ -575,7 +565,7 @@ export function AdmissionFormPrintWorkspace({
               sx={{
                 p: { xs: 1, sm: 2 },
                 ...(inLayoutEditor && { pt: 1 }),
-                maxWidth: 850,
+                maxWidth: canEdit ? 1300 : 850,
                 mx: 'auto',
               }}
             >
@@ -603,7 +593,9 @@ export function AdmissionFormPrintWorkspace({
                   key={previewContext}
                   url={previewUrl}
                   title={form.name}
+                  showPageText={false}
                   usePageSelector
+                  separateZoomControls={canEdit}
                   preservePageOnUpdate={canEdit}
                   onPageCountChange={canEdit ? updatePreviewPageCount : undefined}
                   reveal={!busy && !error && preview.url === previewUrl ? currentChange : undefined}

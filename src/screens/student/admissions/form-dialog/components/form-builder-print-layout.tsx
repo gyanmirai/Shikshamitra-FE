@@ -19,7 +19,7 @@ export function FormBuilderPrintLayout({ formik }: Props) {
   return (
     <AdmissionFormPrintWorkspace
       form={form}
-      settings={getAdmissionFormPrintSettings(formik.values.printSettings, formik.values.purpose)}
+      settings={getAdmissionFormPrintSettings(formik.values.printSettings)}
       initialMode="blank"
       sampleDetails
       readOnly={formik.isSubmitting}

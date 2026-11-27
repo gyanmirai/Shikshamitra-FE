@@ -15,6 +15,7 @@ import { FormBuilderSections } from '../form-builder-sections';
 import { useFormWizardFocus } from '../hooks/use-form-wizard-focus';
 import { FormBuilderPrintLayout } from './form-builder-print-layout';
 import { FormInheritanceProvider } from '../hooks/use-form-inheritance';
+import { formStepTransition } from '../form-step-transition';
 
 import type { BuilderIssueTarget } from '../form-builder-issue-navigation';
 
@@ -53,8 +54,10 @@ export function FormBuilderWizardContent({
       onReadinessChange={onInheritanceReadinessChange}
     >
       <Stack
+        key={activeStep}
         ref={contentRef}
         sx={{
+          ...formStepTransition,
           flex: 1,
           width: 1,
           minWidth: 0,

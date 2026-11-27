@@ -57,7 +57,7 @@ import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { getCycleNameError } from './cycle-dialog/cycle-name-error';
-import { AdmissionNumberingDialog } from './admission-numbering-dialog';
+import { AdmissionNumberingDrawer } from './admission-numbering-dialog';
 import { useAdmissionCycleFilters } from './use-admission-cycle-filters';
 import { AdmissionCycleActionDialog } from './admission-cycle-action-dialog';
 import { AdmissionCycleConfigurationDialog } from './admission-cycle-configuration-dialog';
@@ -65,7 +65,6 @@ import { cycleColumnFilters, serializeCycleColumnFilters } from './admission-cyc
 import {
   canEditCycle,
   windowLabels,
-  windowColors,
   canCloseCycle,
   canDeleteCycle,
   canReopenCycle,
@@ -78,6 +77,8 @@ import {
 
 import type { CycleGuardedAction } from './admission-cycle-action-dialog';
 import type { CycleConfigurationMode } from './admission-cycle-configuration-dialog';
+
+const FILTER_WIDTH = { xs: '100%', sm: 220 } as const;
 
 const getAcademicYearSortValue = (year: AcademicYear): number => {
   const startDate = dayjs(year.startDate);
@@ -93,10 +94,9 @@ const getErrorMessage = (error: unknown): string =>
 
 export default function AdmissionCyclesScreen() {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isWideWorkspace = useMediaQuery(theme.breakpoints.up('lg'));
   const editDialog = useBoolean();
-  const numberingDialog = useBoolean();
+  const numberingDrawer = useBoolean();
   const [editingCycle, setEditingCycle] = useState<AdmissionCycle | null>(null);
   const [actionCycle, setActionCycle] = useState<AdmissionCycle | null>(null);
   const [guardedAction, setGuardedAction] = useState<CycleGuardedAction | null>(null);
@@ -385,46 +385,6 @@ export default function AdmissionCyclesScreen() {
     },
 
     {
-      id: 'windowStatus',
-      label: 'Window',
-      minWidth: 130,
-      isFilter: true,
-      filterType: 'enum',
-      enumOptions: Object.entries(windowLabels).map(([value, label]) => ({
-        value: Number(value),
-        label,
-      })),
-      // Mobile combines both statuses here. On narrow desktop/tablet views,
-      // pin Lifecycle and Actions so the data columns retain a usable scroll area.
-      sticky: isMobile || isWideWorkspace,
-      stickyPosition: 'right',
-      render: (value, row) => {
-        const lifecycle = Number((row as AdmissionCycle).status) as AdmissionCycleStatus;
-        const windowStatus = Number(value) as AdmissionCycleWindowStatus;
-        const windowLabel = (
-          <Label color={windowColors[windowStatus]}>{windowLabels[windowStatus]}</Label>
-        );
-        return (
-          <>
-            <Box
-              role="group"
-              aria-label="Lifecycle and admission window"
-              sx={{
-                display: { xs: 'flex', sm: 'none' },
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: 0.5,
-              }}
-            >
-              <Label color={lifecycleColors[lifecycle]}>{lifecycleLabels[lifecycle]}</Label>
-              {windowLabel}
-            </Box>
-            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>{windowLabel}</Box>
-          </>
-        );
-      },
-    },
-    {
       id: 'status',
       label: 'Status',
       minWidth: 130,
@@ -437,13 +397,17 @@ export default function AdmissionCyclesScreen() {
       sticky: true,
       stickyPosition: 'right',
       stickyOnMobile: false,
-      headerSx: { display: { xs: 'none', sm: 'table-cell' } },
-      cellSx: { display: { xs: 'none', sm: 'table-cell' } },
-      render: (value) => (
-        <Label color={lifecycleColors[Number(value) as AdmissionCycleStatus]}>
-          {lifecycleLabels[Number(value) as AdmissionCycleStatus]}
-        </Label>
-      ),
+      render: (value, row) => {
+        const lifecycle = Number(value) as AdmissionCycleStatus;
+        const { windowStatus } = row as AdmissionCycle;
+        const windowClosed = lifecycle === 1 && (windowStatus === 2 || windowStatus === 3);
+        return (
+          <Stack direction="row" gap={0.5} alignItems="center" flexWrap="wrap">
+            <Label color={lifecycleColors[lifecycle]}>{lifecycleLabels[lifecycle]}</Label>
+            {windowClosed && <Label color="warning">Closed</Label>}
+          </Stack>
+        );
+      },
     },
     {
       id: 'actions',
@@ -476,9 +440,12 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'edit',
-                  label: `Edit`,
+                  label: 'Edit',
                   icon: 'solar:pen-bold',
                   disabled: !canEditCycle(cycle),
+                  tooltip: cycle.status === 1
+                    ? 'Published cycles cannot be edited. Use Revise window to change application dates.'
+                    : !canEditCycle(cycle) ? 'Only draft admission cycles can be edited.' : undefined,
                   onClick: () => {
                     setEditingCycle(cycle);
                     editDialog.onTrue();
@@ -490,13 +457,13 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'delete',
-                  label: `Delete`,
+                  label: 'Delete',
                   icon: 'solar:trash-bin-trash-bold',
                   color: canDeleteCycle(cycle) ? 'error.main' : 'text.disabled',
                   disabled: !canDeleteCycle(cycle),
-                  tooltip: !canDeleteCycle(cycle)
-                    ? 'Only Unused Draft Admission Cycles Can Be Deleted.'
-                    : undefined,
+                  tooltip: cycle.status === 1
+                    ? 'Published cycles cannot be deleted. Only unused drafts can be deleted.'
+                    : !canDeleteCycle(cycle) ? 'Only unused draft admission cycles can be deleted.' : undefined,
                   onClick: () => openGuardedAction('delete', cycle),
                 },
               ]
@@ -547,6 +514,7 @@ export default function AdmissionCyclesScreen() {
           <AdaptiveThreeDotsActions
             placement="right-top"
             moreLabel={`More actions for ${cycle.name}`}
+            moreTooltip="More actions"
             directActionLimit={2}
             collapseOnOverflow={false}
             sx={{ justifyContent: 'flex-start' }}
@@ -571,7 +539,7 @@ export default function AdmissionCyclesScreen() {
       <CustomBreadcrumbs
         editorOpen={
           editDialog.value ||
-          numberingDialog.value ||
+          numberingDrawer.value ||
           Boolean(guardedAction) ||
           Boolean(configurationMode)
         }
@@ -616,7 +584,7 @@ export default function AdmissionCyclesScreen() {
               disabled={academicYearsLoading}
               onChange={(event) => updateFilters({ academicYearId: event.target.value })}
               slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
-              sx={{ width: { xs: '100%', sm: 170 } }}
+              sx={{ width: FILTER_WIDTH }}
             >
               <MenuItem value="">All Academic Years</MenuItem>
               {academicYears.map((year) => (
@@ -640,7 +608,7 @@ export default function AdmissionCyclesScreen() {
                 })
               }
               slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
-              sx={{ width: { xs: '100%', sm: 160 } }}
+              sx={{ width: FILTER_WIDTH }}
             >
               <MenuItem value="">All Lifecycles</MenuItem>
               {Object.entries(lifecycleLabels).map(([value, label]) => (
@@ -664,7 +632,7 @@ export default function AdmissionCyclesScreen() {
                 })
               }
               slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
-              sx={{ width: { xs: '100%', sm: 220 } }}
+              sx={{ width: FILTER_WIDTH }}
             >
               <MenuItem value="">All Application Windows</MenuItem>
               {Object.entries(windowLabels).map(([value, label]) => (
@@ -698,9 +666,9 @@ export default function AdmissionCyclesScreen() {
               size="small"
               variant="outlined"
               startIcon={<Iconify icon="mdi:cog-outline" />}
-              onClick={numberingDialog.onTrue}
+              onClick={numberingDrawer.onTrue}
             >
-              Numbering Settings
+              Numbering
             </Button>
             <Button
               aria-label="Add Cycle"
@@ -734,7 +702,7 @@ export default function AdmissionCyclesScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           errorContent={isError ? <AdmissionQueryError onRetry={() => refetch()} /> : undefined}
           isLoading={isLoading || (isFetching && !data)}
-          refreshIndicator="circular"
+          refreshIndicator="none"
           isRefreshing={isFetching && !isLoading && Boolean(data)}
           isPagination
           isSearch
@@ -783,9 +751,9 @@ export default function AdmissionCyclesScreen() {
         />
       </Box>
 
-      {numberingDialog.value && (
-        <AdmissionNumberingDialog
-          onClose={numberingDialog.onFalse}
+      {numberingDrawer.value && (
+        <AdmissionNumberingDrawer
+          onClose={numberingDrawer.onFalse}
           canEdit={canAdd}
           academicYear={academicYears.find(
             (year) => year.id === (filters.academicYearId || currentYear?.id)

@@ -9,10 +9,12 @@ import { createRequire } from 'node:module';
 import { mswServer } from 'src/test/mswServer';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { it, expect, describe, beforeAll } from 'vitest';
+import { ADMISSION_PRINT_PALETTES } from 'src/redux/student/admissions/admission-form-print-settings';
 import { findPdfPreviewTarget } from 'src/components/preview-document/pdf-preview/find-pdf-preview-target';
 
 import { createAdmissionFormPdfBlob } from './form-print-pdf';
 import { buildAdmissionPrintDocument } from './form-print-model';
+import { getNewAdmissionFormInitialValues } from '../form-dialog/admission-form-template-catalog';
 
 import type { AdmissionPrintBranding } from './form-print-model';
 
@@ -89,6 +91,97 @@ async function artifact(
 }
 
 describe('Advanced Registration paper settings', () => {
+  it.each(['simple', 'boxed-grid', 'structured-classic', 'header-photo'] as const)(
+    'keeps the photo and content in place when changing appearance on %s',
+    async (template) => {
+      const definition = {
+        name: 'Registration',
+        sections: [
+          section('Student details', [
+            question('NAME'),
+            question('PHOTO', { validationJson: '{"format":"photo"}', displayOrder: 1 }),
+          ]),
+        ],
+      };
+      const withHeaderPhoto = template === 'header-photo';
+      const settings = {
+        template: withHeaderPhoto ? ('boxed-grid' as const) : template,
+        ...(template === 'structured-classic' && { advanced: {} }),
+        ...(withHeaderPhoto && { advanced: { photo: { placement: 'header-top-right' as const } } }),
+      };
+      const model = buildAdmissionPrintDocument({ definition, values: {}, mode: 'blank', settings });
+      const withoutBorder = await artifact(`without-border-${template}`, model);
+      const withBorder = await artifact(`with-border-${template}`, {
+        ...model,
+        settings: {
+          ...model.settings,
+          advanced: {
+            ...model.settings.advanced,
+            border: { enabled: true, style: 'double', corners: 'rounded', inset: 25 },
+          },
+        },
+      });
+      expect(withoutBorder.texts[0]).toContain('Photograph');
+      expect(withBorder.texts).toEqual(withoutBorder.texts);
+      const textPositions = (output: typeof withBorder) =>
+        output.pages.map((page) =>
+          page.items.flatMap((item) =>
+            'str' in item && item.str
+              ? [{ text: item.str, transform: item.transform, width: item.width, height: item.height }]
+              : []
+          )
+        );
+      expect(textPositions(withBorder)).toEqual(textPositions(withoutBorder));
+      expect(withBorder.pages[0].operators.fnArray.length).toBeGreaterThan(
+        withoutBorder.pages[0].operators.fnArray.length
+      );
+      const { OPS } = await pdfjs();
+      await Promise.all(
+        Object.entries(ADMISSION_PRINT_PALETTES).map(async ([palette, colors]) => {
+          const recolored = await artifact(`palette-${palette}-${template}`, {
+            ...model,
+            settings: {
+              ...model.settings,
+              advanced: {
+                ...model.settings.advanced,
+                ...(palette !== 'school-blue' && {
+                  border: { enabled: true, style: 'double', corners: 'rounded' },
+                }),
+                style: { palette: palette as keyof typeof ADMISSION_PRINT_PALETTES, ...colors },
+              },
+            },
+          });
+          expect(textPositions(recolored)).toEqual(textPositions(withoutBorder));
+          const { fnArray, argsArray } = recolored.pages[0].operators;
+          const printedColors = fnArray.flatMap((op, index) =>
+            op === OPS.setFillRGBColor || op === OPS.setStrokeRGBColor
+              ? [String(argsArray[index][0]).toLowerCase()]
+              : []
+          );
+          expect(printedColors).toContain(colors.sectionFill.toLowerCase());
+          expect(printedColors).toContain(colors.borderColor.toLowerCase());
+          expect(printedColors).toContain(colors.textColor.toLowerCase());
+        })
+      );
+    }
+  );
+
+  it('generates the recommended registration PDF directly from the starter', async () => {
+    const form = { ...getNewAdmissionFormInitialValues(1), name: 'Student Registration Form' };
+    const model = buildAdmissionPrintDocument({
+      definition: form,
+      values: {},
+      mode: 'blank',
+    });
+    const result = await artifact('recommended-registration', model);
+    expect(result.texts[0]).toContain('Student Registration Form');
+    expect(result.texts[0]).toContain('Photograph');
+    expect(result.texts[0]).toContain('Complete all required fields marked *.');
+    expect(result.text).toContain('I confirm that the information provided is accurate.');
+    expect(result.text).toContain('Parent');
+    expect(result.text).not.toContain('Office signature');
+  });
+
   it.each([false, true])(
     'prints the comma-separated address with positioned header %s',
     async (positioned) => {
@@ -145,6 +238,36 @@ describe('Advanced Registration paper settings', () => {
     expect(getX(revised, 'Example') - getX(original, 'Example')).toBeGreaterThan(80);
     expect(revised.text).toContain('NAME');
   }, 25000);
+
+  it('shrinks unused space below a positioned header while keeping content below it', async () => {
+    const model = buildAdmissionPrintDocument({
+      definition: { name: 'Header Title', sections: [section('STUDENT')] },
+      values: {},
+      mode: 'blank',
+      settings: {
+        advanced: {
+          header: {
+            layout: {
+              schoolName: { x: 0, y: 0, width: 40, height: 10 },
+              address: { x: 0, y: 10, width: 40, height: 10 },
+              title: { x: 0, y: 20, width: 40, height: 10 },
+              registrationNumber: { x: 0, y: 30, width: 40, height: 10 },
+              date: { x: 60, y: 30, width: 35, height: 10 },
+            },
+          },
+        },
+      },
+    });
+    const output = await artifact('compact-positioned-header', model);
+    const y = (text: string) => {
+      const item = output.pages[0].items.find((entry) => 'str' in entry && entry.str.includes(text));
+      if (!item || !('transform' in item)) throw new Error(`Missing PDF text: ${text}`);
+      return item.transform[5];
+    };
+    const gap = y('Header Title') - y('STUDENT');
+    expect(gap).toBeGreaterThan(15);
+    expect(gap).toBeLessThan(60);
+  });
 
   it('reveals the changed section and field on page 3 in the generated PDF', async () => {
     const model = buildAdmissionPrintDocument({
@@ -326,6 +449,25 @@ describe('Advanced Registration paper settings', () => {
     const hidden = await render(false, 'right');
     expect(hidden.text).not.toContain('Photo space sample');
     expect(hidden.text).toContain('NAME');
+  });
+
+  it('prints a configured photo independently of the signature area', async () => {
+    const definition = {
+      name: 'Independent photo and signature',
+      sections: [section('Student', [question('PHOTO', { validationJson: '{"format":"photo"}' })])],
+    };
+    const render = (showPhoto: boolean, showSignature: boolean) =>
+      artifact(
+        `photo-signature-${showPhoto}-${showSignature}`,
+        buildAdmissionPrintDocument({
+          definition,
+          values: {},
+          mode: 'blank',
+          settings: { showPhoto, showSignature, advanced: { photo: { caption: 'Photo space sample' } } },
+        })
+      );
+    expect((await render(true, false)).text).toContain('Photo space sample');
+    expect((await render(false, true)).text).not.toContain('Photo space sample');
   });
 
   it.each([
@@ -833,6 +975,8 @@ describe('Advanced Registration paper settings', () => {
     expect(result.pages.length).toBeGreaterThan(2);
     const tablePages = result.texts.filter((text) => /Person \d/.test(text));
     expect(tablePages.length).toBeGreaterThan(1);
+    expect(tablePages[0]).not.toContain('FAMILY (continued)');
+    expect(tablePages.slice(1).every((text) => text.includes('FAMILY (continued)'))).toBe(true);
     expect(
       tablePages.every((text) => text.includes('Person name') && text.includes('Relationship'))
     ).toBe(true);
@@ -904,6 +1048,31 @@ describe('Advanced Registration paper settings', () => {
       [pdf.OPS.paintImageXObject, pdf.OPS.paintInlineImageXObject].includes(operation)
     );
     expect(imageCount.length).toBeGreaterThanOrEqual(2);
+  }, 30000);
+  it('prints custom handwritten lines on their configured signature page', async () => {
+    const model = buildAdmissionPrintDocument({
+      definition: { name: 'Registration', sections: [section('STUDENT')] },
+      values: {},
+      mode: 'blank',
+      settings: {
+        advanced: {
+          content: {
+            parentSignature: false,
+            officeSignature: false,
+            signaturePlacement: 'separate-page',
+            translations: {
+              en: { customSignatureLabels: [' Principal signature ', '', 'Student signature'] },
+            },
+          },
+        },
+      },
+    });
+    const result = await artifact('custom-handwritten-signatures', model);
+    expect(result.texts.at(-1)).toContain('Principal signature');
+    expect(result.texts.at(-1)).toContain('Student signature');
+    expect(result.text).not.toContain('Parent signature');
+    expect(result.text).not.toContain('School office signature');
+    expect(result.texts[0]).not.toContain('Principal signature');
   }, 30000);
   it('prints instruction typography at the selected sizes', async () => {
     const model = buildAdmissionPrintDocument({

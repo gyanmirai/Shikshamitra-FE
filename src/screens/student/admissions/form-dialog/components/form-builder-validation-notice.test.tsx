@@ -1,4 +1,5 @@
 import { Formik } from 'formik';
+import { Toaster } from 'sonner';
 import { it, vi, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
@@ -20,22 +21,25 @@ it.each([
     const onSelectIssue = vi.fn();
     const onSelect = vi.fn();
     render(
-      <Formik
-        initialValues={form}
-        initialErrors={{ sections: [{ [property]: 'Required setting' }] }}
-        initialTouched={{ sections: [{ [property]: true }] }}
-        onSubmit={() => undefined}
-      >
-        {(formik) => (
-          <FormBuilderValidationNotice
-            formik={formik}
-            onSelect={onSelect}
-            onSelectIssue={onSelectIssue}
-          />
-        )}
-      </Formik>
+      <>
+        <Toaster />
+        <Formik
+          initialValues={form}
+          initialErrors={{ sections: [{ [property]: 'Required setting' }] }}
+          initialTouched={{ sections: [{ [property]: true }] }}
+          onSubmit={() => undefined}
+        >
+          {(formik) => (
+            <FormBuilderValidationNotice
+              formik={formik}
+              onSelect={onSelect}
+              onSelectIssue={onSelectIssue}
+            />
+          )}
+        </Formik>
+      </>
     );
-    await userEvent.setup().click(screen.getByRole('button', { name: action }));
+    await userEvent.setup().click(await screen.findByRole('button', { name: action }));
     expect(onSelectIssue).toHaveBeenCalledWith(
       expect.objectContaining({
         kind,

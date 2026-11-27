@@ -561,7 +561,7 @@ export default function AdmissionAssessmentsScreen() {
                       <AdmissionQueryError onRetry={retryList} />
                     ) : undefined
                   }
-                  refreshIndicator="circular"
+                  refreshIndicator="none"
                   isRefreshing={applicants.isFetching && !!applicants.currentData}
                   filters={tableFilters}
                   onServerFilter={(next) =>

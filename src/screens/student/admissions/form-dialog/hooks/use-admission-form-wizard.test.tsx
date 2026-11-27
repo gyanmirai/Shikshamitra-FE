@@ -59,7 +59,7 @@ describe('admission form wizard identity', () => {
     expect(values.inheritance.enabled).toBe(true);
   });
   it.each([
-    { purpose: 1 as const, template: 'boxed-grid' },
+    { purpose: 1 as const, template: 'simple' },
     { purpose: 0 as const, template: 'simple' },
   ])('saves legacy print settings for form purpose $purpose', async ({ purpose, template }) => {
     const onSave = vi.fn().mockResolvedValue(undefined);

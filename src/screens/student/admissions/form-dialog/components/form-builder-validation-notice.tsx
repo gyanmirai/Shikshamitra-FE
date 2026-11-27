@@ -2,7 +2,7 @@ import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import { getIn } from 'formik';
-import { Button, Typography } from '@mui/material';
+import { Button } from '@mui/material';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { getFirstFormikErrorPath } from 'src/components/custom-stepper/formik-validation';
 
@@ -28,10 +28,10 @@ export function FormBuilderValidationNotice({ formik, onSelect, onSelectIssue }:
   return (
     <StudentFeedback
       notificationKey="STU-0366"
-      presentation="inline"
+      presentation="toast"
       severity="error"
       sx={{ flexShrink: 0 }}
-      action={
+      toastAction={
         target.kind !== 'form' &&
         (onSelectIssue || onSelect) && (
           <Button
@@ -47,12 +47,10 @@ export function FormBuilderValidationNotice({ formik, onSelect, onSelectIssue }:
         )
       }
     >
-      {typeof message === 'string' ? message : 'Check the highlighted form settings.'}
-      {guidance && (
-        <Typography variant="caption" component="p">
-          {guidance}
-        </Typography>
-      )}
+      {message === 'Add at least one field'
+        ? 'Add at least one field to this section.'
+        : guidance ||
+          (typeof message === 'string' ? message : 'Check the highlighted form settings.')}
     </StudentFeedback>
   );
 }

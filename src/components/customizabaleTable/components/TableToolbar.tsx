@@ -22,8 +22,6 @@ import { extractTextFromReactNode } from '../utils';
 import type { IColumn, TableExportFormat } from '../types';
 
 interface TableToolbarProps {
-  refreshLabel?: string;
-  showRefreshSlot?: boolean;
   exportLabel: string;
   isSearch: boolean;
   showColumns: boolean;
@@ -49,8 +47,6 @@ interface TableToolbarProps {
 
 export const TableToolbar = memo(
   ({
-    refreshLabel,
-    showRefreshSlot = false,
     exportLabel,
     isSearch,
     showColumns,
@@ -76,8 +72,7 @@ export const TableToolbar = memo(
     const [columnAnchor, setColumnAnchor] = useState<HTMLElement | null>(null);
     const [exportAnchor, setExportAnchor] = useState<HTMLElement | null>(null);
     const [columnSearch, setColumnSearch] = useState('');
-    if (!isSearch && !showColumns && !showExport && !showFullScreen && !showRefreshSlot)
-      return null;
+    if (!isSearch && !showColumns && !showExport && !showFullScreen) return null;
     return (
       <Stack
         direction="row"
@@ -114,23 +109,6 @@ export const TableToolbar = memo(
           />
         )}
         <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 'auto !important' }}>
-          {showRefreshSlot && (
-            <Box data-testid="table-refresh-slot" sx={{ width: 16, height: 16, flexShrink: 0 }}>
-              {refreshLabel && (
-                <CircularProgress
-                  size={16}
-                  color="inherit"
-                  aria-label={refreshLabel}
-                  sx={{
-                    '@media (prefers-reduced-motion: reduce)': {
-                      animation: 'none',
-                      '& .MuiCircularProgress-circle': { animation: 'none' },
-                    },
-                  }}
-                />
-              )}
-            </Box>
-          )}
           {exportBusy && onCancelExport && (
             <Button size="small" color="inherit" onClick={onCancelExport}>
               Cancel export

@@ -5,7 +5,8 @@ import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders } from 'src/test/test-utils';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { FormBuilderProperties } from '../form-builder-properties';
@@ -22,7 +23,7 @@ function renderFieldSettings(fieldType: 6 | 7 | 8, patch: Partial<AdmissionFormF
   const form = getAdmissionFormInitialValues();
   const section = form.sections[0];
   section.fields = [{ ...newField(section.id!, 0, fieldType), ...patch }];
-  render(
+  renderWithProviders(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <Formik initialValues={form} onSubmit={() => undefined}>
         {(formik) => (

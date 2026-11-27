@@ -144,12 +144,11 @@ describe('form lifecycle decision', () => {
       <FormLifecycleDialog
         {...props}
         canConfirm={false}
-        error="This form has changed."
         requiresReload
         onReload={onReload}
       />
     );
-    expect(screen.getByRole('alert')).toHaveTextContent('This form has changed.');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Reload Latest' }));
     expect(onReload).toHaveBeenCalledOnce();

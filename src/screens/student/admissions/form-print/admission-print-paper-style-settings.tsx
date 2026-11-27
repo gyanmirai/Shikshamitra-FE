@@ -86,98 +86,35 @@ export function AdmissionPrintPaperStyleSettings({
       <PrintSettingsCard
         title="Page Border"
         icon={GlobalIcons.stationaryIcon}
-        action={
-          <PrintSettingsResetButton
-            title="Page Border"
-            onReset={() =>
-              update('border', {
-                enabled: false,
-                placement: 'every',
-                style: 'single',
-                thickness: 'thin',
-                inset: 8,
-                corners: 'square',
-                sectionBorders: true,
-                fieldBorders: true,
-                dividers: true,
-              })
-            }
-          />
-        }
-        descriptionTooltip="Page borders and section dividers affect the printed copy only."
+        descriptionTooltip="Choose the line style and corners for the printed page border."
       >
         <PrintSettingToggle
           label="Show page border"
           checked={border.enabled}
           onChange={(enabled) => update('border', { enabled })}
         />
-        <PrintSettingsGrid>
-          <PrintSettingSelect
-            label="Border pages"
-            value={border.placement}
-            disabled={!border.enabled}
-            options={[
-              ['first', 'First page'],
-              ['every', 'Every page'],
-            ]}
-            onChange={(placement) => update('border', { placement })}
-          />
-          <PrintSettingSelect
-            label="Border style"
-            value={border.style}
-            disabled={!border.enabled}
-            options={[
-              ['single', 'Single line'],
-              ['double', 'Double line'],
-            ]}
-            onChange={(value) => update('border', { style: value })}
-          />
-          <PrintSettingSelect
-            label="Border thickness"
-            value={border.thickness}
-            disabled={!border.enabled}
-            options={[
-              ['thin', 'Thin'],
-              ['medium', 'Medium'],
-              ['thick', 'Thick'],
-            ]}
-            onChange={(thickness) => update('border', { thickness })}
-          />
-          <PrintSettingNumber
-            label="Border inset"
-            value={border.inset}
-            min={2}
-            max={25}
-            unit="mm"
-            disabled={!border.enabled}
-            onChange={(inset) => update('border', { inset })}
-          />
-          <PrintSettingSelect
-            label="Border corners"
-            value={border.corners}
-            disabled={!border.enabled}
-            options={[
-              ['square', 'Square'],
-              ['rounded', 'Rounded'],
-            ]}
-            onChange={(corners) => update('border', { corners })}
-          />
-        </PrintSettingsGrid>
-        <PrintSettingToggle
-          label="Section borders"
-          checked={border.sectionBorders}
-          onChange={(sectionBorders) => update('border', { sectionBorders })}
-        />
-        <PrintSettingToggle
-          label="Field borders"
-          checked={border.fieldBorders}
-          onChange={(fieldBorders) => update('border', { fieldBorders })}
-        />
-        <PrintSettingToggle
-          label="Row dividers"
-          checked={border.dividers}
-          onChange={(dividers) => update('border', { dividers })}
-        />
+        {border.enabled && (
+          <PrintSettingsGrid>
+            <PrintSettingSelect
+              label="Border style"
+              value={border.style}
+              options={[
+                ['single', 'Single line'],
+                ['double', 'Double line'],
+              ]}
+              onChange={(value) => update('border', { style: value })}
+            />
+            <PrintSettingSelect
+              label="Border corners"
+              value={border.corners}
+              options={[
+                ['square', 'Square'],
+                ['rounded', 'Rounded'],
+              ]}
+              onChange={(corners) => update('border', { corners })}
+            />
+          </PrintSettingsGrid>
+        )}
       </PrintSettingsCard>
       <PrintSettingsCard
         title="Print Colours"
@@ -291,7 +228,7 @@ export function AdmissionPrintPaperStyleSettings({
               [
                 ['sans', 'Sans serif'],
                 ['serif', 'Serif'],
-                ['monospace', 'Monospace'],
+                ...(style.fontFamily === 'monospace' ? [['monospace', 'Monospace (saved)'] as const] : []),
                 ['roboto', 'Roboto'],
               ] as const
             ).map(([family, label]) => (

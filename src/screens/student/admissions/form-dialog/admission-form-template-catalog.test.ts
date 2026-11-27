@@ -42,6 +42,7 @@ it('starts Registration with four steps, linked optional address, and optional e
     expect.arrayContaining([
       expect.objectContaining({ bindingKey: 'Applicant.DateOfBirth', required: true }),
       expect.objectContaining({ bindingKey: 'Applicant.Gender', required: true }),
+      expect.objectContaining({ bindingKey: 'Applicant.ProfilePhoto', required: false }),
     ])
   );
   expect(
@@ -101,7 +102,7 @@ describe('admission form template catalogue', () => {
     expect(cloned.printSettings).toEqual(source.printSettings);
     expect(cloned.printSettings).not.toBe(source.printSettings);
   });
-  it('uses Boxed Grid when creating an editable draft from a legacy Registration starter', () => {
+  it('preserves the saved print layout when using an existing form as a starter', () => {
     const legacySettings = {
       ...getAdmissionFormInitialValues().printSettings!,
       template: 'simple' as const,
@@ -115,10 +116,7 @@ describe('admission form template catalogue', () => {
       printSettings: legacySettings,
     } as AdmissionForm;
 
-    expect(cloneSchoolFormAsStarter(source).printSettings).toEqual({
-      ...legacySettings,
-      template: 'boxed-grid',
-    });
+    expect(cloneSchoolFormAsStarter(source).printSettings).toEqual(legacySettings);
     expect(cloneSchoolFormAsStarter({ ...source, purpose: 0 }).printSettings).toEqual(
       legacySettings
     );

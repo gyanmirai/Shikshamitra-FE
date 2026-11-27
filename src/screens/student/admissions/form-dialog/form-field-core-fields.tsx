@@ -1,12 +1,13 @@
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
+import { GlobalIcons } from 'src/utils/icons';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import CustomSelect from 'src/components/custom-select';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { parseFieldConfiguration } from './form-field-presets';
@@ -53,10 +54,11 @@ export function FormFieldCoreFields({
   const labelError = Boolean(labelMeta.touched && labelMeta.error);
   return (
     <Stack spacing={1.5}>
-      <SectionCard
+      <FormSectionCard
         title="Basic Settings"
-        paperProps={{ sx: { mb: 0, minWidth: 0 } }}
-        gridProps={{ sx: { display: 'block' } }}
+        icon={GlobalIcons.academicFieldSettings}
+        descriptionTooltip="Set the field label, answer type, and instructions for applicants."
+        sx={{ minWidth: 0 }}
       >
         <Stack spacing={1.5}>
           <ShakingTextField error={labelError}>
@@ -103,7 +105,7 @@ export function FormFieldCoreFields({
                     : !catalogueReady
                       ? 'Checking the linked student field.'
                       : linkedField
-                        ? `Linked to ${linkedField.displayName}. This student field uses ${expectedType}. For a different answer type, add a custom field.`
+                        ? `Linked to ${linkedField.displayName}. Add a custom field for a different type.`
                         : 'This student field connection is unavailable. Review this field before publishing.'
                   : field.fieldType === 10
                     ? 'File upload is not available yet. Replace this field before publishing.'
@@ -192,7 +194,7 @@ export function FormFieldCoreFields({
             />
           )}
         </Stack>
-      </SectionCard>
+      </FormSectionCard>
       {isChoice && !locked && (
         <FieldChoiceSettings formik={formik} sectionIndex={sectionIndex} fieldIndex={fieldIndex} />
       )}

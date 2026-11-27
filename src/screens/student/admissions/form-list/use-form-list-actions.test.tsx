@@ -12,7 +12,7 @@ import { AdmissionFormPublishDialog } from '../admission-form-publish-dialog';
 
 const query = vi.hoisted(() => ({ data: null as AdmissionForm | null, isError: false }));
 const publication = vi.hoisted(() => ({ validate: vi.fn(), publish: vi.fn() }));
-const saving = vi.hoisted(() => ({ create: vi.fn(), update: vi.fn(), version: vi.fn() }));
+const saving = vi.hoisted(() => ({ create: vi.fn(), update: vi.fn(), version: vi.fn(), clone: vi.fn() }));
 const deletion = vi.hoisted(() => ({ remove: vi.fn() }));
 const freshForm = vi.hoisted(() => ({ load: vi.fn() }));
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
@@ -34,7 +34,7 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => {
       isError: false,
     }),
     useLazyGetAdmissionFormQuery: () => [freshForm.load],
-    useCloneAdmissionFormMutation: mutation,
+    useCloneAdmissionFormMutation: () => [saving.clone, { isLoading: false }],
     useCreateAdmissionFormMutation: () => [saving.create, { isLoading: false }],
     useDeleteAdmissionFormMutation: () => [deletion.remove, { isLoading: false }],
     useUpdateAdmissionFormMutation: () => [saving.update, { isLoading: false }],
@@ -140,7 +140,7 @@ describe('useFormListActions editor mode', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Publish from table' }));
     await screen.findByRole('dialog', { name: 'Form Needs Changes' });
     expect(screen.getByText('APPLICANT_GENDER needs valid choices.')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Publish Form' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
     expect(publication.publish).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
     expect(screen.getByLabelText('Editing form')).toHaveTextContent('draft');
@@ -148,9 +148,9 @@ describe('useFormListActions editor mode', () => {
     await waitFor(() => expect(screen.getByLabelText('Editing form')).toBeEmptyDOMElement());
     expect(saving.update).toHaveBeenCalledExactlyOnceWith({ id: 'draft', body: correction });
     fireEvent.click(screen.getByRole('button', { name: 'Publish from table' }));
-    await screen.findByRole('dialog', { name: 'Publish Inquiry with Other?' });
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Publish Form' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'Publish Form' }));
+    await screen.findByRole('dialog', { name: 'Publish Form?' });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
     await waitFor(() =>
       expect(publication.publish).toHaveBeenCalledExactlyOnceWith({
         id: 'draft',
@@ -551,10 +551,9 @@ describe('useFormListActions editor mode', () => {
     expect(freshForm.load.mock.results[0].value.unsubscribe).toHaveBeenCalledOnce();
     expect(deletion.remove).toHaveBeenCalledWith({ id: 'draft', concurrencyStamp: 'latest' });
     expect(result.current.pendingDelete?.id).toBe('draft');
-    expect(result.current.deleteError).toBe(
-      'Cannot delete this draft: it is linked to 1 offering.'
-    );
-    expect(toast.error).toHaveBeenCalledWith({ message: result.current.deleteError });
+    expect(toast.error).toHaveBeenCalledExactlyOnceWith({
+      message: 'Cannot delete this draft: it is linked to 1 offering.',
+    });
   });
 
   it('closes the delete confirmation after a successful draft deletion', async () => {
@@ -571,7 +570,6 @@ describe('useFormListActions editor mode', () => {
     expect(freshForm.load).toHaveBeenCalledWith('draft', false);
     expect(deletion.remove).toHaveBeenCalledWith({ id: 'draft', concurrencyStamp: 'latest' });
     expect(result.current.pendingDelete).toBeNull();
-    expect(result.current.deleteError).toBeNull();
     expect(toast.success).toHaveBeenCalledWith({
       message: 'Admission form draft deleted successfully',
     });
@@ -593,7 +591,7 @@ describe('useFormListActions editor mode', () => {
 
     expect(deletion.remove).not.toHaveBeenCalled();
     expect(result.current.pendingDelete?.id).toBe('draft');
-    expect(result.current.deleteError).toContain('Unable to verify the latest form version');
+    expect(toast.error).toHaveBeenCalledWith({ message: expect.stringContaining('Unable to verify the latest form version') });
   });
 
   it('keeps confirmation open and blocks repeated actions while checking the latest version', async () => {
@@ -643,6 +641,6 @@ describe('useFormListActions editor mode', () => {
       await result.current.confirmDelete();
     });
     expect(deletion.remove).not.toHaveBeenCalled();
-    expect(result.current.deleteError).toContain('Only a draft');
+    expect(toast.error).toHaveBeenCalledWith({ message: expect.stringContaining('Only a draft') });
   });
 });

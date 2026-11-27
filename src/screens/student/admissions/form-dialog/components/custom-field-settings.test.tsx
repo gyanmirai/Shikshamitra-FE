@@ -8,7 +8,8 @@ import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders } from 'src/test/test-utils';
+import { screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { CUSTOM_FIELD_PRESETS } from '../form-field-presets';
@@ -21,11 +22,21 @@ import {
 
 import type { AdmissionFieldPreset } from '../form-field-presets';
 
-vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <svg aria-hidden="true" data-icon={icon} />,
+}));
 
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   useGetAdmissionFormDataSourcesQuery: () => ({ data: [] }),
-  useGetAdmissionFormSystemFieldsQuery: () => ({ data: [] }),
+  useGetAdmissionFormSystemFieldsQuery: () => ({
+    data: [
+      {
+        key: 'Applicant.EmergencyContactNumber',
+        displayName: 'Emergency contact number',
+        fieldType: 4,
+      },
+    ],
+  }),
 }));
 
 function renderSettings(
@@ -37,7 +48,7 @@ function renderSettings(
   const form = getAdmissionFormInitialValues();
   const section = form.sections[0];
   section.fields = [{ ...newField(section.id!, 0, fieldType, preset), ...patch }, ...otherFields];
-  render(
+  renderWithProviders(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <Formik initialValues={form} onSubmit={() => undefined}>
         {(formik) => (
@@ -52,7 +63,8 @@ function renderSettings(
           </>
         )}
       </Formik>
-    </ThemeProvider>
+    </ThemeProvider>,
+    { preloadedState: { confirmPopup: { isChanges: true } } }
   );
 }
 
@@ -68,12 +80,50 @@ function expectTechnicalEditorsHidden() {
 }
 
 describe('Admission Form Builder custom field settings', () => {
+  it('uses icon-led cards and explains the locked type of a linked Student field', () => {
+    renderSettings(4, undefined, {
+      bindingType: 0,
+      bindingKey: 'Applicant.EmergencyContactNumber',
+      label: 'Emergency contact number',
+    });
+
+    const basic = screen.getByRole('heading', { name: 'Basic Settings' }).closest('section');
+    const more = screen.getByRole('heading', { name: 'More Options' }).closest('section');
+    expect(basic?.querySelector('[data-icon="mdi:tune-variant"]')).toBeVisible();
+    expect(more?.querySelector('[data-icon="mdi:clipboard-text-outline"]')).toBeVisible();
+    const fieldType = screen.getByRole('combobox', { name: 'Field Type' });
+    expect(fieldType).toHaveAttribute('aria-disabled', 'true');
+    expect(fieldType).toHaveAccessibleDescription(
+      'Linked to Emergency contact number. Add a custom field for a different type.'
+    );
+  });
+
+  it('uses the filled system indicator and switches settings without a leave prompt', async () => {
+    const user = userEvent.setup();
+    renderSettings(0);
+    const tabList = screen.getByRole('tablist', { name: 'Field Settings Categories' });
+    expect(
+      tabList.closest('.MuiTabs-root')?.querySelector('.MuiTabs-indicator > span')
+    ).toBeVisible();
+    const basic = screen.getByRole('tab', { name: 'Basic', selected: true });
+    const rules = screen.getByRole('tab', { name: 'Rules', selected: false });
+    basic.focus();
+    await user.keyboard('{ArrowRight}{Enter}');
+    expect(rules).toHaveFocus();
+    expect(rules).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tabpanel', { name: 'Rules' })).toBeVisible();
+  });
+
   it('shows Always visible by default and restores it without retaining a condition', async () => {
     const user = userEvent.setup();
     const date = { ...newField('section-1', 1, 5), code: 'DATE_OF_BIRTH', label: 'Date of birth' };
     renderSettings(0, undefined, {}, [date]);
     const before = currentField();
     await user.click(screen.getByRole('tab', { name: 'Rules' }));
+    const visibility = screen
+      .getByRole('heading', { name: 'Visibility Conditions' })
+      .closest('section');
+    expect(visibility?.querySelector('[data-icon="carbon:view-filled"]')).toBeVisible();
     const selector = screen.getByRole('combobox', { name: /Show Field When/ });
     expect(selector).toHaveTextContent('Always Visible');
     expect(currentField()).toEqual(before);
@@ -163,7 +213,10 @@ describe('Admission Form Builder custom field settings', () => {
       expectTechnicalEditorsHidden();
       expect(JSON.parse(currentField().validationJson)).toEqual(preset.validation);
       if (preset.key === 'state' || preset.key === 'city') {
-        expect(screen.getByText('Location Dependency')).toBeVisible();
+        const location = screen
+          .getByRole('heading', { name: 'Location Dependency' })
+          .closest('section');
+        expect(location?.querySelector('[data-icon="lineicons:route-1"]')).toBeVisible();
         expect(screen.getByRole('combobox', { name: 'Country Field' })).toBeVisible();
       }
     }

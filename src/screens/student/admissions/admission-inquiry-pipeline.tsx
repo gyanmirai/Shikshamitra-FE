@@ -361,7 +361,7 @@ export default function AdmissionInquiryPipelineScreen() {
               isLoading={
                 yearChanging || scopeLoading || (!skip && !listQuery.isError && !displayData)
               }
-              refreshIndicator="circular"
+              refreshIndicator="none"
               isRefreshing={Boolean(displayData) && listQuery.isFetching && !skip && !applicationId}
               errorContent={
                 listQuery.isError && !skip && !displayData?.items.length ? (

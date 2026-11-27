@@ -155,6 +155,7 @@ describe('Admissions settings row actions', () => {
       onCreateVersion: vi.fn(),
       onArchive: vi.fn(),
       onRestore: vi.fn(),
+      onClone: vi.fn(),
       onDelete: vi.fn(),
     };
     const form = {
@@ -181,6 +182,7 @@ describe('Admissions settings row actions', () => {
       screen.getByRole('button', { name: 'More actions for Fresh admission, version 2' })
     );
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
+    expect(screen.queryByRole('menuitem', { name: 'Validate' })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Clone as Draft' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'History & Versions' })).toBeVisible();
     expect(
@@ -195,6 +197,15 @@ describe('Admissions settings row actions', () => {
     );
     await user.click(screen.getByRole('button', { name: 'New Version' }));
     expect(handlers.onCreateVersion).toHaveBeenCalledOnce();
+
+    rerender(<FormRowActions form={{ ...form, status: 2 }} canManage canPublish canDelete {...handlers} />);
+    expect(screen.getByRole('button', { name: 'Restore' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'History & Versions' })).toBeVisible();
+    expect(screen.queryByRole('menuitem', { name: 'Clone as Draft' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'More Actions' })).not.toBeInTheDocument();
+
+    rerender(<FormRowActions form={{ ...form, status: 2 }} canManage={false} canPublish={false} canDelete={false} {...handlers} />);
+    expect(screen.queryByRole('button', { name: 'More Actions' })).not.toBeInTheDocument();
   });
 
   it('keeps workflow draft edit and delete available without a redundant preview icon', () => {

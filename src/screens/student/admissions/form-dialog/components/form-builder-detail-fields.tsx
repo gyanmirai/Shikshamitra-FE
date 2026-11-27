@@ -81,16 +81,6 @@ export function FormBuilderDetailFields({
           <MenuItem value={1}>Step by Step</MenuItem>
         </TextField>
       </Grid>
-      <Grid size={{ xs: 12 }}>
-        <TextField
-          fullWidth
-          size="small"
-          label="Description"
-          multiline
-          minRows={1}
-          {...formik.getFieldProps('description')}
-        />
-      </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
         <Autocomplete
           multiple
@@ -148,6 +138,16 @@ export function FormBuilderDetailFields({
             </MenuItem>
           ))}
         </TextField>
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <TextField
+          fullWidth
+          size="small"
+          label="Description"
+          multiline
+          minRows={3}
+          {...formik.getFieldProps('description')}
+        />
       </Grid>
       <ConfirmDialog
         open={confirmSinglePage}

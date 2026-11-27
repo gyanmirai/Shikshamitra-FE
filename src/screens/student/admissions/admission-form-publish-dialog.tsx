@@ -48,8 +48,8 @@ export function AdmissionFormPublishDialog({
       disableBackdropClick
       disableEscapeKeyDown={busy}
       disableCancel={busy}
-      icon={hasIssues ? 'error' : null}
-      title={hasIssues ? 'Form Needs Changes' : `Publish ${form?.name ?? 'form'}?`}
+      icon={hasIssues ? 'error' : 'success'}
+      title={hasIssues ? 'Form Needs Changes' : 'Publish Form?'}
       sx={{ '& .MuiDialogActions-root': { p: 2, borderTop: 1, borderColor: 'divider' } }}
       content={
         hasIssues ? (
@@ -104,7 +104,7 @@ export function AdmissionFormPublishDialog({
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={onPublish}
           >
-            Publish Form
+            Publish
           </LoadingButton>
         )
       }

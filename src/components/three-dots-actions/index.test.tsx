@@ -59,6 +59,13 @@ describe('ThreeDotsActions', () => {
     expect(moreActions).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it('uses concise overflow help with a separate contextual accessible name', async () => {
+    render(<ThreeDotsActions moreLabel="More actions for Cycle A" moreTooltip="More actions" />);
+
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'More actions for Cycle A' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(/^More actions$/);
+  });
+
   it('does not bubble a popover action to its parent table row', async () => {
     const onRowClick = vi.fn();
     const onDuplicate = vi.fn();

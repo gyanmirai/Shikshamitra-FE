@@ -1,94 +1,96 @@
-import type { AdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
-
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import {
-  Box,
-  Stack,
-  Radio,
-  Button,
-  Switch,
-  RadioGroup,
-  Typography,
-  FormControlLabel,
-} from '@mui/material';
-import {
-  resolveAdmissionPrintAdvancedSettings,
-  resolveEditableRegistrationPrintTemplate,
-} from 'src/redux/student/admissions/admission-form-print-settings';
+import { Box, Stack, Radio, RadioGroup, Typography, FormControlLabel } from '@mui/material';
+import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { PrintInstructionsListEditor } from './print-instructions-list-editor';
 import {
+  PrintSettingText,
   PrintSettingsCard,
-  PrintSettingsCards,
+  PrintSettingsGrid,
   PrintSettingSelect,
+  PrintSettingToggle,
+  PrintSettingsCards,
 } from './admission-print-setting-controls';
 
-import type { AdmissionPrintSettings, AdmissionPrintBranding } from './form-print-model';
+import type { AdmissionPrintDefinition, AdmissionPrintSettings } from './form-print-model';
+
+const PRINT_TEMPLATES = [
+  ['boxed-grid', 'Boxed Grid'],
+  ['structured-classic', 'Structured Classic'],
+] as const;
 
 export function AdmissionPrintSettingsPanel({
   settings,
   onChange,
-  branding,
   defaultLanguage = 'en',
-  pageCount,
   hasPhotoField = false,
-  onEditHeader,
+  form,
 }: {
   settings: AdmissionPrintSettings;
   onChange: (settings: AdmissionPrintSettings) => void;
-  branding: AdmissionPrintBranding;
   defaultLanguage?: string;
-  pageCount?: number;
   hasPhotoField?: boolean;
-  onEditHeader?: () => void;
+  form?: AdmissionPrintDefinition;
 }) {
-  const bannerPagesId = useId();
-  const selectedTemplate = resolveEditableRegistrationPrintTemplate(settings.template);
-  const advanced = resolveAdmissionPrintAdvancedSettings(settings.advanced);
-  const { bannerPlacement, bannerPages, showBanner } = advanced.branding;
-  const pageNumbers = [
-    ...new Set([
-      ...Array.from({ length: pageCount ?? 1 }, (_, index) => index + 1),
-      ...bannerPages,
-    ]),
-  ].sort((left, right) => left - right);
-  const update = <K extends keyof AdmissionPrintAdvancedSettings>(
-    key: K,
-    value: NonNullable<AdmissionPrintAdvancedSettings[K]>
-  ) =>
+  const {
+    header,
+    content,
+    flow,
+    paper,
+    sections: sectionSettings,
+  } = resolveAdmissionPrintAdvancedSettings(settings.advanced);
+  const [selectedSection, setSelectedSection] = useState('');
+  const sections = [
+    ...new Map(
+      (form?.sections ?? []).map((section) => [section.code.toUpperCase(), section])
+    ).values(),
+  ];
+  const section =
+    sections.find((item) => item.code.toUpperCase() === selectedSection) ?? sections[0];
+  const sectionCode = section?.code.toUpperCase() ?? '';
+  const sectionOverride = sectionSettings[sectionCode] ?? {};
+  const updateSection = (patch: { startNewPage?: boolean; keepTogether?: boolean }) =>
     onChange({
       ...settings,
       advanced: {
         ...settings.advanced,
-        [key]: { ...settings.advanced?.[key], ...value },
+        sections: {
+          ...settings.advanced?.sections,
+          [sectionCode]: { ...sectionOverride, ...patch },
+        },
       },
     });
+  const selectedTemplate = settings.template ?? 'simple';
+  const templateLabelId = useId();
 
   return (
     <PrintSettingsCards>
       <PrintSettingsCard
-        title="Template & Spacing"
+        title="Print Layout"
         icon={GlobalIcons.stationaryIcon}
-        descriptionTooltip="Choose the template, handwriting space, colours and page border for the printed form."
+        descriptionTooltip="Choose a print template, title and spacing for handwritten answers."
         defaultExpanded
       >
+        <Typography id={templateLabelId} variant="subtitle2">
+          Print template
+        </Typography>
         <RadioGroup
-          aria-label="Print template"
+          aria-labelledby={templateLabelId}
           value={selectedTemplate}
           onChange={(_, template) =>
             onChange({ ...settings, template: template as AdmissionPrintSettings['template'] })
           }
           sx={{ gap: 1 }}
         >
-          {(
-            [
-              ['boxed-grid', 'Boxed Grid'],
-              ['structured-classic', 'Structured Classic'],
-            ] as const
-          ).map(([template, title]) => (
+          {selectedTemplate === 'simple' && (
+            <FormControlLabel
+              value="simple"
+              control={<Radio size="small" />}
+              label="Simple (saved layout)"
+            />
+          )}
+          {PRINT_TEMPLATES.map(([template, title]) => (
             <FormControlLabel
               key={template}
               value={template}
@@ -102,7 +104,6 @@ export function AdmissionPrintSettingsPanel({
               sx={{
                 m: 0,
                 p: 1,
-                alignItems: 'flex-start',
                 border: 1,
                 borderRadius: 1,
                 borderColor: selectedTemplate === template ? 'primary.main' : 'divider',
@@ -112,6 +113,20 @@ export function AdmissionPrintSettingsPanel({
             />
           ))}
         </RadioGroup>
+        <PrintSettingText
+          label="Print title"
+          value={header.title}
+          helperText="Leave blank to use the form name."
+          onChange={(title) =>
+            onChange({
+              ...settings,
+              advanced: {
+                ...settings.advanced,
+                header: { ...settings.advanced?.header, title },
+              },
+            })
+          }
+        />
         <Typography variant="subtitle2">Print spacing</Typography>
         <RadioGroup
           row
@@ -124,197 +139,139 @@ export function AdmissionPrintSettingsPanel({
           <FormControlLabel value="compact" control={<Radio size="small" />} label="Compact" />
           <FormControlLabel value="spacious" control={<Radio size="small" />} label="Spacious" />
         </RadioGroup>
-        <CustomSelect
-          label="Print palette"
-          size="small"
-          value={advanced.style.palette}
-          options={[
-            { label: 'School blue', value: 'school-blue' },
-            { label: 'Neutral', value: 'neutral' },
-            { label: 'Forest green', value: 'forest-green' },
-            { label: 'Black & white', value: 'monochrome' },
-          ]}
-          onChange={(value) =>
-            update('style', {
-              palette: value as typeof advanced.style.palette,
-              sectionFill: undefined,
-              borderColor: undefined,
-              textColor: undefined,
+        {hasPhotoField && (
+          <PrintSettingToggle
+            label="Photo space"
+            checked={settings.showPhoto}
+            onChange={(showPhoto) => onChange({ ...settings, showPhoto })}
+          />
+        )}
+        <PrintSettingToggle
+          label="Signature area"
+          checked={settings.showSignature}
+          onChange={(showSignature) => onChange({ ...settings, showSignature })}
+        />
+      </PrintSettingsCard>
+      <PrintSettingsCard
+        defaultExpanded
+        title="Paper & Style"
+        icon={GlobalIcons.documentIcon}
+        descriptionTooltip="Choose the paper size and orientation for printed copies."
+      >
+        <PrintSettingsGrid>
+          <PrintSettingSelect
+            label="Paper size"
+            value={settings.paperSize}
+            options={[
+              ['A4', 'A4'],
+              ['A5', 'A5'],
+              ['LETTER', 'Letter'],
+              ['LEGAL', 'Legal'],
+            ]}
+            onChange={(paperSize) => onChange({ ...settings, paperSize })}
+          />
+          <PrintSettingSelect
+            label="Orientation"
+            value={paper.orientation}
+            options={[
+              ['portrait', 'Portrait'],
+              ['landscape', 'Landscape'],
+            ]}
+            onChange={(orientation) =>
+              onChange({
+                ...settings,
+                advanced: {
+                  ...settings.advanced,
+                  paper: { ...settings.advanced?.paper, orientation },
+                },
+              })
+            }
+          />
+        </PrintSettingsGrid>
+      </PrintSettingsCard>
+      <PrintSettingsCard
+        defaultExpanded
+        title="Page Fitting"
+        icon={GlobalIcons.admissionDetails}
+        descriptionTooltip="Use available page space while keeping each field row readable."
+      >
+        <PrintSettingToggle
+          label="Smart page fitting"
+          checked={flow.smartPageFitting}
+          onChange={(smartPageFitting) =>
+            onChange({
+              ...settings,
+              advanced: {
+                ...settings.advanced,
+                flow: { ...settings.advanced?.flow, smartPageFitting },
+              },
             })
           }
         />
-        <FormControlLabel
-          label="Full-page border"
-          control={
-            <Switch
-              checked={advanced.border.enabled}
-              onChange={(_, enabled) => update('border', { enabled })}
-            />
-          }
-        />
+        <Typography variant="caption" color="text.secondary">
+          Use available space and continue sections on the next page.
+        </Typography>
       </PrintSettingsCard>
-      <PrintSettingsCard
-        title="School Branding"
-        icon={GlobalIcons.building}
-        descriptionTooltip="Choose how the school logo and banner from Institute Setup appear on paper."
-      >
-        <FormControlLabel
-          label="School header"
-          control={
-            <Switch
-              checked={settings.showSchoolHeader}
-              onChange={(_, checked) => onChange({ ...settings, showSchoolHeader: checked })}
-            />
-          }
-        />
-        {settings.showSchoolHeader && !branding.bannerUrl && !branding.logoUrl && (
+      {section && (
+        <PrintSettingsCard
+          defaultExpanded
+          title="Section Layout"
+          icon={GlobalIcons.admissionDetails}
+          descriptionTooltip="Choose how a section flows across printed pages."
+        >
+          <PrintSettingSelect
+            label="Section"
+            value={sectionCode}
+            options={sections.map((item) => [item.code.toUpperCase(), item.name] as const)}
+            onChange={setSelectedSection}
+          />
+          <PrintSettingToggle
+            label="Start section on a new page"
+            checked={sectionOverride.startNewPage ?? false}
+            onChange={(startNewPage) => updateSection({ startNewPage })}
+          />
+          <PrintSettingToggle
+            label="Keep section together"
+            checked={sectionOverride.keepTogether ?? !flow.smartPageFitting}
+            onChange={(keepTogether) => updateSection({ keepTogether })}
+          />
           <Typography variant="caption" color="text.secondary">
-            No school logo or banner is configured in Institute Setup.
+            Long sections may continue on the next page.
           </Typography>
-        )}
-        {settings.showSchoolHeader && (
-          <>
-            {(branding.bannerUrl || branding.logoUrl) && (
-              <Stack direction="row" flexWrap="wrap" columnGap={1}>
-                {(
-                  [
-                    { asset: 'logo', label: 'Logo', flag: 'showLogo' },
-                    { asset: 'banner', label: 'Banner', flag: 'showBanner' },
-                  ] as const
-                ).map(({ asset, label, flag }) => (
-                  <FormControlLabel
-                    key={asset}
-                    label={label}
-                    control={
-                      <Switch
-                        size="small"
-                        checked={Boolean(branding[`${asset}Url`] && advanced.branding[flag])}
-                        disabled={!branding[`${asset}Url`]}
-                        onChange={(_, value) => update('branding', { [flag]: value })}
-                      />
-                    }
-                  />
-                ))}
-              </Stack>
-            )}
-            <CustomSelect
-              label="Header on later pages"
-              size="small"
-              value={advanced.header.continuation}
-              options={[
-                { label: 'Compact', value: 'compact' },
-                { label: 'Full', value: 'full' },
-                { label: 'None', value: 'none' },
-              ]}
-              onChange={(value) =>
-                update('header', { continuation: value as typeof advanced.header.continuation })
-              }
-            />
-            <PrintSettingSelect
-              label="Banner pages"
-              value={bannerPlacement}
-              disabled={!showBanner}
-              options={[
-                ['first', 'First page'],
-                ['every', 'Every page'],
-                ['selected', 'Selected pages'],
-              ]}
-              onChange={(placement) =>
-                update('branding', {
-                  bannerPlacement: placement,
-                  ...(placement === 'selected' ? { bannerPages } : {}),
-                })
-              }
-            />
-            {bannerPlacement === 'selected' && (
-              <CustomSelect
-                name={bannerPagesId}
-                label="Pages with banner"
-                size="small"
-                fullWidth
-                multiple
-                disabled={!showBanner}
-                disabledValues={bannerPages.length === 1 ? bannerPages : undefined}
-                value={bannerPages}
-                options={pageNumbers.map((page) => ({ value: page, label: `Page ${page}` }))}
-                onChange={(pages) => {
-                  if (pages.length) {
-                    update('branding', {
-                      bannerPages: pages.map(Number).sort((left, right) => left - right),
-                    });
-                  }
-                }}
-                helperText="Choose at least one page of the printed copy."
-              />
-            )}
-          </>
-        )}
-        {onEditHeader && (
-          <Button
-            size="small"
-            variant="outlined"
-            color="inherit"
-            startIcon={<Iconify icon={GlobalIcons.edit} />}
-            onClick={onEditHeader}
-          >
-            Edit header
-          </Button>
-        )}
-      </PrintSettingsCard>
-      <PrintSettingsCard
-        title="Photo & Signature"
-        icon={GlobalIcons.image}
-        descriptionTooltip="Choose whether the printed form includes a photo space and signature area."
-      >
-        <FormControlLabel
-          label="Photo space"
-          control={
-            <Switch
-              checked={hasPhotoField && settings.showPhoto}
-              disabled={!hasPhotoField}
-              onChange={(_, checked) => onChange({ ...settings, showPhoto: checked })}
-            />
-          }
-        />
-        {!hasPhotoField && (
-          <Typography variant="caption" color="text.secondary">
-            Add a photo question in Build form to print a photo space.
-          </Typography>
-        )}
-        <FormControlLabel
-          label="Signature area"
-          control={
-            <Switch
-              checked={settings.showSignature}
-              onChange={(_, checked) => onChange({ ...settings, showSignature: checked })}
-            />
-          }
-        />
-      </PrintSettingsCard>
+        </PrintSettingsCard>
+      )}
       <PrintSettingsCard
         title="Writing Instructions"
         icon={GlobalIcons.info}
         descriptionTooltip="Add instructions for anyone filling in the paper form."
       >
-        <FormControlLabel
+        <PrintSettingToggle
           label="Print writing instructions"
-          control={
-            <Switch
-              checked={advanced.content.showInstructions}
-              onChange={(_, showInstructions) => update('content', { showInstructions })}
-            />
+          checked={content.showInstructions}
+          onChange={(showInstructions) =>
+            onChange({
+              ...settings,
+              advanced: {
+                ...settings.advanced,
+                content: { ...settings.advanced?.content, showInstructions },
+              },
+            })
           }
         />
-        {advanced.content.showInstructions && (
+        {content.showInstructions && (
           <PrintInstructionsListEditor
-            value={advanced.content.translations[defaultLanguage]?.instructions ?? ''}
+            value={content.translations[defaultLanguage]?.instructions ?? ''}
             onChange={(instructions) =>
-              update('content', {
-                translations: {
-                  ...advanced.content.translations,
-                  [defaultLanguage]: {
-                    ...advanced.content.translations[defaultLanguage],
-                    instructions,
+              onChange({
+                ...settings,
+                advanced: {
+                  ...settings.advanced,
+                  content: {
+                    ...settings.advanced?.content,
+                    translations: {
+                      ...content.translations,
+                      [defaultLanguage]: { ...content.translations[defaultLanguage], instructions },
+                    },
                   },
                 },
               })

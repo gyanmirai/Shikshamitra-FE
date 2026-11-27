@@ -170,9 +170,9 @@ it('shows publishing issues without opening an editor from review', async () => 
   values.sections[0].fields[0].bindingKey = '';
   mountReview(values);
   await user.click(screen.getByRole('button', { name: '1 check to review' }));
-  expect(screen.getByText('Student name needs a custom binding key.')).toBeVisible();
+  expect(screen.getByText(/Student name needs a data connection\./)).toBeVisible();
   expect(
-    screen.queryByRole('button', { name: 'Student name needs a custom binding key.' })
+    screen.queryByRole('button', { name: 'Student name needs a data connection.' })
   ).not.toBeInTheDocument();
   expect(screen.queryByRole('dialog', { name: 'Field Settings' })).not.toBeInTheDocument();
   expect(definition()).toEqual(values);

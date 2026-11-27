@@ -1,4 +1,5 @@
 import Button from '@mui/material/Button';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -45,12 +46,13 @@ export function FormBuilderDeleteUnit({ name, unit, onDelete, open, onClose, hid
             size="small"
             variant="contained"
             color="error"
+            aria-label={unit === 'step' ? 'Delete step' : undefined}
             onClick={() => {
               close();
               onDelete();
             }}
           >
-            Delete {unit}
+            {unit === 'section' ? 'Delete section' : <Iconify icon={GlobalIcons.delete} width={18} />}
           </Button>
         }
       />

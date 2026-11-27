@@ -1,14 +1,18 @@
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import { Formik } from 'formik';
-import { it, vi, expect } from 'vitest';
+import { toast, Toaster } from 'sonner';
+import { it, vi, expect, afterEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { renderWithProviders } from 'src/test/test-utils';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { FormBuilderSections } from './form-builder-sections';
 import { newField, getBlankAdmissionFormInitialValues } from './form-dialog-model';
+
+afterEach(() => toast.dismiss());
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
@@ -49,8 +53,9 @@ function renderRouting(error: 'section' | 'visibility' | 'type' | 'validation') 
     stepDisplayOrder: 1,
     fields: [target],
   });
-  render(
+  renderWithProviders(
     <ThemeProvider theme={createTheme(defaultSettings)}>
+      <Toaster />
       <Formik<CreateUpdateAdmissionForm>
         initialValues={values}
         initialErrors={{
@@ -103,7 +108,7 @@ it('opens the exact inactive section heading when fixing an error from Preview o
   renderRouting('section');
   fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
   fireEvent.click(screen.getByRole('tab', { name: 'Student Fields' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Fix error' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Fix error' }));
   expect(screen.getByRole('tab', { name: 'Your Form' })).toHaveAttribute('aria-selected', 'true');
   expect(screen.getByRole('button', { name: 'Preview' })).toBeVisible();
   const heading = screen.getByRole('textbox', { name: 'Section Heading' });
@@ -114,7 +119,7 @@ it('opens the exact inactive section heading when fixing an error from Preview o
 it('opens Rules for an inactive field condition issue and focuses its actual repair control', async () => {
   const target = renderRouting('visibility');
   fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Fix error' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Fix error' }));
   expect(screen.getByRole('tab', { name: 'Rules' })).toHaveAttribute('aria-selected', 'true');
   const rule = screen.getByRole('textbox', { name: 'Compatibility Rule' });
   expect(rule).toBeVisible();
@@ -126,7 +131,7 @@ it('opens Rules for an inactive field condition issue and focuses its actual rep
 
 it('focuses the existing Restore action for a mismatched linked field type without changing its value', async () => {
   const target = renderRouting('type');
-  fireEvent.click(screen.getByRole('button', { name: 'Fix error' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Fix error' }));
   const restore = screen.getByRole('button', { name: 'Restore Date' });
   expect(restore).toBeVisible();
   await waitFor(() => expect(restore).toHaveFocus());
@@ -135,15 +140,13 @@ it('focuses the existing Restore action for a mismatched linked field type witho
   );
 });
 
-it('shows unsupported saved-setting recovery inside the open question drawer', () => {
+it('shows unsupported saved-setting recovery in a toast', async () => {
   const target = renderRouting('validation');
-  fireEvent.click(screen.getByRole('button', { name: 'Review question' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Review question' }));
   const drawer = screen.getByRole('button', { name: 'Done' }).closest('.MuiDrawer-paper');
   expect(drawer).not.toBeNull();
   expect(
-    within(drawer as HTMLElement).getByText(
-      /This question has saved settings that cannot be edited here/
-    )
+    screen.getByText('Review this question or restore an earlier form version.')
   ).toBeVisible();
   expect(screen.getByRole('button', { name: 'Done' })).toBeVisible();
   expect(JSON.parse(screen.getByTestId('saved-form').textContent!).sections[1].fields[0]).toEqual(

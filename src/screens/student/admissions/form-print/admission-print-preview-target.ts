@@ -18,6 +18,7 @@ const settingLabels: Record<string, string> = {
   spacing: 'Section spacing',
   fullWidth: 'Full-width section',
   startNewPage: 'Start section on a new page',
+  keepTogether: 'Keep section together',
   keepHeading: 'Keep heading with first row',
   repeatTableHeadings: 'Repeat table headings',
   blankRows: 'Blank table rows',
@@ -178,6 +179,7 @@ export function getAdmissionPrintPreviewTarget(
         beforeContent.signatureDate,
         previousTranslation?.parentLabel,
         previousTranslation?.officeLabel,
+        previousTranslation?.customSignatureLabels,
       ],
       [
         content.signaturePlacement,
@@ -188,10 +190,11 @@ export function getAdmissionPrintPreviewTarget(
         content.signatureDate,
         translation?.parentLabel,
         translation?.officeLabel,
+        translation?.customSignatureLabels,
       ]
     )
   )
-    return last(model.labels.signature, model.labels.signature);
+    return after.showSignature ? last(model.labels.signature, model.labels.signature) : undefined;
 
   if (changed(previous.footer, next.footer)) {
     const placement =

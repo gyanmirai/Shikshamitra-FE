@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { BannerUpload } from 'src/components/custom-upload/banner-upload';
 import { Stack, Button, Tooltip, IconButton, Typography } from '@mui/material';
+import { MAX_ADMISSION_PRINT_CUSTOM_SIGNATURES } from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import { PrintInstructionsListEditor } from './print-instructions-list-editor';
@@ -17,11 +17,6 @@ import {
 } from './admission-print-setting-controls';
 
 import type { AdmissionPrintAdvancedTabProps } from './admission-print-advanced-types';
-
-const SIGNATURE_IMAGE_ACCEPT = {
-  'image/png': ['.png'],
-  'image/jpeg': ['.jpg', '.jpeg'],
-};
 
 export function AdmissionPrintContentCopiesSettings({
   settings,
@@ -38,6 +33,8 @@ export function AdmissionPrintContentCopiesSettings({
   const { content, copies } = advanced;
   const translation = content.translations[language] ?? {};
   const checklist = translation.checklist ?? [];
+  const customSignatureLabels = translation.customSignatureLabels ?? [];
+  const canEditSignatures = settings.showSignature && Boolean(language);
   const updateTranslation = (patch: Partial<typeof translation>) =>
     update('content', {
       translations: { ...content.translations, [language]: { ...translation, ...patch } },
@@ -95,15 +92,10 @@ export function AdmissionPrintContentCopiesSettings({
             onReset={() =>
               resetContentCard(
                 {
-                  showInstructions: false,
                   instructionsPlacement: 'first',
                   instructionSection: '',
-                  instructionHeadingSize: 'default',
-                  instructionTextSize: 'default',
-                  instructionTextWeight: 'regular',
-                  instructionTextColor: 'default',
                 },
-                { instructions: undefined }
+                language !== (form.defaultLanguage ?? 'en') ? { instructions: undefined } : undefined
               )
             }
           />
@@ -111,10 +103,9 @@ export function AdmissionPrintContentCopiesSettings({
         descriptionTooltip="School-authored instructions appear only in printed copies and do not add applicant questions."
       >
         <PrintSettingToggle
-          label="Include instructions"
+          label="Print writing instructions"
           checked={content.showInstructions}
           onChange={(showInstructions) => update('content', { showInstructions })}
-          helperTooltip="Each non-empty line prints as a bullet. Use up to 2,000 characters for the selected language."
         />
         <PrintSettingSelect
           label="Instructions placement"
@@ -143,60 +134,12 @@ export function AdmissionPrintContentCopiesSettings({
             helperTooltip={!form.sections.length ? 'Add a section in Build form first.' : undefined}
           />
         )}
-        <PrintSettingsGrid>
-          <PrintSettingSelect
-            label="Heading font size"
-            value={content.instructionHeadingSize}
-            disabled={!content.showInstructions}
-            options={[
-              ['default', 'Default'],
-              ['10', '10 pt'],
-              ['12', '12 pt'],
-              ['14', '14 pt'],
-              ['16', '16 pt'],
-            ]}
-            onChange={(instructionHeadingSize) => update('content', { instructionHeadingSize })}
+        {language && content.showInstructions && (
+          <PrintInstructionsListEditor
+            value={translation.instructions}
+            onChange={(instructions) => updateTranslation({ instructions })}
           />
-          <PrintSettingSelect
-            label="Instruction font size"
-            value={content.instructionTextSize}
-            disabled={!content.showInstructions}
-            options={[
-              ['default', 'Default'],
-              ['10', '10 pt'],
-              ['12', '12 pt'],
-              ['14', '14 pt'],
-              ['16', '16 pt'],
-            ]}
-            onChange={(instructionTextSize) => update('content', { instructionTextSize })}
-          />
-          <PrintSettingSelect
-            label="Instruction text weight"
-            value={content.instructionTextWeight}
-            disabled={!content.showInstructions}
-            options={[
-              ['regular', 'Regular'],
-              ['bold', 'Bold'],
-            ]}
-            onChange={(instructionTextWeight) => update('content', { instructionTextWeight })}
-          />
-          <PrintSettingSelect
-            label="Instruction text color"
-            value={content.instructionTextColor}
-            disabled={!content.showInstructions}
-            options={[
-              ['default', 'Default'],
-              ['black', 'Black'],
-              ['gray', 'Gray'],
-            ]}
-            onChange={(instructionTextColor) => update('content', { instructionTextColor })}
-          />
-        </PrintSettingsGrid>
-        <PrintInstructionsListEditor
-          value={translation.instructions}
-          disabled={!content.showInstructions || !language}
-          onChange={(instructions) => updateTranslation({ instructions })}
-        />
+        )}
       </PrintSettingsCard>
       <PrintSettingsCard
         title="Document Checklist"
@@ -295,7 +238,12 @@ export function AdmissionPrintContentCopiesSettings({
                   officeSignatureImage: undefined,
                   signatureDate: false,
                 },
-                { declaration: undefined, parentLabel: undefined, officeLabel: undefined }
+                {
+                  declaration: undefined,
+                  parentLabel: undefined,
+                  officeLabel: undefined,
+                  customSignatureLabels: undefined,
+                }
               )
             }
           />
@@ -331,21 +279,16 @@ export function AdmissionPrintContentCopiesSettings({
           checked={content.parentSignature}
           disabled={!settings.showSignature}
           onChange={(parentSignature) => update('content', { parentSignature })}
-          helperTooltip="Upload an optional parent signature image, or leave it blank to print an empty signature line. Leave the label blank to use the standard translation."
+          helperTooltip="Add a line for the parent or guardian to sign. Leave the label blank to use the standard translation."
         />
-        {content.parentSignature && settings.showSignature && (
-          <BannerUpload
-            label="Parent signature image"
-            description="PNG or JPG image. Maximum 5 MB."
-            accept={SIGNATURE_IMAGE_ACCEPT}
-            maxSize={5 * 1024 * 1024}
-            value={content.parentSignatureImage ? [content.parentSignatureImage] : []}
-            onChange={(files) =>
-              update('content', {
-                parentSignatureImage: typeof files[0] === 'string' ? files[0] : undefined,
-              })
-            }
-          />
+        {content.parentSignature && settings.showSignature && content.parentSignatureImage && (
+          <Button
+            type="button"
+            size="small"
+            onClick={() => update('content', { parentSignatureImage: undefined })}
+          >
+            Remove saved parent signature image
+          </Button>
         )}
         <PrintSettingText
           label="Parent signature label"
@@ -358,21 +301,17 @@ export function AdmissionPrintContentCopiesSettings({
           checked={content.officeSignature}
           disabled={!settings.showSignature}
           onChange={(officeSignature) => update('content', { officeSignature })}
-          helperTooltip="Upload an optional office signature image, or leave it blank to print an empty signature line. Leave the label blank to use the standard translation."
+          helperTooltip="Add a line for school staff to sign. Leave the label blank to use the standard translation."
         />
-        {content.officeSignature && settings.showSignature && (
-          <BannerUpload
-            label="Office signature image"
-            description="PNG or JPG image. Maximum 5 MB."
-            accept={SIGNATURE_IMAGE_ACCEPT}
-            maxSize={5 * 1024 * 1024}
-            value={content.officeSignatureImage ? [content.officeSignatureImage] : []}
-            onChange={(files) =>
-              update('content', {
-                officeSignatureImage: typeof files[0] === 'string' ? files[0] : undefined,
-              })
-            }
-          />
+        {content.officeSignature && settings.showSignature && content.officeSignatureImage && (
+          <Button
+            type="button"
+            size="small"
+            sx={{ alignSelf: 'flex-start' }}
+            onClick={() => update('content', { officeSignatureImage: undefined })}
+          >
+            Remove saved office signature image
+          </Button>
         )}
         <PrintSettingText
           label="Office signature label"
@@ -380,6 +319,56 @@ export function AdmissionPrintContentCopiesSettings({
           disabled={!settings.showSignature || !content.officeSignature || !language}
           onChange={(officeLabel) => updateTranslation({ officeLabel })}
         />
+        {customSignatureLabels.map((label, index) => (
+          <Stack key={index} direction="row" spacing={1} alignItems="center">
+            <PrintSettingText
+              label={`Custom signature label ${index + 1}`}
+              value={label}
+              disabled={!canEditSignatures}
+              onChange={(value) =>
+                updateTranslation({
+                  customSignatureLabels: customSignatureLabels.map((item, itemIndex) =>
+                    itemIndex === index ? value : item
+                  ),
+                })
+              }
+            />
+            <Tooltip title="Remove signature">
+              <span>
+                <IconButton
+                  type="button"
+                  size="small"
+                  aria-label={`Remove custom signature ${index + 1}`}
+                  disabled={!canEditSignatures}
+                  onClick={() =>
+                    updateTranslation({
+                      customSignatureLabels: customSignatureLabels.filter(
+                        (_, itemIndex) => itemIndex !== index
+                      ),
+                    })
+                  }
+                >
+                  <Iconify icon={GlobalIcons.delete} />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Stack>
+        ))}
+        <Button
+          type="button"
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+          sx={{ alignSelf: 'flex-start' }}
+          disabled={
+            !canEditSignatures || customSignatureLabels.length >= MAX_ADMISSION_PRINT_CUSTOM_SIGNATURES
+          }
+          onClick={() =>
+            updateTranslation({ customSignatureLabels: [...customSignatureLabels, ''] })
+          }
+        >
+          Add signature
+        </Button>
         <PrintSettingToggle
           label="Signature date"
           checked={content.signatureDate}

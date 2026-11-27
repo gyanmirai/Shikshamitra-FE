@@ -13,7 +13,7 @@ describe('admission form row action visibility', () => {
   it('offers draft-only actions for a draft', () => {
     expect(getFormRowActionVisibility(0, true, true, true)).toEqual({
       edit: true,
-      validate: true,
+      validate: false,
       publish: true,
       delete: true,
       history: true,
@@ -62,9 +62,10 @@ describe('admission form row action visibility', () => {
   it('allows a publisher to publish any draft without a review state', () => {
     expect(getFormRowActionVisibility(0, true, true, false)).toMatchObject({
       edit: true,
-      validate: true,
+      validate: false,
       publish: true,
     });
     expect(getFormRowActionVisibility(0, true, false, false).publish).toBe(false);
+    expect(getFormRowActionVisibility(0, true, false, false).validate).toBe(true);
   });
 });

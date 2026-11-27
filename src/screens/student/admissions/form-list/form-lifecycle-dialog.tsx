@@ -12,7 +12,6 @@ type Props = {
   loading: boolean;
   busy: boolean;
   canConfirm: boolean;
-  error?: string | null;
   onClose: () => void;
   onConfirm: () => void;
   requiresReload?: boolean;
@@ -25,7 +24,6 @@ export function FormLifecycleDialog({
   loading,
   busy,
   canConfirm,
-  error,
   onClose,
   onConfirm,
   requiresReload,
@@ -82,11 +80,6 @@ export function FormLifecycleDialog({
               Restore and publish the same form version. Existing links, saved answers and history
               are retained. Linked offerings and workflows can use it again when their other
               requirements are met.
-            </Typography>
-          )}
-          {error && (
-            <Typography variant="body2" color="error" role="alert">
-              {error}
             </Typography>
           )}
           {requiresReload && (

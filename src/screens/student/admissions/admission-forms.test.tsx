@@ -268,13 +268,16 @@ describe('Admission forms list workspace', () => {
     }
   );
 
-  it('keeps safe current rows while refreshing the same query', () => {
+  it('keeps safe current rows without a visible loader while refreshing the same query', () => {
     mocks.result.isFetching = true;
     renderScreen();
     const table = screen.getByRole('table', { name: 'Admission Forms table' });
     expect(within(table).getByText('Fresh inquiry')).toBeInTheDocument();
     expect(table).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByRole('progressbar', { name: 'Refreshing Admission Forms' })).toBeVisible();
+    expect(
+      screen.queryByRole('progressbar', { name: 'Refreshing Admission Forms' })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId('table-refresh-slot')).not.toBeInTheDocument();
     expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
   });
 
@@ -391,6 +394,8 @@ describe('Admission forms list workspace', () => {
     expect(screen.queryByText('Fresh inquiry')).not.toBeInTheDocument();
     const table = screen.getByRole('table', { name: 'Admission Forms table' });
     expect(table.querySelector('tbody .MuiSkeleton-root')).toBeInTheDocument();
+    expect(table).toHaveAttribute('aria-busy', 'true');
+    expect(screen.queryByText(/^Loading(?:…|\.\.\.)$/)).not.toBeInTheDocument();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(screen.queryByText(/No Admission Forms/)).not.toBeInTheDocument();
   });

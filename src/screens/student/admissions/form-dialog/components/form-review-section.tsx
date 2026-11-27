@@ -1,8 +1,9 @@
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
-import { Box, Grid, Typography } from '@mui/material';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { GlobalIcons } from 'src/utils/icons';
+import { Box, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { localizeAdmissionSection } from '../form-languages';
 import AdmissionRuntimeField from '../../admission-runtime-field';
@@ -27,10 +28,10 @@ export function FormReviewSection({
   const section = localizeAdmissionSection(formik.values.sections[sectionIndex], language);
   const columns = section.fieldsPerRow ?? formik.values.fieldsPerRow;
   return (
-    <SectionCard
+    <FormSectionCard
       title={section.name}
-      paperProps={{ sx: { mb: 0, minWidth: 0, '& h6': { overflowWrap: 'anywhere' } } }}
-      gridProps={{ spacing: 1 }}
+      icon={GlobalIcons.admissionDetails}
+      sx={{ minWidth: 0, '& h6': { overflowWrap: 'anywhere' } }}
     >
       <AdmissionSectionFields
         fields={section.fields}
@@ -63,12 +64,10 @@ export function FormReviewSection({
         )}
       />
       {!section.fields.length && (
-        <Grid size={{ xs: 12 }}>
-          <Typography variant="body2" color="text.secondary">
-            No fields in this section. Return to Build form to add fields.
-          </Typography>
-        </Grid>
+        <Typography variant="body2" color="text.secondary">
+          No fields in this section. Return to Build form to add fields.
+        </Typography>
       )}
-    </SectionCard>
+    </FormSectionCard>
   );
 }

@@ -103,11 +103,13 @@ function Harness({
   definition = form,
   basic = false,
   onEditHeader,
+  bannerUrl,
 }: {
   initial?: AdmissionPrintSettings;
   definition?: AdmissionPrintDefinition;
   basic?: boolean;
   onEditHeader?: () => void;
+  bannerUrl?: string;
 }) {
   const [settings, setSettings] = useState(initial);
   return (
@@ -116,16 +118,16 @@ function Harness({
         <AdmissionPrintSettingsPanel
           settings={settings}
           onChange={setSettings}
-          branding={{ schoolName: 'Example School' }}
-          pageCount={4}
+          hasPhotoField={definition === formWithPhoto}
         />
       ) : (
         <AdmissionPrintAdvancedSettings
           settings={settings}
           onChange={setSettings}
           form={definition}
-          branding={{ schoolName: 'Example School' }}
+          branding={{ schoolName: 'Example School', bannerUrl }}
           onEditHeader={onEditHeader}
+          pageCount={4}
         />
       )}
       <output data-testid="saved-settings">{JSON.stringify(settings)}</output>
@@ -148,6 +150,29 @@ function selectSettingsTab(name: string) {
 }
 
 describe('Advanced registration print settings', () => {
+  it('shows labeled scroll arrows when the tabs overflow', () => {
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(private callback: (entries: { isIntersecting: boolean }[]) => void) {}
+
+        observe() {
+          this.callback([{ isIntersecting: false }]);
+        }
+
+        disconnect = vi.fn();
+      }
+    );
+    try {
+      render(<Harness />);
+      expect(screen.getByRole('button', { name: 'Scroll tabs left' })).toBeEnabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Scroll tabs right' }));
+      expect(screen.getByRole('tab', { name: 'Paper & style', selected: true })).toBeVisible();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it.each([
     ['Paper & style', 'Paper Setup', 'Page Border'],
     ['Header & footer', 'School Details', 'Photo Space'],
@@ -183,8 +208,7 @@ describe('Advanced registration print settings', () => {
   });
 
   it.each([
-    ['Paper & style', 'Page Border'],
-    ['Header & footer', 'Photo Space'],
+        ['Header & footer', 'Photo Space'],
     ['Sections & fields', 'Section Layout'],
     ['Content & copies', 'Document Checklist'],
   ])('provides keyboard-accessible disclosure controls on %s', async (tab, title) => {
@@ -218,54 +242,39 @@ describe('Advanced registration print settings', () => {
     );
   });
 
-  it('edits writing instructions as list items while preserving the saved newline format', () => {
-    render(
-      <Harness
-        initial={{
-          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
-          advanced: {
-            content: {
-              showInstructions: true,
-              translations: { en: { instructions: 'Use black ink.\nWrite clearly.' } },
-            },
-          },
-        }}
-      />
-    );
+  it('retains saved instruction typography when changing instruction placement', () => {
+    const content = {
+      showInstructions: true,
+      instructionTextSize: '14' as const,
+      instructionTextWeight: 'bold' as const,
+    };
+    render(<Harness initial={{ ...DEFAULT_ADMISSION_PRINT_SETTINGS, advanced: { content } }} />);
     selectSettingsTab('Content & copies');
     openSettingsCard('Instructions');
-
-    expect(screen.getByLabelText('Instruction 1')).toHaveValue('Use black ink.');
-    expect(screen.getByLabelText('Instruction 2')).toHaveValue('Write clearly.');
-    fireEvent.click(screen.getByRole('button', { name: 'Add instruction' }));
-    fireEvent.change(screen.getByLabelText('Instruction 3'), {
-      target: { value: 'Sign every page.' },
+    choose('Instructions placement', 'Before declaration');
+    expect(payload().advanced.content).toEqual({
+      ...content,
+      instructionsPlacement: 'before-declaration',
     });
-    expect(payload().advanced.content.translations.en.instructions).toBe(
-      'Use black ink.\nWrite clearly.\nSign every page.'
-    );
+    expect(screen.queryByLabelText('Instruction font size')).not.toBeInTheDocument();
   });
 
-  it('updates instruction typography in the saved settings', () => {
-    render(
-      <Harness
-        initial={{
-          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
-          advanced: { content: { showInstructions: true } },
-        }}
-      />
-    );
+  it('enables instruction placement and editing from the Advanced card', () => {
+    render(<Harness />);
     selectSettingsTab('Content & copies');
     openSettingsCard('Instructions');
-    choose('Heading font size', '16 pt');
-    choose('Instruction font size', '14 pt');
-    choose('Instruction text weight', 'Bold');
-    choose('Instruction text color', 'Gray');
+
+    const placement = screen.getByRole('combobox', { name: 'Instructions placement' });
+    expect(placement).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(screen.getByRole('switch', { name: 'Print writing instructions' }));
+    choose('Instructions placement', 'Separate page');
+    fireEvent.change(screen.getByLabelText('Instruction 1'), {
+      target: { value: 'Write in block letters' },
+    });
     expect(payload().advanced.content).toMatchObject({
-      instructionHeadingSize: '16',
-      instructionTextSize: '14',
-      instructionTextWeight: 'bold',
-      instructionTextColor: 'gray',
+      showInstructions: true,
+      instructionsPlacement: 'separate-page',
+      translations: { en: { instructions: 'Write in block letters' } },
     });
   });
 
@@ -273,8 +282,6 @@ describe('Advanced registration print settings', () => {
     render(<Harness />);
     selectSettingsTab('Content & copies');
 
-    openSettingsCard('Instructions');
-    expect(screen.getByRole('button', { name: 'Include instructions help' })).toBeInTheDocument();
     openSettingsCard('Declaration & Signatures');
     expect(screen.getByRole('button', { name: 'Include declaration help' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Parent signature help' })).toBeInTheDocument();
@@ -291,7 +298,7 @@ describe('Advanced registration print settings', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('shows independent parent and office signature uploads and persists their images', () => {
+  it('keeps saved signature images removable and adds custom handwritten signature lines', () => {
     render(
       <Harness
         initial={{
@@ -308,12 +315,31 @@ describe('Advanced registration print settings', () => {
     selectSettingsTab('Content & copies');
     openSettingsCard('Declaration & Signatures');
 
-    expect(screen.getByRole('group', { name: /Parent signature image/ })).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: /Office signature image/ })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: /Parent signature image/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove saved parent signature image' })).toBeVisible();
+    expect(screen.queryByRole('group', { name: /Office signature image/ })).not.toBeInTheDocument();
     expect(payload().advanced.content).toMatchObject({
       parentSignatureImage: 'data:image/png;base64,cGFyZW50',
       officeSignatureImage: 'data:image/jpeg;base64,b2ZmaWNl',
     });
+    fireEvent.click(screen.getByRole('button', { name: 'Remove saved office signature image' }));
+    expect(payload().advanced.content.officeSignatureImage).toBeUndefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Add signature' }));
+    fireEvent.change(screen.getByLabelText('Custom signature label 1'), {
+      target: { value: 'Principal signature' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add signature' }));
+    fireEvent.change(screen.getByLabelText('Custom signature label 2'), {
+      target: { value: 'Student signature' },
+    });
+    expect(payload().advanced.content.translations.en.customSignatureLabels).toEqual([
+      'Principal signature',
+      'Student signature',
+    ]);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove custom signature 1' }));
+    expect(payload().advanced.content.translations.en.customSignatureLabels).toEqual([
+      'Student signature',
+    ]);
   });
 
   it('shows photo guidance without changing saved settings when there is no photo question', () => {
@@ -337,15 +363,19 @@ describe('Advanced registration print settings', () => {
     });
   });
 
-  it('keeps specific banner pages independent of the header choice', () => {
-    render(<Harness basic />);
-    expect(screen.getByRole('button', { name: 'Collapse Template & Spacing' })).toBeVisible();
-    openSettingsCard('School Branding');
-    expect(screen.getByRole('button', { name: 'Expand Template & Spacing' })).toBeVisible();
-    choose('Banner pages', 'Selected pages');
-    choose('Pages with banner', 'Page 3');
-    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
-    choose('Header on later pages', 'Full');
+  it('preserves saved banner page choices when the continuation header changes', () => {
+    render(
+      <Harness
+        bannerUrl="/school-banner.png"
+        initial={{
+          ...DEFAULT_ADMISSION_PRINT_SETTINGS,
+          advanced: { branding: { bannerPlacement: 'selected', bannerPages: [1, 3] } },
+        }}
+      />
+    );
+    selectSettingsTab('Header & footer');
+    expect(screen.getByRole('combobox', { name: 'Pages with banner' })).toHaveTextContent('Page 3');
+    choose('Continuation page header', 'Full header');
     expect(payload().advanced).toMatchObject({
       branding: { bannerPlacement: 'selected', bannerPages: [1, 3] },
       header: { continuation: 'full' },
@@ -370,7 +400,7 @@ describe('Advanced registration print settings', () => {
 
   it('saves photo visibility while retaining the saved placement values', () => {
     render(
-      <Harness
+      <Harness basic
         definition={formWithPhoto}
         initial={{
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
@@ -378,14 +408,12 @@ describe('Advanced registration print settings', () => {
         }}
       />
     );
-    selectSettingsTab('Header & footer');
-    openSettingsCard('Photo Space');
-    fireEvent.click(screen.getByLabelText('Show photo space'));
+    fireEvent.click(screen.getByLabelText('Photo space'));
     expect(payload()).toMatchObject({
       showPhoto: false,
       advanced: { photo: { placement: 'last', alignment: 'center' } },
     });
-    fireEvent.click(screen.getByLabelText('Show photo space'));
+    fireEvent.click(screen.getByLabelText('Photo space'));
     expect(payload().advanced.photo).toMatchObject({ placement: 'last', alignment: 'center' });
   });
 
@@ -405,13 +433,14 @@ describe('Advanced registration print settings', () => {
     openSettingsCard('Page Border');
     fireEvent.click(screen.getByRole('switch', { name: 'Show page border' }));
     choose('Border style', 'Double line');
+    choose('Border corners', 'Rounded');
     openSettingsCard('Print Colours');
     fireEvent.click(screen.getByRole('radio', { name: /School blue/ }));
     expect(payload()).toMatchObject({
       paperSize: 'A5',
       advanced: {
         paper: { orientation: 'landscape' },
-        border: { enabled: true, style: 'double' },
+        border: { enabled: true, style: 'double', corners: 'rounded' },
         style: { palette: 'school-blue', borderColor: '#003399' },
         branding: initial.advanced?.branding,
         sections: initial.advanced?.sections,
@@ -420,7 +449,7 @@ describe('Advanced registration print settings', () => {
     });
   });
 
-  it('offers four print colour presets and font families', () => {
+  it('offers four print colour presets and three font families', () => {
     render(<Harness />);
     openSettingsCard('Print Colours');
     expect(screen.getByRole('radio', { name: /School blue/ })).toBeInTheDocument();
@@ -440,10 +469,10 @@ describe('Advanced registration print settings', () => {
     openSettingsCard('Typography');
     expect(screen.getByRole('radio', { name: 'Sans serif' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Serif' })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'Monospace' })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: 'Monospace' })).not.toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Roboto' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('radio', { name: 'Monospace' }));
-    expect(payload().advanced.style.fontFamily).toBe('monospace');
+    fireEvent.click(screen.getByRole('radio', { name: 'Serif' }));
+    expect(payload().advanced.style.fontFamily).toBe('serif');
   });
 
   it('resets each paper and style card independently', () => {
@@ -492,18 +521,6 @@ describe('Advanced registration print settings', () => {
       },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset Page Border to defaults' }));
-    expect(payload().advanced.border).toMatchObject({
-      enabled: false,
-      placement: 'every',
-      style: 'single',
-      thickness: 'thin',
-      inset: 8,
-      corners: 'square',
-      sectionBorders: true,
-      fieldBorders: true,
-      dividers: true,
-    });
   });
 
   it('resets header, photo and footer cards independently', () => {
@@ -563,7 +580,7 @@ describe('Advanced registration print settings', () => {
     );
     expect(payload().advanced.header).toMatchObject({
       schoolName: true,
-      title: '',
+      title: 'Keep me',
       subtitle: '',
       alignment: 'center',
       registrationNumber: true,
@@ -572,10 +589,10 @@ describe('Advanced registration print settings', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset Photo Space to defaults' }));
     expect(payload()).toMatchObject({
-      showPhoto: true,
+      showPhoto: false,
       advanced: {
         photo: {
-          placement: 'first',
+          placement: 'header-top-right',
           alignment: 'right',
           width: 35,
           height: 45,
@@ -592,7 +609,6 @@ describe('Advanced registration print settings', () => {
       pageNumbers: true,
       registrationReference: false,
       schoolName: false,
-      formTitle: false,
     });
   });
 
@@ -674,8 +690,6 @@ describe('Advanced registration print settings', () => {
     );
     selectSettingsTab('Content & copies');
 
-    openSettingsCard('Instructions');
-    expect(screen.getByRole('button', { name: 'Include instructions help' })).toBeInTheDocument();
     openSettingsCard('Declaration & Signatures');
     expect(screen.getByRole('button', { name: 'Include declaration help' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Parent signature help' })).toBeInTheDocument();
@@ -689,7 +703,7 @@ describe('Advanced registration print settings', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset Instructions to defaults' }));
     expect(payload().advanced.content).toMatchObject({
-      showInstructions: false,
+      showInstructions: true,
       instructionsPlacement: 'first',
       instructionSection: '',
       translations: {
@@ -746,17 +760,17 @@ describe('Advanced registration print settings', () => {
     expect(screen.getByRole('switch', { name: 'School phone' })).toBeDisabled();
     expect(screen.getByRole('switch', { name: 'School phone' })).toBeChecked();
     expect(screen.getByRole('switch', { name: 'School phone' })).toHaveAccessibleDescription(
-      'Set missing school contact details in Institute Setup to include them.'
+      'Add missing contact details in Institute Setup to print them.'
     );
-    expect(screen.getByText(/Set missing school contact details/)).toBeVisible();
+    expect(screen.getByText(/Add missing contact details in Institute Setup/)).toBeVisible();
     openSettingsCard('Title & Admission Details');
-    fireEvent.change(screen.getByLabelText('Print title'), {
+    fireEvent.change(screen.getByLabelText('Subtitle'), {
       target: { value: 'Admission registration' },
     });
     openSettingsCard('Footer');
     choose('Footer pages', 'Last page');
     expect(payload().advanced).toMatchObject({
-      header: { phone: true, title: 'Admission registration' },
+      header: { phone: true, subtitle: 'Admission registration' },
       footer: { placement: 'last' },
     });
   });
@@ -771,10 +785,10 @@ describe('Advanced registration print settings', () => {
     choose('Field width', 'Full width');
     openSettingsCard('Section Layout');
     choose('Section', 'Siblings');
-    fireEvent.click(screen.getByRole('switch', { name: 'Full-width section' }));
+    choose('Section columns', '1 column');
     expect(screen.getByLabelText('Blank table rows')).toBeVisible();
     expect(payload().advanced).toMatchObject({
-      sections: { STUDENT: { columns: 3, startNewPage: true }, SIBLINGS: { fullWidth: true } },
+      sections: { STUDENT: { columns: 3, startNewPage: true }, SIBLINGS: { columns: 1 } },
       fields: { FIRST_NAME: { width: 'full' } },
     });
     expect(form.sections[0].fields[0].required).toBe(true);
@@ -790,6 +804,7 @@ describe('Advanced registration print settings', () => {
           ...DEFAULT_ADMISSION_PRINT_SETTINGS,
           advanced: {
             content: {
+              showInstructions: true,
               translations: {
                 en: { instructions: 'English instructions' },
                 gu: { instructions: 'Gujarati instructions', checklist: ['Birth certificate'] },
@@ -802,7 +817,6 @@ describe('Advanced registration print settings', () => {
     selectSettingsTab('Content & copies');
     choose('Content language', 'Gujarati');
     openSettingsCard('Instructions');
-    fireEvent.click(screen.getByRole('switch', { name: 'Include instructions' }));
     fireEvent.change(screen.getByLabelText('Instruction 1'), {
       target: { value: 'Updated Gujarati instructions' },
     });

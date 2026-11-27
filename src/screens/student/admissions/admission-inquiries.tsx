@@ -433,7 +433,7 @@ export default function AdmissionInquiriesScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
           data={skipList || scopeLoading ? [] : (data?.items ?? [])}
-          refreshIndicator="circular"
+          refreshIndicator="none"
           isRefreshing={
             Boolean(data) && isFetching && !scopeLoading && !skipList && !handoff.moving
           }

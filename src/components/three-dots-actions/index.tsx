@@ -29,6 +29,7 @@ const ThreeDotsActions = ({
   editLabel = 'Edit',
   deleteLabel = 'Delete',
   moreLabel = 'More actions',
+  moreTooltip = moreLabel,
   disableDeleteIcon = false,
   deleteDisabledReason,
   disableEditIcon = false,
@@ -117,8 +118,12 @@ const ThreeDotsActions = ({
         </CustomTooltip>
       )}
       {directActions.map((action) => (
-        <Tooltip key={action.id} title={action.tooltip ?? action.label}>
-          <span>
+        <Tooltip key={action.id} title={action.tooltip ?? action.label} describeChild>
+          <span
+            {...(action.disabled && action.tooltip
+              ? { role: 'group', tabIndex: 0, 'aria-label': action.ariaLabel ?? action.label }
+              : {})}
+          >
             <IconButton
               {...(action.href && !action.disabled && !action.loading
                 ? { component: RouterLink, href: action.href }
@@ -148,7 +153,7 @@ const ThreeDotsActions = ({
         </Tooltip>
       ))}
       {showThreeDots && (
-        <Tooltip title={moreLabel}>
+        <Tooltip title={moreTooltip} describeChild>
           <IconButton
             aria-label={moreLabel}
             aria-haspopup="menu"

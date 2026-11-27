@@ -40,6 +40,7 @@ export type AdmissionPrintSectionSettings = {
   spacing?: 'compact' | 'spacious';
   fullWidth?: boolean;
   startNewPage?: boolean;
+  keepTogether?: boolean;
   keepHeading?: boolean;
   repeatTableHeadings?: boolean;
   blankRows?: number;
@@ -124,7 +125,7 @@ export type AdmissionPrintAdvancedSettings = {
     schoolName?: boolean;
     formTitle?: boolean;
   };
-  flow?: { stepTitles?: boolean; sectionNumbers?: boolean };
+  flow?: { stepTitles?: boolean; sectionNumbers?: boolean; smartPageFitting?: boolean };
   /** Uppercase authored codes survive draft reopen and new-version clones. */
   sections?: Record<string, AdmissionPrintSectionSettings>;
   fields?: Record<string, AdmissionPrintFieldSettings>;
@@ -159,6 +160,7 @@ export type AdmissionPrintAdvancedSettings = {
         declaration?: string;
         parentLabel?: string;
         officeLabel?: string;
+        customSignatureLabels?: string[];
       }
     >;
   };
@@ -167,6 +169,8 @@ export type AdmissionPrintAdvancedSettings = {
     selectedChoices?: 'label' | 'mark';
   };
 };
+
+export const MAX_ADMISSION_PRINT_CUSTOM_SIGNATURES = 4;
 
 export type AdmissionFormPrintSettings = {
   template?: 'simple' | 'boxed-grid' | 'structured-classic';
@@ -177,12 +181,6 @@ export type AdmissionFormPrintSettings = {
   showSignature: boolean;
   advanced?: AdmissionPrintAdvancedSettings | null;
 };
-
-export function resolveEditableRegistrationPrintTemplate(
-  template: AdmissionFormPrintSettings['template']
-) {
-  return template && template !== 'simple' ? template : 'boxed-grid';
-}
 
 export const ADMISSION_PRINT_DEFAULT_ASSETS = {
   logo: { x: 0, y: 8, width: 14, height: 84, lockAspectRatio: true },
@@ -280,7 +278,7 @@ export function resolveAdmissionPrintAdvancedSettings(
       formTitle: false,
       ...advanced?.footer,
     },
-    flow: { stepTitles: true, sectionNumbers: true, ...advanced?.flow },
+    flow: { stepTitles: true, sectionNumbers: true, smartPageFitting: true, ...advanced?.flow },
     sections: advanced?.sections ?? {},
     fields: advanced?.fields ?? {},
     content: {

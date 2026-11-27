@@ -21,6 +21,108 @@ const pdfJsPackage = createRequire(import.meta.url).resolve('pdfjs-dist/package.
 
 beforeAll(() => mswServer.close());
 
+it.each([
+  ['boxed-grid', true],
+  ['boxed-grid', false],
+  ['structured-classic', false],
+  ['simple', false],
+] as const)('labels a continued section only after its first page (%s, advanced %s)', async (template, advanced) => {
+  const model = boundaryDocument({ template, layout: 'compact', mode: 'filled' }, 4, advanced);
+  const pages = await readPages(model);
+  const text = pages.map((items) => items.map((item) => item.str).join(' '));
+  const first = text.findIndex((page) => page.includes('Personal information'));
+  expect(first).toBeGreaterThanOrEqual(0);
+  expect(text[first]).not.toContain('Personal information (continued)');
+  expect(text.slice(first + 1).some((page) => page.includes('Personal information (continued)'))).toBe(true);
+}, 30000);
+
+it('keeps a small section together when explicitly requested and flows it otherwise', async () => {
+  const testCase = { template: 'boxed-grid', layout: 'compact', mode: 'blank' } as const;
+  let foundSplit = false;
+  for (const fillerRows of Array.from({ length: 24 }, (_, index) => index + 1)) {
+    const model = boundaryDocument(testCase, fillerRows, true);
+    model.steps[1].sections[0].entries[0].fields = model.steps[1].sections[0].entries[0].fields.slice(1, 7);
+    const flowing = await readPages(model);
+    const pageOf = (pages: Awaited<ReturnType<typeof readPages>>, text: string) =>
+      pages.findIndex((items) => items.some((item) => item.str === text));
+    const first = pageOf(flowing, 'Identity reference');
+    const last = pageOf(flowing, 'Additional detail 3');
+    if (last <= first || first < 0) continue;
+    foundSplit = true;
+    model.settings.advanced = { sections: { PERSONAL: { keepTogether: true } } };
+    const together = await readPages(model);
+    expect(pageOf(together, 'Additional detail 3')).toBe(pageOf(together, 'Identity reference'));
+    model.settings.advanced = { flow: { smartPageFitting: false } };
+    const fittingOff = await readPages(model);
+    expect(pageOf(fittingOff, 'Additional detail 3')).toBe(pageOf(fittingOff, 'Identity reference'));
+    break;
+  }
+  expect(foundSplit).toBe(true);
+}, 30000);
+
+it('continues an oversized section even when keep together is requested', async () => {
+  const model = boundaryDocument({ template: 'boxed-grid', layout: 'compact', mode: 'filled' }, 4, true);
+  model.settings.advanced = { sections: { PERSONAL: { keepTogether: true } } };
+  const pages = await readPages(model);
+  const pageOf = (text: string) => pages.findIndex((items) => items.some((item) => item.str === text));
+  expect(pageOf('Additional detail 32')).toBeGreaterThan(pageOf('Personal information'));
+  expect(pageOf('Primary detail 1')).toBe(pageOf('Personal information'));
+}, 30000);
+
+it('honors an explicit new page when a section is also kept together', async () => {
+  const model = boundaryDocument({ template: 'boxed-grid', layout: 'compact', mode: 'blank' }, 1, true);
+  model.steps[1].sections[0].entries[0].fields = model.steps[1].sections[0].entries[0].fields.slice(1, 7);
+  model.settings.advanced = { sections: { PERSONAL: { startNewPage: true, keepTogether: true } } };
+  const pages = await readPages(model);
+  const pageOf = (text: string) => pages.findIndex((items) => items.some((item) => item.str === text));
+  expect(pageOf('Personal information')).toBeGreaterThan(pageOf('Previous information'));
+  expect(pageOf('Additional detail 3')).toBe(pageOf('Personal information'));
+}, 30000);
+
+it('does not label the first page of an explicitly moved section as continued', async () => {
+  const model = boundaryDocument({ template: 'boxed-grid', layout: 'compact', mode: 'blank' }, 1, true);
+  model.settings.advanced = { sections: { PERSONAL: { startNewPage: true } } };
+  const pages = await readPages(model);
+  const text = pages.map((items) => items.map((item) => item.str).join(' '));
+  const first = text.findIndex((page) => page.includes('Personal information'));
+  expect(first).toBeGreaterThan(0);
+  expect(text[first]).not.toContain('Personal information (continued)');
+}, 30000);
+
+it.each([5, 8, 10, 12, 14, 16])('does not label a section first page as continued at boundary %i', async (rows) => {
+  const model = boundaryDocument({ template: 'boxed-grid', layout: 'compact', mode: 'blank' }, rows, true);
+  const pages = await readPages(model);
+  const text = pages.map((items) => items.map((item) => item.str).join(' '));
+  const firstHeading = text.findIndex((page) => page.includes('Personal information'));
+  expect(firstHeading).toBeGreaterThanOrEqual(0);
+  expect(text[firstHeading]).not.toContain('Personal information (continued)');
+}, 30000);
+
+it('does not add a continued label to a short section that stays on one page', async () => {
+  const model = boundaryDocument({ template: 'boxed-grid', layout: 'compact', mode: 'blank' }, 1, true);
+  model.steps[1].sections[0].entries[0].fields = model.steps[1].sections[0].entries[0].fields.slice(1, 3);
+  const pages = await readPages(model);
+  expect(pages.flat().map((item) => item.str).join(' ')).not.toContain('Personal information (continued)');
+}, 30000);
+
+it.each(['boxed-grid', 'structured-classic'] as const)(
+  'uses available space for short sections in the default %s template',
+  async (template) => {
+    let foundSplit = false;
+    for (const fillerRows of Array.from({ length: 24 }, (_, index) => index + 1)) {
+      const model = boundaryDocument({ template, layout: 'compact', mode: 'blank' }, fillerRows);
+      model.steps[1].sections[0].entries[0].fields = model.steps[1].sections[0].entries[0].fields.slice(1, 7);
+      const pages = await readPages(model);
+      const pageOf = (text: string) => pages.findIndex((items) => items.some((item) => item.str === text));
+      const first = pageOf('Identity reference');
+      const last = pageOf('Additional detail 3');
+      if (first >= 0 && last > first) { foundSplit = true; break; }
+    }
+    expect(foundSplit).toBe(true);
+  },
+  30000
+);
+
 const question = (code: string, label: string, displayOrder = 0) => ({
   id: code,
   code,
@@ -90,7 +192,12 @@ function boundaryDocument(
       BIRTH: '14 May 2012',
     },
     mode,
-    settings: { template, layout, showSignature: false, ...(advanced ? { advanced: {} } : {}) },
+    settings: {
+      template,
+      layout,
+      showSignature: false,
+      ...(advanced ? { advanced: { paper: { orientation: 'portrait' } } } : {}),
+    },
   });
   const { fields } = model.steps[1].sections[0].entries[0];
   fields[2].kind = 'choice';
@@ -193,6 +300,9 @@ it.each([8, 9, 10, 11])(
       expect(pageOf(text)).toBe(headingPage)
     );
     expect(pageOf('Relative 26')).toBeGreaterThanOrEqual(1);
+    expect(pages.slice(headingPage + 1).some((items) =>
+      items.map((item) => item.str).join(' ').includes('Personal information (continued)')
+    )).toBe(true);
   },
   30000
 );

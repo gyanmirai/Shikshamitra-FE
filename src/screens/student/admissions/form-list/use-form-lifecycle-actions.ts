@@ -2,8 +2,8 @@
 
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useRef, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useArchiveAdmissionFormMutation,
@@ -11,11 +11,15 @@ import {
   useGetAdmissionFormArchiveImpactQuery,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import {
+  admissionFormActionErrorMessage,
+  FORM_RESTORE_INVALID_DEFINITION,
+} from './form-validation-errors';
+
 export type PendingFormLifecycle = { action: 'archive' | 'restore'; form: AdmissionForm } | null;
 
 export function useFormLifecycleActions(canManage: boolean) {
   const [pending, setPending] = useState<PendingFormLifecycle>(null);
-  const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [requiresReload, setRequiresReload] = useState(false);
   const locked = useRef(false);
@@ -28,6 +32,16 @@ export function useFormLifecycleActions(canManage: boolean) {
   const impact =
     query.currentData?.formDefinitionId === pending?.form.id ? query.currentData : undefined;
   const expectedStatus = pending?.action === 'archive' ? 1 : 2;
+  const statusChanged = Boolean(
+    !query.isFetching && !query.isError && impact && impact.status !== expectedStatus
+  );
+  useEffect(() => {
+    if (statusChanged) {
+      shikshaMitraToast.error({
+        message: 'This form status has changed. Close and reopen the latest form.',
+      });
+    }
+  }, [statusChanged]);
   const canConfirm = Boolean(
     canManage &&
     pending &&
@@ -42,7 +56,6 @@ export function useFormLifecycleActions(canManage: boolean) {
   const request = useCallback(
     (action: 'archive' | 'restore', form: AdmissionForm) => {
       if (!canManage || locked.current || form.status !== (action === 'archive' ? 1 : 2)) return;
-      setError(null);
       setRequiresReload(false);
       setPending({ action, form });
     },
@@ -57,34 +70,26 @@ export function useFormLifecycleActions(canManage: boolean) {
     requiresReload,
     loading: query.isFetching,
     queryError: Boolean(pending && query.isError),
-    error:
-      error ||
-      (!query.isFetching && !query.isError && impact && impact.status !== expectedStatus
-        ? 'This form status has changed. Close and reopen the latest form.'
-        : null),
     request,
     close: () => {
-      if (!locked.current) {
-        setPending(null);
-        setError(null);
-      }
+      if (!locked.current) setPending(null);
     },
     reloadLatest: async () => {
       if (!pending || locked.current) return;
       setRequiresReload(true);
       try {
         await query.refetch().unwrap();
-        setError(null);
         setRequiresReload(false);
       } catch (failure) {
-        shikshaMitraToast.error({ message: parseApiProblemDetail(failure).detail });
+        shikshaMitraToast.error({
+          message: admissionFormActionErrorMessage(failure, 'Unable to reload the form. Please try again.'),
+        });
       }
     },
     confirm: async () => {
       if (!pending || !canConfirm || !impact || locked.current) return;
       locked.current = true;
       setBusy(true);
-      setError(null);
       try {
         const mutation = pending.action === 'archive' ? archive : restore;
         await mutation({ id: pending.form.id, concurrencyStamp: impact.concurrencyStamp }).unwrap();
@@ -94,19 +99,23 @@ export function useFormLifecycleActions(canManage: boolean) {
         setPending(null);
       } catch (failure) {
         const problem = parseApiProblemDetail(failure);
-        const message = problem.detail;
         if (
           problem.errorCode === 'Admissions.FormConcurrencyConflict' ||
           (failure as { status?: number })?.status === 409
-        )
-          setRequiresReload(true);
-        if (
-          typeof problem.errorCode === 'string' &&
-          problem.errorCode.startsWith('Admissions.Form')
         ) {
-          setError(message);
+          setRequiresReload(true);
+          shikshaMitraToast.error({
+            message: 'This form has changed. Select Reload Latest before trying again.',
+          });
         } else {
-          shikshaMitraToast.error({ message });
+          if (problem.errorCode === FORM_RESTORE_INVALID_DEFINITION) setPending(null);
+          shikshaMitraToast.error({
+            message: admissionFormActionErrorMessage(
+              failure,
+              `Unable to ${pending.action} this form. Please try again.`,
+              problem
+            ),
+          });
         }
       } finally {
         locked.current = false;

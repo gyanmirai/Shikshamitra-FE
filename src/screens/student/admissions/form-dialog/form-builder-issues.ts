@@ -38,7 +38,10 @@ export function getAddressBuilderIssues(form: CreateUpdateAdmissionForm): Builde
   const missingIds = new Set(missing.map(({ field }) => field.id));
   const fields = form.sections.flatMap((section) => section.fields);
   const issues = missing.map(({ field, kind }) => ({
-    message: addressMissingMessage(kind, field.label.trim() || (kind === 'city' ? 'City' : 'State')),
+    message: addressMissingMessage(
+      kind,
+      field.label.trim() || (kind === 'city' ? 'City' : 'State')
+    ),
     fieldId: field.id,
     target: getBuilderIssueTarget(form, { fieldId: field.id, settingPath: '.validationJson' }),
   }));
@@ -46,7 +49,9 @@ export function getAddressBuilderIssues(form: CreateUpdateAdmissionForm): Builde
     if (missingIds.has(fieldId)) return;
     const label = fields.find((field) => field.id === fieldId)?.label.trim();
     issues.push({
-      message: label ? `${addressOrderMessage} Check the position of ${label}.` : addressOrderMessage,
+      message: label
+        ? `${addressOrderMessage} Check the position of ${label}.`
+        : addressOrderMessage,
       fieldId,
       target: getBuilderIssueTarget(form, { fieldId }),
     });
@@ -80,11 +85,12 @@ export function getBuilderIssues(
           message: `Step ${step.displayOrder + 1} needs a name.`,
           target: getFormikBuilderIssueTarget(form, `${stepPath}.stepName`),
         });
-      if (!code) issues.push({ message: `${step.name || 'Step'} needs a code.`, target });
+      if (!code)
+        issues.push({ message: `${step.name || 'Step'} needs its settings reviewed.`, target });
       else if (!/^[A-Z][A-Z0-9_-]*$/.test(code))
-        issues.push({ message: `${step.name || step.code} has an invalid code.`, target });
+        issues.push({ message: `${step.name || 'Step'} has invalid settings.`, target });
       else if (stepCodes.has(code))
-        issues.push({ message: `Duplicate step code: ${step.code}.`, target });
+        issues.push({ message: `${step.name || 'Step'} has duplicate settings.`, target });
       stepCodes.add(code);
     });
   }
@@ -152,7 +158,7 @@ export function getBuilderIssues(
     const key = field.bindingKey?.toLowerCase();
     if (key && boundKeys.has(key))
       issues.push({
-        message: `${field.label || field.code} duplicates a linked student field.`,
+        message: `${field.label || 'Question'} duplicates a linked student field.`,
         fieldId: field.id,
         target: targetForField(field.id, 'bindingKey'),
       });
@@ -161,7 +167,7 @@ export function getBuilderIssues(
     const metadata = catalogue.fields!.find((item) => item.key.toLowerCase() === key);
     if (!metadata)
       issues.push({
-        message: `${field.label || field.code} needs a valid student field connection.`,
+        message: `${field.label || 'Question'} needs a valid student field connection.`,
         fieldId: field.id,
         target: targetForField(field.id, 'bindingKey'),
       });
@@ -169,7 +175,7 @@ export function getBuilderIssues(
       const expectedType =
         FIELD_TYPES.find(([, type]) => type === metadata.fieldType)?.[0] ?? 'original answer type';
       issues.push({
-        message: `${field.label || field.code} is linked to ${metadata.displayName} and must use ${expectedType}. Restore its field type in Basic settings.`,
+        message: `${field.label || 'Question'} is linked to ${metadata.displayName} and must use ${expectedType}. Restore its field type in Basic settings.`,
         fieldId: field.id,
         target: targetForField(field.id, 'fieldType'),
       });
@@ -182,16 +188,16 @@ export function getBuilderIssues(
       !(form.purpose === 1 && form.inheritance?.enabled && form.inheritance.sources.length)
     )
       issues.push({
-        message: `${section.name || section.code || 'Section'} has no fields. Add at least one field before publishing.`,
+        message: `${section.name || 'Section'} has no fields. Add at least one field before publishing.`,
         target: getBuilderIssueTarget(form, { sectionId: section.id }),
       });
     if (!section.code.trim())
-      issues.push({ message: `${section.name || 'Section'} needs a code.`, target });
+      issues.push({ message: `${section.name || 'Section'} needs its settings reviewed.`, target });
     const sectionCode = section.code.trim().toUpperCase();
     if (section.code.trim() && !/^[A-Z][A-Z0-9_-]*$/.test(sectionCode))
-      issues.push({ message: `${section.name || section.code} has an invalid code.`, target });
+      issues.push({ message: `${section.name || 'Section'} has invalid settings.`, target });
     if (sectionCodes.has(sectionCode))
-      issues.push({ message: `Duplicate section code: ${section.code}.`, target });
+      issues.push({ message: `${section.name || 'Section'} has duplicate settings.`, target });
     sectionCodes.add(sectionCode);
     section.fields.forEach((field, fieldIndex) => {
       const fieldPath = `sections[${sectionIndex}].fields[${fieldIndex}]`;
@@ -200,32 +206,32 @@ export function getBuilderIssues(
       const code = field.code.trim().toUpperCase();
       if (!field.code.trim())
         issues.push({
-          message: `${field.label || 'Field'} needs a code.`,
+          message: `${field.label || 'Question'} needs its settings reviewed.`,
           fieldId: field.id,
           target: fieldTarget('code'),
         });
       if (field.code.trim() && !/^[A-Z][A-Z0-9_-]*$/.test(code))
         issues.push({
-          message: `${field.label || field.code} has an invalid code.`,
+          message: `${field.label || 'Question'} has invalid settings.`,
           fieldId: field.id,
           target: fieldTarget('code'),
         });
       if (fieldCodes.has(code))
         issues.push({
-          message: `Duplicate field code: ${field.code}.`,
+          message: `${field.label || 'Question'} has duplicate settings.`,
           fieldId: field.id,
           target: fieldTarget('code'),
         });
       fieldCodes.add(code);
       if (!field.label.trim())
         issues.push({
-          message: `${field.code || 'Field'} needs a label.`,
+          message: 'Add a question label.',
           fieldId: field.id,
           target: fieldTarget('label'),
         });
       if (field.fieldType !== 12 && field.bindingType === 1 && !field.bindingKey?.trim())
         issues.push({
-          message: `${field.label || field.code} needs a custom binding key.`,
+          message: `${field.label || 'Question'} needs a data connection.`,
           fieldId: field.id,
           target: fieldTarget('bindingKey'),
         });
@@ -234,7 +240,7 @@ export function getBuilderIssues(
         !parseOptions(field.optionsJson)
       )
         issues.push({
-          message: `${field.label || field.code} requires valid options.`,
+          message: `${field.label || 'Question'} requires valid options.`,
           fieldId: field.id,
           target: fieldTarget('optionsJson'),
         });
@@ -245,7 +251,7 @@ export function getBuilderIssues(
       ].forEach(([label, json, property]) => {
         if (json && !isJsonObject(json))
           issues.push({
-            message: `${field.label || field.code} has invalid ${label} JSON.`,
+            message: `${field.label || 'Question'} has invalid ${label} settings.`,
             fieldId: field.id,
             target: fieldTarget(property!),
           });
@@ -258,7 +264,7 @@ export function getBuilderIssues(
       .filter((reference) => !knownCodes.has(reference.toUpperCase()))
       .forEach((reference) =>
         issues.push({
-          message: `${section.name || section.code} references missing field ${reference}.`,
+          message: `${section.name || 'Section'} has a rule linked to a missing question.`,
           target: getFormikBuilderIssueTarget(form, `sections[${sectionIndex}].visibilityRuleJson`),
         })
       )
@@ -269,7 +275,7 @@ export function getBuilderIssues(
         .filter((reference) => !knownCodes.has(reference.toUpperCase()))
         .forEach((reference) =>
           issues.push({
-            message: `${step.name || step.code} references missing field ${reference}.`,
+            message: `${step.name || 'Step'} has a rule linked to a missing question.`,
             target: getFormikBuilderIssueTarget(
               form,
               `sections[${step.sections[0].sectionIndex}].stepVisibilityRuleJson`
@@ -291,7 +297,7 @@ export function getBuilderIssues(
       .filter(({ reference }) => !knownCodes.has(reference.toUpperCase()))
       .forEach(({ reference, property }) =>
         issues.push({
-          message: `${field.label || field.code} references missing field ${reference}.`,
+          message: `${field.label || 'Question'} has a rule linked to a missing question.`,
           fieldId: field.id,
           target: targetForField(field.id, property),
         })
@@ -305,7 +311,7 @@ export function getBuilderIssues(
       .filter((reference) => !knownCodes.has(reference.toUpperCase()))
       .forEach((reference) =>
         issues.push({
-          message: `${field.label} references missing field ${reference}.`,
+          message: `${field.label || 'Question'} has a rule linked to a missing question.`,
           fieldId: field.id,
           target: targetForField(field.id, 'validationJson'),
         })

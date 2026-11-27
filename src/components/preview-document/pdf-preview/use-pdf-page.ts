@@ -13,7 +13,8 @@ export function usePdfPage(
   pageNumber: number,
   retry: number,
   preservePage = false,
-  reveal?: PdfPreviewReveal
+  reveal?: PdfPreviewReveal,
+  renderScale = 1.5
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const displayed = useRef<{ url: string; page: number; retry: number }>(undefined);
@@ -75,7 +76,7 @@ export function usePdfPage(
       const longestSide = Math.max(original.width, original.height);
       if (!Number.isFinite(longestSide) || longestSide <= 0)
         throw new Error('Invalid PDF page dimensions.');
-      const viewport = page.getViewport({ scale: Math.min(1.5, 3072 / longestSide) });
+      const viewport = page.getViewport({ scale: Math.min(renderScale, 3072 / longestSide) });
       // Render off-screen while the previously drawn page stays in the viewer.
       const canvas = preservePage ? window.document.createElement('canvas') : canvasRef.current;
       canvas.width = Math.ceil(viewport.width);
@@ -113,7 +114,7 @@ export function usePdfPage(
       task?.destroy().catch(() => undefined);
       worker?.terminate();
     };
-  }, [url, pageNumber, retry, preservePage, reveal]);
+  }, [url, pageNumber, retry, preservePage, reveal, renderScale]);
   return {
     canvasRef,
     loading,

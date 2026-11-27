@@ -4,7 +4,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from '../iconify';
 import { ConfirmDialog } from './confirm-dialog';
 
-type Options = { title?: string; description?: string; busy?: boolean };
+type Options = { title?: string; description?: string; busy?: boolean; discardLabel?: string };
 
 export function renderUnsavedConfirmation(
   keepEditing: () => void,
@@ -13,6 +13,7 @@ export function renderUnsavedConfirmation(
     title = 'Discard Unsaved Changes?',
     description = 'Your changes have not been saved. Keep editing, or discard them and continue.',
     busy = false,
+    discardLabel = 'Discard changes',
   }: Options = {}
 ) {
   return (
@@ -40,7 +41,7 @@ export function renderUnsavedConfirmation(
           startIcon={<Iconify icon={GlobalIcons.delete} />}
           onClick={discard}
         >
-          Discard changes
+          {discardLabel}
         </Button>
       }
     />

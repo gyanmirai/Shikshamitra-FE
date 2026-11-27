@@ -44,6 +44,8 @@ export interface ThreeDotsActionsOptions {
   editLabel?: string;
   deleteLabel?: string;
   moreLabel?: string;
+  /** Short visible help when the accessible name includes record context. */
+  moreTooltip?: string;
   disableDeleteIcon?: boolean;
   deleteDisabledReason?: ReactNode;
   disableEditIcon?: boolean;

@@ -12,6 +12,8 @@ export default function PdfPreview({
   controlsPosition = 'top',
   hideControlsForSinglePage = false,
   usePageSelector = false,
+  separateZoomControls = false,
+  showAdjacentPage = false,
   initialPage = 1,
   onPageChange,
   onPageCountChange,
@@ -25,6 +27,8 @@ export default function PdfPreview({
   controlsPosition?: 'top' | 'bottom';
   hideControlsForSinglePage?: boolean;
   usePageSelector?: boolean;
+  separateZoomControls?: boolean;
+  showAdjacentPage?: boolean;
   initialPage?: number;
   onPageChange?: (page: number) => void;
   onPageCountChange?: (count: number) => void;
@@ -42,6 +46,8 @@ export default function PdfPreview({
         controlsPosition={controlsPosition}
         hideControlsForSinglePage={hideControlsForSinglePage}
         usePageSelector={usePageSelector}
+        separateZoomControls={separateZoomControls}
+        showAdjacentPage={showAdjacentPage}
         initialPage={initialPage}
         onPageChange={onPageChange}
         onPageCountChange={onPageCountChange}

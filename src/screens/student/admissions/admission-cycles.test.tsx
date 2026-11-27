@@ -111,7 +111,7 @@ vi.mock('./admission-cycle-action-dialog', () => ({
 vi.mock('./admission-cycle-configuration-dialog', () => ({
   AdmissionCycleConfigurationDialog: () => null,
 }));
-vi.mock('./admission-numbering-dialog', () => ({ AdmissionNumberingDialog: () => null }));
+vi.mock('./admission-numbering-dialog', () => ({ AdmissionNumberingDrawer: () => null }));
 
 // Register decorative icons locally so real components do not fetch Iconify data.
 [
@@ -281,11 +281,10 @@ describe('Admission periods table states', () => {
       expect(screen.getByRole('combobox', { name: 'Academic Year' })).toBeInTheDocument();
       expect(screen.getByRole('textbox', { name: 'Search table' })).toBeInTheDocument();
       const table = screen.getByRole('table');
-      // Responsive status columns remain mounted while CSS chooses their visibility.
-      expect(within(table).getAllByRole('columnheader', { hidden: true })).toHaveLength(8);
+      expect(within(table).getAllByRole('columnheader', { hidden: true })).toHaveLength(7);
       const rows = table.querySelectorAll('tbody tr');
       expect(rows).toHaveLength(10);
-      rows.forEach((row) => expect(row.querySelectorAll('td')).toHaveLength(8));
+      rows.forEach((row) => expect(row.querySelectorAll('td')).toHaveLength(7));
       expect(table.querySelector('.MuiSkeleton-root')).toBeInTheDocument();
       expect(within(table).queryByText('Fresh Admission')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Go to next page' })).toBeInTheDocument();
@@ -327,16 +326,13 @@ describe('Admission periods table states', () => {
     expect(screen.queryByRole('menuitem', { name: 'Clone as Draft' })).not.toBeInTheDocument();
   });
 
-  it('shows a refresh spinner while retaining records and headings', () => {
+  it('retains records and headings without a visible refresh loader', () => {
     mocks.result.currentData = { items: [cycle], totalCount: 1 };
     mocks.result.isFetching = true;
     renderScreen();
     expect(screen.getByText('Fresh Admission')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
-    expect(screen.getByRole('progressbar', { name: 'Refreshing Admission Periods' })).toHaveClass(
-      'MuiCircularProgress-root'
-    );
-    expect(document.querySelector('.MuiLinearProgress-root')).not.toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
     expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
   });
@@ -432,11 +428,11 @@ describe('Admission periods table states', () => {
     renderScreen(['Students.Admissions.View']);
 
     expect(screen.getByRole('button', { name: 'Add Cycle' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Numbering Settings' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Numbering' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /More Actions/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /More actions/i })).not.toBeInTheDocument();
     expect(screen.getByText('Fresh Admission')).toBeInTheDocument();
   });
 
@@ -452,22 +448,53 @@ describe('Admission periods table states', () => {
     await waitFor(() => expect(mocks.update).toHaveBeenCalledWith({ search: 'Fresh Admission' }));
   });
 
-  it.each([
-    { heading: 'Status', option: 'Draft', changes: { status: 0, windowStatus: '' } },
-    { heading: 'Window', option: 'Archived', changes: { status: '', windowStatus: 4 } },
-  ])('applies the $heading header filter to server state', async ({ heading, option, changes }) => {
+  it('applies the Status header filter without clearing the Application Window filter', async () => {
+    mocks.filters.windowStatus = 4;
     mocks.result.currentData = { items: [cycle], totalCount: 36 };
     renderScreen();
 
-    fireEvent.click(screen.getByRole('button', { name: `Filter ${heading}`, hidden: true }));
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: `${heading} *` }));
-    fireEvent.click(await screen.findByRole('option', { name: option }));
+    fireEvent.click(screen.getByRole('button', { name: 'Filter Status', hidden: true }));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status *' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Draft' }));
     fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
 
-    await waitFor(() =>
-      expect(mocks.update).toHaveBeenCalledWith({ ...changes, columnFilters: '' })
-    );
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledWith({
+      status: 0, windowStatus: 4, columnFilters: '',
+    }));
     expect(screen.queryByRole('button', { name: 'Filter Actions' })).not.toBeInTheDocument();
+  });
+
+  it('shows an ended application window in Status and omits the redundant Open label', () => {
+    mocks.result.currentData = {
+      items: [
+        { ...cycle, status: 1, windowStatus: 1, name: 'Accepting applications' },
+        { ...cycle, id: 'cycle-2', status: 1, windowStatus: 2, name: 'Applications ended' },
+      ],
+      totalCount: 2,
+    };
+    renderScreen();
+
+    const table = within(screen.getByRole('table'));
+    expect(table.queryByText('Window', { exact: true })).not.toBeInTheDocument();
+    expect(table.queryByText('Open', { exact: true })).not.toBeInTheDocument();
+    expect(within(table.getByRole('row', { name: /Applications ended/ })).getByText('Closed')).toBeVisible();
+    expect(within(table.getByRole('row', { name: /Accepting applications/ })).getByText('Published')).toBeVisible();
+  });
+
+  it('explains unavailable Edit and Delete actions for a published cycle', async () => {
+    mocks.result.currentData = { items: [{ ...cycle, status: 1, windowStatus: 1 }], totalCount: 1 };
+    renderScreen();
+
+    const edit = screen.getByRole('button', { name: 'Edit' });
+    const remove = screen.getByRole('button', { name: 'Delete' });
+    expect(edit).toBeDisabled();
+    expect(remove).toBeDisabled();
+
+    fireEvent.mouseOver(edit.parentElement!);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Published cycles cannot be edited.');
+    fireEvent.mouseLeave(edit.parentElement!);
+    fireEvent.mouseOver(remove.parentElement!);
+    await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent('Published cycles cannot be deleted.'));
   });
 
   it('restores both status chips from the same filters used by selectors and the server', () => {
@@ -488,6 +515,14 @@ describe('Admission periods table states', () => {
     expect(mocks.update).toHaveBeenCalledWith({ status: '', windowStatus: '', columnFilters: '' });
   });
 
+  it('filters application windows from the toolbar after the Window column is removed', () => {
+    renderScreen();
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Application Window' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Ended' }));
+    expect(mocks.update).toHaveBeenCalledWith({ windowStatus: 2 });
+  });
+
   it('sends restored name and date criteria to the API rather than filtering the loaded page', () => {
     mocks.filters.columnFilters =
       '[{"column":"name","type":"contains","value":"Fresh","valueType":"string"},{"column":"endDate","type":"before","value":"01-04-2027","valueType":"date"}]';
@@ -501,7 +536,7 @@ describe('Admission periods table states', () => {
         skipCount: 20,
       })
     );
-    ['Cycle', 'Start Date', 'End Date', 'Offerings', 'Applications', 'Window', 'Status'].forEach(
+    ['Cycle', 'Start Date', 'End Date', 'Offerings', 'Applications', 'Status'].forEach(
       (heading) =>
         expect(
           screen.getByRole('button', { name: `Filter ${heading}`, hidden: true })

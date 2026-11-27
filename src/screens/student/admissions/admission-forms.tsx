@@ -9,7 +9,6 @@ import { studentPaths } from 'src/constants/student-menu';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Paper, Stack, Button, Typography } from '@mui/material';
 import { studentSetupReturnUrl } from 'src/screens/student/setup/embedding/student-setup-return';
@@ -27,7 +26,6 @@ import { AdmissionFormDialog } from './admission-form-dialog';
 import { AdmissionQueryError } from './admission-query-error';
 import { useFormListActions } from './form-list/use-form-list-actions';
 import { FormLifecycleDialog } from './form-list/form-lifecycle-dialog';
-import { AdmissionFormCloneDialog } from './admission-form-clone-dialog';
 import { AdmissionFormPublishDialog } from './admission-form-publish-dialog';
 import { AdmissionFormHistoryDialog } from './admission-form-history-dialog';
 import { normalizeAdmissionFormFilters } from './form-list/form-column-filters';
@@ -147,7 +145,6 @@ export default function AdmissionFormsScreen() {
         editorOpen={
           actions.dialog.value ||
           Boolean(
-            actions.pendingClone ||
             actions.pendingPublish ||
             actions.pendingDelete ||
             lifecycle.pending ||
@@ -156,7 +153,6 @@ export default function AdmissionFormsScreen() {
         }
         busy={
           actions.saving ||
-          actions.cloning ||
           actions.publishing ||
           actions.deleting ||
           Boolean(actions.creatingVersionId) ||
@@ -255,7 +251,7 @@ export default function AdmissionFormsScreen() {
           searchTerm={search}
           filters={filters}
           isLoading={query.isLoading || (query.isFetching && !currentData)}
-          refreshIndicator="circular"
+          refreshIndicator="none"
           isRefreshing={query.isFetching && Boolean(currentData)}
           isPagination
           isSearch
@@ -303,12 +299,6 @@ export default function AdmissionFormsScreen() {
         onSave={actions.save}
         onPublishNow={actions.saveAndPublish}
         checkUnchangedVersion={actions.checkUnchangedVersion}
-      />
-      <AdmissionFormCloneDialog
-        source={actions.pendingClone}
-        saving={actions.cloning}
-        onClose={actions.clearPendingClone}
-        onSave={actions.confirmClone}
       />
       <AdmissionFormPublishDialog
         form={actions.pendingPublish}
@@ -391,12 +381,6 @@ export default function AdmissionFormsScreen() {
             <Typography variant="body2" id="admission-form-delete-description">
               Delete <strong>{actions.pendingDelete?.name}</strong> and its sections and fields?
             </Typography>
-
-            {actions.deleteError && (
-              <StudentFeedback notificationKey="STU-0070" presentation="inline" severity="error">
-                {actions.deleteError}
-              </StudentFeedback>
-            )}
           </Stack>
         }
         action={

@@ -1,9 +1,11 @@
+import type { TabScrollButtonProps } from '@mui/material/TabScrollButton';
+
 import { useId } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { GlobalIcons } from 'src/utils/icons';
-import { Tab, Box, Stack } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { Tab, Box, Stack, IconButton } from '@mui/material';
 import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 
 import { AdmissionPrintPaperStyleSettings } from './admission-print-paper-style-settings';
@@ -32,15 +34,47 @@ const PANELS = {
   content: AdmissionPrintContentCopiesSettings,
 };
 
+function AdvancedTabScrollButton({
+  direction,
+  disabled,
+  className,
+  onClick,
+}: TabScrollButtonProps) {
+  const left = direction === 'left';
+  return (
+    <IconButton
+      className={className}
+      type="button"
+      size="small"
+      aria-label={left ? 'Scroll tabs left' : 'Scroll tabs right'}
+      disabled={disabled}
+      onClick={onClick}
+      sx={{
+        width: 36,
+        flexShrink: 0,
+        mx: 0.5,
+        border: 1,
+        borderRadius: 1,
+        borderColor: 'divider',
+        color: 'text.primary',
+        '@media (any-pointer: coarse)': { width: 44 },
+      }}
+    >
+      <Iconify icon={left ? 'solar:arrow-left-bold' : 'solar:arrow-right-bold'} width={18} />
+    </IconButton>
+  );
+}
+
 export function AdmissionPrintAdvancedSettings({
   settings,
   onChange,
   form,
   branding,
   onEditHeader,
+  pageCount,
 }: Pick<
   AdmissionPrintAdvancedTabProps,
-  'settings' | 'onChange' | 'form' | 'branding' | 'onEditHeader'
+  'settings' | 'onChange' | 'form' | 'branding' | 'onEditHeader' | 'pageCount'
 >) {
   const id = useId();
   const tabs = useTabs(TABS[0].value);
@@ -73,6 +107,7 @@ export function AdmissionPrintAdvancedSettings({
           variant="scrollable"
           scrollButtons="auto"
           allowScrollButtonsMobile
+          slots={{ scrollButtons: AdvancedTabScrollButton }}
           aria-label="Advanced print settings"
         >
           {TABS.map((item) => (
@@ -93,6 +128,7 @@ export function AdmissionPrintAdvancedSettings({
           settings={settings}
           onChange={onChange}
           onEditHeader={onEditHeader}
+          pageCount={pageCount}
           advanced={advanced}
           update={update}
           form={form}
