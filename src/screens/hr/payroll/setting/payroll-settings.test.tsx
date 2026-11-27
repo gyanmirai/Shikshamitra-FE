@@ -1,6 +1,6 @@
 import { vi, it, expect, beforeEach } from 'vitest';
 import { hrPermissions } from 'src/constants/hr-menus';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import PayrollSettings from './payroll-settings';
 
@@ -8,6 +8,10 @@ const auth = vi.hoisted(() => ({
   permissions: [] as { name: string; isGranted: boolean }[],
   loading: false,
   permissionsInitialized: true,
+}));
+const prefetch = vi.hoisted(() => vi.fn());
+vi.mock('src/redux/hr/salary-template-api', () => ({
+  salaryTemplateApi: { usePrefetch: () => prefetch },
 }));
 vi.mock('react-redux', () => ({ useSelector: () => auth }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -25,9 +29,19 @@ vi.mock('src/components/form-section-card', () => ({
 vi.mock('src/routes/components', () => ({ RouterLink: 'a' }));
 
 beforeEach(() => {
+  prefetch.mockClear();
   auth.permissions = [];
   auth.loading = false;
   auth.permissionsInitialized = true;
+});
+it('prefetches the salary template list on intent for an authorized destination', () => {
+  auth.permissions = [
+    { name: hrPermissions.payroll.settings.salaryTemplateActions.view, isGranted: true },
+  ];
+  render(<PayrollSettings />);
+  expect(prefetch).not.toHaveBeenCalled();
+  fireEvent.focus(screen.getByRole('link', { name: 'Open salary templates' }));
+  expect(prefetch).toHaveBeenCalledWith(undefined);
 });
 it('shows only destinations permitted by the existing navigation contract', () => {
   auth.permissions = [

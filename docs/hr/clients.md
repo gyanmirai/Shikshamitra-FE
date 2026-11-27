@@ -112,6 +112,11 @@ The client-only access key isolates identity and grants in RTK Query without sen
 Operational queries retain unused data for zero seconds and use `currentData` to avoid displaying a previous date or scope.
 The retired combined summary and Main preview are not used by the main HR dashboard.
 
+Staff Salaries keeps staff and month in the URL and updates those client-side query inputs without a route request.
+Picking a staff option reuses its display name and the paginated picker reuses cached option pages.
+The Payroll Settings link prefetches the salary template list on pointer hover or keyboard focus for users who can open it.
+The destination uses the same RTK Query entry and template mutations invalidate it.
+
 Use these expectations when reviewing client behavior:
 
 | Mutation                                               | Expected invalidation                                                                        |

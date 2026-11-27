@@ -7,12 +7,12 @@ import type { EmployeeOption } from 'src/screens/hr/leave-request/leave-request.
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
@@ -46,11 +46,6 @@ import {
 
 export default function EmployeeSalaryStructureScreen() {
   const params = useSearchParams();
-  return <SalaryStructureWorkspace key={params.get('employeeId') || ''} />;
-}
-
-function SalaryStructureWorkspace() {
-  const params = useSearchParams();
   const router = useRouter();
   const employeeId = params.get('employeeId')?.trim() || '';
   const hasRequestedMonth = params.has('month');
@@ -65,30 +60,43 @@ function SalaryStructureWorkspace() {
   const canRead =
     canManage ||
     hasGrantedPermission(permissions, hrPermissions.payroll.compensationRevisionActions.view);
-  const [selected, setSelected] = useState<EmployeeOption | null>(
-    employeeId ? { id: employeeId, label: 'Loading staff…' } : null
-  );
-  const { currentData: employee } = useGetEmployeeByIdQuery(employeeId, {
-    skip: !employeeId || !canRead,
+  const legacySetup = params.get('setup') === 'salary';
+  const [picked, setPicked] = useState<EmployeeOption | null>(null);
+  const pickedEmployee = picked?.id === employeeId ? picked : null;
+  const { currentData: employee, isError: employeeError } = useGetEmployeeByIdQuery(employeeId, {
+    skip: !employeeId || !canRead || legacySetup || Boolean(pickedEmployee),
   });
+  const selected = useMemo<EmployeeOption | null>(() => {
+    if (!employeeId) return null;
+    if (pickedEmployee) return pickedEmployee;
+    return {
+      id: employeeId,
+      label:
+        employee?.fullName ||
+        employee?.employeeName ||
+        (employeeError || employee ? 'Selected staff' : 'Loading staff…'),
+      status: employee?.status ?? employee?.employeeStatusType,
+    };
+  }, [employee, employeeError, employeeId, pickedEmployee]);
   const {
     currentData: summary,
     isFetching,
     isError,
     refetch,
-  } = useGetSalarySummaryQuery({ employeeId, month }, { skip: !employeeId || !canRead });
+  } = useGetSalarySummaryQuery(
+    { employeeId, month },
+    { skip: !employeeId || !canRead || legacySetup }
+  );
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetEmployeeOptionsQuery,
   });
   const fetchEmployees = useCallback(
     async (query: string, page: number) => {
-      const result: EmployeeOptionsResponse = await getEmployees({
-        page,
-        pageSize: 25,
-        search: query.trim(),
-        status: 'Active',
-      }).unwrap();
+      const result: EmployeeOptionsResponse = await getEmployees(
+        { page, pageSize: 25, search: query.trim(), status: 'Active' },
+        true
+      ).unwrap();
       return {
         data: result.items.map((item) => ({
           id: item.id,
@@ -100,27 +108,19 @@ function SalaryStructureWorkspace() {
     },
     [getEmployees]
   );
-  useEffect(() => {
-    if (employee)
-      setSelected({
-        id: employeeId,
-        label: employee.fullName || employee.employeeName || 'Selected staff',
-        status: employee.status ?? employee.employeeStatusType,
-      });
-  }, [employee, employeeId]);
   const updateContext = (values: { employeeId?: string; month?: string }) => {
-    const next = new URLSearchParams(params.toString());
+    const next = new URLSearchParams(window.location.search);
     Object.entries(values).forEach(([key, value]) => {
       if (value) next.set(key, value);
       else next.delete(key);
     });
-    router.replace(hrPaths.payroll.structure + (next.size ? `?${next}` : ''));
+    // Staff and month are client-side query inputs on this route.
+    window.history.replaceState(null, '', hrPaths.payroll.structure + (next.size ? `?${next}` : ''));
   };
   const returnParams = new URLSearchParams(params.toString());
   returnParams.delete('setup');
   const returnHref = `${hrPaths.payroll.structure}?${returnParams}`;
   const editHref = salaryEditorHref(employeeId, returnHref, hasRequestedMonth ? month : undefined);
-  const legacySetup = params.get('setup') === 'salary';
   const from = params.get('from');
   useEffect(() => {
     if (!legacySetup || !employeeId) return;
@@ -189,8 +189,8 @@ function SalaryStructureWorkspace() {
               size="small"
               sx={{ flex: '1 1 280px', maxWidth: { md: 420 } }}
               onChange={(_, value) => {
-                setSelected(value as EmployeeOption | null);
-                updateContext({ employeeId: (value as EmployeeOption | null)?.id || '' });
+                setPicked(value);
+                updateContext({ employeeId: value?.id || '' });
               }}
             />
             <TextField

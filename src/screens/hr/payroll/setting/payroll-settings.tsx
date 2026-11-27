@@ -8,6 +8,7 @@ import { HrNotice } from 'src/screens/hr/components/hr-notice';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { hasNavigationPermission } from 'src/utils/permissions';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { salaryTemplateApi } from 'src/redux/hr/salary-template-api';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
 
@@ -105,6 +106,9 @@ const tasks: {
 
 export default function PayrollSettings() {
   const auth = useSelector((state: RootState) => state.auth);
+  const prefetchSalaryTemplates = salaryTemplateApi.usePrefetch('getSalaryTemplates', {
+    ifOlderThan: 30,
+  });
   const available = tasks
     .map((task) => ({
       ...task,
@@ -146,18 +150,26 @@ export default function PayrollSettings() {
                 {task.description}
               </Typography>
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                {task.links.map((link) => (
-                  <Button
-                    key={link.path}
-                    component={RouterLink}
-                    href={link.path}
-                    size="small"
-                    variant="outlined"
-                    color="inherit"
-                  >
-                    {link.label}
-                  </Button>
-                ))}
+                {task.links.map((link) => {
+                  const warmTemplates =
+                    link.path === settings.salaryTemplates
+                      ? () => prefetchSalaryTemplates(undefined)
+                      : undefined;
+                  return (
+                    <Button
+                      key={link.path}
+                      component={RouterLink}
+                      href={link.path}
+                      onMouseEnter={warmTemplates}
+                      onFocus={warmTemplates}
+                      size="small"
+                      variant="outlined"
+                      color="inherit"
+                    >
+                      {link.label}
+                    </Button>
+                  );
+                })}
               </Stack>
             </FormSectionCard>
           ))}
