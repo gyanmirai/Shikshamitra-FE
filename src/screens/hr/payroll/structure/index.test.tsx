@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
   refetch: vi.fn(),
   query: vi.fn(),
+  employeeQuery: vi.fn(),
   canRead: true,
   params: 'employeeId=staff-1&month=2026-10',
   isError: false,
@@ -20,7 +21,10 @@ vi.mock('next/navigation', () => ({
 vi.mock('react-redux', () => ({ useSelector: () => [] }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => mocks.canRead }));
 vi.mock('src/redux/hr/employeeApi', () => ({
-  useGetEmployeeByIdQuery: () => ({ currentData: employee }),
+  useGetEmployeeByIdQuery: (id: string, options: { skip: boolean }) => {
+    mocks.employeeQuery(id, options);
+    return { currentData: options.skip ? undefined : employee };
+  },
   useLazyGetEmployeeOptionsQuery: () => [vi.fn()],
 }));
 vi.mock('src/redux/customQueryAndMutation', () => ({ default: () => [vi.fn()] }));
@@ -204,11 +208,20 @@ it('never presents incomplete totals as zero', () => {
   expect(screen.getByText(/This estimate is incomplete/)).toBeVisible();
   expect(screen.getAllByText('Unavailable')).toHaveLength(3);
 });
-it('preserves month when changing staff', () => {
-  render(<EmployeeSalaryStructureScreen />);
+it('preserves month and keeps the picker option without requesting the full employee profile', () => {
+  window.history.replaceState(null, '', '/hr/payroll/structure?employeeId=staff-1&month=2026-10');
+  const { rerender } = render(<EmployeeSalaryStructureScreen />);
   fireEvent.click(screen.getByRole('button', { name: 'Select second staff' }));
-  expect(mocks.replace).toHaveBeenLastCalledWith(
-    '/hr/payroll/structure?employeeId=staff-2&month=2026-10'
+  expect(window.location.search).toBe('?employeeId=staff-2&month=2026-10');
+  expect(mocks.replace).not.toHaveBeenCalled();
+
+  mocks.params = window.location.search;
+  rerender(<EmployeeSalaryStructureScreen />);
+  expect(screen.getByText('Second staff')).toBeVisible();
+  expect(mocks.employeeQuery).toHaveBeenLastCalledWith('staff-2', { skip: true });
+  expect(mocks.query).toHaveBeenLastCalledWith(
+    { employeeId: 'staff-2', month: '2026-10' },
+    { skip: false }
   );
 });
 it('offers retry after a failed request', () => {
@@ -229,6 +242,8 @@ it('keeps a plain route idle and retains staff-entry redirects', () => {
   expect(mocks.query).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
   mocks.params = 'employeeId=staff-1&setup=salary&from=staff-edit&month=2026-10';
   rerender(<EmployeeSalaryStructureScreen />);
+  expect(mocks.query).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+  expect(mocks.employeeQuery).toHaveBeenLastCalledWith('staff-1', { skip: true });
   expect(mocks.replace).toHaveBeenCalledWith(expect.stringContaining('/staff-1/edit?returnTo='));
   expect(mocks.replace).toHaveBeenCalledWith(expect.stringContaining('month=2026-10'));
 });
