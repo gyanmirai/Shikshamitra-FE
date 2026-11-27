@@ -1,277 +1,215 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
+import Link from 'next/link';
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
-import React, { useMemo, useEffect } from 'react';
-import { HrDashboardPreviewShell } from 'src/screens/hr/hr-dashboard/components/HrDashboardPreviewShell';
-import { shouldShowDashboardSnapshotSkeleton } from 'src/screens/hr/hr-dashboard/hr-dashboard-preview-state';
-import { HrDashboardSnapshotEmptyState } from 'src/screens/hr/hr-dashboard/components/HrDashboardSnapshotEmptyState';
+import { DatePicker } from '@mui/x-date-pickers';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useHRAccessKey } from 'src/hooks/use-hr-access-key';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useGetHRAttendanceDashboardQuery } from 'src/redux/hr/hrOperationalDashboardApi';
+import { Box, Alert, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import {
-  Box,
-  Card,
-  Grid,
-  Alert,
-  Stack,
-  Button,
-  Divider,
-  Skeleton,
-  Typography,
-} from '@mui/material';
-import {
-  parseHRDashboardPayload,
-  useGetHRDashboardPreviewQuery,
-  type HRDashboardAttendancePreview,
-  useRefreshHRDashboardPreviewMutation,
-} from 'src/redux/hr/hrDashboardApi';
+  indiaToday,
+  formatUpdatedAt,
+  formatSchoolDate,
+  parseDashboardState,
+  dashboardPermissions,
+  isDashboardAccessError,
+} from 'src/screens/hr/hr-dashboard/operational-dashboard-state';
 
-const StatCard = ({
-  label,
-  value,
-  icon,
-  color,
-}: {
-  label: string;
-  value: string | number;
-  icon: string;
-  color: string;
-}) => (
-  <Card sx={{ p: 2, border: (theme) => `1px solid ${theme.palette.divider}`, boxShadow: 'none' }}>
-    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-      <Box>
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-          {label}
-        </Typography>
-        <Typography variant="h4" sx={{ mt: 0.5 }}>
-          {value}
-        </Typography>
-      </Box>
-      <Box
-        sx={{
-          width: 42,
-          height: 42,
-          borderRadius: 1,
-          display: 'grid',
-          placeItems: 'center',
-          color,
-          bgcolor: `${color}14`,
-        }}
-      >
-        <Iconify icon={icon} width={22} />
-      </Box>
-    </Stack>
-  </Card>
-);
+import { AttendanceDashboardContent } from './components/attendance-dashboard-content';
 
-const AttendanceDashboardScreen = () => {
-  const {
-    data: preview,
-    isLoading,
-    isFetching,
-    refetch,
-    isError,
-  } = useGetHRDashboardPreviewQuery('Attendance');
-  const [refreshPreview, { isLoading: isRefreshStarting }] = useRefreshHRDashboardPreviewMutation();
-  const data = useMemo(
-    () => parseHRDashboardPayload<HRDashboardAttendancePreview>(preview),
-    [preview]
+function AttendanceDashboardScreen() {
+  const accessKey = useHRAccessKey();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
+  const router = useRouter();
+  const params = useSearchParams();
+  const [dateError, setDateError] = useState(false);
+  const today = indiaToday();
+  const { date } = parseDashboardState(new URLSearchParams(params.toString()), today);
+  const selectedDate = params.get('date') === date ? date : undefined;
+  const canView = hasGrantedPermission(permissions, dashboardPermissions.attendance);
+  const canTrack = hasGrantedPermission(permissions, dashboardPermissions.staff);
+  const canMark =
+    hasGrantedPermission(permissions, dashboardPermissions.markAttendanceView) &&
+    hasGrantedPermission(permissions, dashboardPermissions.markAttendance);
+  const query = useGetHRAttendanceDashboardQuery(
+    { date: selectedDate, accessKey },
+    {
+      skip: !canView,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+      refetchOnMountOrArgChange: true,
+      pollingInterval: 60_000,
+      skipPollingIfUnfocused: true,
+    }
   );
-
-  useEffect(() => {
-    if (preview?.status !== 'Refreshing') return undefined;
-    const id = window.setInterval(() => refetch(), 5000);
-    return () => window.clearInterval(id);
-  }, [preview?.status, refetch]);
-
-  if (isLoading) {
-    return <Skeleton variant="rounded" height={420} />;
-  }
+  const denied = !canView || isDashboardAccessError(query.error);
+  const data = denied || query.isError ? undefined : query.currentData;
+  const activeDate = data?.summary.date ?? date;
+  const withinCurrentYear =
+    Boolean(currentYear?.startDate && currentYear.endDate) &&
+    !dayjs(activeDate).isBefore(dayjs(currentYear?.startDate), 'day') &&
+    !dayjs(activeDate).isAfter(dayjs(currentYear?.endDate), 'day');
+  const registerHref = withinCurrentYear
+    ? `${hrPaths.attendance.attendanceTracking}?startDate=${activeDate}&endDate=${activeDate}`
+    : undefined;
+  const loading = !denied && !query.isError && !data;
+  const title = 'Attendance Dashboard';
 
   return (
-    <HrDashboardPreviewShell
-      title="Attendance Dashboard"
-      subtitle={
-        data ? `Stored attendance preview for ${dayjs(data.date).format('DD MMM YYYY')}` : undefined
-      }
-      preview={preview}
-      isFetching={isFetching}
-      isRefreshing={isRefreshStarting}
-      onRefresh={() => refreshPreview('Attendance')}
-    >
-      {isError ? (
-        <Alert severity="error">Attendance dashboard preview could not be loaded.</Alert>
-      ) : null}
-      {!data ? (
-        shouldShowDashboardSnapshotSkeleton({
-          status: preview?.status,
-          isFetching,
-          hasPreview: Boolean(preview),
-        }) ? (
-          <Skeleton variant="rounded" height={360} />
-        ) : (
-          <HrDashboardSnapshotEmptyState
-            status={preview?.status}
-            isRefreshing={isRefreshStarting}
-            quickLinks={[
-              {
-                label: 'Mark attendance',
-                href: hrPaths.attendance.markAttendance,
-                icon: 'solar:calendar-mark-linear',
-              },
-              {
-                label: 'Tracking',
-                href: hrPaths.attendance.attendanceTracking,
-                icon: 'solar:clock-circle-linear',
-              },
-              {
-                label: 'Leave center',
-                href: hrPaths.leaveManagement.leaveCenter,
-                icon: 'solar:clipboard-list-linear',
-              },
-            ]}
-          />
-        )
+    <Stack spacing={2} sx={{ minWidth: 0, pb: 2 }}>
+      <CustomBreadcrumbs
+        layout="inline"
+        heading={title}
+        headingComponent="h1"
+        description="Check staff attendance and find records that need follow-up."
+        links={[{ name: title }]}
+        action={
+          !denied && (
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => query.refetch()}
+                disabled={query.isFetching}
+                startIcon={<Iconify icon="mdi:refresh" aria-hidden />}
+                sx={{ minHeight: 44 }}
+              >
+                Refresh
+              </Button>
+              {canMark &&
+                data &&
+                withinCurrentYear &&
+                !data.unavailableDates.includes(activeDate) && (
+                  <Button
+                    component={Link}
+                    href={`${hrPaths.attendance.markAttendance}?date=${activeDate}`}
+                    size="small"
+                    variant="contained"
+                    startIcon={<Iconify icon="mdi:calendar-check-outline" aria-hidden />}
+                    sx={{ minHeight: 44 }}
+                  >
+                    Mark attendance
+                  </Button>
+                )}
+            </Stack>
+          )
+        }
+      />
+      {denied ? (
+        <Alert severity="warning">
+          Attendance dashboard access is unavailable. Ask your administrator to review your
+          permissions and staff scope.
+        </Alert>
       ) : (
         <>
-          <Grid container spacing={1.5}>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                label="Present"
-                value={data.present}
-                icon="mdi:account-check-outline"
-                color="#22C55E"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                label="Absent"
-                value={data.absent}
-                icon="mdi:account-cancel-outline"
-                color="#EF4444"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                label="Missing"
-                value={data.missingAttendance}
-                icon="mdi:clock-alert-outline"
-                color="#F59E0B"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                label="Attendance Rate"
-                value={`${data.attendanceRate}%`}
-                icon="mdi:chart-line"
-                color="#2563EB"
-              />
-            </Grid>
-          </Grid>
-
-          <Grid container spacing={1.5}>
-            <Grid size={{ xs: 12, md: 7 }}>
-              <Card
-                sx={{
-                  p: 2,
-                  boxShadow: 'none',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
-              >
-                <Typography variant="h6">7-Day Trend</Typography>
-                <Stack spacing={1.25} sx={{ mt: 2 }}>
-                  {data.trend.map((point) => {
-                    const total = point.present + point.absent + point.leave || 1;
-                    return (
-                      <Box key={point.date}>
-                        <Stack direction="row" justifyContent="space-between">
-                          <Typography variant="body2">
-                            {dayjs(point.date).format('DD MMM')}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {point.present} present / {point.absent} absent / {point.leave} leave
-                          </Typography>
-                        </Stack>
-                        <Stack
-                          direction="row"
-                          sx={{ mt: 0.75, height: 8, borderRadius: 1, overflow: 'hidden' }}
-                        >
-                          <Box
-                            sx={{
-                              width: `${(point.present / total) * 100}%`,
-                              bgcolor: 'success.main',
-                            }}
-                          />
-                          <Box
-                            sx={{
-                              width: `${(point.leave / total) * 100}%`,
-                              bgcolor: 'warning.main',
-                            }}
-                          />
-                          <Box
-                            sx={{
-                              width: `${(point.absent / total) * 100}%`,
-                              bgcolor: 'error.main',
-                            }}
-                          />
-                        </Stack>
-                      </Box>
-                    );
-                  })}
-                </Stack>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <Card
-                sx={{
-                  p: 2,
-                  boxShadow: 'none',
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
-              >
-                <Typography variant="h6">Top Attendance Exceptions</Typography>
-                <Stack divider={<Divider flexItem />} sx={{ mt: 1 }}>
-                  {data.topDefaulters.length ? (
-                    data.topDefaulters.map((item) => (
-                      <Stack
-                        key={item.employeeId}
-                        direction="row"
-                        justifyContent="space-between"
-                        sx={{ py: 1 }}
-                      >
-                        <Box>
-                          <Typography variant="subtitle2">{item.employeeName}</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {item.employeeIdentifier}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {item.missingAttendance + item.absences} issues
-                        </Typography>
-                      </Stack>
-                    ))
-                  ) : (
-                    <Alert severity="success">
-                      No attendance exceptions in the stored preview.
-                    </Alert>
-                  )}
-                </Stack>
-              </Card>
-            </Grid>
-          </Grid>
-
-          <Button
-            size="small"
-            href="/hr/manual-attendance"
-            variant="contained"
-            startIcon={<Iconify icon="solar:calendar-mark-linear" />}
-            sx={{ alignSelf: 'flex-start' }}
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            gap={1.5}
+            alignItems={{ sm: 'center' }}
+            justifyContent="space-between"
+            sx={{ px: 1 }}
           >
-            Mark Attendance
-          </Button>
+            <Box>
+              <Typography component="p" variant="subtitle2">
+                {formatSchoolDate(activeDate)} · IST
+              </Typography>
+              <Stack direction="row" useFlexGap flexWrap="wrap" gap={1} role="status">
+                <Typography variant="caption" color="text.secondary">
+                  {data?.scopeLabel ?? 'Your permitted staff scope'}
+                </Typography>
+                {data && (
+                  <Typography variant="caption" color="text.secondary">
+                    Updated {formatUpdatedAt(data.generatedAt)} IST
+                  </Typography>
+                )}
+                {query.isFetching && (
+                  <Typography variant="caption" color="text.secondary">
+                    {loading ? 'Loading attendance…' : 'Refreshing attendance…'}
+                  </Typography>
+                )}
+              </Stack>
+            </Box>
+            <DatePicker
+              label="Attendance date"
+              format="DD/MM/YYYY"
+              value={dayjs(activeDate)}
+              maxDate={dayjs(data?.asOfDate ?? today)}
+              onError={(error) => setDateError(Boolean(error))}
+              onChange={(next, context) => {
+                if (!next?.isValid() || context.validationError) return;
+                const value = next.format('YYYY-MM-DD');
+                if (value === activeDate) return;
+                const search = new URLSearchParams(params.toString());
+                search.set('date', value);
+                router.push(`${hrPaths.attendance.dashboard}?${search.toString()}`, {
+                  scroll: false,
+                });
+              }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  helperText: dateError ? 'Choose a valid date up to today.' : undefined,
+                  sx: { width: { xs: 1, sm: 190 } },
+                },
+              }}
+            />
+          </Stack>
+          <Box sx={{ height: 2 }}>
+            {query.isFetching && (
+              <LinearProgress
+                aria-label="Loading attendance dashboard"
+                sx={{
+                  height: 2,
+                  '@media (prefers-reduced-motion: reduce)': {
+                    '& .MuiLinearProgress-bar': { animation: 'none' },
+                  },
+                }}
+              />
+            )}
+          </Box>
+          {query.isError && (
+            <Alert severity="error">
+              Attendance data could not be loaded. Select Refresh to retry.
+            </Alert>
+          )}
+          {loading && (
+            <Box aria-busy="true">
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
+                  gap: 2,
+                  mb: 2,
+                }}
+              >
+                {['present', 'unmarked', 'leave', 'absent'].map((metric) => (
+                  <Skeleton key={metric} variant="rounded" height={118} />
+                ))}
+              </Box>
+              <Skeleton variant="rounded" height={310} />
+            </Box>
+          )}
+          {data && (
+            <AttendanceDashboardContent
+              data={data}
+              canTrack={canTrack}
+              registerHref={registerHref}
+            />
+          )}
         </>
       )}
-    </HrDashboardPreviewShell>
+    </Stack>
   );
-};
+}
 
 export default AttendanceDashboardScreen;
