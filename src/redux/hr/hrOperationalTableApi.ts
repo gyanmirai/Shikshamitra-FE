@@ -1,7 +1,7 @@
 import { api } from 'src/redux/service';
 import { employeeType, workShiftType, payrollStructureType } from 'src/redux/tagTypes';
 
-import { markAttendanceReadTags } from './attendanceApi';
+import { markAttendanceReadTags, attendanceRegisterReadTags } from './attendanceApi';
 
 import type { ReportTableCriteria } from './hrReportingWorkspaceApi';
 
@@ -36,7 +36,7 @@ export function operationalTableTags(table: string) {
     case 'hr-manual-attendance':
       return markAttendanceReadTags;
     case 'hr-attendance-register':
-      return [employeeType.attendance];
+      return attendanceRegisterReadTags;
     case 'hr-salary-documents':
       return [employeeType.salarySlip, employeeType.hrReports];
     case 'payroll-monthly-workbench-table':
@@ -59,7 +59,12 @@ export const hrOperationalTableApi = api.injectEndpoints({
         size: number;
       }
     >({
-      query: (body) => ({ url: '/hr/table-query', method: 'POST', body }),
+      query: (body) => ({
+        url: '/hr/table-query',
+        method: 'POST',
+        body,
+        ...(body.table === 'hr-attendance-register' && { timeout: 30_000 }),
+      }),
       // Refresh against the owning mutations without invalidating unrelated module tables.
       providesTags: (_result, _error, { table }) => operationalTableTags(table),
     }),

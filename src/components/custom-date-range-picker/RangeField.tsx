@@ -137,12 +137,15 @@ export function RangeField({
             readOnly: !editable,
             endAdornment: (
               <InputAdornment position="end">
-                {editable ? (
+                {!readOnly ? (
                   <IconButton
                     aria-label={`Open calendar for ${label || 'Date Range'}`}
                     size="small"
                     disabled={disabled}
-                    onClick={onOpen}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onOpen(event);
+                    }}
                   >
                     <Iconify icon="mdi:calendar" />
                   </IconButton>

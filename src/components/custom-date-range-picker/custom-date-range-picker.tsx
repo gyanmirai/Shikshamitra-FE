@@ -4,6 +4,8 @@ import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Popover from '@mui/material/Popover';
 import { useState, useCallback } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import { useResponsive } from 'src/hooks/use-responsive';
@@ -83,7 +85,9 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
 
   const handleOpen = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
-      setAnchorEl(event.currentTarget);
+      setAnchorEl(
+        event.currentTarget.closest<HTMLElement>('.MuiTextField-root') ?? event.currentTarget
+      );
       onOpen();
     },
     [onOpen]
@@ -145,18 +149,41 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
 
         {/* Footer / Actions */}
         {!isCalendarView && (
-          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-            <Button variant="outlined" color="inherit" onClick={onReset}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            gap={1}
+            flexWrap="wrap"
+          >
+            <Button
+              type="button"
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+              onClick={onReset}
+            >
               Reset
             </Button>
 
             <Box sx={{ flexGrow: 1 }} />
 
-            <Button variant="outlined" color="inherit" onClick={handleCloseWrapped}>
+            <Button
+              type="button"
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={handleCloseWrapped}
+            >
               Cancel
             </Button>
             <Button
+              type="button"
+              size="small"
               variant="contained"
+              startIcon={<Iconify icon={GlobalIcons.tick} />}
               onClick={onAccept}
               disabled={
                 !startDate ||

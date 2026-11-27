@@ -13,11 +13,15 @@ const checks = [];
 try {
   await page.goto(process.env.REGISTER_FIXTURE_URL || 'http://localhost:5189/');
   await expect(page.getByRole('status')).toHaveText('65 staff found');
+  await expect(page.getByRole('button', { name: /^Expand row / })).toHaveCount(50);
   await expect(page.getByRole('region', { name: 'Attendance register filters' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Go to next page' }).click();
+  await page.getByRole('button', { name: 'Expand row 1', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Collapse row 1', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Go to next page' }).last().click();
   await expect.poll(async () => (await state()).query.skipCount).toBe(50);
   await expect(page.getByText('Synthetic Staff 51', { exact: true })).toBeVisible();
-  checks.push('server paging');
+  await expect(page.getByRole('button', { name: 'Expand row 1', exact: true })).toBeVisible();
+  checks.push('50-row server paging and staff row expansion identity');
   await page.getByRole('button', { name: 'Filters', exact: true }).click();
   await page.getByRole('combobox', { name: 'Divisions', exact: true }).click();
   await page.getByRole('option', { name: 'Primary / English', exact: true }).click();
@@ -69,18 +73,43 @@ try {
   await page.getByRole('button', { name: /^Filters \(/ }).click();
   await page.getByRole('textbox', { name: 'Department contains' }).fill('No such department');
   await expect(page.getByRole('status')).toHaveText('0 staff found');
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  await page.getByRole('button', { name: 'Reset filters', exact: true }).first().click();
   await expect(page.getByRole('status')).toHaveText('65 staff found');
   await expect(page.getByRole('textbox', { name: 'Search table' })).toHaveValue('');
   expect((await state()).query.educationMediumStageIds).toEqual([]);
   expect((await state()).query.employeeId).toBe('');
   checks.push('empty intersection and full filter/search reset');
   const original = (await state()).query.startDate;
+  const originalEnd = (await state()).query.endDate;
   await page.getByRole('button', { name: 'Previous month', exact: true }).click();
   await expect.poll(async () => (await state()).query.startDate).not.toBe(original);
   await page.getByRole('button', { name: 'Next month', exact: true }).click();
   await expect.poll(async () => (await state()).query.startDate).toBe(original);
+  expect((await state()).query.endDate).toBe(originalEnd);
+  const calendar = page.getByRole('button', { name: 'Open calendar for Register period' });
+  await calendar.press('Enter');
+  await expect(page.getByRole('button', { name: 'Apply', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Apply', exact: true })).toHaveCount(0);
+  expect((await state()).query.startDate).toBe(original);
   checks.push('month navigation preserves criteria');
+  await page
+    .getByRole('checkbox', {
+      name: 'Select editable attendance for Synthetic Staff 01',
+      exact: true,
+    })
+    .check();
+  await page
+    .getByRole('button', { name: 'Adjust attendance for Synthetic Staff 02', exact: true })
+    .click();
+  await dialog.getByRole('combobox').click();
+  await page.getByRole('option', { name: 'Absent', exact: true }).click();
+  await dialog.getByRole('textbox', { name: 'Reason' }).fill('Synthetic correction');
+  await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(async () => (await state()).adjustments.length).toBe(2);
+  expect((await state()).adjustments[1].attendanceIds).toEqual(['staff-2-day']);
+  await expect(dialog).toHaveCount(0);
+  checks.push('row action submits only the named staff member');
   await page.getByRole('button', { name: 'Filters', exact: true }).click();
   await page.screenshot({ path: `${output}/desktop.png` });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -94,6 +123,28 @@ try {
   await page.screenshot({ path: `${output}/mobile-filters.png`, fullPage: true });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   checks.push('390px mobile, keyboard panel/multiselect, no document horizontal overflow');
+  await calendar.press('Enter');
+  await expect(page.getByRole('dialog', { name: 'Register Period' })).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Register Period' })).toHaveCount(0);
+  checks.push('mobile calendar opens from the keyboard and dismisses');
+  const fixtureUrl = new URL(process.env.REGISTER_FIXTURE_URL || 'http://localhost:5189/');
+  fixtureUrl.searchParams.set('failFirst', '');
+  await page.goto(fixtureUrl.href);
+  await expect(page.getByRole('heading', { name: 'Attendance Register' })).toBeVisible();
+  await expect(page.getByRole('status')).toHaveText('Loading attendance…');
+  await expect(page.getByRole('status')).toHaveText('Attendance could not be loaded');
+  await page.getByRole('button', { name: 'Retry', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('65 staff found');
+  checks.push('loading preserves header and a timeout can be retried');
+  fixtureUrl.search = '?readOnly';
+  await page.goto(fixtureUrl.href);
+  await expect(page.getByRole('status')).toHaveText('65 staff found');
+  await expect(page.getByRole('button', { name: 'Bulk adjust', exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Adjust attendance for Synthetic Staff 01', exact: true })
+  ).toBeDisabled();
+  checks.push('view-only staff can read the register with adjustment actions disabled');
   expect(errors).toEqual([]);
   await fs.writeFile(`${output}/results.json`, JSON.stringify({ checks, errors }, null, 2));
   console.log(JSON.stringify({ passed: checks.length, checks, errors }, null, 2));

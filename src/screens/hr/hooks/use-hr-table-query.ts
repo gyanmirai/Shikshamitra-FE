@@ -94,15 +94,23 @@ type Options = {
   columnTypes?: Record<string, FieldType>;
   genericSearch?: boolean;
   freshnessSeconds?: number;
+  nativeSortColumns?: readonly string[];
 };
 
 /** Keep existing screen mappers and mutation workflows. Active criteria read the complete,
  * authorized server population, never sort/filter the owning reader's loaded page. */
-export function useHrTableQuery<T extends object>(options: Options, original: T) {
+export function useHrTableCriteria(options: Options) {
   const [filters, setFilters] = useState<IParams['filters']>([]);
   const [sorts, setSorts] = useState<IParams['sorts']>([]);
   const [search, setSearch] = useState('');
-  const active = filters.length > 0 || sorts.length > 0 || Boolean(search);
+  const nativeSort =
+    !filters.length &&
+    !search &&
+    sorts.length === 1 &&
+    options.nativeSortColumns?.includes(sorts[0].column)
+      ? `${sorts[0].column} ${sorts[0].direction}`
+      : undefined;
+  const active = filters.length > 0 || (sorts.length > 0 && !nativeSort) || Boolean(search);
   const criteria = {
     search,
     filters: filters.map(({ column, type, value }) => ({ column, type, value })),
@@ -117,7 +125,7 @@ export function useHrTableQuery<T extends object>(options: Options, original: T)
       size: options.size,
     },
     {
-      skip: !active || options.skip,
+      skip: !active || options.skip === true,
       refetchOnMountOrArgChange: options.freshnessSeconds ?? true,
     }
   );
@@ -170,7 +178,10 @@ export function useHrTableQuery<T extends object>(options: Options, original: T)
     },
   };
   return {
-    ...original,
+    active,
+    nativeSort,
+    filtered,
+    tableProps,
     resetCriteria: () => {
       if (options.locked) return;
       setFilters([]);
@@ -178,6 +189,14 @@ export function useHrTableQuery<T extends object>(options: Options, original: T)
       setSearch('');
       options.resetPage();
     },
+  };
+}
+
+export function useHrTableQuery<T extends object>(options: Options, original: T) {
+  const { active, filtered, tableProps, resetCriteria } = useHrTableCriteria(options);
+  return {
+    ...original,
+    resetCriteria,
     ...(active
       ? {
           data: filtered.currentData,

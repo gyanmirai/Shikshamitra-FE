@@ -15,7 +15,11 @@ const store = configureStore({
   reducer: {
     globalState: () => ({ currentYear: { id: 'synthetic-year' } }),
     confirmPopup: () => ({ isChanges: false }),
-    auth: () => ({ permissions: [] }),
+    auth: () => ({
+      permissions: new URLSearchParams(window.location.search).has('readOnly')
+        ? []
+        : [{ name: 'HR.AttendanceAndLeave.AttendanceTracking.Add', isGranted: true }],
+    }),
   },
 });
 createRoot(document.getElementById('root')!).render(

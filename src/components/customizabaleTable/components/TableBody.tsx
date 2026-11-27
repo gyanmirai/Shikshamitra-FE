@@ -28,9 +28,10 @@ interface TableBodyProps {
   onRowClick: (row: IData, index: number) => void;
   getRowAction?: (row: IData, index: number) => TableRowAction | undefined;
   rowProps: (row: IData, index: number) => any;
+  getRowKey?: (row: IData) => string | number;
   renderExpandedRow?: (row: IData, index: number) => React.ReactNode;
-  expandedRows: Record<number, boolean>;
-  onExpandRow: (index: number) => void;
+  expandedRows: Record<string | number, boolean>;
+  onExpandRow: (key: string | number) => void;
   noDataText?: React.ReactNode;
   errorContent?: React.ReactNode;
   tableRef: number;
@@ -50,6 +51,7 @@ export const TableBody = ({
   onRowClick,
   getRowAction,
   rowProps,
+  getRowKey,
   renderExpandedRow,
   expandedRows,
   onExpandRow,
@@ -121,6 +123,9 @@ export const TableBody = ({
   return (
     <MuiTableBody>
       {data.map((row, index) => {
+        const rowKey = getRowKey?.(row);
+        const expansionKey = rowKey ?? index;
+        const expanded = expandedRows[expansionKey] === true;
         const action = getRowAction?.(row, index);
         const clickable = Boolean(action && !action.disabled && !action.pending);
         const props = rowProps(row, index);
@@ -128,7 +133,7 @@ export const TableBody = ({
           columns.find((column) => columnVisibility[column.id] && column.rowHeader) ??
           columns.find((column) => columnVisibility[column.id]);
         return (
-          <React.Fragment key={row.id ?? index}>
+          <React.Fragment key={rowKey ?? row.id ?? index}>
             <TableRow
               hover
               data-row-id={typeof row?.id === 'string' ? row.id : undefined}
@@ -192,14 +197,14 @@ export const TableBody = ({
                 <TableCell>
                   <IconButton
                     size="small"
-                    aria-label={`${expandedRows[index] ? 'Collapse' : 'Expand'} row ${index + 1}`}
-                    aria-expanded={Boolean(expandedRows[index])}
+                    aria-label={`${expanded ? 'Collapse' : 'Expand'} row ${index + 1}`}
+                    aria-expanded={expanded}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onExpandRow(index);
+                      onExpandRow(expansionKey);
                     }}
                   >
-                    {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                   </IconButton>
                 </TableCell>
               )}
@@ -269,9 +274,14 @@ export const TableBody = ({
             {columns.some((column) => column.children) && (
               <TableRow>
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={columns.length + 1}>
-                  <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
+                  <Collapse in={expanded} timeout="auto" unmountOnExit>
                     <Box sx={{ margin: 1 }}>
-                      {columns.map((column) => column.children && column.children(row))}
+                      {columns.map(
+                        (column) =>
+                          column.children && (
+                            <React.Fragment key={column.id}>{column.children(row)}</React.Fragment>
+                          )
+                      )}
                     </Box>
                   </Collapse>
                 </TableCell>

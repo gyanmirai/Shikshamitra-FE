@@ -99,6 +99,14 @@ export const markAttendanceReadTags = [
   workShiftType.workShift,
 ];
 
+export const attendanceRegisterReadTags = [
+  employeeType.attendance,
+  employeeType.employee,
+  employeeType.attendanceRule,
+  employeeType.runPayroll,
+  employeeType.salarySlip,
+];
+
 export const attendancePayrollInvalidationTags = [
   employeeType.attendance,
   employeeType.runPayroll,
@@ -255,9 +263,10 @@ export const attendanceApi = employeeApi.injectEndpoints({
       query: (params: GetGroupedAttendanceRegisterParams) => ({
         url: '/hr/attendance/register/grouped',
         method: 'GET',
+        timeout: 30_000,
         params: buildAttendanceRegisterParams(params),
       }),
-      providesTags: [employeeType.attendance],
+      providesTags: attendanceRegisterReadTags,
     }),
     adjustAttendanceRegister: builder.mutation({
       query: (body) => ({

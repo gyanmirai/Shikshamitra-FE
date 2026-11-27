@@ -8,10 +8,14 @@ export type AcademicOrganizationSelectOption = AcademicOrganizationOption & {
   name: string;
 };
 
-export const useAcademicOrganizationOptions = (academicYearId?: string) => {
-  const { data, isLoading, isFetching } = useGetAcademicOrganizationOptionsQuery(
+export const useAcademicOrganizationOptions = (academicYearId?: string, enabled = true) => {
+  const {
+    currentData: data,
+    isLoading,
+    isFetching,
+  } = useGetAcademicOrganizationOptionsQuery(
     { academicYearId: academicYearId || '' },
-    { skip: !academicYearId }
+    { skip: !academicYearId || !enabled }
   );
 
   const options = useMemo<AcademicOrganizationSelectOption[]>(
