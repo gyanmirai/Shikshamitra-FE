@@ -781,7 +781,7 @@ export const ReviewQueueTab = ({
                 {review.action === 'approve'
                   ? 'Approve this submission for official record and execution.'
                   : review.action === 'reject'
-                    ? 'Rejecting this submission will notify the teacher.'
+                    ? 'Reject this submission and save the reason in the lesson plan.'
                     : 'Request revisions from the teacher with detailed feedback.'}
               </Alert>
 

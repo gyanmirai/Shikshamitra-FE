@@ -11,6 +11,15 @@ vi.hoisted(() => {
 beforeEach(prepareReviewNetwork);
 
 describe('review comment requirements remain unchanged', () => {
+  it('describes what rejecting a submission saves without promising a notification', async () => {
+    renderReviewQueue();
+    fireEvent.click(await screen.findByRole('button', { name: 'Reject' }));
+
+    const dialog = within(await screen.findByRole('dialog'));
+    expect(dialog.getByText('Reject this submission and save the reason in the lesson plan.')).toBeInTheDocument();
+    expect(dialog.queryByText(/will notify the teacher/i)).not.toBeInTheDocument();
+  });
+
   it.each([
     ['Request changes', 'Submit Request', 'Please describe the changes required.'],
     ['Reject', 'Confirm Reject', 'Rejection reason is required.'],
