@@ -147,6 +147,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     >
       <CustomBreadcrumbs
         heading={currentTabLabel}
+        layout="inline"
         description={
           currentTab?.description ?? 'Configure staff calendars, policies, and assignments.'
         }
@@ -157,7 +158,9 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         ]}
       />
       {!academicYearId ? <Alert severity="warning">Select an academic year</Alert> : null}
-      {isLoading ? <LinearProgress /> : null}
+      {tab === 'assignments' && isLoading ? (
+        <LinearProgress aria-label="Loading policy assignments" />
+      ) : null}
       {academicYearId && !drawer
         ? defaultWarnings
             .filter(({ policy }) => tab === policy || tab === 'assignments')

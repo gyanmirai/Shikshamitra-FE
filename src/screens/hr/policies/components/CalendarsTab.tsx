@@ -10,17 +10,14 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { formatHrAuditDateTime } from 'src/utils/hr-audit-format';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Card, Stack, Button, MenuItem, MenuList } from '@mui/material';
 import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useGetWorkCalendarPoliciesQuery } from 'src/redux/hr/hr-policy-api';
-import { Card, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
 
 import { InfoTooltipIcon } from './HRPolicySharedUI';
-import {
-  formatRange,
-  getErrorMessage,
-  getCalendarWeeklyRuleLabel,
-} from '../hr-policy-workspace-utils';
+import { POLICY_PAGE_SIZE } from '../hr-policy-workspace.constants';
+import { formatRange, getCalendarWeeklyRuleLabel } from '../hr-policy-workspace-utils';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
@@ -30,20 +27,28 @@ function ArchiveToggle({
   current,
   onCurrent,
   onArchived,
-  archivedCount,
 }: {
   current: boolean;
   onCurrent: () => void;
   onArchived: () => void;
-  archivedCount: number;
 }) {
   return (
     <Stack direction="row" spacing={1}>
-      <Button size="small" variant={current ? 'contained' : 'outlined'} onClick={onCurrent}>
+      <Button
+        size="small"
+        aria-pressed={current}
+        variant={current ? 'contained' : 'outlined'}
+        onClick={onCurrent}
+      >
         Current
       </Button>
-      <Button size="small" variant={!current ? 'contained' : 'outlined'} onClick={onArchived}>
-        Archived ({archivedCount})
+      <Button
+        size="small"
+        aria-pressed={!current}
+        variant={!current ? 'contained' : 'outlined'}
+        onClick={onArchived}
+      >
+        Archived
       </Button>
     </Stack>
   );
@@ -73,7 +78,7 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     unarchivePolicy,
     clonePolicy,
   } = ctx;
-  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 10, search: '' });
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: POLICY_PAGE_SIZE, search: '' });
   const isCurrent = policyArchiveView.calendar === 'current';
   const listArgs = {
     academicYearId,
@@ -100,12 +105,7 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     },
     useGetWorkCalendarPoliciesQuery(listArgs, { skip: !academicYearId })
   );
-  const { data: archivedSummary } = useGetWorkCalendarPoliciesQuery(
-    { academicYearId, maxResultCount: 1, isArchived: true },
-    { skip: !academicYearId }
-  );
   const visibleCalendars = policyPage?.items || [];
-  const archivedCalendarCount = archivedSummary?.totalCount || 0;
 
   const calendarColumns: IColumn[] = [
     {
@@ -286,7 +286,6 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           <Stack spacing={1}>
             <ArchiveToggle
               current={isCurrent}
-              archivedCount={archivedCalendarCount}
               onCurrent={() => {
                 setTableQuery((current) => ({ ...current, page: 1 }));
                 setPolicyArchiveView((current) => ({ ...current, calendar: 'current' }));
@@ -310,11 +309,6 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             </Button>
           ) : null}
         </Stack>
-        {calendarsError ? (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            {getErrorMessage(calendarsError, 'Could not load work calendars.')}
-          </Alert>
-        ) : null}
       </Card>
       <CustomizableTable
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}

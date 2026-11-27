@@ -42,6 +42,10 @@ TL;DR: use this page to locate RTK Query clients and backend contract ownership 
 Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md`.
 
 `hr-setup-review-api.ts` supplies on-demand evidence for the Policies & Rules overview.
+
+Policy screens request only the current workspace's data and required policy lookups.
+Archive lists and leave year-end settlements load when opened.
+Focusing or hovering over a permitted policy link on the overview prefetches its first page for the selected academic year.
 See [setup review integration](references/setup-review.md) for mounting, cache and API details.
 
 Staff Directory's Academic Permission step passes `employeeId` to `employeeApi` scope queries and mutations. They use GET/PUT `/api/employees/{employeeId}/academic-permission`, preserving the hierarchy response, academic-year payload and cache invalidation. Standalone Security callers omit `employeeId` and continue using the global User Scope APIs. The [backend HR API contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md) owns draft delegation and scope enforcement.

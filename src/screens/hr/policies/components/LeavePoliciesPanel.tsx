@@ -20,10 +20,10 @@ import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
 import {
+  Box,
   Card,
   Chip,
   Stack,
-  Alert,
   Button,
   Drawer,
   Divider,
@@ -42,6 +42,7 @@ import { DrawerHeader } from './HRPolicySharedUI';
 import { LeavePolicyForm } from './LeavePolicyForm';
 import { policyImpactRequest } from '../leave-impact.types';
 import { getErrorMessage } from '../hr-policy-workspace-utils';
+import { POLICY_PAGE_SIZE } from '../hr-policy-workspace.constants';
 import { LeavePolicyDetailsDrawer } from './LeavePolicyDetailsDrawer';
 import { LeaveYearEndSettlementsPanel } from './LeaveYearEndSettlementsPanel';
 import { useLeavePolicyImpactReview } from '../hooks/useLeavePolicyImpactReview';
@@ -84,7 +85,7 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
   const [drawerOpen, setDrawerOpen] = useState(false);
   const impactReview = useLeavePolicyImpactReview(currentYear?.id);
   const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
-  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 10, search: '' });
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: POLICY_PAGE_SIZE, search: '' });
 
   const exportTable = useHrTableExport('hr-policy-leave', {
     academicYearId: currentYear?.id,
@@ -121,16 +122,6 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
       { skip: !currentYear?.id }
     )
   );
-  const { data: archivedSummary } = useGetLeavePoliciesQuery(
-    {
-      academicYearId: currentYear?.id,
-      page: 1,
-      pageSize: 1,
-      archivedOnly: true,
-    },
-    { skip: !currentYear?.id }
-  );
-
   const [archiveLeavePolicy, archiveState] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteLeavePolicyMutation,
@@ -147,7 +138,6 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
   });
 
   const tableData = (leavePolicyData?.items || []) as ILeavePolicy[];
-  const archivedCount = archivedSummary?.totalCount || 0;
 
   const openCreateDrawer = () => {
     if (!canCreate) return;
@@ -277,68 +267,34 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
       {
         id: 'policyTitle',
         label: 'Name',
-        minWidth: 180,
+        minWidth: 200,
         sticky: true,
         stickyOnMobile: false,
-        render: (_value, row) => getLeavePolicyTitle(row.policyItem),
-      },
-      {
-        id: 'ruleCount',
-        label: 'Rules',
-        minWidth: 90,
-        render: (_value, row) => {
-          const rules = getActivePolicyRules(row.policyItem);
-          const hasPaid = rules.some((rule) => getRuleBucket(rule) === 'Paid');
-          const hasUnpaid = rules.some((rule) => getRuleBucket(rule) === 'Unpaid');
-          return (
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              <Label color="default" variant="soft">
-                {rules.length}/2
-              </Label>
-              {hasPaid ? (
-                <Label color="success" variant="soft">
-                  Paid
-                </Label>
-              ) : null}
-              {hasUnpaid ? (
-                <Label color="warning" variant="soft">
-                  Unpaid
-                </Label>
-              ) : null}
-            </Stack>
-          );
-        },
-      },
-      {
-        id: 'buckets',
-        label: 'Buckets',
-        minWidth: 220,
-        render: (_value, row) => {
-          const paid = getRuleByBucket(row.policyItem, 'Paid');
-          const unpaid = getRuleByBucket(row.policyItem, 'Unpaid');
-          return (
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              <Label color="success" variant="soft">
-                Paid: {formatRuleEntitlement(paid)}
-              </Label>
-              <Label color="warning" variant="soft">
-                Unpaid: {formatRuleEntitlement(unpaid)}
-              </Label>
-            </Stack>
-          );
-        },
+        render: (_value, row) => (
+          <Typography variant="subtitle2">{getLeavePolicyTitle(row.policyItem)}</Typography>
+        ),
       },
       {
         id: 'entitlements',
         label: 'Entitlement',
-        minWidth: 240,
+        minWidth: 164,
         render: (_value, row) => {
           const paid = getRuleByBucket(row.policyItem, 'Paid');
           const unpaid = getRuleByBucket(row.policyItem, 'Unpaid');
           return (
             <Stack spacing={0.25}>
-              <Typography variant="body2">Paid: {formatRuleEntitlement(paid)}</Typography>
-              <Typography variant="body2">Unpaid: {formatRuleEntitlement(unpaid)}</Typography>
+              <Typography variant="body2">
+                <Box component="span" sx={{ color: 'text.secondary' }}>
+                  Paid
+                </Box>{' '}
+                {formatRuleEntitlement(paid)}
+              </Typography>
+              <Typography variant="body2">
+                <Box component="span" sx={{ color: 'text.secondary' }}>
+                  Unpaid
+                </Box>{' '}
+                {formatRuleEntitlement(unpaid)}
+              </Typography>
             </Stack>
           );
         },
@@ -346,7 +302,7 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
       {
         id: 'controls',
         label: 'Controls',
-        minWidth: 230,
+        minWidth: 184,
         render: (_value, row) => {
           const rules = getActivePolicyRules(row.policyItem);
           const flags = [
@@ -366,7 +322,11 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
                   variant="outlined"
                 />
               ))}
-              {!flags.length ? <Chip size="small" label="Basic" variant="outlined" /> : null}
+              {!flags.length ? (
+                <Typography variant="body2" color="text.secondary">
+                  None
+                </Typography>
+              ) : null}
             </Stack>
           );
         },
@@ -390,18 +350,13 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
                 : 'warning';
 
           return (
-            <Stack spacing={0.75}>
+            <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
               <Label color={statusColor} variant="soft">
                 {policyStatus}
               </Label>
               {row.policyItem?.isDefault ? (
                 <Label color="primary" variant="soft">
                   Default
-                </Label>
-              ) : null}
-              {row.encashmentAllowed ? (
-                <Label color="warning" variant="soft">
-                  Payroll impact
                 </Label>
               ) : null}
             </Stack>
@@ -541,38 +496,43 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
     id: policy.id,
     policyItem: policy,
     policyTitle: getLeavePolicyTitle(policy),
-    ruleCount: getActivePolicyRules(policy).length,
-    encashmentAllowed: getActivePolicyRules(policy).some((rule) => rule.encashmentAllowed),
     updatedAt: formatHrAuditDateTime(policy.lastModificationTime || policy.creationTime),
   }));
 
   return (
     <Stack spacing={1} sx={{ width: 1, minWidth: 0, minHeight: 0, flex: 1 }}>
       <Card sx={{ p: 1, flexShrink: 0 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={1.5}>
-          <Stack spacing={0.5}>
-            <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Button
-                size="small"
-                variant={archiveView === 'current' ? 'contained' : 'outlined'}
-                onClick={() => {
-                  setTableQuery((current) => ({ ...current, page: 1 }));
-                  setArchiveView('current');
-                }}
-              >
-                Current
-              </Button>
-              <Button
-                size="small"
-                variant={archiveView === 'archived' ? 'contained' : 'outlined'}
-                onClick={() => {
-                  setTableQuery((current) => ({ ...current, page: 1 }));
-                  setArchiveView('archived');
-                }}
-              >
-                Archived ({archivedCount})
-              </Button>
-            </Stack>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          spacing={1}
+          flexWrap="wrap"
+          useFlexGap
+        >
+          <Stack direction="row" spacing={0.75} role="group" aria-label="Leave policy status">
+            <Button
+              size="small"
+              aria-pressed={archiveView === 'current'}
+              variant={archiveView === 'current' ? 'contained' : 'outlined'}
+              onClick={() => {
+                setTableQuery((current) => ({ ...current, page: 1 }));
+                setArchiveView('current');
+              }}
+            >
+              Current
+            </Button>
+            <Button
+              size="small"
+              aria-pressed={archiveView === 'archived'}
+              variant={archiveView === 'archived' ? 'contained' : 'outlined'}
+              onClick={() => {
+                setTableQuery((current) => ({ ...current, page: 1 }));
+                setArchiveView('archived');
+              }}
+            >
+              Archived
+            </Button>
           </Stack>
           {archiveView === 'current' && canCreate ? (
             <Button
@@ -587,11 +547,6 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
             </Button>
           ) : null}
         </Stack>
-        {error ? (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            Could not load leave policies.
-          </Alert>
-        ) : null}
       </Card>
 
       <LeaveYearEndSettlementsPanel />
@@ -629,7 +584,7 @@ export function LeavePoliciesPanel({ onHistory }: { onHistory?: (policy: ILeaveP
         noDataText={
           archiveView === 'archived'
             ? 'No archived leave policies.'
-            : 'No current leave policies. Create one from Policies & Rules.'
+            : 'No current leave policies for this academic year.'
         }
         {...operationalTableProps}
       />

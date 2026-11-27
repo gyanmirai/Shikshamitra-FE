@@ -147,6 +147,9 @@ const grantedPermissions = [
   'ShikshaMitra.Module.HR.AttendanceManagement',
   'ShikshaMitra.Module.HR.LeaveManagement',
   'HR.LeaveManagement.Setting.LeavePolicy',
+  'HR.LeaveManagement.Setting.LeavePolicy.View',
+  'HR.LeaveManagement.Setting.LeavePolicy.Add',
+  'HR.LeaveManagement.Setting.LeavePolicy.Edit',
   'HR.LeaveManagement.LeaveCenter',
   'HR.Policies.View',
   'HR.Policies.Create',
@@ -214,12 +217,25 @@ async function seedAcademicYear(page: Page) {
 
 async function installPermissionRoutes(page: Page) {
   failOnUnauthorizedApiLeak(page);
+  await page.route('**/api/host/session-context', (route) =>
+    fulfillJson(route, {
+      accountMode: 'tenant',
+      tenantId: 'leave-policy-center-school-e2e',
+      setupCompleted: true,
+      canManageSetup: false,
+      canViewTenants: false,
+      canCreateTenants: false,
+      canUpdateTenants: false,
+      canManageTenantStatus: false,
+    })
+  );
   await page.route('**/api/auth/session**', (route) =>
     fulfillJson(route, {
       accessToken: 'leave-policy-center-token-e2e',
       expires: '2099-01-01T00:00:00.000Z',
       profile: {
         sub: 'leave-policy-center-user-e2e',
+        tenantid: 'leave-policy-center-school-e2e',
         name: 'Leave Policy HR User',
         role: 'hr-manager',
       },
@@ -240,6 +256,9 @@ async function installPermissionRoutes(page: Page) {
     })
   );
   await page.route('**/api/employees/me**', (route) => fulfillJson(route, employee));
+  await page.route('**/api/institute-setup/school-identity/branding/logo', (route) =>
+    route.fulfill({ status: 404 })
+  );
   await page.route('**/api/app/education-board**', (route) =>
     fulfillJson(route, { items: [], totalCount: 0 })
   );
@@ -247,7 +266,11 @@ async function installPermissionRoutes(page: Page) {
     fulfillJson(route, { items: [], totalCount: 0 })
   );
   await page.route('**/api/app/user-scope/user-scope-hierarchy**', (route) =>
-    fulfillJson(route, { isAdmin: true, accessibleHierarchy: [] })
+    fulfillJson(route, {
+      userId: 'leave-policy-center-user-e2e',
+      isAdmin: true,
+      accessibleHierarchy: [],
+    })
   );
   await page.route('**/permission-management/permissions?**', (route) =>
     fulfillJson(route, {
@@ -279,6 +302,9 @@ async function installLeavePolicyRoutes(
 
   await page.route('**/api/app/academic-year**', (route) =>
     fulfillJson(route, { items: [academicYear], totalCount: 1 })
+  );
+  await page.route('**/api/hr/setup-readiness**', (route) =>
+    fulfillJson(route, { academicYearId: academicYear.id, isReady: true, checks: [] })
   );
 
   let activeSettlementRun: any = state.settlementRun || settlementRun;
@@ -336,6 +362,30 @@ async function installLeavePolicyRoutes(
     if (request.method() === 'GET') {
       const isSinglePolicy = /\/api\/leave-policies\/[^/?]+$/.test(url.pathname);
       await fulfillJson(route, isSinglePolicy ? policy : { items: [policy], totalCount: 1 });
+      return;
+    }
+
+    if (request.method() === 'POST' && url.pathname.endsWith('/impact/preview')) {
+      const assessment = request.postDataJSON();
+      await fulfillJson(route, {
+        action: assessment.action,
+        requiresConfirmation: true,
+        confirmationToken: 'leave-policy-impact-e2e',
+        currentVersion: 1,
+        proposedVersion: 2,
+        warnings: [],
+        blockingWarnings: [],
+        differences: [],
+        impact: {
+          asOfDate: assessment.asOfDate,
+          fromDate: assessment.fromDate,
+          toDate: assessment.toDate,
+          completeness: 'reference_assessment_complete',
+          limitation: 'Synthetic impact assessment',
+          measures: {},
+          payrollPeriods: [],
+        },
+      });
       return;
     }
 
@@ -507,6 +557,55 @@ test.describe('Leave policy and Leave Center matrix', () => {
     await seedAcademicYear(page);
   });
 
+  test('opens the policy list without requesting archived records, assignments, or settlements', async ({
+    page,
+  }) => {
+    await installLeavePolicyRoutes(page, {});
+    const unrelatedListPaths = new Set([
+      '/api/employees',
+      '/api/groups',
+      '/api/hr/policy-assignments',
+      '/api/hr/work-calendar-policies',
+      '/api/hr/payroll/policies',
+      '/api/hr/attendance/policies',
+    ]);
+    await page.route((url) => unrelatedListPaths.has(url.pathname), (route) =>
+      route.request().method() === 'GET'
+        ? fulfillJson(route, { items: [], totalCount: 0 })
+        : route.fallback()
+    );
+    const requests: URL[] = [];
+    page.on('request', (request) => {
+      if (request.method() === 'GET') requests.push(new URL(request.url()));
+    });
+
+    await gotoLeavePolicies(page);
+    await expect(page.getByText(policy.policyTitle, { exact: true })).toBeVisible();
+    expect(
+      requests
+        .filter(
+          ({ pathname, searchParams }) =>
+            (pathname === '/api/leave-policies' && searchParams.get('archivedOnly') === 'true') ||
+            unrelatedListPaths.has(pathname) ||
+            pathname === '/api/leave-management/year-end-settlements'
+        )
+        .map(({ pathname, search }) => pathname + search)
+    ).toEqual([]);
+
+    await page.getByRole('button', { name: 'Archived', exact: true }).click();
+    await expect
+      .poll(() =>
+        requests.some(
+          ({ pathname, searchParams }) =>
+            pathname === '/api/leave-policies' && searchParams.get('archivedOnly') === 'true'
+        )
+      )
+      .toBe(true);
+
+    await page.getByRole('button', { name: 'Show settlement details' }).click();
+    await expect(page.getByText('4 carried')).toBeVisible();
+  });
+
   test('authors Paid and Unpaid policy rules with accrual and paid-only controls', async ({
     page,
   }) => {
@@ -526,7 +625,8 @@ test.describe('Leave policy and Leave Center matrix', () => {
       .getByRole('spinbutton', { name: /^Days \*$/i })
       .first()
       .fill('12');
-    await chooseComboboxOption(dialog, 1, /^Monthly$/i);
+    await dialog.getByRole('combobox', { name: /^Paid Accrual/i }).click();
+    await page.getByRole('option', { name: 'Monthly', exact: true }).click();
     await dialog
       .getByRole('spinbutton', { name: /Max Per Request/i })
       .first()
@@ -546,9 +646,11 @@ test.describe('Leave policy and Leave Center matrix', () => {
     await dialog.getByRole('checkbox', { name: /Carry forward/i }).check();
     await dialog.getByRole('spinbutton', { name: /Carry Limit/i }).fill('5');
     await dialog.getByRole('checkbox', { name: /Encashable/i }).check();
-    await chooseComboboxOption(dialog, 2, /End of year/i);
+    await dialog.getByRole('combobox', { name: /Encashment Timing/i }).click();
+    await page.getByRole('option', { name: 'End of year', exact: true }).click();
 
-    await chooseComboboxOption(dialog, 3, /^Limited$/i);
+    await dialog.getByRole('combobox', { name: /Entitlement/i }).click();
+    await page.getByRole('option', { name: 'Limited', exact: true }).click();
     await dialog
       .getByRole('spinbutton', { name: /^Days \*$/i })
       .nth(1)
@@ -588,7 +690,7 @@ test.describe('Leave policy and Leave Center matrix', () => {
     expect(JSON.stringify(state.createPayload)).not.toContain('leaveTypeMasterId');
 
     await page
-      .getByRole('button', { name: /^Edit$/i })
+      .getByRole('button', { name: `Edit ${policy.policyTitle}`, exact: true })
       .first()
       .click();
     const editDialog = page.getByRole('dialog');
@@ -600,7 +702,8 @@ test.describe('Leave policy and Leave Center matrix', () => {
       .getByRole('spinbutton', { name: /^Days \*$/i })
       .first()
       .fill('14');
-    await editDialog.getByRole('button', { name: /^Update$/i }).click();
+    await editDialog.getByRole('button', { name: /^Submit$/i }).click();
+    await page.getByRole('button', { name: 'Confirm and save', exact: true }).click();
 
     await expect.poll(() => state.updatePayload).toBeTruthy();
     expect(state.updatePayload).toEqual(
@@ -632,9 +735,9 @@ test.describe('Leave policy and Leave Center matrix', () => {
 
     await gotoLeavePolicies(page);
     await expect(page.getByText('Year-End Settlements')).toBeVisible({ timeout: 60_000 });
+    await page.getByRole('button', { name: /Show settlement details/i }).click();
     await expect(page.getByText('4 carried')).toBeVisible();
     await expect(page.getByText('5 encashed')).toBeVisible();
-    await page.getByRole('button', { name: /Show settlement details/i }).click();
     await expect(page.getByText('Pending leave', { exact: true })).toBeVisible();
 
     const finalizeButton = page.getByRole('button', { name: /^Finalize$/i });
@@ -660,6 +763,7 @@ test.describe('Leave policy and Leave Center matrix', () => {
 
     await gotoLeavePolicies(page);
     await expect(page.getByText('Year-End Settlements')).toBeVisible({ timeout: 60_000 });
+    await page.getByRole('button', { name: /Show settlement details/i }).click();
     await expect(page.getByText('0 blocked')).toBeVisible();
 
     await page.getByRole('button', { name: /^Preview$/i }).click();
