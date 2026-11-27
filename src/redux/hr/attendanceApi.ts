@@ -1,4 +1,4 @@
-import { academicType, employeeType } from 'src/redux/tagTypes';
+import { academicType, employeeType, workShiftType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
 
@@ -91,6 +91,13 @@ export const buildAttendanceRegisterParams = (params: GetAttendanceRegisterParam
     maxResultCount: params.maxResultCount ?? 50,
   });
 };
+
+export const markAttendanceReadTags = [
+  employeeType.attendance,
+  employeeType.employee,
+  employeeType.attendanceRule,
+  workShiftType.workShift,
+];
 
 export const attendancePayrollInvalidationTags = [
   employeeType.attendance,
@@ -233,7 +240,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         method: 'GET',
         params: buildGetDayAttendanceQueryParams(params),
       }),
-      providesTags: [employeeType.attendance],
+      providesTags: markAttendanceReadTags,
     }),
 
     getAttendanceRegister: builder.query({

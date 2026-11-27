@@ -18,7 +18,7 @@ import { test, expect } from '@playwright/test';
         0
       );
       const header = await page
-        .getByRole('button', { name: 'Mark all as Present', exact: true })
+        .getByRole('button', { name: 'Mark this page as Present', exact: true })
         .boundingBox();
       const row = await present.boundingBox();
       expect(Math.abs(header!.x - row!.x)).toBeLessThan(1);
@@ -49,7 +49,7 @@ import { test, expect } from '@playwright/test';
       await region.getByRole('textbox', { name: 'Department contains' }).fill('missing department');
       await region.getByRole('button', { name: 'Apply filters' }).click();
       await expect(
-        page.getByText('No staff found for the selected date', { exact: true })
+        page.getByText('No staff match the current filters', { exact: true })
       ).toBeVisible();
       await region.getByRole('button', { name: 'Clear filters' }).click();
       await expect(present).toBeVisible();
@@ -82,7 +82,7 @@ test('date changes reset pagination and late day responses cannot restore obsole
   await expect(page.getByRole('button', { name: 'Mark SYN-1 Present', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Go to next page' }).click();
   await expect(
-    page.getByRole('button', { name: 'Mark SYN-51 Present', exact: true })
+    page.getByRole('button', { name: 'Mark SYN-26 Present', exact: true })
   ).toBeVisible();
   // MUI's segmented accessible date field supports keyboard day editing.
   const day = page.getByRole('spinbutton', { name: 'Day' });
@@ -94,4 +94,26 @@ test('date changes reset pagination and late day responses cannot restore obsole
   await expect(page.getByRole('cell', { name: '22/10/2026', exact: true }).first()).toBeVisible();
   await page.waitForTimeout(900);
   await expect(page.getByRole('cell', { name: '23/10/2026', exact: true })).toHaveCount(0);
+});
+
+test('revisiting a recently loaded page reuses its attendance data', async ({ page }) => {
+  let requests = 0;
+  await page.route('**/api/hr/attendance/take-attendance/day?*', async (route) => {
+    requests += 1;
+    await route.continue();
+  });
+  await page.goto('/?date=2026-10-24');
+  const firstRow = page.getByRole('button', { name: 'Mark SYN-1 Present', exact: true });
+  await expect(firstRow).toBeVisible();
+  expect(requests).toBe(1);
+
+  await page.getByRole('button', { name: 'Go to next page' }).click();
+  await expect(firstRow).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Go to previous page' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: /^Mark SYN-\d+ Present$/ }).first()).toBeVisible();
+  expect(requests).toBe(2);
+
+  await page.getByRole('button', { name: 'Go to previous page' }).click();
+  await expect(firstRow).toBeVisible();
+  expect(requests).toBe(2);
 });
