@@ -477,6 +477,7 @@ const hrModule = () => ({
               shortcutKey: 'Alt+H+A+0',
               shortcutKeyName: 'Alt+H+A+0',
               permissionName: hrPermissions.attendance.dashboard,
+              requiredAllPermissions: [`${hrPermissions.attendance.dashboard}.View`],
               icon: menuIconView('mdi:view-dashboard-outline'),
             },
             // {

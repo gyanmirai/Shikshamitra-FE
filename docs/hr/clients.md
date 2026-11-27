@@ -84,8 +84,8 @@ Use this table before searching `src/redux`:
 
 | Client                             | Endpoint families                                                                             | Backend owner                   |
 | ---------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------- |
-| `hrOperationalDashboardApi.ts`     | Live module overview and separate server-paged staff reads                                                | HR operational dashboard        |
-| `hrDashboardApi.ts`                | Separate attendance and payroll previews and refresh                                        | HR dashboard previews           |
+| `hrOperationalDashboardApi.ts`     | Live HR overview, separate server-paged staff reads, and the scoped attendance dashboard                | HR operational dashboard        |
+| `hrDashboardApi.ts`                | Stored payroll preview and refresh                                                                   | HR dashboard previews           |
 | `employeeApi.ts`                   | Employees, profile tabs, status, documents, reporting, search                                 | HR employees                    |
 | `employee-icard-template-api.ts`   | I-card templates, assets, and PDF download                                                    | HR employees and I-card         |
 | `employee-payroll-api.ts`          | Earning components, deduction components, provident fund, professional tax, pay elements      | HR payroll settings             |

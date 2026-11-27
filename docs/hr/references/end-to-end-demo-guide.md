@@ -541,13 +541,15 @@ Route: `/hr/attendance-dashboard`.
 Demo steps:
 
 1. Open Attendance Management, Dashboard.
-2. Show live status, late trend, action center, shift monitoring, top defaulters, and problem detection widgets if populated.
-3. Filter by date or group if controls are available.
-4. Use quick actions to navigate to Mark Attendance or Attendance Register.
+2. Show the selected school date, effective staff scope, daily status counts, and seven-day attendance trend.
+3. Choose an earlier date and show how daily counts and links follow the selection.
+4. With Attendance Tracking View, open a flagged employee's dated register entry.
+5. With both marking grants, open Mark Attendance for a date in the selected academic year.
+6. Demonstrate a dashboard-only role with scoped counts and aggregate review information.
 
 Example narration:
 
-`This dashboard helps HR find missing punches, late arrivals, shift issues, and attendance exceptions before payroll is calculated.`
+`This dashboard helps HR see which attendance records are complete, which are unmarked, and which have review flags.`
 
 ## 8. Demo device attendance
 

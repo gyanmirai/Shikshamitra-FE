@@ -41,6 +41,17 @@ export type DashboardStaff = {
     message: string;
   }[];
 };
+export type AttendanceDashboard = {
+  asOfDate: string;
+  generatedAt: string;
+  scopeLabel: string;
+  summary: DashboardCounts;
+  trend: DashboardCounts[];
+  unavailableDates: string[];
+  review?: (Pick<DashboardStaff, 'employeeId' | 'name' | 'status'> & {
+    flags: DashboardStaff['reviewFlags'];
+  })[];
+};
 export type DashboardCapabilities = {
   canViewAttendance: boolean;
   canViewStaff: boolean;
@@ -114,6 +125,23 @@ export type OperationalStaffPage = {
 
 export const operationalDashboardApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getHRAttendanceDashboard: builder.query<
+      AttendanceDashboard,
+      { date?: string; accessKey: string }
+    >({
+      query: ({ date }) => ({
+        url: '/hr/dashboard/attendance',
+        params: date ? { date } : undefined,
+        cache: 'no-store',
+      }),
+      providesTags: [
+        employeeType.hrDashboard,
+        employeeType.employee,
+        employeeType.attendance,
+        employeeType.employeeLeavePolicy,
+      ],
+      keepUnusedDataFor: 0,
+    }),
     getHROperationalOverview: builder.query<OperationalOverview, OverviewQuery>({
       query: ({ accessKey, ...params }) => ({ url: '/hr/dashboard/overview', params }),
       providesTags: [
@@ -135,5 +163,8 @@ export const operationalDashboardApi = api.injectEndpoints({
   }),
 });
 
-export const { useGetHROperationalOverviewQuery, useGetHROperationalStaffQuery } =
-  operationalDashboardApi;
+export const {
+  useGetHRAttendanceDashboardQuery,
+  useGetHROperationalOverviewQuery,
+  useGetHROperationalStaffQuery,
+} = operationalDashboardApi;
