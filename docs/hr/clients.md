@@ -33,7 +33,10 @@ The [backend readiness contract](https://github.com/gyanmirai/Shikshamitra-BE/bl
 
 `employeeOnboardingApi.ts` carries structured `workAssignment` in invite/detail/public/finalization data. `work-assignment-field.tsx` reads `academicOrganizationOptionsApi` directly, using `currentData` and refetch-on-mount to avoid validating with a previous year's response. Summary labels are supplied by the backend. Finalization sends the reviewed assignment and `workAssignmentConfirmed`; role and Academic Permission payloads retain their independent contracts.
 
-The onboarding list (`src/screens/hr/employee-onboarding/index.tsx`) initially requests only the paged application list. Detail reads require a selected application; operational column filters/sorts use the existing table-query reader. `finalize-page.tsx` imports the separate `finalize-workflow.tsx` module so the initial list does not load the salary/statutory wizard and its address/stepper dependencies. Keep the wizard out of list-module re-exports; its route owns those imports and lookup requests.
+The onboarding list (`src/screens/hr/employee-onboarding/index.tsx`) starts with the paged application list.
+Detail reads require a selected application, and operational column filters and sorts use the existing table-query reader.
+`finalize-page.tsx` imports the separate `finalize-workflow.tsx` module so the initial list does not load the salary/statutory wizard and its address/stepper dependencies.
+Keep the wizard out of list-module re-exports since its route owns those imports and lookup requests.
 
 TL;DR: use this page to locate RTK Query clients and backend contract ownership for HR screens.
 Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md`.
@@ -58,7 +61,9 @@ The Add Staff form submits personal information through `addBasicInformation` wi
 Policy inheritance is owned by the [backend policy resolver](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/references/policy-architecture.md).
 Explicit policy assignments use their existing authorized policy/profile clients separately. Creation errors retain entered values.
 
-Staff Directory uses the paged `getEmployee` query only while the directory is visible and reuses responses less than 30 seconds old.
+Staff Directory subscribes to the paged `getEmployee` query while the directory is visible and reuses responses less than 30 seconds old.
+After the Staff Onboarding list loads, it prefetches the default first directory page for users with Staff Directory View permission.
+Both screens share the default query arguments and freshness window.
 Employee mutations retain their existing cache invalidation.
 The table uses `currentData` so background refreshes keep the current rows visible and a newly requested page never displays the previous page's staff.
 Staff profile and edit screens load their code when opened.

@@ -14,6 +14,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
+import { employeeApi } from 'src/redux/hr/employeeApi';
 import CustomDialog from 'src/components/customDialog';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -74,6 +75,11 @@ import {
   workAssignmentRequest,
   type EmployeeWorkAssignment,
 } from './work-assignment';
+import {
+  staffDirectoryQuery,
+  initialStaffDirectoryFilters,
+  staffDirectoryCacheFreshnessSeconds,
+} from '../employee/staff-directory-query';
 import {
   getValidNextStatuses,
   EmployeeApplicationStatus,
@@ -1016,6 +1022,17 @@ export default function EmployeeOnboardingScreen() {
   const { currentData: detailData } = useGetEmployeeApplicationQuery(applicationId || '', {
     skip: !applicationId,
   });
+  const canViewDirectory = hasGrantedPermission(permissions, `${hrPermissions.employee.list}.View`);
+  const prefetchDirectory = employeeApi.usePrefetch('getEmployee');
+  const onboardingListReady = Boolean(data);
+  useEffect(() => {
+    if (!applicationId && onboardingListReady && canViewDirectory) {
+      prefetchDirectory(staffDirectoryQuery(initialStaffDirectoryFilters), {
+        ifOlderThan: staffDirectoryCacheFreshnessSeconds,
+      });
+    }
+  }, [applicationId, canViewDirectory, onboardingListReady, prefetchDirectory]);
+
   const applications = data?.items || [];
   const totalCount = data?.totalCount || 0;
   const selectedApplication = resolveCurrentEmployeeApplication(
