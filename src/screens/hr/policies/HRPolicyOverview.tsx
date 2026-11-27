@@ -1,9 +1,11 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
+import type { RootState, AppDispatch } from 'src/redux/store';
 
 import Link from 'next/link';
-import { useSelector } from 'react-redux';
+import { leaveApi } from 'src/redux/hr/leaveApi';
+import { useSelector, useDispatch } from 'react-redux';
+import { hrPolicyApi } from 'src/redux/hr/hr-policy-api';
 import { Box, Alert, Stack, Button } from '@mui/material';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { hasNavigationPermission } from 'src/utils/permissions';
@@ -11,6 +13,7 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { hrLeavePolicyPermissions } from 'src/constants/hr-policy-permissions';
 
+import { POLICY_PAGE_SIZE } from './hr-policy-workspace.constants';
 import { HRSetupReviewChecklist } from './components/HRSetupReviewChecklist';
 
 const policyTasks = [
@@ -20,6 +23,7 @@ const policyTasks = [
     href: hrPaths.policies.calendars,
     permission: hrPermissions.policies.calendars,
     view: hrPermissions.policyActions.view,
+    endpoint: 'getWorkCalendarPolicies',
     action: 'Open work calendars',
     description:
       'Start with working days, weekly days off, and holidays. Attendance and payroll policies can use different calendars.',
@@ -30,6 +34,7 @@ const policyTasks = [
     href: hrPaths.policies.attendance,
     permission: hrPermissions.policies.attendance,
     view: hrPermissions.policyActions.view,
+    endpoint: 'getAttendancePolicies',
     action: 'Open attendance policies',
     description: 'Choose a work calendar and set attendance expectations and holiday work rules.',
   },
@@ -39,6 +44,7 @@ const policyTasks = [
     href: hrPaths.policies.payroll,
     permission: hrPermissions.policies.payroll,
     view: hrPermissions.policyActions.view,
+    endpoint: 'getPayrollPolicies',
     action: 'Open payroll policies',
     description: 'Choose a work calendar and set how working days and holidays count for payroll.',
   },
@@ -48,13 +54,15 @@ const policyTasks = [
     href: hrPaths.policies.leavePolicies,
     permission: hrPermissions.policies.leavePolicies,
     view: hrLeavePolicyPermissions.view,
+    endpoint: 'getLeavePolicies',
     action: 'Open leave policies',
     description:
       'Set entitlements and approvals. The staff member’s payroll calendar and workday rules determine how many days a leave request uses.',
   },
-];
+] as const;
 
 export default function HRPolicyOverview() {
+  const dispatch = useDispatch<AppDispatch>();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const academicYear = useSelector((state: RootState) => state.globalState.currentYear);
   const availableTasks = policyTasks.filter(({ permission, view }) =>
@@ -65,6 +73,38 @@ export default function HRPolicyOverview() {
     hrPermissions.policies.assignments,
     [hrPermissions.policyActions.view]
   );
+
+  const prefetchPolicyPage = (endpoint: (typeof policyTasks)[number]['endpoint']) => {
+    if (!academicYear?.id) return;
+    const academicYearId = academicYear.id;
+    if (endpoint === 'getLeavePolicies') {
+      dispatch(
+        leaveApi.util.prefetch(
+          endpoint,
+          {
+            academicYearId,
+            page: 1,
+            pageSize: POLICY_PAGE_SIZE,
+            archivedOnly: false,
+          },
+          { ifOlderThan: 30 }
+        )
+      );
+    } else {
+      dispatch(
+        hrPolicyApi.util.prefetch(
+          endpoint,
+          {
+            academicYearId,
+            maxResultCount: POLICY_PAGE_SIZE,
+            skipCount: 0,
+            isArchived: false,
+          },
+          { ifOlderThan: 30 }
+        )
+      );
+    }
+  };
 
   return (
     <Box sx={{ minWidth: 0, pb: 2 }}>
@@ -84,7 +124,7 @@ export default function HRPolicyOverview() {
                 gap: 2,
               }}
             >
-              {availableTasks.map(({ title, icon, href, description, action }) => (
+              {availableTasks.map(({ title, icon, href, description, action, endpoint }) => (
                 <FormSectionCard
                   key={href}
                   title={title}
@@ -103,6 +143,8 @@ export default function HRPolicyOverview() {
                       variant="outlined"
                       color="inherit"
                       size="small"
+                      onMouseEnter={() => prefetchPolicyPage(endpoint)}
+                      onFocus={() => prefetchPolicyPage(endpoint)}
                     >
                       {action}
                     </Button>

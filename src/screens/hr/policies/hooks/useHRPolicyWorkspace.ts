@@ -307,6 +307,15 @@ export function useHRPolicyWorkspace({
     toDate: '',
   });
   // --- API Queries ----------------------------------------------------------
+  const showAssignments = !embedded && tab === 'assignments';
+  const showHolidayImpact = tab === 'holiday';
+  const needsCalendarOptions =
+    embedded || showHolidayImpact || tab === 'payroll' || tab === 'attendance';
+  const needsPayrollPolicies =
+    embedded || showAssignments || showHolidayImpact || tab === 'payroll';
+  const needsAttendancePolicies =
+    embedded || showAssignments || showHolidayImpact || tab === 'attendance';
+  const skipAssignments = !academicYearId || !showAssignments;
   const listArgs = { academicYearId, maxResultCount: 200, isArchived: false };
   const [assignmentPage, setAssignmentPage] = useState({ number: 1, size: 20 });
   useEffect(() => {
@@ -321,7 +330,7 @@ export function useHRPolicyWorkspace({
 
   const { currentData: employees, isFetching: employeesLoading } = useGetEmployeeQuery(
     { page: 1, pageSize: EMPLOYEE_LIST_MAX_PAGE_SIZE },
-    { skip: embedded || !academicYearId }
+    { skip: skipAssignments }
   );
   const { currentData: employeeSearchResults, isFetching: employeeSearchLoading } =
     useGetEmployeeQuery(
@@ -330,30 +339,37 @@ export function useHRPolicyWorkspace({
         pageSize: 100,
         search: employeeLookupSearch.trim(),
       },
-      { skip: !academicYearId || employeeLookupSearch.trim().length < 2 }
+      {
+        skip:
+          skipAssignments ||
+          drawer?.kind !== 'assignment' ||
+          employeeLookupSearch.trim().length < 2,
+      }
     );
   const { data: groups, isFetching: groupsLoading } = useGetGroupsQuery(
     { academicYearId, maxResultCount: 200, includeDetails: false },
-    { skip: embedded || !academicYearId }
+    { skip: skipAssignments || drawer?.kind !== 'assignment' }
   );
   const {
-    data: workCalendarPolicies,
+    currentData: workCalendarPolicies,
     isFetching: calendarsLoading,
     error: calendarsError,
     refetch: refetchCalendars,
-  } = useGetWorkCalendarPoliciesQuery(listArgs, { skip: !academicYearId });
+  } = useGetWorkCalendarPoliciesQuery(listArgs, { skip: !academicYearId || !needsCalendarOptions });
   const {
     currentData: payrollPolicies,
     isFetching: payrollLoading,
     error: payrollError,
     refetch: refetchPayroll,
-  } = useGetPayrollPoliciesQuery(listArgs, { skip: !academicYearId });
+  } = useGetPayrollPoliciesQuery(listArgs, { skip: !academicYearId || !needsPayrollPolicies });
   const {
     currentData: attendancePolicies,
     isFetching: attendanceLoading,
     error: attendanceError,
     refetch: refetchAttendance,
-  } = useGetAttendancePoliciesQuery(listArgs, { skip: !academicYearId });
+  } = useGetAttendancePoliciesQuery(listArgs, {
+    skip: !academicYearId || !needsAttendancePolicies,
+  });
   const {
     currentData: leavePolicyData,
     isFetching: leavePoliciesLoading,
@@ -363,11 +379,12 @@ export function useHRPolicyWorkspace({
     {
       skip:
         !academicYearId ||
-        (embedded && !hasGrantedPermission(permissions, hrLeavePolicyPermissions.view)),
+        (!showAssignments && tab !== 'leave') ||
+        !hasGrantedPermission(permissions, hrLeavePolicyPermissions.view),
     }
   );
   const {
-    data: assignments,
+    currentData: assignments,
     isFetching: assignmentsLoading,
     error: assignmentsError,
     refetch: refetchAssignments,
@@ -379,9 +396,9 @@ export function useHRPolicyWorkspace({
       page: assignmentPage.number - 1,
       size: assignmentPage.size,
       resetPage: () => setAssignmentPage((current) => ({ ...current, number: 1 })),
-      skip: embedded || !academicYearId,
+      skip: skipAssignments,
     },
-    useGetHrPolicyAssignmentsQuery(assignmentListArgs, { skip: embedded || !academicYearId })
+    useGetHrPolicyAssignmentsQuery(assignmentListArgs, { skip: skipAssignments })
   );
 
   const policyAuditTarget =
@@ -2366,6 +2383,7 @@ export function useHRPolicyWorkspace({
     },
     // Errors
     calendarsError,
+    refetchCalendars,
     payrollError,
     attendanceError,
     leavePoliciesError,

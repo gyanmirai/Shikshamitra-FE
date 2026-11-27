@@ -19,6 +19,7 @@ import {
   Chip,
   Alert,
   Stack,
+  Button,
   Divider,
   Collapse,
   Typography,
@@ -58,6 +59,8 @@ const formatDays = (value?: number | null) =>
 const getIssueLabels = (item: LeaveYearEndSettlementItem) =>
   (item.issueCodes || []).map((code) => ISSUE_LABELS[code] || code);
 
+const emptyRuns: LeaveYearEndSettlementRun[] = [];
+
 export function LeaveYearEndSettlementsPanel() {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const academicYearId = currentYear?.id || '';
@@ -66,10 +69,15 @@ export function LeaveYearEndSettlementsPanel() {
   const [expanded, setExpanded] = useState(false);
 
   const {
-    data: runs = [],
+    currentData: runs = emptyRuns,
     isLoading: runsLoading,
     isFetching: runsFetching,
-  } = useGetLeaveYearEndSettlementsQuery({ academicYearId }, { skip: !academicYearId });
+    error: runsError,
+    refetch: refetchRuns,
+  } = useGetLeaveYearEndSettlementsQuery(
+    { academicYearId },
+    { skip: !academicYearId || !expanded }
+  );
 
   const selectedRun = useMemo(
     () => runs.find((run) => run.id === selectedRunId) || runs[0] || null,
@@ -77,11 +85,11 @@ export function LeaveYearEndSettlementsPanel() {
   );
 
   const {
-    data: runDetail,
+    currentData: runDetail,
     isFetching: detailFetching,
     refetch: refetchRunDetail,
   } = useGetLeaveYearEndSettlementByIdQuery(selectedRun?.id || '', {
-    skip: !selectedRun?.id,
+    skip: !expanded || !selectedRun?.id,
   });
 
   const [previewSettlement, previewState] = usePreviewLeaveYearEndSettlementMutation();
@@ -166,47 +174,59 @@ export function LeaveYearEndSettlementsPanel() {
     <Card sx={{ p: 1, flexShrink: 0, maxHeight: expanded ? '50%' : undefined, overflowY: 'auto' }}>
       <Stack spacing={1.25}>
         <Stack
-          direction={{ xs: 'column', md: 'row' }}
+          direction="row"
           justifyContent="space-between"
-          spacing={1.25}
+          spacing={1}
+          alignItems="center"
+          flexWrap="wrap"
+          useFlexGap
         >
           <Stack spacing={0.75} sx={{ minWidth: 0 }}>
             <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Chip size="small" label="Year-End Settlements" color="primary" variant="outlined" />
-              {activeRun ? renderRunSummary(activeRun) : null}
+              <Typography component="h2" variant="subtitle2">
+                Year-End Settlements
+              </Typography>
+              {expanded && activeRun ? renderRunSummary(activeRun) : null}
             </Stack>
-            {payrollMonths.length ? (
+            {expanded && payrollMonths.length ? (
               <Typography variant="caption" color="text.secondary">
                 Payroll month{payrollMonths.length > 1 ? 's' : ''}: {payrollMonths.join(', ')}
               </Typography>
             ) : null}
           </Stack>
           <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
-            <LoadingButton
-              size="small"
-              variant="outlined"
-              loading={previewState.isLoading}
-              disabled={!academicYearId}
-              startIcon={<Iconify icon="solar:refresh-linear" />}
-              onClick={handlePreview}
-            >
-              Preview
-            </LoadingButton>
-            <LoadingButton
-              size="small"
-              variant="contained"
-              color="warning"
-              loading={finalizeState.isLoading}
-              disabled={!canFinalize}
-              startIcon={<Iconify icon="solar:check-circle-linear" />}
-              onClick={() => setConfirmOpen(true)}
-            >
-              Finalize
-            </LoadingButton>
+            {expanded && (
+              <LoadingButton
+                size="small"
+                variant="outlined"
+                loading={previewState.isLoading}
+                disabled={!academicYearId}
+                startIcon={<Iconify icon="solar:refresh-linear" />}
+                onClick={handlePreview}
+              >
+                Preview
+              </LoadingButton>
+            )}
+            {expanded && (
+              <LoadingButton
+                size="small"
+                variant="contained"
+                color="warning"
+                loading={finalizeState.isLoading}
+                disabled={!canFinalize}
+                startIcon={<Iconify icon="solar:check-circle-linear" />}
+                onClick={() => setConfirmOpen(true)}
+              >
+                Finalize
+              </LoadingButton>
+            )}
             <IconButton
               size="small"
               aria-label={expanded ? 'Hide settlement details' : 'Show settlement details'}
-              onClick={() => setExpanded(!expanded)}
+              aria-expanded={expanded}
+              aria-controls="leave-year-end-settlement-details"
+              disabled={previewState.isLoading || finalizeState.isLoading}
+              onClick={() => setExpanded((open) => !open)}
             >
               <Iconify
                 icon={
@@ -217,10 +237,21 @@ export function LeaveYearEndSettlementsPanel() {
           </Stack>
         </Stack>
 
-        <Collapse in={expanded}>
+        <Collapse id="leave-year-end-settlement-details" in={expanded} mountOnEnter unmountOnExit>
           <Stack spacing={1.25} sx={{ mt: 1.25 }}>
             {!academicYearId ? (
               <Alert severity="warning">Select an academic year.</Alert>
+            ) : runsError ? (
+              <Alert
+                severity="error"
+                action={
+                  <Button color="inherit" size="small" onClick={refetchRuns}>
+                    Retry
+                  </Button>
+                }
+              >
+                Could not load year-end settlements.
+              </Alert>
             ) : loading && !activeRun ? (
               <Stack alignItems="center" sx={{ py: 2 }}>
                 <CircularProgress size={22} />

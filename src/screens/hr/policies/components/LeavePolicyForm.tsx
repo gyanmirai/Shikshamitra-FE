@@ -9,7 +9,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useId, useRef, useMemo, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetLeavePoliciesQuery,
@@ -592,6 +592,7 @@ function RuleSection({
   ) => void;
 }) {
   const isPaid = title === 'Paid';
+  const fieldId = useId();
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
@@ -622,9 +623,10 @@ function RuleSection({
           {!isPaid ? (
             <Grid size={{ xs: 12, md: 3 }}>
               <FormControl fullWidth size="small">
-                <InputLabel>Entitlement</InputLabel>
+                <InputLabel id={`${fieldId}-entitlement`}>Entitlement</InputLabel>
                 <Select
                   label="Entitlement"
+                  labelId={`${fieldId}-entitlement`}
                   value={rule.entitlementMode}
                   onChange={(event) =>
                     setRuleValue(bucket, 'entitlementMode', event.target.value as EntitlementMode)
@@ -652,9 +654,10 @@ function RuleSection({
 
           <Grid size={{ xs: 12, md: 3 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>Accrual</InputLabel>
+              <InputLabel id={`${fieldId}-accrual`}>{title} Accrual</InputLabel>
               <Select
-                label="Accrual"
+                label={`${title} Accrual`}
+                labelId={`${fieldId}-accrual`}
                 value={rule.accrualPolicyType}
                 onChange={(event) =>
                   setRuleValue(
@@ -726,9 +729,10 @@ function RuleSection({
           {isPaid ? (
             <Grid size={{ xs: 12, md: 3 }}>
               <FormControl fullWidth size="small" disabled={!rule.encashmentAllowed}>
-                <InputLabel>Encashment Timing</InputLabel>
+                <InputLabel id={`${fieldId}-encashment-timing`}>Encashment Timing</InputLabel>
                 <Select
                   label="Encashment Timing"
+                  labelId={`${fieldId}-encashment-timing`}
                   value={rule.encashmentTiming}
                   onChange={(event) =>
                     setRuleValue(
