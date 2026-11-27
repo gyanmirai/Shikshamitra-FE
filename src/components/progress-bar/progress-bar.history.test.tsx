@@ -1,5 +1,6 @@
+import NProgress from 'nprogress';
 import { it, vi, expect, afterEach } from 'vitest';
-import { act, render } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 
 import { ProgressBar } from './progress-bar';
 
@@ -22,4 +23,25 @@ it('preserves Next router metadata in legacy history entries and cancelled globa
   expect(pushState).toHaveBeenLastCalledWith(metadata, document.title, window.location.href);
   expect(fixture.router.back).not.toHaveBeenCalled();
   unmount();
+});
+
+it('uses the route skeleton for Finance links and keeps progress for other destinations', () => {
+  vi.mocked(NProgress.start).mockClear();
+  render(
+    <>
+      <a href="/finance/settings/fee-category" onClick={(event) => event.preventDefault()}>
+        Fee Category
+      </a>
+      <a href="/student" onClick={(event) => event.preventDefault()}>
+        Student
+      </a>
+      <ProgressBar />
+    </>
+  );
+
+  fireEvent.click(screen.getByRole('link', { name: 'Fee Category' }));
+  expect(NProgress.start).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('link', { name: 'Student' }));
+  expect(NProgress.start).toHaveBeenCalledTimes(1);
 });

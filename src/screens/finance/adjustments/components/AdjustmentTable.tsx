@@ -301,8 +301,7 @@ const AdjustmentTableContent: React.FC<IAdjustmentTableProps> = ({
           onClearCriteria={() =>
             setTableQuery((previous) => ({ ...previous, scope, page: 0, search: '', filters: [] }))
           }
-          isLoading={isLoading || (isFetching && !applicationsData)}
-          isRefreshing={Boolean(applicationsData && isFetching && !isLoading)}
+          isLoading={isLoading || isFetching}
           error={isError ? { message: 'Could not load adjustments. Please try again.' } : undefined}
           onRetry={refetch}
           wrapperProps={{ sx: { flex: 1, minHeight: 0, width: 1 } }}

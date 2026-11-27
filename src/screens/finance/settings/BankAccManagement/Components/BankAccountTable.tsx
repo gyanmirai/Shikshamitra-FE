@@ -12,7 +12,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
-import { Box, Chip, Link, Stack, Switch, TextField, Typography } from '@mui/material';
+import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import AccountCategoryVersionDrawer from 'src/screens/finance/settings/components/AccountCategoryVersionDrawer';
 import {
@@ -33,7 +33,6 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
   onEdit,
   onView,
   isLoading,
-  isRefreshing,
   error,
   onRetry,
   totalCount,
@@ -77,18 +76,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         sticky: true,
         stickyPosition: 'left',
         align: 'left',
-        render: (value, row) => (
-          <Link
-            component="button"
-            variant="body2"
-            onClick={(event) => {
-              event.stopPropagation();
-              onView(row as IBankAccount);
-            }}
-          >
-            {value}
-          </Link>
-        ),
+        render: (value) => <Typography variant="body2">{value}</Typography>,
       },
       {
         id: 'branchName',
@@ -339,7 +327,6 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         columns={columns}
         data={data || []}
         isLoading={isLoading}
-        isRefreshing={isRefreshing}
         error={error}
         onRetry={onRetry}
         serverSideFilter

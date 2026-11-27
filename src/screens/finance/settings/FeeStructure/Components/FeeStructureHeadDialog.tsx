@@ -28,7 +28,7 @@ import {
   Autocomplete,
   DialogActions,
   FormControlLabel,
-  CircularProgress,
+  Skeleton,
 } from '@mui/material';
 
 import { amountError, defaultPaymentTerm } from '../feeStructureModel';
@@ -351,7 +351,15 @@ export default function FeeStructureHeadDialog({
                         ...params.InputProps,
                         endAdornment: (
                           <>
-                            {headsLoading ? <CircularProgress size={18} /> : null}
+                            {headsLoading && (
+                              <Skeleton
+                                variant="rounded"
+                                width={18}
+                                height={18}
+                                role="status"
+                                aria-label="Loading fee heads"
+                              />
+                            )}
                             {params.InputProps.endAdornment}
                           </>
                         ),

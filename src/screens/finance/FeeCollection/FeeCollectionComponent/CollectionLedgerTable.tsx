@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import { useState, useContext } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CancelButton from 'src/components/cancel-button';
 import { formatNumber } from 'src/utils/formate_number';
 import { Label, labelClasses } from 'src/components/label';
@@ -395,7 +396,14 @@ export default function CollectionLedgerTable({
       spacing={1}
       sx={{ flex: 1, minHeight: 0, minWidth: 0 }}
     >
-      <Stack spacing={1.5} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pb: 1 }}>
+      <Scrollbar
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          '& > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper > .simplebar-content':
+            { display: 'flex', flexDirection: 'column', gap: 1.5, pb: 1 },
+        }}
+      >
         {groups.map((group, index) => {
           const groupedByFeeHead =
             activeTab === 'by-fee-head' && layout !== 'period' && group.id !== 'additional-charges';
@@ -514,6 +522,7 @@ export default function CollectionLedgerTable({
                     direction={{ xs: 'column', sm: 'row' }}
                     alignItems={{ sm: 'center' }}
                     spacing={1}
+                    useFlexGap
                     sx={{ width: 1, minWidth: 0, pr: 1 }}
                   >
                     <Typography
@@ -534,7 +543,7 @@ export default function CollectionLedgerTable({
                     {groupedByFeeHead && oneTimeFeeHeadIds?.has(group.id) && (
                       <Label sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}>One time</Label>
                     )}
-                    {selected.length ? (
+                    {selected.length > 0 ? (
                       <Label
                         color="success"
                         sx={{
@@ -544,18 +553,19 @@ export default function CollectionLedgerTable({
                           whiteSpace: 'normal',
                           flexShrink: 0,
                           py: 0.5,
-                          alignSelf: { xs: 'flex-start', sm: 'center' },
+                          alignSelf: { xs: 'flex-end', sm: 'center' },
+                          ml: { sm: 'auto' },
                         }}
                       >
-                        {formatNumber(selectedTotal, 'INR')} ({selected.length} selected)
+                        {formatNumber(selectedTotal, 'INR')} ({selected.length}/{group.items.length}{' '}
+                        selected)
                       </Label>
                     ) : (
                       <Typography
                         variant="body2"
                         color="text.secondary"
-                        sx={{ ml: { sm: 'auto !important' } }}
+                        sx={{ alignSelf: { xs: 'flex-end', sm: 'center' }, ml: { sm: 'auto' } }}
                       >
-                        {group.items.length} {group.items.length === 1 ? 'fee' : 'fees'} ·{' '}
                         {formatNumber(outstanding, 'INR')}
                       </Typography>
                     )}
@@ -628,7 +638,7 @@ export default function CollectionLedgerTable({
           Showing {rows.length} {rows.length === 1 ? 'fee' : 'fees'} in {groups.length}{' '}
           {groups.length === 1 ? 'group' : 'groups'}
         </Typography>
-      </Stack>
+      </Scrollbar>
       <CustomDialog
         titleInfo="Review the selected fee or charge, its due period, status, and recorded amounts."
         open={Boolean(detail)}

@@ -2,8 +2,10 @@ import type { ReactNode, FormEventHandler } from 'react';
 import type { Theme, SxProps } from '@mui/material/styles';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { Box, Stack, Button, DialogActions } from '@mui/material';
+import { AssignmentPreviewSkeleton } from 'src/screens/finance/components/FinanceFormSkeletons';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 export function assignmentBatchGrid(results: boolean): SxProps<Theme> {
@@ -59,19 +61,18 @@ export default function AssignmentForm({
       sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, minWidth: 0 }}
     >
       <FormBusyRegion busy={busy} label={busyLabel} fillContent flattenFieldset>
-        <Box
-          sx={{
-            flex: 1,
-            minHeight: 0,
-            minWidth: 0,
-            overflowY: 'auto',
-            px: { xs: 2, sm: 3 },
-            py: 2,
-            containerType: 'inline-size',
-          }}
-        >
-          {children}
-        </Box>
+        <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+          <Box
+            sx={{
+              minWidth: 0,
+              px: { xs: 2, sm: 3 },
+              py: 2,
+              containerType: 'inline-size',
+            }}
+          >
+            {children}
+          </Box>
+        </Scrollbar>
         <Stack
           direction="row"
           justifyContent={resultAction ? 'flex-end' : 'space-between'}
@@ -147,12 +148,14 @@ export default function AssignmentForm({
 export function AssignmentPreviewDialog({
   title = 'Assignment Preview',
   busy,
+  loading = false,
   children,
   onClose,
   action,
 }: {
   title?: string;
   busy: boolean;
+  loading?: boolean;
   children: ReactNode;
   onClose: () => void;
   action?: { label: string; disabled?: boolean; onClick: () => void };
@@ -169,9 +172,13 @@ export function AssignmentPreviewDialog({
       guardUnsavedChanges={false}
     >
       <DialogScrollContent>
-        <FormBusyRegion busy={busy} label="Saving…">
-          <Stack spacing={2}>{children}</Stack>
-        </FormBusyRegion>
+        {loading ? (
+          <AssignmentPreviewSkeleton />
+        ) : (
+          <FormBusyRegion busy={busy} label="Saving…">
+            <Stack spacing={2}>{children}</Stack>
+          </FormBusyRegion>
+        )}
       </DialogScrollContent>
       <DialogActions>
         <Button

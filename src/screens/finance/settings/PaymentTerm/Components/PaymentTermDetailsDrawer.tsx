@@ -17,7 +17,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { fDate, fDateTime } from 'src/utils/format-time';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Alert, Stack, Button, Drawer, Typography, LinearProgress } from '@mui/material';
+import { Box, Alert, Stack, Button, Drawer, Typography } from '@mui/material';
 import FinancePolicySkeleton from 'src/screens/finance/policies/components/FinancePolicySkeleton';
 import { DetailGrid, DetailField, DetailSection } from 'src/screens/finance/components/detail-view';
 import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
@@ -301,6 +301,7 @@ export default function PaymentTermDetailsDrawer({
     { paymentTermId: paymentTermId ?? '', maxResultCount: 50 },
     { skip: !open || !paymentTermId || view !== 'versions' }
   );
+  const loadingVersions = view === 'versions' && Boolean(data) && versionHistoryFetching;
   useEffect(() => {
     if (open) {
       setView(initialTab);
@@ -392,13 +393,12 @@ export default function PaymentTermDetailsDrawer({
           }
           onClose={onClose}
         />
-        {versionHistoryFetching && !isFetching && (
-          <LinearProgress aria-label="Loading payment term version history" />
-        )}
-        {isFetching ? (
+        {isFetching || loadingVersions ? (
           <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
             <Box sx={{ p: 2 }}>
-              <FinancePolicySkeleton label="Loading payment term details" />
+              <FinancePolicySkeleton
+                label={isFetching ? 'Loading payment term details' : 'Loading payment term version history'}
+              />
             </Box>
           </Scrollbar>
         ) : isError ? (

@@ -61,7 +61,7 @@ export function InfoTooltipIcon({
         color="info"
         disabled={disabled}
         onClick={() => setOpen(true)}
-        sx={{ width: 44, height: 44, flexShrink: 0 }}
+        sx={{ width: 44, height: 44, flexShrink: 0, marginInlineStart: '-1px' }}
       >
         <Box
           ref={anchorRef}

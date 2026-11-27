@@ -6,6 +6,7 @@ import FinanceAccountantDashboardScreen from 'src/screens/finance/dashboard';
 import FinanceAdminDashboardScreen from 'src/screens/finance/FinanceAdminDashboard';
 import FinancePrincipalDashboard from 'src/screens/finance/FinancePrincipalDashboard';
 import { getSessionRoles } from 'src/screens/mainDashboard/dashboard-template-resolver';
+import { FinanceDashboardSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 import { resolveFinanceDashboardView } from 'src/screens/finance/FinanceAdminDashboard/finance-dashboard-routing';
 import {
   Box,
@@ -15,7 +16,6 @@ import {
   Avatar,
   Typography,
   CardContent,
-  CircularProgress,
 } from '@mui/material';
 
 const FinanceRoleNotConfigured = ({ role }: { role: string }) => (
@@ -73,18 +73,7 @@ const FinanceDashboard = () => {
   const view = resolveFinanceDashboardView(session);
 
   if (status === 'loading') {
-    return (
-      <Box
-        sx={{
-          minHeight: 'calc(100vh - 220px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
+    return <FinanceDashboardSkeleton />;
   }
 
   if (view === 'admin') {

@@ -69,6 +69,12 @@ export default function FeeStructureAssignTable({
     permissions,
     `${financePermissions.fees.structureAssign}.OverridePolicies`
   );
+  const canChangeVariableFees =
+    canAssign &&
+    hasGrantedPermission(
+      permissions,
+      financePermissions.policies.prorationPolicyActions.overrideChargePeriod
+    );
   const context = useFinanceAcademicFilters({ includeWorkContext: false });
   const [pagination, setPagination] = useState({ page: 1, scope: '' });
   const [pageSize, setPageSize] = useState(10);
@@ -111,7 +117,7 @@ export default function FeeStructureAssignTable({
       skipCount: (page - 1) * pageSize,
       maxResultCount: pageSize,
     },
-    { skip: !currentYear?.id || !canView || !context.isReady }
+    { skip: !currentYear?.id || !canView || !context.isReady, refetchOnMountOrArgChange: true }
   );
   useEffect(() => {
     setPagination({ page: 1, scope });
@@ -571,7 +577,9 @@ export default function FeeStructureAssignTable({
                     },
                     ...((canEdit ||
                       (row.isActive &&
-                        (canStopOptionalService || (canAssign && row.canEditStructure)))) &&
+                        (canStopOptionalService ||
+                          (canAssign && row.canEditStructure) ||
+                          (canChangeVariableFees && row.canChangeVariableFees)))) &&
                     onEdit
                       ? [
                           {

@@ -66,6 +66,9 @@ export function ArchivePaymentTermDialog({
             <Typography id={impactId} variant="body2" color="text.secondary">
               Will no longer be available for new fee structures.
             </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Existing fee structures and student schedules will keep their saved payment term.
+            </Typography>
           </Box>
           <ShakingTextField error={Boolean(reasonError)}>
             <TextField

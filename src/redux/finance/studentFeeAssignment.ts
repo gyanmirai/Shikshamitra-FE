@@ -12,6 +12,8 @@ export interface AssignmentServicePeriod {
 }
 
 export interface AssignmentHead {
+  monthlyRateEffectiveDate?: string | null;
+  canChangeVariableFee?: boolean;
   feeHeadId: string;
   feeHeadName: string;
   isOptional: boolean;
@@ -268,6 +270,7 @@ export interface AssignmentCandidate {
 }
 
 export interface AssignmentStudent {
+  canChangeVariableFees?: boolean;
   canEditStructure?: boolean;
   structureEditBlocker?: string;
   assignmentId?: string;
@@ -417,6 +420,27 @@ const assignmentChangedTags = (items: { studentId: string; academicYearId: strin
   ...items.map(assignmentStudentTag),
   ...Array.from(new Set(items.map((x) => x.academicYearId))).map(assignmentYearTag),
 ];
+export interface VariableFeeChangeInput {
+  studentId: string;
+  academicYearId: string;
+  feeHeadId: string;
+  requestId: string;
+  concurrencyStamp: string;
+  effectiveDate: string;
+  serviceEndDate: string;
+  monthlyRate: number;
+  reason: string;
+  previewToken?: string;
+}
+
+export interface VariableFeeChangeResult {
+  previousAmount: number;
+  newAmount: number;
+  previousInstallments: AssignmentLine[];
+  newInstallments: AssignmentLine[];
+  previewToken?: string;
+}
+
 export const studentFeeAssignmentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     assignmentContexts: builder.query<
@@ -429,6 +453,21 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
         { type: financePolicyType.prorationPolicy, id: `year:${academicYearId}` },
         financeModuleType.feeStructure,
       ],
+    }),
+    previewVariableFeeChange: builder.mutation<VariableFeeChangeResult, VariableFeeChangeInput>({
+      query: ({ studentId, ...body }) => ({
+        url: `/student-fee-structure/student/${studentId}/variable-fee-change/preview`,
+        method: 'POST',
+        body,
+      }),
+    }),
+    commitVariableFeeChange: builder.mutation<VariableFeeChangeResult, VariableFeeChangeInput>({
+      query: ({ studentId, ...body }) => ({
+        url: `/student-fee-structure/student/${studentId}/variable-fee-change`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (result, _error, input) => (result ? assignmentChangedTags([input]) : []),
     }),
     assignmentPolicyOptions: builder.query<
       AssignmentPolicy[],
@@ -601,6 +640,8 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
 });
 
 export const {
+  usePreviewVariableFeeChangeMutation,
+  useCommitVariableFeeChangeMutation,
   useAssignmentContextsQuery,
   useAssignmentPolicyOptionsQuery,
   useAssignmentUpdatePoliciesMutation,

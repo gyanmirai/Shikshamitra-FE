@@ -123,8 +123,7 @@ const FinanceExpenseCategoriesScreen = () => {
         editData={selectedExpenseCategory}
         setEditData={setSelectedExpenseCategory}
         data={expenseCategoryData?.items || []}
-        isLoading={expenseCategoryLoading || (expenseCategoryFetching && !expenseCategoryData)}
-        isRefreshing={expenseCategoryFetching && Boolean(expenseCategoryData)}
+        isLoading={expenseCategoryLoading || expenseCategoryFetching}
         error={expenseCategoryError}
         onRetry={() => refetch()}
         totalCount={expenseCategoryData?.totalCount}

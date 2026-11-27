@@ -30,7 +30,6 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   onDelete,
   onEdit,
   isLoading,
-  isRefreshing,
   error,
   onRetry,
   totalCount,
@@ -231,7 +230,6 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         columns={columns}
         data={data || []}
         isLoading={isLoading}
-        isRefreshing={isRefreshing}
         error={error}
         onRetry={onRetry}
         serverSideFilter

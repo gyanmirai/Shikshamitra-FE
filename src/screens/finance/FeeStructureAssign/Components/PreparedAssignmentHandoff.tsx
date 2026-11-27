@@ -2,6 +2,7 @@ import type { AssignmentContext, AssignmentRequest } from 'src/redux/finance/stu
 
 import { useState, useEffect } from 'react';
 import { Stack, Alert, Button } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
 import {
   assignmentError,
   useAssignmentCommitMutation,
@@ -61,17 +62,19 @@ export default function PreparedAssignmentHandoff({
     }
   };
   return (
-    <Stack spacing={2} sx={{ p: 2, flex: 1, minHeight: 0, overflowY: 'auto' }}>
-      <Alert severity="info">
-        Fees were prepared in Admission. Complete the handoff to reuse these dues and payments.
-      </Alert>
-      {error && <Alert severity="error">{error}</Alert>}
-      <AssignmentReview data={context.preparedAssignment} committed />
-      {canAssign && (
-        <Button variant="contained" disabled={busy} onClick={complete}>
-          {busy ? 'Completing handoff…' : 'Complete handoff'}
-        </Button>
-      )}
-    </Stack>
+    <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+      <Stack spacing={2} sx={{ p: 2 }}>
+        <Alert severity="info">
+          Fees were prepared in Admission. Complete the handoff to reuse these dues and payments.
+        </Alert>
+        {error && <Alert severity="error">{error}</Alert>}
+        <AssignmentReview data={context.preparedAssignment} committed />
+        {canAssign && (
+          <Button variant="contained" disabled={busy} onClick={complete}>
+            {busy ? 'Completing handoff…' : 'Complete handoff'}
+          </Button>
+        )}
+      </Stack>
+    </Scrollbar>
   );
 }

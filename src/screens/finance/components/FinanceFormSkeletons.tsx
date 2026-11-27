@@ -77,11 +77,40 @@ export function FeeStructureFormSkeleton() {
   );
 }
 
-export function AssignmentFormSkeleton() {
+export function AssignmentFormSkeleton({ editing = false }: { editing?: boolean }) {
   return (
     <FinanceFormSkeleton label="Loading fee assignment">
+      {editing && (
+        <FinanceSkeletonSection>
+          <FinanceSkeletonFields fields={[{ columns: 4 }, { columns: 4 }, { columns: 4 }]} />
+        </FinanceSkeletonSection>
+      )}
       <FinanceSkeletonSection>
         <FinanceSkeletonFields fields={[{}]} />
+      </FinanceSkeletonSection>
+      {editing && (
+        <FinanceSkeletonSection>
+          <FinanceSkeletonFields fields={[{ columns: 6 }, { columns: 6 }]} />
+        </FinanceSkeletonSection>
+      )}
+      <FinanceSkeletonSection>
+        <FinanceSkeletonRows columns={3} />
+      </FinanceSkeletonSection>
+      {editing && (
+        <FinanceSkeletonSection>
+          <FinanceSkeletonRows columns={3} rows={1} />
+        </FinanceSkeletonSection>
+      )}
+    </FinanceFormSkeleton>
+  );
+}
+
+export function AssignmentPreviewSkeleton() {
+  return (
+    <FinanceFormSkeleton label="Loading assignment preview">
+      <FinanceSkeletonSection>
+        <FinanceSkeletonFields fields={[{ columns: 4 }, { columns: 4 }, { columns: 4 }]} />
+        <FinanceSkeletonFields fields={[{ columns: 4 }, { columns: 4 }, { columns: 4 }]} />
       </FinanceSkeletonSection>
       <FinanceSkeletonSection>
         <FinanceSkeletonRows columns={3} />

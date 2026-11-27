@@ -24,6 +24,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { DetailField } from 'src/screens/finance/components/detail-view';
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -33,7 +34,6 @@ import {
   Button,
   Typography,
   DialogActions,
-  LinearProgress,
 } from '@mui/material';
 import {
   assignmentError,
@@ -146,7 +146,7 @@ function RestartDialog({
             {restartError(context.error)}
           </Alert>
         ) : (
-          <LinearProgress aria-label="Loading optional service settings" />
+          <FinanceListSkeleton label="Loading optional service settings" columns={2} rows={2} />
         )}
       </DialogScrollContent>
       <DialogActions>
@@ -421,7 +421,7 @@ function RestartForm({
                         value={formik.values[name]}
                         options={choices.map((choice) => ({
                           value: choice.versionId,
-                          label: versionLabel(choice),
+                          label: choice.name,
                         }))}
                         onChange={(value) => formik.setFieldValue(name, value)}
                         onBlur={() => formik.setFieldTouched(name)}
@@ -496,10 +496,6 @@ function RestartForm({
   );
 }
 
-function versionLabel(option: { name: string; version: number }) {
-  return `${option.name} · v${option.version}`;
-}
-
 function RestartBreakdown({
   quote,
   currency,
@@ -533,8 +529,8 @@ function RestartBreakdown({
             value={`${fDate(quote.startDate)} to ${fDate(quote.endDate)}`}
           />
           <DetailField label="Monthly rate" value={money(quote.monthlyRate)} />
-          {policy && <DetailField label="Proration policy" value={versionLabel(policy)} />}
-          {term && <DetailField label="Payment term" value={versionLabel(term)} />}
+          {policy && <DetailField label="Proration policy" value={policy.name} />}
+          {term && <DetailField label="Payment term" value={term.name} />}
           <DetailField label="New scheduled total" value={money(quote.scheduledTotal)} />
           <DetailField label="Proration reduction" value={money(quote.prorationReduction)} />
           <DetailField label="New assigned amount" value={money(quote.assignedTotal)} />

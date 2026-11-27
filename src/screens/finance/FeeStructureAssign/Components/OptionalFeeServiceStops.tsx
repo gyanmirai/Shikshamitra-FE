@@ -127,6 +127,7 @@ export default function OptionalFeeServiceStops({
             0
           );
           const { stopped, label, latestPeriod } = optionalServiceStatus(item, cancelledAmount > 0);
+          const statusLabel = label === 'Cancellation recorded' ? '' : label;
           const servicePeriod = latestPeriod ?? item.servicePeriod;
           const supportsStop = item.included && !item.isOneTime && label !== 'Ended';
           const stopBlocker = stopped ? 'This service has already been cancelled.' : blocker;
@@ -147,9 +148,9 @@ export default function OptionalFeeServiceStops({
               head={item}
               currency={assignment.currency}
               status={
-                label ? (
+                statusLabel ? (
                   <Label color={stopped || label === 'Ended' ? 'default' : 'success'}>
-                    {label}
+                    {statusLabel}
                   </Label>
                 ) : !item.included ? (
                   <Label>Not selected</Label>
@@ -256,6 +257,8 @@ export default function OptionalFeeServiceStops({
       <CustomDialog
         open={Boolean(head)}
         title={`Cancel ${head?.feeHeadName ?? 'Optional Fee'} Service`}
+        titleInfo="Preview the cancellation to review the installment count, outstanding balance reduction, and any prepaid service credit before confirming."
+        titleInfoPlacement="right"
         handleClose={() => setHead(undefined)}
         disableClose={busy}
         hasUnsavedChanges={Boolean(endDate || reason)}

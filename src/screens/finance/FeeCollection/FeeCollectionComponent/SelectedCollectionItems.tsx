@@ -85,7 +85,11 @@ function SortableRow({
     >
       <Box role="cell">
         {order !== undefined ? (
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontVariantNumeric: 'tabular-nums' }}
+          >
             {order}
           </Typography>
         ) : (
@@ -110,7 +114,7 @@ function SortableRow({
       </Typography>
       <Typography
         role="cell"
-        variant="caption"
+        variant="body2"
         color="text.secondary"
         sx={{ overflowWrap: 'anywhere' }}
       >
@@ -140,7 +144,8 @@ function SortableRow({
                 disabled={disabled}
                 size="small"
                 onClick={row.onRemove}
-                sx={{ p: 0.5, color: 'text.secondary' }}
+                color="error"
+                sx={{ p: 0.5 }}
               >
                 <Iconify icon={GlobalIcons.cancel} width={18} />
               </IconButton>
@@ -159,7 +164,7 @@ export default function SelectedCollectionItems({
   onMoveFee,
   onMoveCharge,
   fixedFeeOrder = false,
-  emptyText = 'Select fees or charges from the ledger to start collecting.',
+  emptyText,
   expandedGroups,
   onToggleGroup,
 }: Props) {
@@ -285,7 +290,7 @@ export default function SelectedCollectionItems({
           />
         </Paper>
       )}
-      {fees.length === 0 && charges.length === 0 && (
+      {fees.length === 0 && charges.length === 0 && emptyText && (
         <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
           {emptyText}
         </Typography>

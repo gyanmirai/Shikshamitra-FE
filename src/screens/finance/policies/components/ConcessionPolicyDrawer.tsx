@@ -6,7 +6,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Stack, Drawer, Button, Typography, CircularProgress } from '@mui/material';
+import { Box, Stack, Drawer, Button, Typography } from '@mui/material';
 
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 import { useConcessionPolicyForm } from '../hooks/useConcessionPolicyForm';
@@ -146,7 +146,6 @@ function ConcessionPolicyDrawerSession({
                   bgcolor: (theme) => alpha(theme.palette.background.paper, 0.72),
                 }}
               >
-                <CircularProgress size={28} />
                 <Typography variant="body2">Saving policy…</Typography>
               </Stack>
             )}

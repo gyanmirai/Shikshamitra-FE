@@ -4,7 +4,8 @@ import type { RootState } from 'src/redux/store';
 
 import { Suspense, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Card, Button, Typography, LinearProgress } from '@mui/material';
+import { Box, Card, Button, Typography } from '@mui/material';
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 import { GlobalIcons } from 'src/utils/icons';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Iconify } from 'src/components/iconify';
@@ -166,7 +167,7 @@ export default function Adjustments() {
         }
       />
       {mode === 'list' && (
-        <Suspense fallback={<LinearProgress aria-label="Loading adjustments" />}>
+        <Suspense fallback={<FinanceListSkeleton label="Loading adjustments" columns={4} />}>
           <AdjustmentTable
             academicFilters={academicFilters}
             onCreateAdjustment={() => {

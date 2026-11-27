@@ -11,6 +11,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 import {
   useRejectConcessionRequestMutation,
   useGetConcessionApprovalContextQuery,
@@ -72,7 +73,7 @@ const ReasonApprovalForm = ({ onClose, selectedConcession }: IReasonApprovalForm
       <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
         <Grid container spacing={2}>
           <Grid size={12}>
-            {impactLoading && <Typography variant="body2">Loading request impact…</Typography>}
+            {impactLoading && <FinanceListSkeleton label="Loading request impact" rows={1} />}
             {impact && (
               <Stack spacing={0.5} sx={{ mt: 1 }}>
                 <Typography variant="subtitle2">

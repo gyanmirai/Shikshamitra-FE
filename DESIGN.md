@@ -219,6 +219,7 @@ Initial table loading uses table-shaped skeleton rows through `isLoading`.
 The animated character loader is retained in `src/assets/illustrations/table-loading-illustration.tsx` and `src/components/table-loading-state/` for future use. It is not wired into any active table or screen.
 Server refetches retain the current rows when safe and show a labelled progress indicator at the top of the table. Admissions tables use `refreshIndicator="circular"` for a compact spinner in the toolbar, outside the table header. The shared default uses a thin indicator.
 Pass `isRefreshing` for a same-scope refetch with safe current data; keep `isLoading` for the initial request or a new scope without current data.
+Finance tables use body skeletons for visible refetch states and keep the toolbar, column headers, and pagination in place.
 Column headings default to left alignment independently of body-cell `align`; use the explicit `headerAlign` column option only for a documented specialized control.
 Finance monetary body cells align right, including embedded tables and report previews. The shared
 `CurriculumReportPreviewTable` accepts optional `PreviewColumn.align` for body cells without changing headings.
@@ -315,7 +316,7 @@ Choose a loader that matches the scope of work.
 | Authentication, permission, or application bootstrap | `SplashScreen`                                                     |
 | Lazy route or major tab panel                        | Keep the shell visible and render a stable content-shaped skeleton |
 | First table request                                  | `CustomizableTable` skeleton rows                                  |
-| Table refetch                                        | Retain safe rows and show a thin labelled progress indicator       |
+| Table refetch                                        | Retain safe rows with a labelled indicator, or show body skeletons in Finance |
 | Dashboard request                                    | Card and chart skeletons that preserve final geometry              |
 | Button or row mutation                               | Loading state on the initiating control                            |
 | Background refresh                                   | Non-blocking status near the affected content                      |

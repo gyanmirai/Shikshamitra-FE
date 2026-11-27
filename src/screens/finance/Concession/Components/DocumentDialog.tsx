@@ -15,8 +15,8 @@ import {
   IconButton,
   Typography,
   DialogActions,
-  CircularProgress,
 } from '@mui/material';
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 import {
   useUploadConcessionDocumentsMutation,
   useUploadConcessionDocumentFileMutation,
@@ -214,9 +214,7 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
       />
       <Box sx={{ p: 2, minHeight: 150 }}>
         {isLoading ? (
-          <Box display="flex" justifyContent="center" py={4}>
-            <CircularProgress size={32} />
-          </Box>
+          <FinanceListSkeleton label="Loading concession documents" rows={2} />
         ) : (
           <Stack spacing={1.5}>
             {(concessionDetails?.data?.documents || concessionDetails?.documents || []).map(

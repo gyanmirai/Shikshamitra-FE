@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Chip,
@@ -11,6 +14,7 @@ import {
   Button,
   Divider,
   ListItem,
+  IconButton,
   Typography,
   ListItemText,
   ListItemButton,
@@ -89,7 +93,7 @@ export const SelectedStudentsPanel: React.FC<SelectedStudentsPanelProps> = ({
       <Divider sx={{ mb: 1.5 }} />
 
       {/* Students List */}
-      <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+      <Scrollbar ariaLabel="Selected students" sx={{ flex: 1, minHeight: 0 }}>
         {selectedStudents.length === 0 ? (
           <Box sx={{ py: 4, textAlign: 'center' }}>
             <Iconify
@@ -122,14 +126,18 @@ export const SelectedStudentsPanel: React.FC<SelectedStudentsPanelProps> = ({
                 disablePadding
                 secondaryAction={
                   onRemove && (
-                    <Button
-                      size="small"
-                      color="error"
-                      onClick={() => onRemove(student.id)}
-                      sx={{ ml: 1 }}
-                    >
-                      <Iconify icon="solar:trash-bin-2-line-duotone" sx={{ fontSize: 16 }} />
-                    </Button>
+                    <CustomTooltip title={`Remove ${student.label}`}>
+                      <IconButton
+                        type="button"
+                        size="small"
+                        color="error"
+                        aria-label={`Remove ${student.label}`}
+                        onClick={() => onRemove(student.id)}
+                        sx={{ ml: 1 }}
+                      >
+                        <Iconify icon={GlobalIcons.delete} width={20} />
+                      </IconButton>
+                    </CustomTooltip>
                   )
                 }
               >
@@ -144,7 +152,7 @@ export const SelectedStudentsPanel: React.FC<SelectedStudentsPanelProps> = ({
                     },
                   }}
                 >
-                  <Iconify icon="solar:user-circle-bold-duotone" sx={{ mr: 1, fontSize: 20 }} />
+                  <Iconify icon="solar:user-circle-bold-duotone" width={36} sx={{ mr: 1.5 }} />
                   <ListItemText
                     primary={
                       <Typography variant="body2" fontWeight={500}>
@@ -165,7 +173,7 @@ export const SelectedStudentsPanel: React.FC<SelectedStudentsPanelProps> = ({
             ))}
           </List>
         )}
-      </Box>
+      </Scrollbar>
 
       {/* Footer Actions */}
       {selectedStudents.length > 0 && onClearAll && (
@@ -177,7 +185,7 @@ export const SelectedStudentsPanel: React.FC<SelectedStudentsPanelProps> = ({
             size="small"
             fullWidth
             onClick={onClearAll}
-            startIcon={<Iconify icon="solar:trash-bin-2-line-duotone" />}
+            startIcon={<Iconify icon={GlobalIcons.delete} width={18} />}
           >
             Clear All
           </Button>

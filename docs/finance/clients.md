@@ -168,6 +168,10 @@ Fee-head module options are defined by the numeric `FeeHeadModule` enum in `src/
 
 Collections owns academic filter state in `FeeCollection/index.tsx` and passes it to its table. `useFinanceAcademicFilters` subscribes to standards by medium and uses `currentData`, so changing class/division or returning from a student view does not force another standards request or reuse another medium's options. Selecting a division preserves the class; changing a class clears only its division, and changing board, medium, or academic year clears both. Refreshing the same valid academic year preserves selections. The collection request and visible paginator switch to page 1 together when academic filters change, avoiding a request for the old page in the new scope.
 
+The Collections index requests `StudentRecordsOnly` and uses the returned roster for its
+page totals and table export. The collect form reads completed refunds from
+`summary.refundedAmount` within the selected student's academic context.
+
 Payment Term create/update requests send `status` as `Draft` or `Active`. The client does not collect or send a version-effective date; when `Active` is submitted, the backend derives the next valid activation date inside the board period and publishes that version in the same unit of work. Board list responses provide `startDate` and `endDate`, which are the UI and API validation boundaries for installment periods. Payment-term responses use named enum values; the API client also normalizes legacy numeric enum responses at the boundary so form controls and derived bill-generation dates receive one stable string contract.
 
 The installment-template dialog calls `POST /finance/payment-terms/templates/preview` with the selected board, preset, due-date choice, and dialog invoice rule (`demandGenerationRule` / `demandOffsetDays`).

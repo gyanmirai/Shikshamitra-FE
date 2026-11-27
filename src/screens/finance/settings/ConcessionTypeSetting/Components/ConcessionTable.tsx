@@ -295,7 +295,11 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
       />
       <ConfirmDialog
         open={statusConfirm.value}
+        disableCancel={isStatusLoading}
+        disableEscapeKeyDown={isStatusLoading}
+        disableBackdropClick={isStatusLoading}
         onClose={() => {
+          if (isStatusLoading) return;
           statusConfirm.onFalse();
           setStatusData(null);
           setDeactivationReason('');
@@ -311,15 +315,22 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
               ?
             </Typography>
             {!nextStatus && (
-              <TextField
-                fullWidth
-                multiline
-                minRows={2}
-                size="small"
-                label="Archive reason"
-                value={deactivationReason}
-                onChange={(event) => setDeactivationReason(event.target.value)}
-              />
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  Existing concession requests will keep this type. It will be hidden from new
+                  requests until you restore it.
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  size="small"
+                  label="Archive reason"
+                  required
+                  value={deactivationReason}
+                  onChange={(event) => setDeactivationReason(event.target.value)}
+                />
+              </>
             )}
           </Stack>
         }
@@ -330,12 +341,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
+            disabled={!nextStatus && !deactivationReason.trim()}
             onClick={async () => {
               if (!statusData) return;
-              if (!nextStatus && !deactivationReason.trim()) {
-                shikshaMitraToast.error({ message: 'Archive reason is required' });
-                return;
-              }
               try {
                 await patchConcessionTypeStatus({
                   id: statusData.id,

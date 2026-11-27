@@ -1,13 +1,24 @@
+import type { IFeeCategoryResponse } from 'src/redux/feeCategory/feeCategoryApi';
+
 import React from 'react';
+import { Box, Stack, Alert, Paper, Button, Skeleton, Typography } from '@mui/material';
+
 import { Label } from 'src/components/label';
 import { FormSectionCard } from 'src/components/form-section-card';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 import { useGetFeeCategoryByIdQuery } from 'src/redux/feeCategory/feeCategoryApi';
 
 interface IFeeCategoryViewProps {
   id: string;
 }
+
+const feeHeadMetadataRowSx = {
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+  alignItems: 'start',
+  columnGap: 1.5,
+};
 
 const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
   const {
@@ -40,45 +51,59 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
     );
   }
 
-  const feeHeads = category.feeHeads || [];
+  const feeHeads: IFeeCategoryResponse['feeHeads'] = category.feeHeads ?? [];
 
   return (
     <Stack spacing={2} sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
       <FormSectionCard
-        icon="solar:tag-linear"
+        icon="mdi:file-document-outline"
         title="Category Details"
         titleTypographyProps={{ variant: 'subtitle1' }}
         descriptionTooltip="The saved category name, description, and current status."
       >
-        <Box>
-          <Typography variant="caption" color="text.secondary" display="block" mb={0.25}>
-            Category name
-          </Typography>
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-            <Typography
-              component="h3"
-              variant="body2"
-              sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
-            >
-              {category.name || '—'}
+        <Box
+          component="dl"
+          sx={{
+            m: 0,
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'minmax(0, 2fr) minmax(0, 3fr)' },
+            gap: { xs: 2, sm: 3 },
+          }}
+        >
+          <Box>
+            <Typography component="dt" variant="body2" color="text.secondary" mb={0.5}>
+              Category name
             </Typography>
-            <Label color={category.isActive ? 'success' : 'default'}>
-              {category.isActive ? 'Active' : 'Archived'}
-            </Label>
-          </Stack>
-        </Box>
-        <Box>
-          <Typography variant="caption" color="text.secondary" display="block" mb={0.25}>
-            Description
-          </Typography>
-          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-            {category.description?.trim() || 'No description provided.'}
-          </Typography>
+            <Stack
+              component="dd"
+              direction="row"
+              spacing={1}
+              useFlexGap
+              flexWrap="wrap"
+              alignItems="center"
+              sx={{ m: 0 }}
+            >
+              <Typography component="h3" variant="body2" sx={{ minWidth: 0, fontWeight: 600 }}>
+                {category.name || '—'}
+              </Typography>
+              <Label color={category.isActive ? 'success' : 'default'}>
+                {category.isActive ? 'Active' : 'Archived'}
+              </Label>
+            </Stack>
+          </Box>
+          <Box>
+            <Typography component="dt" variant="body2" color="text.secondary" mb={0.5}>
+              Description
+            </Typography>
+            <Typography component="dd" variant="body2" sx={{ m: 0, whiteSpace: 'pre-wrap' }}>
+              {category.description?.trim() || 'No description provided.'}
+            </Typography>
+          </Box>
         </Box>
       </FormSectionCard>
 
       <FormSectionCard
-        icon="solar:layers-linear"
+        icon="mdi:clipboard-list-outline"
         title={`Fee Heads (${feeHeads.length})`}
         titleTypographyProps={{ variant: 'subtitle1' }}
         descriptionTooltip="Mapped fee heads with their descriptions, income categories, and concession settings."
@@ -93,52 +118,62 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
               display: 'grid',
               gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
               gap: 2,
-              gridAutoRows: '1fr',
               '& > article:last-of-type:nth-of-type(odd)': {
                 gridColumn: '1 / -1',
               },
             }}
           >
-            {feeHeads.map((head: any) => (
-              <Stack
+            {feeHeads.map((head) => (
+              <Paper
                 key={head.id}
                 component="article"
                 aria-label={head.name || 'Unnamed fee head'}
-                spacing={1.5}
-                sx={{ p: 2, minWidth: 0, border: 1, borderColor: 'divider', borderRadius: 1 }}
+                variant="outlined"
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  p: { xs: 2, md: 2.5 },
+                  minWidth: 0,
+                  borderRadius: 2,
+                }}
               >
                 <Typography component="h3" variant="subtitle1">
                   {head.name || 'Unnamed fee head'}
                 </Typography>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary" display="block" mb={0.25}>
+                  <Typography variant="body2" color="text.secondary" mb={0.5}>
                     Description
                   </Typography>
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                     {head.description?.trim() || 'No description provided.'}
                   </Typography>
                 </Box>
-                <Box component="dl" sx={{ m: 0, display: 'grid', gap: 1.5 }}>
-                  <Box>
-                    <Typography component="dt" variant="caption" color="text.secondary" mb={0.25}>
+                <Stack
+                  component="dl"
+                  spacing={1}
+                  sx={{ m: 0, pt: 1.5, borderTop: 1, borderColor: 'divider' }}
+                >
+                  <Box sx={feeHeadMetadataRowSx}>
+                    <Typography component="dt" variant="body2" color="text.secondary">
                       Income category
                     </Typography>
-                    <Typography component="dd" variant="body2" sx={{ m: 0 }}>
+                    <Typography component="dd" variant="body2" sx={{ m: 0, textAlign: 'right' }}>
                       {head.incomeCategoryName || '—'}
                     </Typography>
                   </Box>
-                  <Box>
-                    <Typography component="dt" variant="caption" color="text.secondary" mb={0.25}>
+                  <Box sx={feeHeadMetadataRowSx}>
+                    <Typography component="dt" variant="body2" color="text.secondary">
                       Concession applicable
                     </Typography>
-                    <Box component="dd" sx={{ m: 0 }}>
+                    <Box component="dd" sx={{ m: 0, justifySelf: 'end' }}>
                       <Label color={head.isConcessionApplied ? 'success' : 'default'}>
                         {head.isConcessionApplied ? 'Yes' : 'No'}
                       </Label>
                     </Box>
                   </Box>
-                </Box>
-              </Stack>
+                </Stack>
+              </Paper>
             ))}
           </Box>
         )}

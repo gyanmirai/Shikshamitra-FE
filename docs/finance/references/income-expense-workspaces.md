@@ -3,7 +3,7 @@ module: finance
 domain: accounts-workspaces
 content_type: Reference
 status: canonical
-updated_on: 2026-10-24
+updated_on: 2026-11-26
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -21,13 +21,13 @@ Backend ownership and acceptance rules are in [the backend workspace contract](.
 | Income                 | Reuse `/finance/income-tracking`; show confirmed collections and manual income                                                                                                                                            |
 | Expenses               | Reuse `/finance/expenseTracking`; show paid manual expenses, completed refunds and linked returned-payment corrections                                                                                        |
 | Combined legacy routes | Redirect `/finance/income-and-expense` and `/finance/accounts/activity` to an authorized separate workspace                                                                                                               |
-| Header                 | Common breadcrumb with + Income / + Expense on the right; compact Month and Category selectors in a shared surface before the full-height table                                                               |
+| Header                 | Common breadcrumb with + Income / + Expense on the right. Month, Category, and the Expenses Payment method selector sit above the full-height table |
 | Month                  | All months plus calendar months intersecting the selected academic year's actual dates; include the calendar year in each label                                                                                           |
 | Initial month          | Current month if inside the selected year; otherwise the first academic-year month                                                                                                                                        |
-| Context change         | Year/category/month/search changes reset pagination; year changes reset dependent month/category selections                                                                                                        |
+| Context change         | Year, category, month, payment method, and search changes reset pagination. Year changes reset the domain filters |
 | Table                  | Shared CustomizableTable; server paging/search/column filters/sort; reference, Student (GR No.), Class/Division, separate Payer/Payee, category, masked bank, amount, Transaction Date, sticky Status and Actions |
 | Row actions            | View only; no edit/delete or generic links to source lists                                                                                                                                                                |
-| Export                 | Label Export current page accurately; exclude Actions                                                                                                                                                                     |
+| Export                 | Expenses offers Export for all matching pages using the displayed data columns. Income offers Export current page |
 
 Student identity uses the same **Student (GR No.)** and **Class/Division** headings as Fee Collections. Manual counterparties belong in **Payer** (Income) or **Payee** (Expenses), with a neutral dash in student-only cells. Reference and category headings name the owning Income/Expense direction, and **Bank Account** replaces the ambiguous school-bank heading.
 
@@ -52,6 +52,7 @@ Use Formik/Yup, NumericFormatCustom with raw string money and two-decimal valida
 Back, the register breadcrumb and Cancel use the shared discard confirmation when the form is dirty. Loading/saving locks the form and its navigation, and an overlay communicates progress.
 Manual entries collect name/payer or payee, category, amount, payment date, method, non-cash school bank, optional reference and notes.
 Cash clears the bank; non-cash requires an eligible account.
+The Cash expense form highlights the available balance in Payment Details.
 Cancel and Submit sit at the right of the fixed neutral footer, in that order; lock duplicate submissions and unsafe closure during saving; retain input on failure.
 Successful creation invalidates the corresponding register tag and preserves list filters.
 Student payments and refunds must never be recreated using these manual forms.

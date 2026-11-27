@@ -34,7 +34,6 @@ import {
   Skeleton,
   TextField,
   Typography,
-  LinearProgress,
 } from '@mui/material';
 import {
   feeCategoryApi,
@@ -142,14 +141,6 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   const feeHeadStatusConfirm = useBoolean();
   const [feeHeadStatusData, setFeeHeadStatusData] = useState<any | null>(null);
   const [feeHeadDeactivationReason, setFeeHeadDeactivationReason] = useState('');
-  const categoryDependencyCheck = useGetFeeCategoryByIdQuery(statusData?.id ?? '', {
-    skip: !statusConfirm.value || !statusData?.isActive,
-    refetchOnMountOrArgChange: true,
-  });
-  const blockedCategoryHeads =
-    categoryDependencyCheck.currentData?.feeHeads.filter(
-      (head) => head.isUsedInDownstream || head.dependencies?.isBlocked
-    ) ?? [];
   const headDependencyCheck = useGetFeeCategoryByIdQuery(feeHeadsCategoryId ?? '', {
     skip: !feeHeadStatusConfirm.value || !feeHeadStatusData?.isActive,
     refetchOnMountOrArgChange: true,
@@ -456,11 +447,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                     id: 'status',
                     label: row.isActive ? 'Archive' : 'Restore',
                     icon: row.isActive ? 'mdi:archive-outline' : 'mdi:archive-arrow-up-outline',
-                    disabled: row.isActive && Boolean(row?.isUsedInDownstream),
-                    tooltip:
-                      row.isActive && row?.isUsedInDownstream
-                        ? 'This category is used elsewhere and cannot be archived.'
-                        : undefined,
+                     disabled: isStatusLoading,
                     onClick: () => handleOpenStatusConfirm(row as IFeeCategory),
                   },
                 ]
@@ -474,9 +461,6 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
 
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-      {isFeeCategoryFetching && feeCategoryData && (
-        <LinearProgress aria-label="Updating fee categories" />
-      )}
       <CustomizableTable
         tableId="fee-category-data-table"
         tableTitle="Fee categories"
@@ -522,7 +506,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         }}
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{ sx: { height: 1 } }}
-        isLoading={isFeeCategoryLoading || (isFeeCategoryFetching && !feeCategoryData)}
+        isLoading={isFeeCategoryLoading || isFeeCategoryFetching}
         errorContent={
           isFeeCategoryError ? (
             <Alert severity="error" action={<Button onClick={() => refetch()}>Retry</Button>}>
@@ -720,48 +704,31 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
               </Box>
               ?
             </Typography>
-            {!nextStatus && categoryDependencyCheck.isFetching && (
-              <Typography role="status">Checking fee category dependencies…</Typography>
-            )}
-            {!nextStatus && categoryDependencyCheck.isError && (
-              <Alert
-                severity="error"
-                action={
-                  <Button size="small" onClick={() => categoryDependencyCheck.refetch()}>
-                    Retry
-                  </Button>
-                }
-              >
-                Could not verify dependencies. Retry before archiving.
-              </Alert>
-            )}
-            {!nextStatus &&
-              blockedCategoryHeads.map((head) => (
-                <FeeHeadDependencies
-                  key={head.id}
-                  name={head.name}
-                  showName
-                  feeHeadId={head.id}
-                  dependencies={head.dependencies}
+            {!nextStatus && (
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  Existing fee structures and student records will keep using this category and its
+                  fee heads. The category and its fee heads will be hidden from new fee setup
+                  selections until you restore it.
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  size="small"
+                  label="Archive reason"
+                  required
+                  error={!!deactivationReason && !deactivationReason.trim()}
+                  helperText={
+                    deactivationReason && !deactivationReason.trim()
+                      ? 'Enter a reason containing text.'
+                      : undefined
+                  }
+                  value={deactivationReason}
+                  onChange={(event) => setDeactivationReason(event.target.value)}
+                  slotProps={{ htmlInput: { maxLength: 500 } }}
                 />
-              ))}
-            {!nextStatus && blockedCategoryHeads.length === 0 && (
-              <TextField
-                fullWidth
-                multiline
-                minRows={2}
-                size="small"
-                label="Archive reason"
-                required
-                error={!!deactivationReason && !deactivationReason.trim()}
-                helperText={
-                  (deactivationReason && !deactivationReason.trim()
-                    ? 'Enter a reason containing text.'
-                    : undefined) || undefined
-                }
-                value={deactivationReason}
-                onChange={(event) => setDeactivationReason(event.target.value)}
-              />
+              </>
             )}
           </Stack>
         }
@@ -772,14 +739,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
-            disabled={
-              !nextStatus &&
-              (!deactivationReason.trim() ||
-                categoryDependencyCheck.isFetching ||
-                categoryDependencyCheck.isError ||
-                !categoryDependencyCheck.currentData ||
-                blockedCategoryHeads.length > 0)
-            }
+            disabled={!nextStatus && !deactivationReason.trim()}
             onClick={async () => {
               if (!statusData) return;
               try {

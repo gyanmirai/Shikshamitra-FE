@@ -160,7 +160,7 @@ const CustomDialog = ({
                     <IconButton
                       size="small"
                       aria-label={infoLabel}
-                      sx={{ color: 'info.main', flexShrink: 0 }}
+                      sx={{ color: 'info.main', flexShrink: 0, marginInlineStart: '-1px' }}
                     >
                       <InfoOutlined sx={{ fontSize: 18 }} />
                     </IconButton>

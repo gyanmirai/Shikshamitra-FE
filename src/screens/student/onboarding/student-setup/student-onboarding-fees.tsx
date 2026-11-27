@@ -25,6 +25,7 @@ import {
   useConfirmStudentOnboardingFeeStructureMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import OnboardingFinanceAssignment from './onboarding-finance-assignment';
 import AdmissionFeeCollectionPanel from '../../admissions/fee-selection/admission-fee-collection-panel';
 
 export type StudentOnboardingFeesHandle = {
@@ -279,6 +280,7 @@ export default function StudentOnboardingFees({
         <Skeleton height={40} />
       </Stack>
     );
+  const hasEnrollment = Boolean(caseState.studentEnrollmentId) || caseState.status === 5;
   const disabled =
     externallyDisabled ||
     busy ||
@@ -288,8 +290,7 @@ export default function StudentOnboardingFees({
     saving.isLoading ||
     selection.isFetching ||
     (!lockedSnapshot && candidates.isFetching) ||
-    Boolean(caseState.studentEnrollmentId) ||
-    caseState.status === 5;
+    hasEnrollment;
   const collectionPanel =
     feeState.selection && caseState.applicationId ? (
       <AdmissionFeeCollectionPanel
@@ -319,11 +320,7 @@ export default function StudentOnboardingFees({
   const requiredHeadIds =
     chosen?.heads.filter((head) => !head.isOptional).map((head) => head.feeHeadId) ?? [];
   const showStructurePicker = !automaticallyConfirmed && (!compact || !chosen || changingStructure);
-  const feeHeadsReadOnly =
-    Boolean(lockedSnapshot) ||
-    !canManage ||
-    Boolean(caseState.studentEnrollmentId) ||
-    caseState.status === 5;
+  const feeHeadsReadOnly = Boolean(lockedSnapshot) || !canManage || hasEnrollment;
   return (
     <Stack spacing={compact ? 1 : 1.5} component="form" onSubmit={form.handleSubmit}>
       {feeState.feeCollectionDeferral && (
@@ -527,6 +524,12 @@ export default function StudentOnboardingFees({
         <StudentFeedback notificationKey="STU-1000" presentation="persistent" severity="error">
           {form.status}
         </StudentFeedback>
+      )}
+      {caseState.studentId && hasEnrollment && confirmedUnchanged && (
+        <OnboardingFinanceAssignment
+          student={caseState}
+          disabled={externallyDisabled || busy || readError}
+        />
       )}
       {!automaticallyConfirmed && !compact && (
         <Button

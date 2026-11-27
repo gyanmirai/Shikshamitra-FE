@@ -2,6 +2,7 @@
 
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useCallback } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
 import {
   Box,
   List,
@@ -150,7 +151,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
         />
 
         {/* Student List */}
-        <Box sx={{ flex: 1, overflow: 'auto' }}>
+        <Scrollbar ariaLabel="Available students" sx={{ flex: 1, minHeight: 0 }}>
           {isLoading ? (
             <Stack spacing={1}>
               {[...Array(5)].map((_, i) => (
@@ -209,7 +210,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
               ))}
             </List>
           )}
-        </Box>
+        </Scrollbar>
         {totalCount > 25 && (
           <TablePagination
             component="div"

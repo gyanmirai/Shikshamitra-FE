@@ -4,8 +4,8 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { View403 } from 'src/sections/error';
-import { SplashScreen } from 'src/components/loading-screen';
 import { financePermissions } from 'src/constants/finance-menu';
+import { FinancePageSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 
 const FinanceLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -18,7 +18,7 @@ const FinanceLayout: React.FC<{ children: React.ReactNode }> = ({
     (perm: any) => perm.name === financePermissions.root
   )?.isGranted;
 
-  if (loading || !permissionsInitialized) return <SplashScreen />;
+  if (loading || !permissionsInitialized) return <FinancePageSkeleton />;
   return hasPermission ? children : <View403 />;
 };
 

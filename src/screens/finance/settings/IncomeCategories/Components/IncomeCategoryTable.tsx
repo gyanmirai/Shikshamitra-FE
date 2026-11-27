@@ -31,7 +31,6 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
   onDelete,
   onEdit,
   isLoading,
-  isRefreshing,
   error,
   onRetry,
   totalCount,
@@ -245,7 +244,6 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         columns={columns}
         data={data || []}
         isLoading={isLoading}
-        isRefreshing={isRefreshing}
         error={error}
         onRetry={onRetry}
         serverSideFilter

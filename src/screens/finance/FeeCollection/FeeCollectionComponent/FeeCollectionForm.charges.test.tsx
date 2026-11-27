@@ -504,9 +504,27 @@ describe('Collect Fees presentation and shared ledger', () => {
     };
     render(<FeeCollectComponentForm student={student} />);
     expect(screen.getByText('Diya')).toBeVisible();
-    expect(screen.getByText(/GR 10092.*Class 3 A.*2026-2027/)).toBeVisible();
+    expect(screen.getByText('Class 3 / A · GR 10092 · Roll 2')).toBeVisible();
     expect(screen.getByText('Total outstanding')).toBeVisible();
+    expect(screen.queryByText('Total refunds')).not.toBeInTheDocument();
+    expect(screen.queryByText('Total concessions')).not.toBeInTheDocument();
   }, 30_000);
+
+  it('shows positive concessions, net charges, and completed refunds in the student card', () => {
+    mocks.data = buildForm(false);
+    mocks.data.summary.refundedAmount = 175;
+    mocks.data.ledger[0].items[0].concessionAmount = 250;
+    mocks.data.charges = [{ ...lateFees[0], waivedAmount: 25, pendingAmount: 75 }];
+    render(<FeeCollectComponentForm student={student} />);
+
+    for (const [label, amount] of [
+      ['Total concessions', '₹ 250'],
+      ['Total charges', '₹ 75'],
+      ['Total refunds', '₹ 175'],
+    ]) {
+      expect(within(screen.getByText(label).parentElement!).getByText(amount)).toBeVisible();
+    }
+  });
 
   it('keeps approved charges collectible without a scheduled fee assignment', () => {
     mocks.data.student.isFeeStructureAssigned = false;

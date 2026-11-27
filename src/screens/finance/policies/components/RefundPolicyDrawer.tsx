@@ -21,7 +21,6 @@ import {
   Button,
   Skeleton,
   Typography,
-  LinearProgress,
 } from '@mui/material';
 
 import { SectionCard } from './refund/RefundCommon';
@@ -323,7 +322,6 @@ function RefundPolicyDrawerSession({
                   bgcolor: (theme) => alpha(theme.palette.background.paper, 0.72),
                 }}
               >
-                <LinearProgress aria-label="Saving refund policy" sx={{ width: 160 }} />
                 <Typography variant="body2">Saving policy…</Typography>
               </Stack>
             )}

@@ -582,7 +582,11 @@ const FinanceChargeCategory = () => {
       {/* Status Confirmation Dialog */}
       <ConfirmDialog
         open={statusConfirm.value}
+        disableCancel={isStatusLoading}
+        disableEscapeKeyDown={isStatusLoading}
+        disableBackdropClick={isStatusLoading}
         onClose={() => {
+          if (isStatusLoading) return;
           statusConfirm.onFalse();
           setStatusData(null);
           setDeactivationReason('');
@@ -598,23 +602,29 @@ const FinanceChargeCategory = () => {
               ?
             </Typography>
             {!nextStatus && (
-              <TextField
-                fullWidth
-                multiline
-                minRows={2}
-                size="small"
-                label="Archive reason"
-                required
-                error={deactivationReason.length > 0 && !deactivationReason.trim()}
-                helperText={
-                  (deactivationReason.length > 0 && !deactivationReason.trim()
-                    ? 'Archive reason is required.'
-                    : undefined) || undefined
-                }
-                value={deactivationReason}
-                onChange={(event) => setDeactivationReason(event.target.value)}
-                inputProps={{ maxLength: ARCHIVE_REASON_MAX_LENGTH }}
-              />
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  Existing charges will keep this category. It will be hidden from new charges
+                  until you restore it.
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  size="small"
+                  label="Archive reason"
+                  required
+                  error={deactivationReason.length > 0 && !deactivationReason.trim()}
+                  helperText={
+                    deactivationReason.length > 0 && !deactivationReason.trim()
+                      ? 'Archive reason is required.'
+                      : undefined
+                  }
+                  value={deactivationReason}
+                  onChange={(event) => setDeactivationReason(event.target.value)}
+                  inputProps={{ maxLength: ARCHIVE_REASON_MAX_LENGTH }}
+                />
+              </>
             )}
           </Stack>
         }

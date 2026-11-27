@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { View403 } from 'src/sections/error';
 import { useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { SplashScreen } from 'src/components/loading-screen';
+import { FinancePageSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
 import {
   financePaths,
   financePermissions,
@@ -23,7 +23,9 @@ export default function FinanceSetupScreen() {
   const { sessionContext, permissions, user, loading, permissionsInitialized } = useSelector(
     (state: RootState) => state.auth
   );
-  if (loading || !permissionsInitialized) return <SplashScreen />;
+  if (loading || !permissionsInitialized) {
+    return <FinancePageSkeleton label="Loading Finance setup" />;
+  }
   if (
     sessionContext?.accountMode !== 'tenant' ||
     !sessionContext.tenantId ||

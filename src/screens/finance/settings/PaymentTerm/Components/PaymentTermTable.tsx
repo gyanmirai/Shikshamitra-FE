@@ -152,7 +152,6 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
           const term = row as PaymentTermListItem;
           const archived = term.status === 'Archived';
           const canActivate = !archived && term.hasDraft && canPublish;
-          const archiveDisabled = term.referencedStructureCount > 0 || actionLoading;
           const deleteTooltip = getDeleteDisabledReason(term);
 
           return (
@@ -199,7 +198,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
                       id: 'archive',
                       label: 'Archive',
                       icon: 'mdi:archive-outline',
-                      disabled: archiveDisabled,
+                      disabled: actionLoading,
                       onClick: () => onArchive(term),
                     },
                   ]

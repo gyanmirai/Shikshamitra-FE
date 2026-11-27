@@ -68,12 +68,14 @@ export function FeeHeadSelectionRow({
   details,
   labelAdornment,
   selection,
+  datesBeforeAmount = false,
 }: {
   name: string;
   amount?: ReactNode;
   details?: ReactNode;
   labelAdornment?: ReactNode;
   selection?: { checked: boolean; disabled: boolean; onChange: (checked: boolean) => void };
+  datesBeforeAmount?: boolean;
 }) {
   const id = useId();
   const hasAmount = amount != null;
@@ -87,7 +89,9 @@ export function FeeHeadSelectionRow({
         gap: 1,
         alignItems: 'start',
         gridTemplateAreas: details
-          ? '"name" "amount" "details"'
+          ? datesBeforeAmount
+            ? '"name" "details" "amount"'
+            : '"name" "amount" "details"'
           : hasAmount
             ? '"name" "amount"'
             : '"name"',
@@ -98,8 +102,12 @@ export function FeeHeadSelectionRow({
         },
         ...(details && {
           '@container (min-width: 460px)': {
-            gridTemplateAreas: '"name amount details"',
-            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr)',
+            gridTemplateAreas: datesBeforeAmount
+              ? '"name details amount"'
+              : '"name amount details"',
+            gridTemplateColumns: datesBeforeAmount
+              ? 'minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr)'
+              : 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr)',
           },
         }),
       }}

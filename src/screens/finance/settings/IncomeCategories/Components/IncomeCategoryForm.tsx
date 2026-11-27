@@ -30,14 +30,16 @@ import type { IIncomeCategoryFormProps } from './type';
 
 const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const academicYearId = currentYear?.id;
+  const needsAcademicYear = !editData?.id && !academicYearId;
   const [saveError, setSaveError] = useState('');
 
   const { data: incomeCategoryData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeCategoriesQuery,
-    params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
+    params: { academicYearId, page: 1, pageSize: 100 },
     options: {
-      skip: !currentYear?.id || !open?.value,
+      skip: !academicYearId || !open?.value,
     },
   });
 
@@ -93,9 +95,10 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
           message: `${values.name} Income Category updated successfully`,
         });
       } else {
+        if (!academicYearId) return;
         // Create new income category
         await addIncomeCategory({
-          academicYearId: currentYear?.id,
+          academicYearId,
           body: payload,
         }).unwrap();
 
@@ -118,6 +121,11 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
+        {needsAcademicYear && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Select an academic year before adding this income category.
+          </Alert>
+        )}
         {saveError && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {saveError}
@@ -191,7 +199,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
           variant="contained"
           size="small"
           loading={isAddLoading || isUpdateLoading}
-          disabled={isAddLoading || isUpdateLoading}
+          disabled={isAddLoading || isUpdateLoading || needsAcademicYear}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}

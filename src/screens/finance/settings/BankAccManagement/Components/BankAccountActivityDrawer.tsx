@@ -624,8 +624,7 @@ function BankActivityContent({
                       }
                     : undefined
                 }
-                isLoading={activity.isFetching && !data}
-                isRefreshing={activity.isFetching && Boolean(data)}
+                isLoading={activity.isFetching}
                 error={activity.error}
                 onRetry={() => activity.refetch()}
                 serverSidePagination

@@ -1,5 +1,7 @@
 'use client';
 
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
+
 import type { RootState } from 'src/redux/store';
 import type { IParams } from 'src/components/customizabaleTable/types';
 import type { PaymentTermListItem } from 'src/redux/finance/paymentTerm';
@@ -555,7 +557,7 @@ const PaymentTerm = () => {
                 Unable to load source academic years.
               </Alert>
             ) : yearsQuery.isFetching ? (
-              <Box>Loading academic years…</Box>
+              <FinanceListSkeleton label="Loading academic years" rows={1} />
             ) : !cloneSourceYears.length ? (
               <Box>No other academic years are available to clone.</Box>
             ) : !previousYear && !cloneSourceYear ? (

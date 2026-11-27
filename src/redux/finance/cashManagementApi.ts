@@ -36,6 +36,20 @@ export type CashDeposit = {
   bankLabel?: string;
 };
 export type CashExpense = { id: string; name: string; amount: number; paymentDate: string };
+export type CashExpenseRow = CashExpense & { sourceReference: string };
+export type CashManagementCriteria = {
+  academicYearId: string;
+  boardId?: string;
+  mediumId?: string;
+  month?: number;
+  year?: number;
+  startDate?: string;
+  endDate?: string;
+  status?: 0 | 1;
+  search?: string;
+  filters?: string;
+};
+type CashManagementPaging = { page: number; pageSize: number };
 export type CashDetail = CashRow & {
   supportingDocumentName?: string;
   notes?: string;
@@ -78,6 +92,7 @@ export type CashBulkDepositInput = {
   academicYearId: string;
   bankAccountId: string;
   expectedAmount: number;
+  amount?: number;
   idempotencyKey: string;
   notes?: string;
   file?: File;
@@ -92,22 +107,20 @@ export const cashManagementApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getCashManagement: builder.query<
       CashPage,
-      {
-        academicYearId: string;
-        boardId?: string;
-        mediumId?: string;
-        month?: number;
-        year?: number;
-        page: number;
-        pageSize: number;
-        status?: 0 | 1;
-        search?: string;
-        filters?: string;
-        sortBy?: string;
-        sortOrder?: 'asc' | 'desc';
-      }
+      CashManagementCriteria &
+        CashManagementPaging & {
+          sortBy?: string;
+          sortOrder?: 'asc' | 'desc';
+        }
     >({
       query: (params) => ({ url: '/finance/cash-management', params }),
+      providesTags: [financeModuleType.cashManagement],
+    }),
+    getCashExpenses: builder.query<
+      { items: CashExpenseRow[]; totalCount: number },
+      CashManagementCriteria & CashManagementPaging
+    >({
+      query: (params) => ({ url: '/finance/cash-management/expenses', params }),
       providesTags: [financeModuleType.cashManagement],
     }),
     getCashDetail: builder.query<CashDetail, { id: string; academicYearId: string }>({
@@ -185,6 +198,7 @@ export const cashManagementApi = financeModuleApi.injectEndpoints({
 });
 export const {
   useGetCashManagementQuery,
+  useGetCashExpensesQuery,
   useBulkDepositCashMutation,
   useGetCashDetailQuery,
   useDownloadCashSupportingDocumentMutation,

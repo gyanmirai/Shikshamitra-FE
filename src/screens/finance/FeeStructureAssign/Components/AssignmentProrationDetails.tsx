@@ -47,7 +47,16 @@ export default function AssignmentProrationDetails({
       : undefined;
 
   return (
-    <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+    <Stack
+      spacing={0.5}
+      sx={{
+        minWidth: 0,
+        px: 1.25,
+        py: 0.75,
+        bgcolor: 'action.hover',
+        borderRadius: 1,
+      }}
+    >
       {!!rules.size && (
         <Typography variant="caption" color="text.secondary">
           Applied rule:{' '}
@@ -57,7 +66,7 @@ export default function AssignmentProrationDetails({
         </Typography>
       )}
       {(reduction !== 0 || (factor != null && factor !== 1)) && (
-        <Typography variant="caption" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+        <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
           {hasSingleFactor
             ? `${money(scheduled)} × ${formatProrationFactor(factor)} → ${money(obligation)}`
             : `${money(scheduled)} − ${money(reduction)} = ${money(obligation)}`}
@@ -71,7 +80,18 @@ export default function AssignmentProrationDetails({
           <Box component="summary" sx={{ cursor: 'pointer', color: 'text.secondary' }}>
             Calculation by installment
           </Box>
-          <Stack spacing={0.5} component="ul" sx={{ m: 0, pl: 2 }}>
+          <Stack
+            spacing={0.5}
+            component="ul"
+            divider={
+              <Box
+                component="li"
+                role="presentation"
+                sx={{ borderBottom: 1, borderColor: 'divider', listStyle: 'none' }}
+              />
+            }
+            sx={{ m: 0, pl: 0, mt: 0.5, listStyle: 'none', fontVariantNumeric: 'tabular-nums' }}
+          >
             {lines.map((line) => (
               <Box component="li" key={line.dueFeeId ?? line.sequence}>
                 {line.installmentLabel} {formatInstallmentProration(line, currency)}

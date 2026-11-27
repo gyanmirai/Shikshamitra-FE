@@ -1,9 +1,14 @@
 'use client';
 
+import { FinanceListSkeleton } from 'src/screens/finance/components/FinanceContentSkeletons';
+
 import type { Board } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
+import type { DateRange } from 'src/components/custom-date-range-picker';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
+import type { CashManagementCriteria } from 'src/redux/finance/cashManagementApi';
 
+import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -16,13 +21,15 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Box, Card, Stack, Alert, Button, Typography } from '@mui/material';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import { useGetCashManagementQuery } from 'src/redux/finance/cashManagementApi';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { useFinancePermissions } from 'src/screens/finance/hooks/useFinancePermissions';
 import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+import { Box, Card, Stack, Alert, Button, Tooltip, IconButton, Typography } from '@mui/material';
 
 import CashDetails from './CashDetails';
+import CashExpensesDrawer from './CashExpensesDrawer';
 import CashBulkDepositDialog from './CashBulkDepositDialog';
 import { academicMonthOptions, defaultAcademicMonth } from '../Registers/academicMonths';
 import { bankAccountReturnTo, readBankAccountEntryContext } from '../bankAccountEntryContext';
@@ -42,7 +49,6 @@ const columns: IColumn[] = [
   { id: 'payerName', label: 'Payer', minWidth: 180, isFilter: true, filterType: 'string' },
   ...[
     ['amount', 'Collected'],
-    ['spentAmount', 'Spent'],
     ['depositedAmount', 'Deposited'],
     ['remainingAmount', 'Remaining cash'],
     ['inTransitAmount', 'In transit'],
@@ -85,6 +91,7 @@ function readFilters(raw: string | null): IParams['filters'] {
             item &&
             typeof item.column === 'string' &&
             item.column !== 'status' &&
+            item.column !== 'spentAmount' &&
             typeof item.type === 'string' &&
             'value' in item
         )
@@ -118,7 +125,7 @@ export default function CashManagement() {
         ]}
       />
       {!access.isReady ? (
-        <Typography role="status">Loading permissions…</Typography>
+        <FinanceListSkeleton label="Loading cash management permissions" columns={4} />
       ) : !access.canView ? (
         <Alert severity="error">You do not have permission to view Cash Management.</Alert>
       ) : !currentYear?.id ? (
@@ -157,6 +164,26 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
     (requestedMonth && months.some((item) => item.value === requestedMonth))
       ? requestedMonth
       : defaultAcademicMonth(months);
+  const requestedStart = params.get('startDate');
+  const requestedEnd = params.get('endDate');
+  const start = dayjs(requestedStart);
+  const end = dayjs(requestedEnd);
+  const hasDateRange =
+    start.isValid() &&
+    end.isValid() &&
+    start.format('YYYY-MM-DD') === requestedStart &&
+    end.format('YYYY-MM-DD') === requestedEnd &&
+    !start.isAfter(end, 'day');
+  const monthStart = month === 'all' ? null : dayjs(`${month}-01`);
+  const monthEnd = monthStart?.endOf('month') ?? null;
+  const academicStart = dayjs(currentYear?.startDate);
+  const academicEnd = dayjs(currentYear?.endDate);
+  const range: DateRange = hasDateRange
+    ? [start, end]
+    : [
+        monthStart?.isBefore(academicStart, 'day') ? academicStart : monthStart,
+        monthEnd?.isAfter(academicEnd, 'day') ? academicEnd : monthEnd,
+      ];
   const boards: Board[] = currentYear?.boards ?? [];
   const boardId = boards.some((item) => item.id === params.get('boardId'))
     ? params.get('boardId')!
@@ -194,10 +221,13 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
       boardId: undefined,
       mediumId: undefined,
       month: 'all',
+      startDate: undefined,
+      endDate: undefined,
       page: 1,
     });
   const [selected, setSelected] = useState<string | null>(null);
   const deposit = useBoolean();
+  const expenses = useBoolean();
   const openBankDeposit = deposit.onTrue;
   const [depositAmount, setDepositAmount] = useState<number | null>(null);
   const depositButton = useRef<HTMLButtonElement>(null);
@@ -209,17 +239,22 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
     }
     requestAnimationFrame(() => depositButton.current?.focus());
   };
+  const criteria: CashManagementCriteria = {
+    academicYearId,
+    boardId: boardId === 'all' ? undefined : boardId,
+    mediumId: mediumId === 'all' ? undefined : mediumId,
+    month: hasDateRange || month === 'all' ? undefined : Number(month.slice(5)),
+    year: hasDateRange || month === 'all' ? undefined : Number(month.slice(0, 4)),
+    startDate: hasDateRange ? requestedStart! : undefined,
+    endDate: hasDateRange ? requestedEnd! : undefined,
+    search: search || undefined,
+    filters: serializeFinanceTableFilters(filters),
+  };
   const query = useGetCashManagementQuery(
     {
-      academicYearId,
+      ...criteria,
       page,
       pageSize,
-      boardId: boardId === 'all' ? undefined : boardId,
-      mediumId: mediumId === 'all' ? undefined : mediumId,
-      month: month === 'all' ? undefined : Number(month.slice(5)),
-      year: month === 'all' ? undefined : Number(month.slice(0, 4)),
-      search: search || undefined,
-      filters: serializeFinanceTableFilters(filters),
       sortBy,
       sortOrder: sortBy ? sortOrder : undefined,
     },
@@ -260,7 +295,7 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
     setSelected(requestedCashId);
   }, [requestedCashId]);
   const filtered = Boolean(
-    search || filters.length || boardId !== 'all' || mediumId !== 'all' || month !== 'all'
+    search || filters.length || boardId !== 'all' || mediumId !== 'all' || range[0]
   );
   return (
     <>
@@ -310,16 +345,43 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
             disabled={boardId === 'all'}
             onChange={(value) => update({ mediumId: String(value), page: 1 })}
           />
-          <CustomSelect
-            label="Month"
-            size="small"
-            fullWidth
-            formControlProps={{ sx: { width: { xs: '100%', sm: 180 } } }}
-            value={month}
-            options={[{ value: 'all', label: 'All months' }, ...months]}
-            disabled={!months.length}
-            onChange={(value) => update({ month: String(value), page: 1 })}
-          />
+          <Stack
+            direction="row"
+            spacing={0.5}
+            alignItems="center"
+            sx={{ width: { xs: '100%', sm: 270 } }}
+          >
+            <CustomDateRangePicker
+              label="Date range"
+              title="Select cash activity dates"
+              placeholder="All dates"
+              dateFormat="DD/MM/YYYY"
+              value={range}
+              showShortcuts={false}
+              onChange={([from, to]) => {
+                if (from && to && from.isValid() && to.isValid() && !from.isAfter(to, 'day'))
+                  update({
+                    month: undefined,
+                    startDate: from.format('YYYY-MM-DD'),
+                    endDate: to.format('YYYY-MM-DD'),
+                    page: 1,
+                  });
+              }}
+            />
+            {range[0] && (
+              <Tooltip title="Clear date range">
+                <IconButton
+                  size="small"
+                  aria-label="Clear date range"
+                  onClick={() =>
+                    update({ month: 'all', startDate: undefined, endDate: undefined, page: 1 })
+                  }
+                >
+                  <Iconify icon={GlobalIcons.cancel} />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Stack>
           <Stack
             direction="row"
             useFlexGap
@@ -357,6 +419,15 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
                 {availableCash !== undefined ? formatNumber(availableCash, 'INR') : '—'}
               </Typography>
             </Stack>
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.eye} />}
+              onClick={expenses.onTrue}
+            >
+              View expenses
+            </Button>
             {canDeposit && (
               <Button
                 ref={depositButton}
@@ -379,9 +450,6 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
           </Stack>
         </Box>
       </Card>
-      {!months.length && (
-        <Alert severity="warning">Configure the academic-year dates to use the month filter.</Alert>
-      )}
       <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="cash-management"
@@ -390,8 +458,7 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
           data={query.isError ? [] : (query.currentData?.items ?? [])}
           wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
           tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
-          isLoading={query.isFetching && !query.currentData}
-          isRefreshing={query.isFetching && Boolean(query.currentData)}
+          isLoading={query.isFetching}
           serverSidePagination
           serverSideSearch
           serverSideFilter
@@ -414,7 +481,9 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
           onServerPagination={(next, size) => update({ page: next, pageSize: size })}
           onServerFilter={(next) =>
             update({
-              filters: JSON.stringify(next.filter((item) => item.column !== 'status')),
+              filters: JSON.stringify(
+                next.filter((item) => item.column !== 'status' && item.column !== 'spentAmount')
+              ),
               page: 1,
             })
           }
@@ -463,6 +532,13 @@ export function CashContent({ academicYearId }: { academicYearId: string }) {
             setSelected(null);
             if (returnTo && selected === requestedCashId) router.push(returnTo);
           }}
+        />
+      )}
+      {expenses.value && (
+        <CashExpensesDrawer
+          key={JSON.stringify(criteria)}
+          criteria={criteria}
+          onClose={expenses.onFalse}
         />
       )}
       {deposit.value && canDeposit && depositAmount !== null && (

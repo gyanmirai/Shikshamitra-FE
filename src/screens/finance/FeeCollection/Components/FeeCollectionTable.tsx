@@ -127,6 +127,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     currentQueryAndMutation: useGetFeeCollectionListQuery,
     params: {
       AcademicYearId: currentYear?.id,
+      StudentRecordsOnly: true,
       BoardId: filterPayload?.boardId,
       EducationMediumId: filterPayload?.educationMediumId,
       StandardId:

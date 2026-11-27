@@ -148,6 +148,20 @@ function AssignmentAmountValidity({
   return null;
 }
 
+function LoadingAssignmentEditor({ onClose }: { onClose: () => void }) {
+  return (
+    <AssignmentForm
+      busy={false}
+      busyLabel="Loading fee assignment"
+      onCancel={onClose}
+      onPreview={(event) => event.preventDefault()}
+      previewDisabled
+    >
+      <AssignmentFormSkeleton editing />
+    </AssignmentForm>
+  );
+}
+
 type AssignmentWorkflowProps = {
   students: Student[];
   academicYearId: string;
@@ -204,12 +218,15 @@ export default function AssignmentWorkflow({
   if (
     ((contextQuery.isLoading || contextQuery.isFetching) && !contexts) ||
     (selectedStudents.length > 1 && contextQuery.isFetching && !initialBatchContexts.current)
-  )
+  ) {
+    if (selectedStudents.length === 1 && editorProps.editAssignedPolicies)
+      return <LoadingAssignmentEditor onClose={editorProps.onClose} />;
     return (
       <Box sx={{ p: 2 }} role="status" aria-label="Loading assignment context">
         <AssignmentFormSkeleton />
       </Box>
     );
+  }
   if (contextQuery.isError)
     return (
       <Alert
@@ -448,7 +465,10 @@ function AssignmentEditor({
   };
   const editingPolicies =
     editAssignedPolicies &&
-    (canOverridePolicies || canStopOptionalService || canEditAssignedStructure) &&
+    (canOverridePolicies ||
+      canStopOptionalService ||
+      canEditAssignedStructure ||
+      (canAssign && canOverrideDates && students[0]?.isActive !== false)) &&
     !editAssignedStructure &&
     !serviceSaved;
   const setPolicyDirty = useCallback((dirty: boolean) => dispatch(setIsChanges(dirty)), [dispatch]);
@@ -875,6 +895,15 @@ function AssignmentEditor({
       </FormSectionCard>
     ) : null;
 
+  if (
+    viewing &&
+    editingPolicies &&
+    !assigned.isError &&
+    (assigned.isLoading || assigned.isFetching) &&
+    !assigned.data?.assignment
+  )
+    return <LoadingAssignmentEditor onClose={onClose} />;
+
   if (viewing && editingPolicies && !assigned.isError && assigned.data?.assignment) {
     return (
       <AssignedPolicyEditor
@@ -882,6 +911,7 @@ function AssignmentEditor({
         canStopOptionalService={canStopOptionalService}
         canRestartOptionalService={canRestartOptionalService}
         canOverridePolicies={canOverridePolicies}
+        canChangeVariableFees={canAssign && canOverrideDates && students[0]?.isActive !== false}
         onEditFees={
           canEditAssignedStructure && assigned.data.canEditStructure !== false
             ? () => setCorrectionRequested(true)
@@ -902,11 +932,8 @@ function AssignmentEditor({
 
   if (viewing || !canAssign)
     return (
-      <Stack sx={{ flex: 1, minHeight: 0 }}>
-        <Stack
-          spacing={2}
-          sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2, '& > *': { flexShrink: 0 } }}
-        >
+      <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+        <Stack spacing={2} sx={{ p: 2 }}>
           {viewing ? (
             <>
               {studentDetails}
@@ -935,9 +962,7 @@ function AssignmentEditor({
               {!assigned.isFetching &&
                 !assigned.isError &&
                 assigned.data?.assignment &&
-                !editingPolicies && (
-                  <AssignmentReview data={assigned.data.assignment} committed />
-                )}
+                !editingPolicies && <AssignmentReview data={assigned.data.assignment} committed />}
               {!assigned.isFetching && !assigned.isError && !assigned.data?.assignment && (
                 <Alert severity="info">
                   No saved fee assignment is available for this student in the selected academic
@@ -949,7 +974,7 @@ function AssignmentEditor({
             <Box>Your current access allows viewing assignments only.</Box>
           )}
         </Stack>
-      </Stack>
+      </Scrollbar>
     );
 
   const renderContent = (formik: FormikProps<AssignmentValues>, creating = false) => {
@@ -1013,10 +1038,7 @@ function AssignmentEditor({
           onBlur={formik.handleBlur}
           options={(candidates.data ?? []).map((c) => ({
             value: c.id,
-            label:
-              creating && !editAssignedStructure
-                ? `${c.name} · Revision ${c.revisionNumber}`
-                : c.name,
+            label: c.name,
           }))}
           noOptionsMessage="No published structure for this student and year"
           onChange={(value) => {
@@ -1304,11 +1326,7 @@ function AssignmentEditor({
                           label={
                             editAssignedStructure ? 'Saved proration policy' : 'Proration policy'
                           }
-                          value={
-                            prorationPolicy
-                              ? `${prorationPolicy.name} · v${prorationPolicy.version}`
-                              : 'No applicable policy'
-                          }
+                          value={prorationPolicy ? prorationPolicy.name : 'No applicable policy'}
                         />
                       </DetailGrid>
                       <Typography variant="body2" color="text.secondary">
@@ -1381,15 +1399,17 @@ function AssignmentEditor({
                             if (!status.label) return null;
                             return (
                               <>
-                                <Label
-                                  color={
-                                    status.stopped || status.label === 'Ended'
-                                      ? 'default'
-                                      : 'success'
-                                  }
-                                >
-                                  {status.label}
-                                </Label>
+                                {status.label !== 'Cancellation recorded' && (
+                                  <Label
+                                    color={
+                                      status.stopped || status.label === 'Ended'
+                                        ? 'default'
+                                        : 'success'
+                                    }
+                                  >
+                                    {status.label}
+                                  </Label>
+                                )}
                                 {status.stopped && canRestartOptionalService && (
                                   <OptionalFeeServiceRestart
                                     assignment={savedServiceAssignment}
@@ -1795,13 +1815,14 @@ function AssignmentEditor({
               >
                 {renderContent(formik, true)}
               </AssignmentForm>
-              {!isBulk && previewDialogOpen && (
+              {!isBulk && (previewDialogOpen || operationPhase === 'preview') && (
                 <AssignmentPreviewDialog
                   title={showResults ? 'Assignment Results' : undefined}
                   busy={busy}
+                  loading={operationPhase === 'preview'}
                   onClose={showResults ? onClose : () => setPreviewDialogOpen(false)}
                   action={
-                    !showResults && singlePreview
+                    !showResults && operationPhase !== 'preview' && singlePreview
                       ? {
                           label: retryingConfirmation ? 'Retry confirmation' : confirmLabel,
                           disabled: assignDisabled,

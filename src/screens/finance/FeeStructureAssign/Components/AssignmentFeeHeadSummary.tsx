@@ -31,14 +31,15 @@ export default function AssignmentFeeHeadSummary({
 }) {
   const amount = head.included ? head.obligation : head.isVariable ? null : head.configuredAmount;
 
-  const displayedAmount = amountInput ?? amountDetails ?? (
-    typeof amount === 'number' ? (
+  const displayedAmount =
+    amountInput ??
+    amountDetails ??
+    (typeof amount === 'number' ? (
       <DetailField
         label={head.included ? 'Assigned amount' : 'Configured amount'}
         value={formatNumber(amount, currency)}
       />
-    ) : null
-  );
+    ) : null);
 
   return (
     <Box
@@ -58,8 +59,8 @@ export default function AssignmentFeeHeadSummary({
           alignItems: 'start',
           columnGap: 2,
           '@container (min-width: 520px)': {
-            gridTemplateAreas: '"name amount" "details amount"',
-            gridTemplateColumns: 'minmax(0, 1fr) minmax(9rem, 36%)',
+            gridTemplateAreas: '"name details amount"',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.4fr) minmax(8rem, 0.75fr)',
           },
         }}
       >
@@ -80,6 +81,12 @@ export default function AssignmentFeeHeadSummary({
                   <label htmlFor={selection.id}>{head.feeHeadName}</label>
                 ) : (
                   head.feeHeadName
+                )}
+                {!head.isOptional && (
+                  <Box component="span" sx={{ color: 'error.main' }}>
+                    {' '}
+                    *
+                  </Box>
                 )}
               </Typography>
               {head.isVariable && <Label>Variable</Label>}
@@ -109,6 +116,7 @@ export default function AssignmentFeeHeadSummary({
               minWidth: 0,
               mt: 0.75,
               pl: head.isOptional ? 3 : 0,
+              '@container (min-width: 520px)': { mt: 0, pl: 0 },
             }}
           >
             {serviceDetails}

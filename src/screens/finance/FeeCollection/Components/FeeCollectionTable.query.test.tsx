@@ -81,6 +81,7 @@ function setup() {
 describe('Collections full-result query', () => {
   it('maps one-based server callbacks to API offsets and zero-based table pages', () => {
     setup();
+    expect(state.params.StudentRecordsOnly).toBe(true);
     fireEvent.click(screen.getByText('Second page'));
     expect(state.params.SkipCount).toBe(10);
     expect(state.table.page).toBe(1);

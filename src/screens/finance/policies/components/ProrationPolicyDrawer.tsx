@@ -14,7 +14,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import { Box, Alert, Stack, Drawer, Button, Typography, CircularProgress } from '@mui/material';
+import { Box, Alert, Stack, Drawer, Button, Typography } from '@mui/material';
 
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 import ProrationFooterActions from './proration/ProrationFooterActions';
@@ -230,7 +230,6 @@ function ProrationPolicyDrawerSession({
                 bgcolor: (theme) => varAlpha(theme.vars.palette.background.paperChannel, 0.72),
               }}
             >
-              <CircularProgress size={28} />
               <Typography variant="body2">Saving policy…</Typography>
             </Stack>
           )}
