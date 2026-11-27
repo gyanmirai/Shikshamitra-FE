@@ -115,6 +115,23 @@ describe('signed-in notification inbox', () => {
     expect(screen.queryByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
   });
 
+  it('lets both notification groups grow beyond the shared menu list height', async () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const updates = [
+      { ...notice, requiresReview: true },
+      { ...notice, id: 'older', creationTime: yesterday.toISOString() },
+    ];
+    mswServer.use(http.get('*/api/communication/notifications/me/inbox', () =>
+      HttpResponse.json({ totalCount: updates.length, items: updates })
+    ));
+
+    render(inbox(createStore(), originalOwner));
+
+    expect(getComputedStyle(await screen.findByRole('list', { name: 'Actionable notifications' })).maxHeight).toBe('none');
+    expect(getComputedStyle(screen.getByRole('list', { name: 'Yesterday' })).maxHeight).toBe('none');
+  });
+
   it('clears the previous owner’s visible rows and blocks a stale mutation before it reaches the API', async () => {
     const writes: string[] = [];
     mswServer.use(

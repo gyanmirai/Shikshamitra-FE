@@ -10,6 +10,9 @@ import { usePersonalNotificationInboxInfiniteQuery } from 'src/redux/communicati
 import { NotificationInboxRow } from './notification-inbox-item';
 import { notificationDay, needsNotificationAttention } from './notification-presentation';
 
+// The drawer's scrollbar owns the height limit for the entire feed.
+const notificationListSx = { maxHeight: 'none' };
+
 export function NotificationInbox({ owner, unreadOnly, onOpen }: {
   owner: string;
   unreadOnly: boolean;
@@ -66,27 +69,28 @@ export function NotificationInbox({ owner, unreadOnly, onOpen }: {
 
   return (
     <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-      <Box sx={{ pb: 1 }}>
+      <Stack gap={1} sx={{ py: 1 }}>
         {attention.length > 0 && (
           <Box component="section" aria-label="Needs your attention" sx={{
-            mx: 1.5, mt: 1.5, mb: 0.5, border: 1, borderColor: 'divider', borderRadius: 1.25, overflow: 'hidden',
+            mx: 1.5, my: 0.5, border: 1, borderColor: 'divider', borderRadius: 1.25,
           }}>
             <Stack direction="row" gap={0.75} alignItems="center" sx={(theme) => ({
-              px: 1.25, py: 0.75, bgcolor: varAlpha(theme.vars.palette.warning.mainChannel, 0.12),
+              px: 1.25, py: 0.75, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit',
+              bgcolor: varAlpha(theme.vars.palette.warning.mainChannel, 0.12),
             })}>
               <Iconify icon="solar:bell-bold-duotone" width={16} sx={{ color: 'warning.main' }} />
               <Typography component="h3" variant="caption" fontWeight={700}>Needs your attention</Typography>
             </Stack>
-            <List disablePadding aria-label="Actionable notifications">
+            <List disablePadding aria-label="Actionable notifications" sx={notificationListSx}>
               {attention.map((item) => <NotificationInboxRow key={item.id} item={item} owner={owner} onOpen={onOpen} attention />)}
             </List>
           </Box>
         )}
         {Array.from(days, ([day, items]) => (
-          <Box key={day}>
+          <Box key={day} sx={{ '& + &': { borderTop: 1, borderColor: 'divider' } }}>
             <Typography component="h3" variant="caption" fontWeight={700} color="text.secondary"
-              sx={{ px: 2, pt: 1, display: 'block' }}>{day}</Typography>
-            <List disablePadding aria-label={day}>
+              sx={{ px: 2, pt: 1, pb: 0.5, display: 'block' }}>{day}</Typography>
+            <List disablePadding aria-label={day} sx={notificationListSx}>
               {items.map((item) => <NotificationInboxRow key={item.id} item={item} owner={owner} onOpen={onOpen} />)}
             </List>
           </Box>
@@ -100,7 +104,7 @@ export function NotificationInbox({ owner, unreadOnly, onOpen }: {
             </Button>
           </Stack>
         )}
-      </Box>
+      </Stack>
     </Scrollbar>
   );
 }
