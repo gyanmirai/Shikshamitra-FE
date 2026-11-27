@@ -9,6 +9,7 @@ import type {
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
 import { studentPaths } from 'src/constants/student-menu';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Stack, Alert, Button, Skeleton } from '@mui/material';
@@ -206,23 +207,14 @@ export default function AdmissionFormPreviewScreen() {
   }, [optionRequestKey]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0, overflow: 'hidden' }}>
       <CustomBreadcrumbs
-        heading={savedForm ? `${savedForm.name} Preview` : 'Form Preview'}
+        heading="Form Preview"
         description="Preview the Form Layout and Applicant Fields."
         isBack
         onBack={closePreview}
-        action={
-          <Button
-            type="button"
-            size="small"
-            color="inherit"
-            variant="outlined"
-            onClick={closePreview}
-          >
-            Back to Forms
-          </Button>
-        }
+        sx={{ flexShrink: 0, borderRadius: 0 }}
+        slotProps={{ action: {}, heading: {}, moreLink: {}, breadcrumbs: { minWidth: 0, width: '100%' } }}
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
@@ -231,70 +223,72 @@ export default function AdmissionFormPreviewScreen() {
           { name: 'Preview' },
         ]}
       />
-      {canChooseSource && (
-        <Stack spacing={1}>
-          <SavedInquirySourcePicker
-            sources={sourceChoices}
-            sourceId={sourceId}
-            loading={sources.isFetching}
-            onChange={(next) => {
-              setChosen({ formId: id, sourceId: next });
-              const query = new URLSearchParams(searchParams.toString());
-              if (next) query.set('inquiryFormDefinitionId', next);
-              else query.delete('inquiryFormDefinitionId');
-              router.replace(
-                `${studentPaths.enrollment.settings.forms}/${encodeURIComponent(id)}/preview${query.size ? `?${query}` : ''}`,
-                { scroll: false }
-              );
-            }}
-          />
-          {canReadUsage && sourceMetadata.items.length < (sources.currentData?.totalCount ?? 0) && (
-            <Button
-              size="small"
-              disabled={sources.isFetching}
-              onClick={() => setSourcePage((page) => page + 1)}
-            >
-              Load More Inquiry Versions
-            </Button>
-          )}
-          {canReadUsage && sources.isError && (
-            <Alert
-              severity="warning"
-              action={
-                <Button size="small" color="inherit" onClick={() => sources.refetch()}>
-                  Retry Source Names
-                </Button>
-              }
-            >
-              Source names could not load. Saved approved Inquiry versions remain selectable.
-            </Alert>
-          )}
-        </Stack>
-      )}
-      {isLoading || (!savedForm && !isError) || loadingComposition ? (
-        <Stack spacing={2} aria-label="Loading Form Preview" aria-busy="true">
-          <Skeleton variant="rounded" height={360} />
-        </Stack>
-      ) : isError || !savedForm ? (
-        <StudentFeedback notificationKey="STU-0066" presentation="toast" severity="error">
-          Unable to load form preview.
-        </StudentFeedback>
-      ) : inherited && !sourceId ? (
-        <Alert severity="info">This Registration has no approved Inquiry form to preview.</Alert>
-      ) : compositionFailed ? (
-        <Alert
-          severity="error"
-          action={
-            <Button size="small" color="inherit" onClick={() => preview.refetch()}>
-              Retry Preview
-            </Button>
-          }
-        >
-          Unable to load the saved Inquiry questions. Retry the preview.
-        </Alert>
-      ) : form ? (
-        <FormPreviewContent form={form} formik={formik} resolvedOptions={resolvedOptions} preview />
-      ) : null}
+      <Scrollbar fillContent role="region" aria-label="Form preview content" sx={{ flex: '1 1 0', minHeight: 0 }}>
+        {canChooseSource && (
+          <Stack spacing={1}>
+            <SavedInquirySourcePicker
+              sources={sourceChoices}
+              sourceId={sourceId}
+              loading={sources.isFetching}
+              onChange={(next) => {
+                setChosen({ formId: id, sourceId: next });
+                const query = new URLSearchParams(searchParams.toString());
+                if (next) query.set('inquiryFormDefinitionId', next);
+                else query.delete('inquiryFormDefinitionId');
+                router.replace(
+                  `${studentPaths.enrollment.settings.forms}/${encodeURIComponent(id)}/preview${query.size ? `?${query}` : ''}`,
+                  { scroll: false }
+                );
+              }}
+            />
+            {canReadUsage && sourceMetadata.items.length < (sources.currentData?.totalCount ?? 0) && (
+              <Button
+                size="small"
+                disabled={sources.isFetching}
+                onClick={() => setSourcePage((page) => page + 1)}
+              >
+                Load More Inquiry Versions
+              </Button>
+            )}
+            {canReadUsage && sources.isError && (
+              <Alert
+                severity="warning"
+                action={
+                  <Button size="small" color="inherit" onClick={() => sources.refetch()}>
+                    Retry Source Names
+                  </Button>
+                }
+              >
+                Source names could not load. Saved approved Inquiry versions remain selectable.
+              </Alert>
+            )}
+          </Stack>
+        )}
+        {isLoading || (!savedForm && !isError) || loadingComposition ? (
+          <Stack spacing={2} aria-label="Loading Form Preview" aria-busy="true">
+            <Skeleton variant="rounded" height={360} />
+          </Stack>
+        ) : isError || !savedForm ? (
+          <StudentFeedback notificationKey="STU-0066" presentation="toast" severity="error">
+            Unable to load form preview.
+          </StudentFeedback>
+        ) : inherited && !sourceId ? (
+          <Alert severity="info">This Registration has no approved Inquiry form to preview.</Alert>
+        ) : compositionFailed ? (
+          <Alert
+            severity="error"
+            action={
+              <Button size="small" color="inherit" onClick={() => preview.refetch()}>
+                Retry Preview
+              </Button>
+            }
+          >
+            Unable to load the saved Inquiry questions. Retry the preview.
+          </Alert>
+        ) : form ? (
+          <FormPreviewContent form={form} formik={formik} resolvedOptions={resolvedOptions} preview fillAvailable />
+        ) : null}
+      </Scrollbar>
     </Box>
   );
 }

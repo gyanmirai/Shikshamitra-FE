@@ -5,13 +5,16 @@ import DialogTitle from '@mui/material/DialogTitle';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { renderWithProviders } from 'src/test/test-utils';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { FormBuilderSections } from './form-builder-sections';
 import { newField, getBlankAdmissionFormInitialValues } from './form-dialog-model';
 
-vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <svg aria-hidden="true" data-icon={icon} />,
+}));
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   useGetAdmissionFormSystemFieldsQuery: () => ({
     data: [],
@@ -31,7 +34,7 @@ it('keeps settings above the builder dialog and its select menus above the setti
     { ...newField(section.id!, 0, 0), code: 'NAME', label: 'Student name' },
     { ...newField(section.id!, 1, 5), code: 'DOB', label: 'Date of birth' },
   ];
-  render(
+  renderWithProviders(
     <ThemeProvider theme={theme}>
       <Dialog open aria-labelledby="visibility-builder-title">
         <DialogTitle id="visibility-builder-title">Form builder</DialogTitle>
@@ -64,7 +67,9 @@ it('keeps settings above the builder dialog and its select menus above the setti
   await user.click(screen.getByRole('combobox', { name: 'Field Type' }));
   await user.click(screen.getByRole('option', { name: 'Textarea' }));
   expect(screen.getByRole('combobox', { name: 'Field Type' })).toHaveTextContent('Textarea');
-  await user.click(screen.getByRole('button', { name: 'Done' }));
+  const done = screen.getByRole('button', { name: 'Done' });
+  expect(done.querySelector('[data-icon="hugeicons:tick-01"]')).toBeVisible();
+  await user.click(done);
   await waitFor(() =>
     expect(screen.queryByRole('button', { name: 'Close Field Settings' })).not.toBeInTheDocument()
   );

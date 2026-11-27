@@ -12,7 +12,7 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { defaultNumbering } from './admission-numbering-model';
-import { AdmissionNumberingFormDialog } from './admission-numbering-dialog';
+import { AdmissionNumberingFormDrawer } from './admission-numbering-dialog';
 
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
@@ -50,7 +50,7 @@ const year = {
   lastModificationTime: '',
   lastModifierId: '',
 };
-function setup(overrides: Partial<React.ComponentProps<typeof AdmissionNumberingFormDialog>> = {}) {
+function setup(overrides: Partial<React.ComponentProps<typeof AdmissionNumberingFormDrawer>> = {}) {
   const props = {
     onClose: vi.fn(),
     onSave: vi.fn(async () => settings),
@@ -67,18 +67,114 @@ function setup(overrides: Partial<React.ComponentProps<typeof AdmissionNumbering
   render(
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
-        <AdmissionNumberingFormDialog {...props} />
+        <AdmissionNumberingFormDrawer {...props} />
       </ThemeProvider>
     </Provider>
   );
   return { ...props, user: userEvent.setup() };
 }
 describe('application numbering dialog', () => {
-  it('displays the scope label and value together', () => {
-    setup();
-    expect(screen.getByText('All Admission Offerings')).toHaveTextContent(
-      'Applies To: All Admission Offerings'
+  it('previews and confirms a simple new series using the next available number', async () => {
+    const onPreview = vi.fn(async () => ({
+      nextNumber: '004',
+      nextSequence: 4,
+      startingNumberUnavailable: true,
+    }));
+    const { user, onSave } = setup({
+      onPreview,
+      settings: { ...settings, isConfigured: true, sequenceLocked: true },
+    });
+    await user.click(screen.getByRole('radio', { name: /Simple Number/ }));
+    await waitFor(() =>
+      expect(onPreview).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          prefix: '',
+          yearFormat: 0,
+          resetPolicy: 0,
+          startingNumber: 1,
+          digits: 3,
+          beginNewSeries: true,
+        })
+      )
     );
+    expect(await screen.findByText('004')).toBeVisible();
+    expect(screen.getByText(/starting number is already in use/i)).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Review Change' }));
+    expect(await screen.findByText(/Next available number now: 004/)).toBeVisible();
+    expect(
+      screen.getByText(/Current format: Prefix: DDVS · Year: Academic year · Digits: 5/)
+    ).toBeVisible();
+    expect(screen.getByText(/New format: Prefix: None · Year: No year · Digits: 3/)).toBeVisible();
+    expect(onSave).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Confirm Change' }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prefix: '',
+          yearFormat: 0,
+          resetPolicy: 0,
+          startingNumber: 1,
+          digits: 3,
+          beginNewSeries: true,
+        })
+      )
+    );
+  });
+
+  it('selects academic year and school prefix presets and preserves existing custom settings until selected', async () => {
+    const { user, onPreview } = setup({ settings: { ...settings, isConfigured: true } });
+    expect(screen.getByRole('radio', { name: /Custom/ })).toBeChecked();
+    expect(screen.getByLabelText('Prefix')).toHaveValue('DDVS');
+    await user.click(screen.getByRole('radio', { name: /Academic Year/ }));
+    await waitFor(() =>
+      expect(onPreview).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          prefix: '',
+          yearFormat: 2,
+          resetPolicy: 2,
+          separator: '/',
+          beginNewSeries: true,
+        })
+      )
+    );
+    await user.click(screen.getByRole('radio', { name: /School Prefix/ }));
+    expect(screen.getByLabelText('Prefix *')).toHaveValue('DDVS');
+    await waitFor(() =>
+      expect(onPreview).toHaveBeenLastCalledWith(
+        expect.objectContaining({ prefix: 'DDVS', yearFormat: 0, resetPolicy: 0, beginNewSeries: true })
+      )
+    );
+  });
+
+  it('shows a format example while a school prefix is missing, then previews the entered prefix', async () => {
+    const { user, onPreview, onSave } = setup({ settings: { ...settings, prefix: '' } });
+    await user.click(screen.getByRole('radio', { name: /School Prefix/ }));
+    expect(screen.getByText('Format Example')).toBeVisible();
+    expect(screen.getByText('PREFIX-001')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Refresh Preview' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Review Change' }));
+    expect(await screen.findByText('Enter a school prefix.')).toBeVisible();
+    expect(onSave).not.toHaveBeenCalled();
+    expect(onPreview).not.toHaveBeenCalled();
+    await user.type(screen.getByLabelText('Prefix *'), 'EMS');
+    await waitFor(() =>
+      expect(onPreview).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          prefix: 'EMS',
+          yearFormat: 0,
+          resetPolicy: 0,
+          beginNewSeries: true,
+        })
+      )
+    );
+    await user.click(screen.getByRole('radio', { name: /Simple Number/ }));
+    await user.click(screen.getByRole('radio', { name: /School Prefix/ }));
+    expect(screen.getByLabelText('Prefix *')).toHaveValue('EMS');
+  });
+  it('keeps the school-wide scope guidance in the heading information', () => {
+    setup();
+    expect(screen.getByRole('button', { name: 'Application Numbering information' })).toBeVisible();
+    expect(screen.queryByText('All Admission Offerings')).not.toBeInTheDocument();
   });
 
   it.each([
@@ -98,7 +194,8 @@ describe('application numbering dialog', () => {
         expect.objectContaining({ yearFormat: cycle, resetPolicy: cycle })
       )
     );
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Review Change' }));
+    await user.click(await screen.findByRole('button', { name: 'Confirm Change' }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -128,7 +225,8 @@ describe('application numbering dialog', () => {
     expect(onSave).not.toHaveBeenCalled();
     await user.click(screen.getByRole('combobox', { name: 'Year in Number' }));
     await user.click(screen.getByRole('option', { name: 'No Year' }));
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Review Change' }));
+    await user.click(await screen.findByRole('button', { name: 'Confirm Change' }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(
         expect.objectContaining({ yearFormat: 0, resetPolicy: 0 })
@@ -136,17 +234,17 @@ describe('application numbering dialog', () => {
     );
   });
 
-  it('locks the used cycle while retaining editable future format and the real next-number preview', async () => {
+  it('allows existing schools to change the cycle and starting number', async () => {
     const { user, onSave } = setup({ settings: { ...settings, sequenceLocked: true } });
-    expect(screen.getByRole('combobox', { name: 'Numbering Cycle' })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Numbering Cycle' })).not.toHaveAttribute(
       'aria-disabled',
       'true'
     );
-    expect(screen.getByText(/Numbering cycle is locked because application numbers/)).toBeVisible();
-    expect(screen.getByLabelText('Starting Number *')).toBeDisabled();
-    expect(screen.getByLabelText('Prefix *')).toBeEnabled();
-    await user.type(screen.getByLabelText('Prefix *'), 'X');
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(screen.getByLabelText('Starting Number *')).toBeEnabled();
+    expect(screen.getByLabelText('Prefix')).toBeEnabled();
+    await user.type(screen.getByLabelText('Prefix'), 'X');
+    await user.click(screen.getByRole('button', { name: 'Review Change' }));
+    await user.click(await screen.findByRole('button', { name: 'Confirm Change' }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -154,6 +252,7 @@ describe('application numbering dialog', () => {
           resetPolicy: 2,
           yearFormat: 2,
           startingNumber: 1,
+          beginNewSeries: true,
         })
       )
     );
@@ -163,9 +262,15 @@ describe('application numbering dialog', () => {
     const { user, onSave } = setup({
       settings: { ...settings, resetPolicy: 0, yearFormat: 0, isConfigured: true },
     });
-    await user.click(screen.getByRole('button', { name: 'Advanced Settings' }));
+    const expand = screen.getByRole('button', { name: 'Expand Advanced Settings' });
+    expect(expand).toHaveAttribute('aria-expanded', 'false');
+    await user.click(expand);
+    expect(screen.getByRole('button', { name: 'Collapse Advanced Settings' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
     expect(screen.getByRole('combobox', { name: 'Year in Number' })).toHaveTextContent('No Year');
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Review Change' })).toBeDisabled();
     expect(onSave).not.toHaveBeenCalled();
   });
 
@@ -176,7 +281,7 @@ describe('application numbering dialog', () => {
     expect(onPreview).toHaveBeenCalledWith(
       expect.objectContaining({ academicYearId: year.id, startingNumber: 1, prefix: 'DDVS' })
     );
-    expect(screen.getByText('All Admission Offerings')).toBeVisible();
+    expect(screen.queryByText('All Admission Offerings')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Application Number')).not.toBeInTheDocument();
   });
   it(
@@ -189,16 +294,18 @@ describe('application numbering dialog', () => {
         .mockResolvedValue(settings);
       const { user, onClose } = setup({ onSave });
       await user.clear(screen.getByLabelText('Starting Number *'));
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
+      await user.click(screen.getByRole('button', { name: 'Review Change' }));
       expect(await screen.findByText('Starting number is required')).toBeVisible();
       await waitFor(() => expect(screen.getByLabelText('Starting Number *')).toHaveFocus());
       expect(onSave).not.toHaveBeenCalled();
       fireEvent.change(screen.getByLabelText('Starting Number *'), { target: { value: '12' } });
-      fireEvent.change(screen.getByLabelText('Prefix *'), { target: { value: ' school ' } });
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
+      fireEvent.change(screen.getByLabelText('Prefix'), { target: { value: ' school ' } });
+      await user.click(screen.getByRole('button', { name: 'Review Change' }));
+      await user.click(await screen.findByRole('button', { name: 'Confirm Change' }));
       expect(await screen.findByText('Settings changed in another session')).toBeVisible();
       expect(screen.getByLabelText('Starting Number *')).toHaveValue('12');
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
+      await user.click(screen.getByRole('button', { name: 'Review Change' }));
+      await user.click(await screen.findByRole('button', { name: 'Confirm Change' }));
       await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
       expect(onSave).toHaveBeenLastCalledWith(
         expect.objectContaining({ prefix: 'SCHOOL', startingNumber: 12, expectedVersion: 0 })
@@ -214,38 +321,47 @@ describe('application numbering dialog', () => {
         })
     );
     const { onClose } = setup({ onSave });
-    const submit = screen.getByRole('button', { name: 'Submit' });
+    const submit = screen.getByRole('button', { name: 'Review Change' });
     fireEvent.click(submit);
     fireEvent.click(submit);
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm Change' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Change' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'close' })).toBeDisabled();
-    expect(screen.getByLabelText('Prefix *')).toBeDisabled();
-    expect(screen.getByRole('combobox', { name: 'Numbering Cycle' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
     await act(async () => finish(settings));
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });
-  it('preserves existing permission and issued-counter restrictions', () => {
+  it('preserves view-only permission restrictions', () => {
     setup({ canEdit: false, settings: { ...settings, sequenceLocked: true } });
     expect(screen.getByLabelText('Starting Number *')).toBeDisabled();
-    expect(screen.getByLabelText('Prefix *')).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Prefix')).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Review Change' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Number Format information' })).toBeEnabled();
   });
   it('avoids an unchanged save for an already configured rule', async () => {
     const { user, onSave } = setup({ settings: { ...settings, isConfigured: true } });
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Review Change' })).toBeDisabled();
     expect(onSave).not.toHaveBeenCalled();
-    await user.type(screen.getByLabelText('Prefix *'), 'X');
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+    await user.type(screen.getByLabelText('Prefix'), 'X');
+    expect(screen.getByRole('button', { name: 'Review Change' })).toBeEnabled();
+  });
+  it('does not begin a new series for prefix edits that normalize to the saved value', async () => {
+    const { onPreview } = setup({ settings: { ...settings, isConfigured: true } });
+    fireEvent.change(screen.getByLabelText('Prefix'), { target: { value: ' ddvs ' } });
+    expect(screen.getByRole('button', { name: 'Review Change' })).toBeDisabled();
+    await waitFor(() =>
+      expect(onPreview).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          prefix: 'DDVS',
+          beginNewSeries: false,
+        })
+      )
+    );
   });
   it('confirms discarding unsaved work', async () => {
     const { user, onClose } = setup();
-    await user.type(screen.getByLabelText('Prefix *'), 'X');
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    await user.type(screen.getByLabelText('Prefix'), 'X');
+    await user.click(screen.getByRole('button', { name: 'Close Application Numbering' }));
     expect(screen.getByText('Discard Unsaved Changes?')).toBeVisible();
     expect(onClose).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Discard changes' }));
@@ -253,7 +369,7 @@ describe('application numbering dialog', () => {
   });
   it('offers retry after load failure and does not enable submission', async () => {
     const { user, onRetry } = setup({ settings: undefined, loadError: true });
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Review Change' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     render(<div role="alert">{vi.mocked(shikshaMitraToast.error).mock.lastCall![0].message}</div>);
     expect(screen.getByRole('alert')).toHaveTextContent('Unable to load numbering settings.');

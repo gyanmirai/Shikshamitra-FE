@@ -43,6 +43,30 @@ async function createArtifact(...args: Parameters<typeof createAdmissionFormPdfB
 }
 
 describe('Registration printable PDF artifacts', () => {
+  it.each([
+    ['A4', 595.28, 841.89],
+    ['A5', 419.53, 595.28],
+    ['LETTER', 612, 792],
+    ['LEGAL', 612, 1008],
+  ] as const)('uses saved %s paper without advanced settings', async (paperSize, width, height) => {
+    const model = buildAdmissionPrintDocument({
+      definition: { name: 'Registration form', sections: [] },
+      mode: 'blank',
+      values: {},
+      settings: { paperSize, template: 'boxed-grid' },
+    });
+    const blob = await createArtifact(model, {}, path.resolve('public/fonts'));
+    const pdfjs = await loadPdfJs();
+    const loading = pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) });
+    try {
+      const document = await loading.promise;
+      const viewport = (await document.getPage(1)).getViewport({ scale: 1 });
+      expect(viewport.width).toBeCloseTo(width, 0);
+      expect(viewport.height).toBeCloseTo(height, 0);
+    } finally {
+      await loading.destroy();
+    }
+  }, 30000);
   it.each(['blank', 'filled'] as const)(
     'keeps handwriting rows readable in a four-column %s boxed form while preserving filled columns',
     async (mode) => {

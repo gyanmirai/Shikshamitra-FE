@@ -12,6 +12,7 @@ import { ensureAdmissionCustomFieldIdentities } from './form-field-identity';
 import { configureStudentField, connectStudentAddressFields } from './student-field-configuration';
 import {
   getAdmissionFormPrintSettings,
+  getNewAdmissionFormPrintSettings,
   getBlankAdmissionFormInitialValues,
 } from './form-dialog-model';
 
@@ -979,7 +980,7 @@ export function getSystemAdmissionFormTemplate(id: SystemAdmissionFormTemplateId
   const form = ensureAdmissionCustomFieldIdentities(definition.create());
   return lockNewInquiryStarter({
     ...form,
-    printSettings: { ...getAdmissionFormPrintSettings(form.printSettings), template: 'boxed-grid' },
+    printSettings: form.printSettings ?? getNewAdmissionFormPrintSettings(form.purpose),
   });
 }
 
@@ -1016,10 +1017,45 @@ export function getNewAdmissionFormInitialValues(
   ];
   return {
     ...initial,
+    printSettings: {
+      ...getNewAdmissionFormPrintSettings(1),
+      advanced: {
+        ...initial.printSettings?.advanced,
+        content: {
+          ...initial.printSettings?.advanced?.content,
+          showInstructions: true,
+          showDeclaration: true,
+          translations: {
+            en: {
+              instructions: 'Complete all required fields marked *.',
+              declaration: 'I confirm that the information provided is accurate.',
+            },
+            gu: {
+              instructions: '* થી ચિહ્નિત બધા ફરજિયાત ક્ષેત્રો ભરો.',
+              declaration: 'હું ખાતરી આપું છું કે આપેલી માહિતી સાચી છે.',
+            },
+            hi: {
+              instructions: '* से चिह्नित सभी अनिवार्य फ़ील्ड भरें।',
+              declaration: 'मैं पुष्टि करता/करती हूँ कि दी गई जानकारी सही है।',
+            },
+          },
+        },
+      },
+    },
     sections: template.sections
       .filter((section) => section.code !== 'DECLARATION')
       .map((section) => {
         let { fields } = section;
+        if (section.code === 'STUDENT_DETAILS') {
+          fields = [
+            ...fields,
+            createField(section.id, fields.length, {
+              code: 'STUDENT_PHOTO',
+              label: 'Student profile photo',
+              bindingKey: 'Applicant.ProfilePhoto',
+            }),
+          ];
+        }
         if (section.code === 'HOME_ADDRESS')
           fields = fields.map((field) => ({ ...field, required: false }));
         if (section.code === 'ACADEMIC_BACKGROUND')
@@ -1071,7 +1107,7 @@ export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdm
       name: `${source.name} copy`,
       code: copyCode,
       description: source.description,
-      printSettings: getAdmissionFormPrintSettings(source.printSettings, purpose),
+      printSettings: getAdmissionFormPrintSettings(source.printSettings),
       layoutType: source.layoutType,
       purpose,
       fieldsPerRow: source.fieldsPerRow ?? 1,

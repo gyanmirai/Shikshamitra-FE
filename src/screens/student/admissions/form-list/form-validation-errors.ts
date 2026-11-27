@@ -1,4 +1,8 @@
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import {
+  parseApiProblemDetail,
+  isApiProblemCodeMessage,
+  isGenericApiProblemMessage,
+} from 'src/utils/api-problem-details';
 
 import { inquiryFormConfigurationMessages } from '../admission-inquiry-field-bindings';
 import {
@@ -8,6 +12,7 @@ import {
 } from '../form-dialog/form-address-dependencies';
 
 const VERSION_UNCHANGED = 'Admissions.FormVersionUnchanged';
+export const FORM_RESTORE_INVALID_DEFINITION = 'Admissions.FormRestoreInvalidDefinition';
 const VERSION_UNCHANGED_MESSAGE =
   'This draft matches the latest published version. Make a change before publishing, or keep using the published version.';
 
@@ -81,4 +86,46 @@ export function summarizeAdmissionFormIssues(issues: string[]) {
   const messages = [...new Set(issues)];
   const visible = messages.slice(0, 3);
   return `${visible.join(' ')}${messages.length > visible.length ? ` ${messages.length - visible.length} more issue(s) need review.` : ''}`;
+}
+
+type RestoreErrorData = { Errors?: unknown };
+type ProblemBody = { data?: RestoreErrorData; error?: { data?: RestoreErrorData } };
+
+export function admissionFormActionErrorMessage(
+  failure: unknown,
+  fallback: string,
+  problem = parseApiProblemDetail(failure)
+) {
+  if (problem.errorCode === FORM_RESTORE_INVALID_DEFINITION) {
+    const response = failure as (ProblemBody & {
+      data?: ProblemBody & RestoreErrorData;
+      response?: { data?: ProblemBody };
+    }) | null;
+    const body = response?.response?.data ?? response?.data ?? response;
+    const errors = body?.data?.Errors ?? body?.error?.data?.Errors ?? response?.data?.Errors;
+    const issues = (typeof errors === 'string' ? errors.split(';') : [])
+      .map((issue) => issue.trim())
+      .filter(Boolean)
+      .map((issue) =>
+        formatAdmissionFormValidationError(
+          issue,
+          issue.endsWith(':APPLICANT_GENDER') ? 'Student gender' : undefined
+        )
+      );
+    return [
+      'This form cannot be restored.',
+      summarizeAdmissionFormIssues(issues),
+      'Create a new form with these issues corrected, then publish it.',
+    ]
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  return !problem.detail ||
+    problem.detail === problem.errorCode ||
+    isGenericApiProblemMessage(problem.detail) ||
+    isApiProblemCodeMessage(problem.detail) ||
+    /^(?:bad request|validation failed|request failed|conflict|resource not found)\.?$/i.test(problem.detail)
+    ? fallback
+    : problem.detail;
 }

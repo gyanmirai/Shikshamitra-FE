@@ -17,6 +17,13 @@ export const numberingCycles = [
     description: 'Counter continues across years without restarting.',
   },
 ] as const;
+export const numberingYearLabels = ['No year', 'Calendar year', 'Academic year'] as const;
+export function describeNumberingFormat(
+  values: Pick<SaveAdmissionNumbering, 'prefix' | 'suffix' | 'separator' | 'yearFormat' | 'digits'>
+) {
+  const year = numberingYearLabels[values.yearFormat] ?? 'Unknown year';
+  return `Prefix: ${values.prefix || 'None'} · Year: ${year} · Digits: ${values.digits} · Separator: ${values.separator || 'None'} · Suffix: ${values.suffix || 'None'}`;
+}
 export const defaultNumbering: AdmissionNumbering = {
   expectedVersion: 0,
   prefix: 'APP',
@@ -39,11 +46,22 @@ export const numberingFormValues = (settings: AdmissionNumbering): NumberingForm
   digits: settings.digits,
   startingNumber: String(settings.startingNumber),
 });
+export const numberingDefinitionChanged = (
+  values: NumberingFormValues,
+  initial: NumberingFormValues
+) =>
+  values.prefix.trim().toUpperCase() !== initial.prefix.trim().toUpperCase() ||
+  values.suffix.trim().toUpperCase() !== initial.suffix.trim().toUpperCase() ||
+  values.separator !== initial.separator ||
+  values.yearFormat !== initial.yearFormat ||
+  values.resetPolicy !== initial.resetPolicy ||
+  values.digits !== initial.digits ||
+  values.startingNumber !== initial.startingNumber;
 export const numberingSchema = Yup.object({
   prefix: Yup.string()
     .trim()
-    .matches(/^[A-Za-z0-9][A-Za-z0-9-]{0,19}$/, 'Use up to 20 letters, numbers or hyphens')
-    .required('Prefix is required'),
+    .ensure()
+    .matches(/^(?:[A-Za-z0-9][A-Za-z0-9-]{0,19})?$/, 'Use up to 20 letters, numbers or hyphens'),
   separator: Yup.string().ensure().oneOf(['/', '-', ''], 'Choose a supported separator'),
   suffix: Yup.string()
     .trim()

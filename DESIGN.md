@@ -215,9 +215,9 @@ Use a sticky right-side actions column when row actions would otherwise scroll o
 
 The shared table owns its toolbar, active filter chips, sticky header, body loading state, empty state, pagination, and scroll container.
 Every table has a contextual accessible name that identifies its records.
-Initial table loading uses table-shaped skeleton rows through `isLoading`.
+Initial table loading uses table-shaped skeleton rows through `isLoading`. Leave the pagination range blank until the current count is known.
 The animated character loader is retained in `src/assets/illustrations/table-loading-illustration.tsx` and `src/components/table-loading-state/` for future use. It is not wired into any active table or screen.
-Server refetches retain the current rows when safe and show a labelled progress indicator at the top of the table. Admissions tables use `refreshIndicator="circular"` for a compact spinner in the toolbar, outside the table header. The shared default uses a thin indicator.
+Server refetches retain the current rows when safe and mark the table as busy. The shared default is a thin labelled progress indicator. Admissions tables use `refreshIndicator="none"` to retain rows without a visible refresh loader.
 Pass `isRefreshing` for a same-scope refetch with safe current data; keep `isLoading` for the initial request or a new scope without current data.
 Finance tables use body skeletons for visible refetch states and keep the toolbar, column headers, and pagination in place.
 Column headings default to left alignment independently of body-cell `align`; use the explicit `headerAlign` column option only for a documented specialized control.
@@ -316,7 +316,7 @@ Choose a loader that matches the scope of work.
 | Authentication, permission, or application bootstrap | `SplashScreen`                                                     |
 | Lazy route or major tab panel                        | Keep the shell visible and render a stable content-shaped skeleton |
 | First table request                                  | `CustomizableTable` skeleton rows                                  |
-| Table refetch                                        | Retain safe rows with a labelled indicator, or show body skeletons in Finance |
+| Table refetch                                        | Retain safe rows and mark the table as busy. Use thin labelled progress where enabled. |
 | Dashboard request                                    | Card and chart skeletons that preserve final geometry              |
 | Button or row mutation                               | Loading state on the initiating control                            |
 | Background refresh                                   | Non-blocking status near the affected content                      |
@@ -1066,7 +1066,7 @@ Use `ThreeDotsActions` from `src/components/three-dots-actions/` for row actions
 | Direct actions   | Show at most three frequent row actions directly. Use built-in view/edit/delete props first and `directActions` for a feature-specific `mdi:` action; place every remaining action in the three-dot menu. |
 | Server-side data | When the API supports server-side pagination, search, sorting, or filtering, enable the corresponding `serverSide*` props and provide the matching callbacks.     |
 | Loading          | Pass the API loading state through `isLoading`; retain the table geometry while the request is in progress.                                                       |
-| Scoped refresh   | Use `isRefreshing` to retain safe current rows and show labelled progress without shifting rows or headings. Use `refreshIndicator="circular"` in Admissions tables. |
+| Scoped refresh   | Use `isRefreshing` to retain safe current rows and mark the table as busy without shifting rows or headings. Use `refreshIndicator="none"` in Admissions tables. |
 | Pagination       | Use server-side pagination for API-backed collections that can grow; pass `totalCount` and handle `onServerPagination`.                                           |
 
 **Field-to-filter mapping**

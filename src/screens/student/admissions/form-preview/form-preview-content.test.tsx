@@ -7,7 +7,9 @@ import { render, screen, within } from '@testing-library/react';
 
 import { FormPreviewContent } from './form-preview-content';
 
-vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <svg aria-hidden="true" data-icon={icon} />,
+}));
 
 vi.mock('../admission-runtime-field', () => ({
   default: ({
@@ -88,6 +90,20 @@ function previewFormik(values: Record<string, string>) {
 }
 
 describe('embedded admission form preview', () => {
+  it('uses the standard section icon alongside the configured section heading', () => {
+    render(
+      <FormPreviewContent
+        form={photoPreviewForm()}
+        formik={previewFormik({})}
+        resolvedOptions={{}}
+        preview
+      />
+    );
+    const heading = screen.getByRole('heading', { name: 'Student profile' });
+    const section = heading.closest('section');
+    expect(section?.querySelector('[data-icon="mdi:clipboard-text-outline"]')).toBeInTheDocument();
+    expect(within(section!).getByRole('textbox', { name: 'Student name' })).toBeVisible();
+  });
   it('places the language selector with the form title and switches the preview language', async () => {
     const user = userEvent.setup();
     const form = photoPreviewForm();
@@ -171,7 +187,7 @@ describe('embedded admission form preview', () => {
     expect(form.sections[0].fields.map((field) => field.code)).toEqual(['NAME', 'PHOTO']);
   });
 
-  it('keeps all sections in a step visible and lets applicants return without losing values', async () => {
+  it('puts preview steps in a dedicated panel and keeps all sections of the selected step visible', async () => {
     const user = userEvent.setup();
     const formik = {
       values: {},
@@ -219,11 +235,19 @@ describe('embedded admission form preview', () => {
         },
       ],
     } as unknown as AdmissionForm;
-    render(<FormPreviewContent form={form} formik={formik} resolvedOptions={{}} embedded />);
+    render(
+      <FormPreviewContent form={form} formik={formik} resolvedOptions={{}} preview fillAvailable />
+    );
+    const panel = screen.getByRole('complementary', { name: 'Form Step Navigation' });
+    const navigation = within(panel).getByRole('navigation', { name: 'Form Steps' });
     expect(screen.getByText('Basic details')).toBeVisible();
     expect(screen.getByText('Contact details')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Next' }));
     expect(screen.getByText('Health details')).toBeVisible();
+    expect(within(navigation).getByRole('button', { name: 'Medical information' })).toHaveAttribute(
+      'aria-current',
+      'step'
+    );
     await user.click(screen.getByRole('button', { name: 'Previous' }));
     expect(screen.getByText('Basic details')).toBeVisible();
     expect(screen.getByText('Contact details')).toBeVisible();

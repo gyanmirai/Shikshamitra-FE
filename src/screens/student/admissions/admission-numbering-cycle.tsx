@@ -3,7 +3,6 @@ import type { FormikProps } from 'formik';
 import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import CustomSelect from 'src/components/custom-select';
-import CustomAccordion from 'src/components/custom-accordian';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 
@@ -33,7 +32,7 @@ export function AdmissionNumberingCycle({
     <FormSectionCard
       icon={GlobalIcons.scheduledReport}
       title="Numbering Cycle"
-      descriptionTooltip="Choose When the School-Wide Counter Restarts. The Year in the Number Is Matched Automatically. The Cycle Locks After the First Custom Number Is Issued."
+      descriptionTooltip="Choose when the school-wide counter restarts. Changing the cycle starts a new numbering series for future applications."
     >
       <ShakingTextField error={Boolean(cycleError)}>
         <CustomSelect
@@ -64,36 +63,35 @@ export function AdmissionNumberingCycle({
         />
       </ShakingTextField>
       {continuous && (
-        <CustomAccordion
+        <FormSectionCard
+          collapsible
           title="Advanced Settings"
           expanded={expanded}
-          onChange={() => setExpanded((value) => !value)}
-          content={
-            <ShakingTextField error={Boolean(yearError)}>
-              <CustomSelect
-                label="Year in Number"
-                name="yearFormat"
-                value={form.values.yearFormat}
-                options={[
-                  { value: 0, label: 'No Year' },
-                  { value: 1, label: 'Calendar Year' },
-                  { value: 2, label: 'Academic Year' },
-                ]}
-                size="small"
-                fullWidth
-                formControlProps={{ required: true }}
-                disabled={disabled}
-                error={Boolean(yearError)}
-                helperText={
-                  yearError ||
-                  'Including a year changes the format; the counter still continues without restarting.'
-                }
-                onBlur={form.handleBlur}
-                onChange={(value) => form.setFieldValue('yearFormat', Number(value))}
-              />
-            </ShakingTextField>
-          }
-        />
+          onExpandedChange={setExpanded}
+          contentSpacing={1.5}
+          sx={{ p: 1.5 }}
+        >
+          <ShakingTextField error={Boolean(yearError)}>
+            <CustomSelect
+              label="Year in Number"
+              name="yearFormat"
+              value={form.values.yearFormat}
+              options={[
+                { value: 0, label: 'No Year' },
+                { value: 1, label: 'Calendar Year' },
+                { value: 2, label: 'Academic Year' },
+              ]}
+              size="small"
+              fullWidth
+              formControlProps={{ required: true }}
+              disabled={disabled}
+              error={Boolean(yearError)}
+              helperText={yearError || 'With continuous numbering, the counter keeps running across years.'}
+              onBlur={form.handleBlur}
+              onChange={(value) => form.setFieldValue('yearFormat', Number(value))}
+            />
+          </ShakingTextField>
+        </FormSectionCard>
       )}
     </FormSectionCard>
   );

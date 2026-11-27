@@ -13,12 +13,14 @@ import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
+import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useResponsive } from 'src/hooks/use-responsive';
+import { shikshaMitraToast } from 'src/components/toast';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -93,12 +95,13 @@ export function FormBuilderSections({
     ...formik,
     values: markInheritedRegistrationFields(formik.values, inheritance?.preview?.definition),
   };
-  const projectForm = (form: CreateUpdateAdmissionForm) => getInheritanceBuilderValues(
-    form,
-    inheritance?.preview?.definition,
-    inheritance?.previewBaseSectionIds,
-    inheritance?.preview?.inquiryContextSections
-  );
+  const projectForm = (form: CreateUpdateAdmissionForm) =>
+    getInheritanceBuilderValues(
+      form,
+      inheritance?.preview?.definition,
+      inheritance?.previewBaseSectionIds,
+      inheritance?.preview?.inquiryContextSections
+    );
   const effectiveForm = projectForm(formik.values);
   const selection = useFormBuilderSelection(effectiveForm.sections);
   const selectSection = selection.select;
@@ -135,7 +138,7 @@ export function FormBuilderSections({
   const [sidePanel, setSidePanel] = useState<'settings' | null>(null);
   const [gridAnchor, setGridAnchor] = useState<HTMLElement | null>(null);
   const [navigationRequest, setNavigationRequest] = useState<BuilderNavigationRequest>();
-  const [reviewGuidance, setReviewGuidance] = useState<string>();
+
   const [activeFieldDrag, setActiveFieldDrag] = useState<{
     field: AdmissionFormField;
     width?: number;
@@ -169,77 +172,84 @@ export function FormBuilderSections({
     setCanvasMode('design');
     setMobilePanel('form');
   };
-  const selectCanvasField = useCallback((sectionId: string, fieldId: string | null) => {
-    const selectedField = effectiveForm.sections
-      .find((section) => section.id === sectionId)
-      ?.fields.find((field) => field.id === fieldId);
-    selectSection(sectionId, fieldId);
-    if (selectedField?.inheritedFrom) {
-      inheritance?.selectField(selectedField);
-      setSidePanel(null);
-      return;
-    }
-    inheritance?.selectField(null);
-    if (fieldId) setSidePanel('settings');
-    else setSidePanel(null);
-  }, [effectiveForm.sections, inheritance, selectSection]);
-  const selectIssue = useCallback((target: BuilderIssueTarget) => {
-    setCanvasMode('design');
-    setMobilePanel('form');
-    let resolved = target;
-    if (target.kind === 'field') {
-      const base = formik.values.sections
-        .flatMap((section) => section.fields)
-        .find((field) => field.id === target.fieldId);
-      const section = effectiveForm.sections.find((item) =>
-        item.fields.some(
-          (field) =>
-            field.id === target.fieldId ||
+  const selectCanvasField = useCallback(
+    (sectionId: string, fieldId: string | null) => {
+      const selectedField = effectiveForm.sections
+        .find((section) => section.id === sectionId)
+        ?.fields.find((field) => field.id === fieldId);
+      selectSection(sectionId, fieldId);
+      if (selectedField?.inheritedFrom) {
+        inheritance?.selectField(selectedField);
+        setSidePanel(null);
+        return;
+      }
+      inheritance?.selectField(null);
+      if (fieldId) setSidePanel('settings');
+      else setSidePanel(null);
+    },
+    [effectiveForm.sections, inheritance, selectSection]
+  );
+  const selectIssue = useCallback(
+    (target: BuilderIssueTarget) => {
+      setCanvasMode('design');
+      setMobilePanel('form');
+      let resolved = target;
+      if (target.kind === 'field') {
+        const base = formik.values.sections
+          .flatMap((section) => section.fields)
+          .find((field) => field.id === target.fieldId);
+        const section = effectiveForm.sections.find((item) =>
+          item.fields.some(
+            (field) =>
+              field.id === target.fieldId ||
+              Boolean(
+                target.fieldIdentity && field.inheritedFrom?.fieldIdentity === target.fieldIdentity
+              ) ||
+              Boolean(base?.fieldIdentity && base.fieldIdentity === field.fieldIdentity) ||
+              Boolean(
+                base?.bindingType === 0 &&
+                field.bindingType === 0 &&
+                base.bindingKey &&
+                field.bindingKey?.toLowerCase() === base.bindingKey.toLowerCase()
+              )
+          )
+        );
+        const field = section?.fields.find(
+          (item) =>
+            item.id === target.fieldId ||
             Boolean(
-              target.fieldIdentity && field.inheritedFrom?.fieldIdentity === target.fieldIdentity
+              target.fieldIdentity && item.inheritedFrom?.fieldIdentity === target.fieldIdentity
             ) ||
-            Boolean(base?.fieldIdentity && base.fieldIdentity === field.fieldIdentity) ||
+            Boolean(base?.fieldIdentity && base.fieldIdentity === item.fieldIdentity) ||
             Boolean(
               base?.bindingType === 0 &&
-              field.bindingType === 0 &&
+              item.bindingType === 0 &&
               base.bindingKey &&
-              field.bindingKey?.toLowerCase() === base.bindingKey.toLowerCase()
+              item.bindingKey?.toLowerCase() === base.bindingKey.toLowerCase()
             )
-        )
-      );
-      const field = section?.fields.find(
-        (item) =>
-          item.id === target.fieldId ||
-          Boolean(
-            target.fieldIdentity && item.inheritedFrom?.fieldIdentity === target.fieldIdentity
-          ) ||
-          Boolean(base?.fieldIdentity && base.fieldIdentity === item.fieldIdentity) ||
-          Boolean(
-            base?.bindingType === 0 &&
-            item.bindingType === 0 &&
-            base.bindingKey &&
-            item.bindingKey?.toLowerCase() === base.bindingKey.toLowerCase()
-          )
-      );
-      if (section && field) {
-        resolved = {
-          ...target,
-          sectionId: section.id,
-          stepId: getSectionStepId(section),
-          fieldId: field.id,
-          owner: field.inheritedFrom ? 'inquiry' : 'registration',
-        };
-        selectCanvasField(section.id, field.id);
+        );
+        if (section && field) {
+          resolved = {
+            ...target,
+            sectionId: section.id,
+            stepId: getSectionStepId(section),
+            fieldId: field.id,
+            owner: field.inheritedFrom ? 'inquiry' : 'registration',
+          };
+          selectCanvasField(section.id, field.id);
+        }
+      } else if (target.kind !== 'form') {
+        selectCanvasField(target.sectionId, null);
       }
-    } else if (target.kind !== 'form') {
-      selectCanvasField(target.sectionId, null);
-    }
-    setReviewGuidance(getBuilderIssueRecoveryGuidance(resolved));
-    setNavigationRequest((previous) => ({
-      target: resolved,
-      sequence: (previous?.sequence ?? 0) + 1,
-    }));
-  }, [effectiveForm.sections, formik.values.sections, selectCanvasField]);
+      const guidance = getBuilderIssueRecoveryGuidance(resolved);
+      if (guidance) shikshaMitraToast.warning({ message: guidance });
+      setNavigationRequest((previous) => ({
+        target: resolved,
+        sequence: (previous?.sequence ?? 0) + 1,
+      }));
+    },
+    [effectiveForm.sections, formik.values.sections, selectCanvasField]
+  );
   const handledPublishIssue = useRef<BuilderIssueTarget>(undefined);
   useEffect(() => {
     if (!publishIssueTarget || handledPublishIssue.current === publishIssueTarget) return;
@@ -281,8 +291,8 @@ export function FormBuilderSections({
             keepSidePlacement
             title={
               <Box component="span" sx={{ display: 'block', maxWidth: '10rem' }}>
-                Configure the field, answer options and visibility. Changes stay in this draft
-                until you save.
+                Configure the field, answer options and visibility. Changes stay in this draft until
+                you save.
               </Box>
             }
           />
@@ -292,13 +302,6 @@ export function FormBuilderSections({
         </IconButton>
       </Stack>
       <Divider />
-      {reviewGuidance && (
-        <Box sx={{ p: 1.5 }}>
-          <StudentFeedback notificationKey="STU-0366" presentation="inline" severity="warning">
-            {reviewGuidance}
-          </StudentFeedback>
-        </Box>
-      )}
       <Box sx={{ flex: 1, minHeight: 0 }}>
         {selectedBaseLocation &&
         builderFormik.values.sections[selectedBaseLocation.sectionIndex]?.fields[
@@ -320,10 +323,13 @@ export function FormBuilderSections({
             formik={builderFormik}
             selectedLocation={selectedBaseLocation}
             navigationRequest={navigationRequest}
-            linkedFieldReason={selection.selectedFieldId
-              ? getLinkedFieldDeletionReasons(effectiveForm.sections.flatMap((section) => section.fields))
-                .get(selection.selectedFieldId)
-              : undefined}
+            linkedFieldReason={
+              selection.selectedFieldId
+                ? getLinkedFieldDeletionReasons(
+                    effectiveForm.sections.flatMap((section) => section.fields)
+                  ).get(selection.selectedFieldId)
+                : undefined
+            }
           />
         )}
       </Box>
@@ -332,7 +338,13 @@ export function FormBuilderSections({
         justifyContent="flex-end"
         sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}
       >
-        <Button size="small" variant="contained" onClick={() => setSidePanel(null)}>
+        <Button
+          type="button"
+          size="small"
+          variant="contained"
+          startIcon={<Iconify icon={GlobalIcons.approvedIcon} width={18} aria-hidden />}
+          onClick={() => setSidePanel(null)}
+        >
           Done
         </Button>
       </Stack>
@@ -394,6 +406,34 @@ export function FormBuilderSections({
                 loading={commands.systemFieldsQuery.isLoading}
                 error={commands.systemFieldsQuery.isError}
                 onAddField={commands.addField}
+                onViewExisting={(binding) => {
+                  const section = effectiveForm.sections.find((item) =>
+                    item.fields.some(
+                      (field) =>
+                        field.bindingType === 0 &&
+                        field.bindingKey?.toLowerCase() === binding.toLowerCase()
+                    )
+                  );
+                  const field = section?.fields.find(
+                    (item) =>
+                      item.bindingType === 0 &&
+                      item.bindingKey?.toLowerCase() === binding.toLowerCase()
+                  );
+                  if (!section || !field) return;
+                  setCanvasMode('design');
+                  setMobilePanel('form');
+                  selectCanvasField(section.id, field.id);
+                  setNavigationRequest((previous) => ({
+                    sequence: (previous?.sequence ?? 0) + 1,
+                    target: {
+                      kind: 'field',
+                      sectionId: section.id,
+                      stepId: getSectionStepId(section),
+                      fieldId: field.id,
+                      owner: field.inheritedFrom ? 'inquiry' : 'registration',
+                    },
+                  }));
+                }}
                 onAddGroupSection={(name, fields) => {
                   if (!commands.addGroupSection(name, fields)) return;
                   setCanvasMode('design');
@@ -435,7 +475,7 @@ export function FormBuilderSections({
                       aria-label="Add Step"
                       size="small"
                       variant="outlined"
-                      startIcon={<Iconify icon="mdi:plus" />}
+                      startIcon={<Iconify icon="mdi:plus" width={18} />}
                       disabled={formik.isSubmitting}
                       onClick={() => addStep()}
                     >
@@ -446,7 +486,7 @@ export function FormBuilderSections({
                     aria-label="Add Section"
                     size="small"
                     variant="outlined"
-                    startIcon={<Iconify icon="mdi:plus" />}
+                    startIcon={<Iconify icon="mdi:plus" width={18} />}
                     onClick={() => {
                       commands.addSection();
                       setCanvasMode('design');
@@ -458,8 +498,8 @@ export function FormBuilderSections({
                   <Button
                     size="small"
                     variant="outlined"
-                    startIcon={<Iconify icon="mdi:view-grid-outline" />}
-                    endIcon={<Iconify icon="mdi:chevron-down" />}
+                    startIcon={<Iconify icon="mdi:view-grid-outline" width={18} />}
+                    endIcon={<Iconify icon="mdi:chevron-down" width={18} />}
                     aria-expanded={Boolean(gridAnchor)}
                     aria-controls={gridAnchor ? 'admission-form-grid-menu' : undefined}
                     onClick={(event) => setGridAnchor(event.currentTarget)}
@@ -472,6 +512,7 @@ export function FormBuilderSections({
                     startIcon={
                       <Iconify
                         icon={canvasMode === 'preview' ? 'mdi:pencil-outline' : 'mdi:eye-outline'}
+                        width={18}
                       />
                     }
                     disabled={canvasMode !== 'preview' && !previewReady}
@@ -513,10 +554,17 @@ export function FormBuilderSections({
                     onMoveComplete={(sectionId, fieldId) => {
                       selection.selectForReorder(sectionId, fieldId);
                       const section = effectiveForm.sections.find((item) => item.id === sectionId);
-                      if (section) setNavigationRequest((previous) => ({
-                        target: { kind: 'field', owner: 'registration', sectionId, fieldId, stepId: getSectionStepId(section) },
-                        sequence: (previous?.sequence ?? 0) + 1,
-                      }));
+                      if (section)
+                        setNavigationRequest((previous) => ({
+                          target: {
+                            kind: 'field',
+                            owner: 'registration',
+                            sectionId,
+                            fieldId,
+                            stepId: getSectionStepId(section),
+                          },
+                          sequence: (previous?.sequence ?? 0) + 1,
+                        }));
                     }}
                     newStepId={newStepId}
                     onNewStepReady={setNewStepId}
@@ -554,11 +602,6 @@ export function FormBuilderSections({
             </Box>
           }
         >
-          {reviewGuidance && sidePanel === null && (
-            <StudentFeedback notificationKey="STU-0366" presentation="inline" severity="warning">
-              {reviewGuidance}
-            </StudentFeedback>
-          )}
           <FormBuilderValidationNotice formik={formik} onSelectIssue={selectIssue} />
           {!desktop && footer}
         </FormBuilderWorkspace>

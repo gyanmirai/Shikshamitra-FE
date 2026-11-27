@@ -9,7 +9,11 @@ const stepperScrollWrapper =
 const stepperHorizontalTrack =
   '& > div > form > [data-simplebar] > .simplebar-track.simplebar-horizontal';
 
-export const getFormWizardLayout = (activeStep: number, compactProgress: boolean): SxProps<Theme> => ({
+export const getFormWizardLayout = (
+  activeStep: number,
+  compactProgress: boolean,
+  stepSlots?: number
+): SxProps<Theme> => ({
   height: 1,
   minHeight: 0,
   minWidth: 0,
@@ -34,6 +38,11 @@ export const getFormWizardLayout = (activeStep: number, compactProgress: boolean
     py: { md: compactProgress ? 0 : 1 },
     flexShrink: 0,
     display: { xs: 'none', md: 'flex' },
+    // Reserve Print layout's slot only while a new form can switch types.
+    ...(stepSlots && {
+      justifyContent: 'center',
+      '& > .MuiStep-root': { flex: `0 0 ${100 / stepSlots}%` },
+    }),
     '& .MuiStepConnector-root.MuiStepConnector-alternativeLabel': {
       top: 21,
       right: 'calc(50% + 4px)',

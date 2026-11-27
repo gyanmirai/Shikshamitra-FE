@@ -396,7 +396,7 @@ it('never renders the empty result during scope restoration or before the first 
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
 });
 
-it('uses thin refresh progress and leaves handoff feedback to the affected row', () => {
+it('marks retained rows as refreshing and leaves handoff feedback to the affected row', () => {
   Object.assign(state, {
     board: 'board',
     medium: 'medium',
@@ -408,6 +408,7 @@ it('uses thin refresh progress and leaves handoff feedback to the affected row',
   expect(state.table.isLoading).toBe(false);
   expect(screen.getByText('QA Loading')).toBeInTheDocument();
   expect(state.table.isRefreshing).toBe(true);
+  expect(state.table.refreshIndicator).toBe('none');
   state.moving = true;
   view.rerender(<AdmissionInquiriesScreen />);
   expect(screen.getByText('QA Loading')).toBeInTheDocument();

@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react';
 
-import COLORS from 'src/theme/core/colors.json';
 import { Page, Text, View, Image, Document } from '@react-pdf/renderer';
+import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 
+import { AdmissionPrintPageBorder } from './form-print-page-border';
+import { getLegacyAdmissionPrintColors } from './form-print-appearance';
+import { PrintSectionStart, ContinuedPrintSection } from './form-print-continued-section';
 import { PRINT_PAPER_POINTS, formatAdmissionPrintPhotoSize } from './form-print-advanced-layout';
 import { estimatePrintTextLines, estimateStandardPrintFieldHeight } from './form-print-text-layout';
 
@@ -37,7 +40,8 @@ export function AdmissionPaperTemplate({
   const fontSize = spacious ? 10 : 9;
   const [pageWidth, pageHeight] = PRINT_PAPER_POINTS.A4;
   const footerReserve = 44;
-  const border = COLORS.grey[500];
+  const colors = getLegacyAdmissionPrintColors(model.settings.advanced?.style);
+  const { border } = colors;
   const schoolHeader = model.settings.showSchoolHeader;
   const addressLines = schoolHeader
     ? (branding.addressLines ?? []).filter((line) => line.trim())
@@ -226,7 +230,7 @@ export function AdmissionPaperTemplate({
             ? renderChoices(field)
             : renderWritingSpace(field, rowCount)}
       {model.mode === 'blank' && field.conditional ? (
-        <Text style={{ fontSize: 7, color: COLORS.grey[600], marginTop: 3 }}>
+        <Text style={{ fontSize: 7, color: colors.mutedText, marginTop: 3 }}>
           {textRuns(model.labels.conditional)}
         </Text>
       ) : null}
@@ -244,9 +248,14 @@ export function AdmissionPaperTemplate({
           paddingHorizontal: margin,
           fontFamily: baseFamily,
           fontSize,
-          color: COLORS.grey[800],
+          color: colors.text,
         }}
       >
+        <AdmissionPrintPageBorder
+          border={resolveAdmissionPrintAdvancedSettings(model.settings.advanced).border}
+          color={border}
+          margin={margin}
+        />
         <View
           fixed
           style={{
@@ -295,7 +304,7 @@ export function AdmissionPaperTemplate({
               marginTop: 9,
               paddingBottom: 7,
               borderBottomWidth: 1,
-              borderBottomColor: COLORS.grey[700],
+              borderBottomColor: colors.strongBorder,
             }}
           >
             <View style={{ width: '65%', flexDirection: 'row', paddingRight: 25 }}>
@@ -314,6 +323,7 @@ export function AdmissionPaperTemplate({
         </View>
         {model.steps.flatMap((step) =>
           step.sections.flatMap((section, sectionIndex) => {
+            const tracker = { started: false };
             sectionNumber += 1;
             const rows = section.entries.flatMap((entry) =>
               paperRows(
@@ -326,8 +336,10 @@ export function AdmissionPaperTemplate({
                 lastEntryRow: rowIndex === entryRows.length - 1,
               }))
             );
+            if (!rows.length) return [];
             const sectionFields = rows.flatMap(({ row }) => row);
             const keepTogether =
+              model.settings.advanced?.flow?.smartPageFitting === false &&
               headerHeight < 300 &&
               !section.repeatable &&
               rows.length <= 3 &&
@@ -351,6 +363,7 @@ export function AdmissionPaperTemplate({
                   wrap={canFlow}
                   style={{ marginBottom: index === rows.length - 1 ? (spacious ? 13 : 10) : 0 }}
                 >
+                  {firstRow && <PrintSectionStart tracker={tracker} />}
                   {firstRow &&
                     sectionIndex === 0 &&
                     model.steps.length > 1 &&
@@ -369,7 +382,7 @@ export function AdmissionPaperTemplate({
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: COLORS.grey[100],
+                        backgroundColor: colors.sectionFill,
                         borderWidth: 0.7,
                         borderColor: border,
                         paddingVertical: 6,
@@ -421,7 +434,18 @@ export function AdmissionPaperTemplate({
                     {sectionRows}
                   </View>,
                 ]
-              : sectionRows;
+              : [
+                  <ContinuedPrintSection
+                    key={section.key}
+                    title={section.title}
+                    language={model.language}
+                    fontFamily={model.language === 'hi' ? devanagariFamily : baseFamily}
+                    fontSize={fontSize}
+                    tracker={tracker}
+                  >
+                    {sectionRows}
+                  </ContinuedPrintSection>,
+                ];
           })
         )}
         {model.settings.showSignature ? (

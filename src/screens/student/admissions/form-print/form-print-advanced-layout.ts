@@ -40,9 +40,8 @@ export function advancedPrintGeometry(
 ) {
   const size = PRINT_PAPER_POINTS[model.settings.paperSize] ?? PRINT_PAPER_POINTS.A4;
   const [width, height] = options.paper.orientation === 'landscape' ? [...size].reverse() : size;
-  const edge = options.border.enabled ? (options.border.inset + 2) * PRINT_MM : 0;
   const margins = Object.fromEntries(
-    Object.entries(options.paper.margins).map(([side, mm]) => [side, Math.max(mm * PRINT_MM, edge)])
+    Object.entries(options.paper.margins).map(([side, mm]) => [side, mm * PRINT_MM])
   ) as Record<'top' | 'right' | 'bottom' | 'left', number>;
   return { width, height, margins, contentWidth: width - margins.left - margins.right };
 }

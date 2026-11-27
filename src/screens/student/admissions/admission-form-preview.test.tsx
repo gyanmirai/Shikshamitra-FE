@@ -113,7 +113,7 @@ describe('admission form preview return controls', () => {
   });
 
   it.each([0, 1] as const)(
-    'returns purpose %s to its originating list from either control',
+    'returns purpose %s to its originating list from the breadcrumb back control',
     async (purpose) => {
       mocks.form!.purpose = purpose;
       const origin = `${studentPaths.enrollment.settings.forms}?view=${purpose === 1 ? 'registration' : 'inquiry'}&page=3&search=Test`;
@@ -123,10 +123,8 @@ describe('admission form preview return controls', () => {
       });
       fireEvent.click(screen.getByRole('button', { name: 'Back' }));
       expect(mocks.replace).toHaveBeenLastCalledWith(origin);
-      const close = screen.getByRole('button', { name: 'Back to Forms' });
-      expect(close).toHaveClass('MuiButton-outlined');
-      fireEvent.click(close);
-      expect(mocks.replace).toHaveBeenLastCalledWith(origin);
+      expect(screen.queryByRole('button', { name: 'Back to Forms' })).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Form Preview' })).toBeVisible();
     }
   );
 
@@ -136,7 +134,7 @@ describe('admission form preview return controls', () => {
     mocks.isError = state === 'error';
     render(<AdmissionFormPreviewScreen />);
     expect(screen.getByRole('button', { name: 'Back' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Back to Forms' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(mocks.replace).toHaveBeenCalledWith(studentPaths.enrollment.settings.forms);
   });
 
@@ -145,7 +143,7 @@ describe('admission form preview return controls', () => {
     await act(async () => {
       render(<AdmissionFormPreviewScreen />);
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Back to Forms' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(mocks.replace).toHaveBeenCalledWith(studentPaths.enrollment.settings.forms);
   });
   it('uses a sole approved saved source and displays its readonly context before local Registration fields', async () => {

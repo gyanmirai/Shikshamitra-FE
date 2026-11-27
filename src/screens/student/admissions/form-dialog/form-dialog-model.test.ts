@@ -14,9 +14,9 @@ import {
 } from './form-dialog-model';
 
 describe('admission form field codes', () => {
-  it('uses Boxed Grid for editable legacy Registrations and retains saved Structured Classic', () => {
+  it('applies Boxed Grid to new registrations and retains each saved template', () => {
     const legacy = getBlankAdmissionFormInitialValues(1);
-    expect(legacy.printSettings).toEqual({
+    expect(legacy.printSettings).toMatchObject({
       template: 'boxed-grid',
       layout: 'compact',
       paperSize: 'A4',
@@ -47,11 +47,11 @@ describe('admission form field codes', () => {
     expect(getAdmissionFormPrintSettings().template).toBe('simple');
     expect(
       getAdmissionFormInitialValues({ ...editing, printSettings: null }).printSettings?.template
-    ).toBe('boxed-grid');
+    ).toBe('simple');
     const legacySettings = { ...settings, template: 'simple' as const };
     expect(
       getAdmissionFormInitialValues({ ...editing, printSettings: legacySettings }).printSettings
-    ).toEqual({ ...legacySettings, template: 'boxed-grid' });
+    ).toEqual(legacySettings);
     expect(
       getAdmissionFormInitialValues({ ...editing, purpose: 0, printSettings: legacySettings })
         .printSettings

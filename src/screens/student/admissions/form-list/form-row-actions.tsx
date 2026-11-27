@@ -31,7 +31,7 @@ export function getFormRowActionVisibility(
 
   return {
     edit: canManage && isDraft,
-    validate: canManage && isDraft,
+    validate: canManage && isDraft && !canPublish,
     publish: canPublish && isDraft,
     delete: canDelete && isDraft,
     history: true,
@@ -118,11 +118,11 @@ export function FormRowActions({
       icon: 'mdi:history',
       onClick: onHistory,
     });
-
   return (
     <AdaptiveThreeDotsActions
       placement="right-top"
-      moreLabel={`More actions for ${form.name}, version ${form.version}`}
+      popoverSlotProps={{ paper: { sx: { ml: -1 } } }}
+      moreLabel={`More Actions `}
       directActionLimit={2}
       collapseOnOverflow={false}
       sx={{

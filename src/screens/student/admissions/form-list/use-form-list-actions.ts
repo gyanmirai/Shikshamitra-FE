@@ -12,11 +12,9 @@ import { useRouter } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useRef, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { usePendingNavigation } from 'src/hooks/use-pending-navigation';
 import {
   useLazyGetAdmissionFormQuery,
-  useCloneAdmissionFormMutation,
   useCreateAdmissionFormMutation,
   useDeleteAdmissionFormMutation,
   useUpdateAdmissionFormMutation,
@@ -27,12 +25,13 @@ import {
 
 import { getAdmissionFormAccess } from '../form-access';
 import { getAdmissionFormPreviewUrl } from '../form-preview/form-preview-navigation';
-import { SavedAdmissionFormValidationError } from '../form-dialog/form-publish-validation';
 import { getInquiryFormConfigurationIssues } from '../admission-inquiry-field-bindings';
+import { SavedAdmissionFormValidationError } from '../form-dialog/form-publish-validation';
 import {
   getUnchangedVersionMessage,
   UnchangedAdmissionFormError,
   getUnchangedVersionPublishError,
+  admissionFormActionErrorMessage,
   formatAdmissionFormValidationError,
   formatAdmissionFormValidationErrors,
 } from './form-validation-errors';
@@ -50,7 +49,6 @@ export function useFormListActions() {
   const { canManage, canPublish, canDelete } = getAdmissionFormAccess(permissions);
   const [create, createState] = useCreateAdmissionFormMutation();
   const [update, updateState] = useUpdateAdmissionFormMutation();
-  const [clone, cloneState] = useCloneAdmissionFormMutation();
   const [validate, validateState] = useValidateAdmissionFormMutation();
   const [publish, publishState] = usePublishAdmissionFormMutation();
   const [createVersion] = useCreateAdmissionFormVersionMutation();
@@ -59,11 +57,9 @@ export function useFormListActions() {
   const [creatingVersionId, setCreatingVersionId] = useState<string | null>(null);
   const [deleteForm, deleteState] = useDeleteAdmissionFormMutation();
   const [pendingDelete, setPendingDelete] = useState<AdmissionForm | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [checkingDelete, setCheckingDelete] = useState(false);
   const [pendingPublish, setPendingPublish] = useState<AdmissionForm | null>(null);
   const [publishIssues, setPublishIssues] = useState<string[] | null>(null);
-  const [pendingClone, setPendingClone] = useState<AdmissionForm | null>(null);
   const [historyForm, setHistoryForm] = useState<AdmissionForm | null>(null);
   const checkUnchangedVersion = useCallback(
     async (id: string) => getUnchangedVersionMessage((await validate(id).unwrap()).errors),
@@ -76,7 +72,7 @@ export function useFormListActions() {
       return true;
     } catch (error) {
       shikshaMitraToast.error({
-        message: parseApiProblemDetail(error).detail || 'Unable to complete the form action.',
+        message: admissionFormActionErrorMessage(error, 'Unable to complete the form action. Please try again.'),
       });
       return false;
     }
@@ -150,7 +146,7 @@ export function useFormListActions() {
       if (problem?.data?.errorCode === 'Admissions.FormInvalidDefinition' && typeof publishErrors === 'string') {
         throw new SavedAdmissionFormValidationError(publishErrors.split(';').map((issue) => issue.trim()).filter(Boolean), values);
       }
-      throw new Error(`Draft saved, but not published. ${parseApiProblemDetail(error).detail}`);
+      throw new Error(`Draft saved, but not published. ${admissionFormActionErrorMessage(error, 'Review the form and try again.')}`);
     }
   };
   const requestVersion = async (id: string) => {
@@ -191,19 +187,6 @@ export function useFormListActions() {
     pendingNavigationId: navigation.pendingKey,
     preview: (id: string, returnTo?: string) =>
       navigation.navigate(id, getAdmissionFormPreviewUrl(id, returnTo)),
-    requestClone: (form: AdmissionForm) => setPendingClone(form),
-    pendingClone,
-    clearPendingClone: () => setPendingClone(null),
-    confirmClone: (body: { name: string; code: string; description?: string | null }) =>
-      pendingClone
-        ? run(() => clone({ id: pendingClone.id, body }).unwrap(), 'Form cloned as a draft').then(
-            (ok) => {
-              if (ok) setPendingClone(null);
-              return ok;
-            }
-          )
-        : Promise.resolve(false),
-    cloning: cloneState.isLoading,
     validate: (id: string) =>
       run(async () => {
         const result = await validate(id).unwrap();
@@ -219,7 +202,7 @@ export function useFormListActions() {
         setPendingPublish(null);
         shikshaMitraToast.error({
           message:
-            parseApiProblemDetail(error).detail || 'Unable to check whether this form is ready.',
+            admissionFormActionErrorMessage(error, 'Unable to check whether this form is ready. Please try again.'),
         });
       }
     },
@@ -251,7 +234,7 @@ export function useFormListActions() {
       } catch (error) {
         const unchangedVersion = getUnchangedVersionPublishError(error);
         if (unchangedVersion) setPublishIssues([unchangedVersion.message]);
-        else shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
+        else shikshaMitraToast.error({ message: admissionFormActionErrorMessage(error, 'Unable to publish this form. Please try again.') });
         return false;
       }
     },
@@ -266,25 +249,19 @@ export function useFormListActions() {
         return await requestVersion(id);
       } catch (error) {
         shikshaMitraToast.error({
-          message: parseApiProblemDetail(error).detail || 'Unable to create the form draft.',
+          message: admissionFormActionErrorMessage(error, 'Unable to create the form draft. Please try again.'),
         });
         return false;
       }
     },
-    requestDelete: (form: AdmissionForm) => {
-      setDeleteError(null);
-      setPendingDelete(form);
-    },
+    requestDelete: setPendingDelete,
     pendingDelete,
-    deleteError,
     clearPendingDelete: () => {
       if (checkingDelete || deleteState.isLoading) return;
       setPendingDelete(null);
-      setDeleteError(null);
     },
     confirmDelete: async () => {
       if (!pendingDelete || checkingDelete || deleteState.isLoading) return false;
-      setDeleteError(null);
       setCheckingDelete(true);
       try {
         // The list row can be stale; confirm against a fresh version before deleting.
@@ -306,9 +283,7 @@ export function useFormListActions() {
         setPendingDelete(null);
         return true;
       } catch (error) {
-        const message = parseApiProblemDetail(error).detail;
-        setDeleteError(message);
-        shikshaMitraToast.error({ message });
+        shikshaMitraToast.error({ message: admissionFormActionErrorMessage(error, 'Unable to delete this draft. Please try again.') });
         return false;
       } finally {
         setCheckingDelete(false);

@@ -7,12 +7,12 @@ import type {
 
 import { useState } from 'react';
 import { isEqual } from 'src/utils/helper';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { FormSectionCard } from 'src/components/form-section-card';
 import {
   Box,
-  Grid,
   Stack,
   Radio,
   Button,
@@ -73,125 +73,125 @@ export function FormBuilderDetails({
       spacing={2}
       sx={{ width: 1, minWidth: 0, maxWidth: 1120, mx: 'auto', p: { xs: 1.5, sm: 2 } }}
     >
-      <SectionCard gridProps={{ spacing: 0 }} paperProps={{ sx: { mb: 0, p: { xs: 2, sm: 2 } } }}>
-        <Grid size={{ xs: 12 }}>
-          <Typography
-            component="h2"
-            variant="h6"
-            sx={{ pb: 1, mb: 1.5, borderBottom: '1px dashed', borderColor: 'divider' }}
-          >
-            Form Type
-          </Typography>
-          <RadioGroup
-            row
-            name="purpose"
-            aria-label="Form Type"
-            value={purpose}
-            onChange={(event) => {
-              const nextPurpose = Number(event.target.value) as AdmissionFormPurpose;
-              if (nextPurpose === purpose || editing) return;
-              if (isEqual(starterStructure(formik.values), starterStructure(starter.current))) {
-                applyFormType(nextPurpose);
-              } else setPendingPurpose(nextPurpose);
-            }}
-            onBlur={() => formik.setFieldTouched('purpose', true)}
-            sx={{
-              display: 'grid',
-              gap: 1.5,
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-            }}
-          >
-            {[
-              {
-                value: 0,
-                label: 'Inquiry Form',
-                description: 'Start with student and parent details.',
-                icon: 'mdi:account-question-outline',
-              },
-              {
-                value: 1,
-                label: 'Registration Form',
-                description: 'Start with student, family, address and academic details.',
-                icon: 'mdi:file-document-edit-outline',
-              },
-            ].map((option) => (
-              <FormControlLabel
-                key={option.value}
-                value={option.value}
-                disabled={editing || formik.isSubmitting}
-                control={
-                  <Radio
-                    size="small"
-                    icon={<Iconify icon="mdi:radiobox-blank" width={24} />}
-                    checkedIcon={<Iconify icon="mdi:check-circle" width={24} />}
+      <FormSectionCard
+        icon={GlobalIcons.doc}
+        title="Form Type"
+        titleTypographyProps={{ tabIndex: -1 }}
+        descriptionTooltip="Choose whether to collect initial inquiries or detailed registrations."
+        contentSpacing={1.5}
+      >
+        <RadioGroup
+          row
+          name="purpose"
+          aria-label="Form Type"
+          value={purpose}
+          onChange={(event) => {
+            const nextPurpose = Number(event.target.value) as AdmissionFormPurpose;
+            if (nextPurpose === purpose || editing) return;
+            if (isEqual(starterStructure(formik.values), starterStructure(starter.current))) {
+              applyFormType(nextPurpose);
+            } else setPendingPurpose(nextPurpose);
+          }}
+          onBlur={() => formik.setFieldTouched('purpose', true)}
+          sx={{
+            display: 'grid',
+            gap: 1.5,
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+          }}
+        >
+          {[
+            {
+              value: 0,
+              label: 'Inquiry Form',
+              description: 'Start with student and parent details.',
+              icon: 'mdi:account-question-outline',
+            },
+            {
+              value: 1,
+              label: 'Registration Form',
+              description: 'Start with student, family, address and academic details.',
+              icon: 'mdi:file-document-edit-outline',
+            },
+          ].map((option) => (
+            <FormControlLabel
+              key={option.value}
+              value={option.value}
+              disabled={editing || formik.isSubmitting}
+              control={
+                <Radio
+                  size="small"
+                  icon={<Iconify icon="mdi:radiobox-blank" width={24} />}
+                  checkedIcon={<Iconify icon="mdi:check-circle" width={24} />}
+                  sx={{
+                    p: 0,
+                    '&.Mui-checked': { color: 'success.main' },
+                    '&.Mui-checked.Mui-disabled': { color: 'success.main' },
+                  }}
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', minWidth: 0 }}>
+                  <Box
                     sx={{
-                      p: 0,
-                      '&.Mui-checked': { color: 'success.main' },
-                      '&.Mui-checked.Mui-disabled': { color: 'success.main' },
+                      display: 'grid',
+                      placeItems: 'center',
+                      width: 36,
+                      height: 36,
+                      flexShrink: 0,
+                      borderRadius: 1,
+                      bgcolor: 'action.hover',
+                      color: 'text.secondary',
                     }}
-                  />
-                }
-                label={
-                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', minWidth: 0 }}>
-                    <Box
-                      sx={{
-                        display: 'grid',
-                        placeItems: 'center',
-                        width: 36,
-                        height: 36,
-                        flexShrink: 0,
-                        borderRadius: 1,
-                        bgcolor: 'action.hover',
-                        color: 'text.secondary',
-                      }}
-                    >
-                      <Iconify icon={option.icon} width={20} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2">{option.label}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {option.description}
-                      </Typography>
-                    </Box>
+                  >
+                    <Iconify icon={option.icon} width={20} />
                   </Box>
-                }
-                labelPlacement="start"
-                sx={{
-                  m: 0,
-                  p: 1.25,
-                  minHeight: { xs: 64, sm: 72, lg: 64 },
-                  minWidth: 0,
-                  justifyContent: 'space-between',
-                  gap: 1,
-                  border: 1,
-                  borderRadius: 1.5,
-                  borderColor: purpose === option.value ? 'text.primary' : 'divider',
-                  bgcolor: 'background.paper',
-                  '& .MuiFormControlLabel-label': { minWidth: 0, color: 'text.primary' },
-                }}
-              />
-            ))}
-          </RadioGroup>
-          {purposeError && <FormHelperText error>{formik.errors.purpose}</FormHelperText>}
-        </Grid>
-      </SectionCard>
-      <SectionCard gridProps={{ spacing: 0 }} paperProps={{ sx: { mb: 0, p: { xs: 2, sm: 2 } } }}>
-        <Grid size={{ xs: 12 }}>
-          <Typography
-            component="h2"
-            variant="h6"
-            tabIndex={-1}
-            sx={{ pb: 1, mb: 1.5, borderBottom: '1px dashed', borderColor: 'divider' }}
-          >
-            Form Details
-          </Typography>
-          <FormBuilderDetailFields
-            formik={formik}
-            nameConflictMessage={nameConflictMessage}
-            checkingName={checkingName}
-          />
-        </Grid>
-      </SectionCard>
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      color={
+                        editing && purpose !== option.value ? 'text.secondary' : 'text.primary'
+                      }
+                      sx={{ fontWeight: 'fontWeightBold' }}
+                    >
+                      {option.label}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.description}
+                    </Typography>
+                  </Box>
+                </Box>
+              }
+              labelPlacement="start"
+              sx={{
+                m: 0,
+                p: 1.25,
+                minHeight: { xs: 64, sm: 72, lg: 64 },
+                minWidth: 0,
+                justifyContent: 'space-between',
+                gap: 1,
+                border: 1,
+                borderRadius: 1.5,
+                borderColor: purpose === option.value ? 'text.primary' : 'divider',
+                bgcolor: 'background.paper',
+                '& .MuiFormControlLabel-label': { minWidth: 0, color: 'text.primary' },
+              }}
+            />
+          ))}
+        </RadioGroup>
+        {purposeError && <FormHelperText error>{formik.errors.purpose}</FormHelperText>}
+      </FormSectionCard>
+      <FormSectionCard
+        icon={GlobalIcons.admissionDetails}
+        title="Form Details"
+        titleTypographyProps={{ tabIndex: -1 }}
+        descriptionTooltip="Set the form name, layout, and languages available to applicants."
+      >
+        <FormBuilderDetailFields
+          formik={formik}
+          nameConflictMessage={nameConflictMessage}
+          checkingName={checkingName}
+        />
+      </FormSectionCard>
       <ConfirmDialog
         open={pendingPurpose !== null}
         onClose={() => setPendingPurpose(null)}

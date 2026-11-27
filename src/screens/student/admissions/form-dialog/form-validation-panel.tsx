@@ -123,9 +123,6 @@ export function FormValidationPanel({ form, onSelectField, onSelectIssue }: Prop
                 No structural issues were found. You can continue reviewing or save this draft.
               </Typography>
             )}
-            <Typography variant="caption" color="text.secondary">
-              Review these items before publishing. Save draft keeps your form private.
-            </Typography>
           </Stack>
         </Box>
       </Popover>

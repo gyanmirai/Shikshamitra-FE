@@ -47,29 +47,24 @@ it('clears refresh feedback after the request settles', () => {
   expect(screen.getByText('Saved applicant')).toBeVisible();
 });
 
-it('uses a compact spinner outside the table header for Admissions refreshes', () => {
-  const view = renderWithProviders(table({ refreshIndicator: 'circular' }));
-  const progress = screen.getByRole('progressbar', { name: 'Refreshing Admission Inquiries' });
-  expect(progress).toHaveClass('MuiCircularProgress-root');
-  expect(screen.getByRole('table')).not.toContainElement(progress);
-  expect(progress.parentElement).toHaveAttribute('data-testid', 'table-refresh-slot');
-  expect(document.querySelector('.MuiLinearProgress-root')).not.toBeInTheDocument();
+it('can retain busy rows without rendering a refresh loader', () => {
+  const view = renderWithProviders(table({ refreshIndicator: 'none' }));
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
   expect(screen.getByText('Saved applicant')).toBeVisible();
   expect(screen.getByText('Dense')).toBeVisible();
 
-  view.rerender(table({ refreshIndicator: 'circular', isRefreshing: false }));
+  view.rerender(table({ refreshIndicator: 'none', isRefreshing: false }));
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   expect(screen.getByRole('table')).not.toHaveAttribute('aria-busy');
   expect(screen.getByText('Saved applicant')).toBeVisible();
 });
 
-it('keeps the refresh spinner in the toolbar without a green bar or header overlap', () => {
-  renderWithProviders(table({ refreshIndicator: 'circular', showToolbar: true }));
-  const progress = screen.getByRole('progressbar', { name: 'Refreshing Admission Inquiries' });
-  expect(progress.parentElement).toHaveAttribute('data-testid', 'table-refresh-slot');
-  expect(screen.getByRole('table')).not.toContainElement(progress);
-  expect(document.querySelector('.MuiLinearProgress-root')).not.toBeInTheDocument();
+it('renders the toolbar actions without a reserved refresh slot', () => {
+  renderWithProviders(table({ refreshIndicator: 'none', showToolbar: true, showColumns: true }));
+  expect(screen.getByRole('button', { name: 'Columns' })).toBeVisible();
+  expect(screen.queryByTestId('table-refresh-slot')).not.toBeInTheDocument();
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
 });
 
 it('keeps initial table skeleton ownership and avoids an empty-state flash', () => {

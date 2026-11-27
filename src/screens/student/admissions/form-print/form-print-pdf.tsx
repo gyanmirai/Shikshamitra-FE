@@ -1,10 +1,16 @@
-import COLORS from 'src/theme/core/colors.json';
 import { pdf, Font, Page, Text, View, Image, Document } from '@react-pdf/renderer';
 import { splitPdfScriptRuns } from 'src/components/customizabaleTable/indic-pdf-export';
+import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 
+import { AdmissionPrintPageBorder } from './form-print-page-border';
 import { AdmissionPaperTemplate } from './form-print-paper-templates';
 import { AdmissionAdvancedPaperTemplate } from './form-print-advanced-template';
+import { PrintSectionStart, ContinuedPrintSection } from './form-print-continued-section';
 import { estimatePrintTextLines, estimateStandardPrintFieldHeight } from './form-print-text-layout';
+import {
+  getLegacyAdmissionPrintColors,
+  usesAdvancedAdmissionPrintLayout,
+} from './form-print-appearance';
 import {
   PRINT_PAPER_POINTS,
   AdmissionPrintLayoutError,
@@ -88,9 +94,9 @@ export async function createAdmissionFormPdfBlob(
   fontBasePath = '/fonts'
 ): Promise<Blob> {
   registerFonts(fontBasePath);
-  const layoutError = getAdmissionPrintLayoutError(model, branding);
-  if (layoutError) throw new AdmissionPrintLayoutError(layoutError);
-  if (model.settings.advanced)
+  if (usesAdvancedAdmissionPrintLayout(model.settings.advanced, model.settings.paperSize)) {
+    const layoutError = getAdmissionPrintLayoutError(model, branding);
+    if (layoutError) throw new AdmissionPrintLayoutError(layoutError);
     return pdf(
       <AdmissionAdvancedPaperTemplate
         model={model}
@@ -99,6 +105,7 @@ export async function createAdmissionFormPdfBlob(
         devanagariFamily={DEVANAGARI_FAMILY}
       />
     ).toBlob();
+  }
   if (
     model.settings.template === 'boxed-grid' ||
     model.settings.template === 'structured-classic'
@@ -115,6 +122,7 @@ export async function createAdmissionFormPdfBlob(
     ).toBlob();
   }
   const spacious = model.settings.layout === 'spacious';
+  const colors = getLegacyAdmissionPrintColors(model.settings.advanced?.style);
   const margin = spacious ? 36 : 28;
   const fieldPadding = spacious ? 9 : 6;
   const fontSize = spacious ? 10 : 9;
@@ -162,7 +170,7 @@ export async function createAdmissionFormPdfBlob(
             height: photoHeight,
             maxWidth: '100%',
             borderWidth: 0.6,
-            borderColor: COLORS.grey[500],
+            borderColor: colors.border,
             padding: 4,
             justifyContent: 'center',
             alignItems: 'center',
@@ -194,7 +202,7 @@ export async function createAdmissionFormPdfBlob(
         <View
           style={{
             borderBottomWidth: 0.5,
-            borderBottomColor: COLORS.grey[500],
+            borderBottomColor: colors.border,
             paddingBottom: 4,
             minHeight:
               model.mode === 'blank' && field.kind === 'multiline'
@@ -219,7 +227,7 @@ export async function createAdmissionFormPdfBlob(
                       width: 8,
                       height: 8,
                       borderWidth: 0.6,
-                      borderColor: COLORS.grey[600],
+                      borderColor: colors.detailBorder,
                       marginRight: 4,
                       marginTop: 2,
                     }}
@@ -237,7 +245,7 @@ export async function createAdmissionFormPdfBlob(
                       width: 8,
                       height: 8,
                       borderWidth: 0.6,
-                      borderColor: COLORS.grey[600],
+                      borderColor: colors.detailBorder,
                       marginRight: 4,
                       marginTop: 2,
                     }}
@@ -254,7 +262,7 @@ export async function createAdmissionFormPdfBlob(
         </View>
       )}
       {model.mode === 'blank' && field.conditional && (
-        <Text style={{ fontSize: 7, marginTop: 2, color: COLORS.grey[600] }}>
+        <Text style={{ fontSize: 7, marginTop: 2, color: colors.mutedText }}>
           {textRuns(model.labels.conditional)}
         </Text>
       )}
@@ -273,9 +281,14 @@ export async function createAdmissionFormPdfBlob(
           paddingHorizontal: margin,
           fontFamily: BASE_FAMILY,
           fontSize,
-          color: COLORS.grey[800],
+          color: colors.text,
         }}
       >
+        <AdmissionPrintPageBorder
+          border={resolveAdmissionPrintAdvancedSettings(model.settings.advanced).border}
+          color={colors.border}
+          margin={margin}
+        />
         <View
           fixed
           style={{
@@ -285,7 +298,7 @@ export async function createAdmissionFormPdfBlob(
             right: margin,
             height: headerHeight - 10,
             borderBottomWidth: 0.7,
-            borderBottomColor: COLORS.grey[500],
+            borderBottomColor: colors.border,
             paddingBottom: 8,
           }}
         >
@@ -329,13 +342,15 @@ export async function createAdmissionFormPdfBlob(
         </View>
         {model.steps.flatMap((step) =>
           step.sections.flatMap((section, sectionIndex) => {
+            const tracker = { started: false };
             const rows = section.entries.flatMap((entry) =>
               fieldRows(
                 entry.fields.filter((field) => model.settings.showPhoto || field.kind !== 'photo'),
                 section.columns
               ).map((row, rowIndex) => ({ row, rowIndex, entry }))
             );
-            return rows.map(({ row, rowIndex, entry }, index) => {
+            if (!rows.length) return [];
+            const sectionRows = rows.map(({ row, rowIndex, entry }, index) => {
               const firstRow = index === 0;
               const rowWidth = (pageWidth - margin * 2) / row.length - fieldPadding * 2;
               const canFlow = row.some(
@@ -354,6 +369,7 @@ export async function createAdmissionFormPdfBlob(
                   wrap={canFlow}
                   style={{ marginBottom: index === rows.length - 1 ? (spacious ? 12 : 8) : 0 }}
                 >
+                  {firstRow && <PrintSectionStart tracker={tracker} />}
                   {firstRow &&
                     sectionIndex === 0 &&
                     (model.steps.length > 1 || step.sections.length > 1) && (
@@ -375,10 +391,10 @@ export async function createAdmissionFormPdfBlob(
                       style={{
                         fontSize: 10,
                         fontWeight: 700,
-                        backgroundColor: COLORS.grey[100],
+                        backgroundColor: colors.sectionFill,
                         padding: 6,
                         borderBottomWidth: 0.5,
-                        borderBottomColor: COLORS.grey[300],
+                        borderBottomColor: colors.lightBorder,
                       }}
                     >
                       {textRuns(section.title)}
@@ -398,6 +414,18 @@ export async function createAdmissionFormPdfBlob(
                 </View>
               );
             });
+            return [
+              <ContinuedPrintSection
+                key={section.key}
+                title={section.title}
+                language={model.language}
+                fontFamily={model.language === 'hi' ? DEVANAGARI_FAMILY : BASE_FAMILY}
+                fontSize={fontSize}
+                tracker={tracker}
+              >
+                {sectionRows}
+              </ContinuedPrintSection>,
+            ];
           })
         )}
         {model.settings.showSignature ? (
@@ -415,7 +443,7 @@ export async function createAdmissionFormPdfBlob(
                   style={{
                     width: '43%',
                     borderTopWidth: 0.6,
-                    borderTopColor: COLORS.grey[600],
+                    borderTopColor: colors.detailBorder,
                     paddingTop: 5,
                   }}
                 >

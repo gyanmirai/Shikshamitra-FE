@@ -7,8 +7,9 @@ import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { act, screen, fireEvent, render as renderWithTestingLibrary } from '@testing-library/react';
 
-import { DEFAULT_ADMISSION_PRINT_SETTINGS } from './form-print-model';
 import { AdmissionFormPrintWorkspace } from './admission-form-print-workspace';
+import { getAdmissionPrintPreviewTarget } from './admission-print-preview-target';
+import { buildAdmissionPrintDocument, DEFAULT_ADMISSION_PRINT_SETTINGS } from './form-print-model';
 
 import type { AdmissionPrintDefinition } from './form-print-model';
 
@@ -65,7 +66,11 @@ vi.mock('./admission-print-settings', () => ({
         onClick={() =>
           onChange({
             ...settings,
-            advanced: { sections: { SECTION_1: { columns: 1 } } },
+            advanced: {
+              sections: {
+                SECTION_1: { columns: settings.advanced?.sections?.SECTION_1?.columns === 1 ? 2 : 1 },
+              },
+            },
           })
         }
       >
@@ -143,6 +148,14 @@ const form: AdmissionPrintDefinition = {
 };
 
 describe('Registration print workspace controls', () => {
+  it('keeps the current preview page when the signature area is removed', () => {
+    const settings = DEFAULT_ADMISSION_PRINT_SETTINGS;
+    const model = buildAdmissionPrintDocument({ definition: form, values: {}, mode: 'blank', settings });
+    const withoutSignature = { ...settings, showSignature: false };
+
+    expect(getAdmissionPrintPreviewTarget(model, settings, withoutSignature)).toBeUndefined();
+    expect(getAdmissionPrintPreviewTarget(model, withoutSignature, settings)?.target.page).toBe('last');
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.branding.mockReturnValue({
@@ -168,10 +181,13 @@ describe('Registration print workspace controls', () => {
   it('opens layout settings by default while keeping the existing preview mounted', () => {
     render(<AdmissionFormPrintWorkspace form={form} onSettingsChange={vi.fn()} />);
     const preview = screen.getByTestId('pdf-preview');
-    const settings = screen.getByRole('button', { name: 'Layout settings' });
+    const settings = screen.getByRole('button', { name: 'Layout' });
+    expect(screen.getByRole('button', { name: 'Download PDF' })).toHaveTextContent('PDF');
+    expect(mocks.pdf.mock.lastCall![0].separateZoomControls).toBe(true);
+    expect(mocks.pdf.mock.lastCall![0].showAdjacentPage).not.toBe(true);
     expect(settings).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('complementary', { name: 'Layout Settings' })).toBeVisible();
-    const headingRow = screen.getByRole('heading', { name: 'Layout Settings' }).parentElement;
+    expect(screen.getByRole('complementary', { name: 'Print Settings' })).toBeVisible();
+    const headingRow = screen.getByRole('heading', { name: 'Print Settings' }).parentElement;
     expect(headingRow).toContainElement(
       screen.getByRole('group', { name: 'Print layout settings' })
     );
@@ -241,7 +257,7 @@ describe('Registration print workspace controls', () => {
     const model = mocks.preview.mock.lastCall![0];
     expect(model.registrationNumber).toBe('SAMPLE-001');
     expect(model.steps[0].sections[0].entries[0].fields[0].value).toBe('Example answer');
-    expect(screen.getByText(/Sample answers are used/)).toBeVisible();
+    expect(screen.queryByText(/Sample answers are used/)).not.toBeInTheDocument();
     expect(mocks.options.mock.lastCall![2]).toBe(false);
     fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }));
     expect(mocks.download).toHaveBeenLastCalledWith('blob:current', 'Registration-sample');
@@ -356,10 +372,46 @@ describe('Registration print workspace controls', () => {
     const { reveal, onReveal, onPageChange } = mocks.pdf.mock.lastCall![0];
     expect(screen.getByRole('status', { name: /Updating print preview/ })).toBeVisible();
     act(() => onReveal(reveal.id, 3));
-    expect(screen.getByRole('status')).toHaveTextContent(/Preview updated · Family .* Page 3/);
+    expect(screen.queryByText(/Preview updated/)).not.toBeInTheDocument();
     act(() => onPageChange(1));
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(settingsButton).toHaveFocus();
+  });
+
+  it('dismisses the preview highlight five seconds after the latest reveal', () => {
+    vi.useFakeTimers();
+    try {
+      const onSettingsChange = vi.fn();
+      const props = { form, onSettingsChange, settings: DEFAULT_ADMISSION_PRINT_SETTINGS };
+      const { rerender } = render(<AdmissionFormPrintWorkspace {...props} />);
+      const preview = screen.getByTestId('pdf-preview');
+      const settingsButton = screen.getByRole('button', { name: 'Print settings' });
+      const updateSettings = () => {
+        fireEvent.click(settingsButton);
+        rerender(
+          <AdmissionFormPrintWorkspace {...props} settings={onSettingsChange.mock.lastCall![0]} />
+        );
+        return mocks.pdf.mock.lastCall![0];
+      };
+
+      const first = updateSettings();
+      act(() => vi.advanceTimersByTime(5000));
+      expect(mocks.pdf.mock.lastCall![0].reveal).toBe(first.reveal);
+      act(() => first.onReveal(first.reveal.id, 3));
+      act(() => vi.advanceTimersByTime(4000));
+
+      const latest = updateSettings();
+      expect(latest.reveal.id).not.toBe(first.reveal.id);
+      act(() => latest.onReveal(latest.reveal.id, 3));
+      act(() => vi.advanceTimersByTime(4999));
+      expect(mocks.pdf.mock.lastCall![0].reveal).toBe(latest.reveal);
+      act(() => vi.advanceTimersByTime(1));
+      expect(mocks.pdf.mock.lastCall![0].reveal).toBeUndefined();
+      expect(screen.getByTestId('pdf-preview')).toBe(preview);
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('keeps the header editor usable when moving between Basic and Advanced', () => {
@@ -388,6 +440,7 @@ describe('Registration print workspace controls', () => {
       onSettingsChange,
     };
     const { rerender } = render(<AdmissionFormPrintWorkspace {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit header' }));
     expect(screen.queryByRole('button', { name: 'Move school logo' })).not.toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole('button', { name: 'Move form title' }), {

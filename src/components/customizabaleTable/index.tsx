@@ -20,7 +20,6 @@ import {
   TableContainer,
   LinearProgress,
   TablePagination,
-  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 
@@ -522,8 +521,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           {!fullScreenDialog.value && headerContent}
           {showToolbar && (
             <TableToolbar
-              showRefreshSlot={refreshIndicator === 'circular'}
-              refreshLabel={refreshLabel}
               exportLabel={exportLabel}
               isSearch={isSearch}
               showColumns={showColumns ?? isFilter}
@@ -600,34 +597,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               isFullScreen={fullScreenDialog.value}
               onToggleFullScreen={fullScreenDialog.onToggle}
             />
-          )}
-          {!showToolbar && refreshIndicator === 'circular' && (
-            <Box
-              sx={{
-                height: 24,
-                flexShrink: 0,
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
-                px: 1,
-              }}
-            >
-              <Box data-testid="table-refresh-slot" sx={{ width: 16, height: 16 }}>
-                {refreshLabel && (
-                  <CircularProgress
-                    size={16}
-                    color="inherit"
-                    aria-label={refreshLabel}
-                    sx={{
-                      '@media (prefers-reduced-motion: reduce)': {
-                        animation: 'none',
-                        '& .MuiCircularProgress-circle': { animation: 'none' },
-                      },
-                    }}
-                  />
-                )}
-              </Box>
-            </Box>
           )}
           {exportError && (
             <StudentScopedFeedback
@@ -880,7 +849,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     }
                     labelDisplayedRows={
                       isLoading
-                        ? () => 'Loading…'
+                        ? () => ''
                         : paginationMode === 'unknown'
                           ? () => `Page ${page + 1}`
                           : undefined

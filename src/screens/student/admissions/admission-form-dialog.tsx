@@ -1,18 +1,18 @@
+import type { ReactNode } from 'react';
 import type {
   AdmissionForm,
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
-import { useLazyCheckAdmissionFormNameQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { useFormik } from 'formik';
-import { useRef, useState, useEffect } from 'react';
-import { Label } from 'src/components/label';
 import { isEqual } from 'src/utils/helper';
 import { Iconify } from 'src/components/iconify';
+import { useRef, useState, useEffect } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Button, LinearProgress } from '@mui/material';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Stack, Button, Typography, LinearProgress, CircularProgress } from '@mui/material';
+import { useLazyCheckAdmissionFormNameQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { useAdmissionDraftGuard } from './use-admission-draft-guard';
@@ -20,6 +20,7 @@ import { getFormWizardLayout } from './form-dialog/form-wizard-layout';
 import { getAdmissionWizardSteps } from './form-dialog/form-wizard-model';
 import { useAdmissionFormWizard } from './form-dialog/hooks/use-admission-form-wizard';
 import { FormBuilderWizardContent } from './form-dialog/components/form-builder-wizard-content';
+import { FormBuilderDetailsSkeleton } from './form-dialog/components/form-builder-details-skeleton';
 
 type Props = {
   open: boolean;
@@ -45,45 +46,128 @@ export function AdmissionFormDialog({
 }: Props) {
   if (!open) return null;
   if (editingId && !editing) {
-    const formType = props.initialPurpose === 0 ? 'Inquiry' : 'Registration';
     return (
-      <CustomDialog
-        open
-        title={`Edit ${formType} Form`}
-        handleClose={props.onClose}
-        hasForm={false}
-        guardUnsavedChanges={false}
-        maxWidth="sm"
+      <AdmissionFormEditorShell
+        editing
+        immediate
+        purpose={props.initialPurpose ?? 1}
+        activeStep={0}
+        onClose={props.onClose}
       >
-        <Stack spacing={2} sx={{ p: 3, minHeight: 144, justifyContent: 'center' }}>
-          {editingError ? (
-            <StudentFeedback
-              notificationKey="STU-0060"
-              presentation="toast"
-              severity="error"
-              toastAction={
-                <Button size="small" sx={{ minHeight: 44 }} onClick={onRetryEditing}>
-                  Retry
-                </Button>
-              }
-            >
-              This form could not be loaded. Try again.
-            </StudentFeedback>
-          ) : (
-            <Stack direction="row" spacing={1.5} alignItems="center" role="status">
-              <CircularProgress size={24} aria-label={`Loading ${formType.toLowerCase()} Form`} />
-              <Typography variant="body2">Loading {formType.toLowerCase()} form...</Typography>
-            </Stack>
-          )}
-        </Stack>
-      </CustomDialog>
+        {editingError ? (
+          <StudentFeedback
+            notificationKey="STU-0060"
+            presentation="toast"
+            severity="error"
+            toastAction={
+              <Button size="small" sx={{ minHeight: 44 }} onClick={onRetryEditing}>
+                Retry
+              </Button>
+            }
+          >
+            This form could not be loaded. Try again.
+          </StudentFeedback>
+        ) : (
+          <FormBuilderDetailsSkeleton purpose={props.initialPurpose ?? 1} />
+        )}
+      </AdmissionFormEditorShell>
     );
   }
-  return <AdmissionFormEditor editing={editing} {...props} />;
+  return <AdmissionFormEditor editingId={editingId} editing={editing} {...props} />;
+}
+
+function AdmissionFormEditorShell({
+  children,
+  editing,
+  purpose,
+  activeStep,
+  busy,
+  immediate,
+  onClose,
+}: {
+  children: ReactNode;
+  editing: boolean;
+  purpose: CreateUpdateAdmissionForm['purpose'];
+  activeStep: number;
+  busy?: boolean;
+  immediate?: boolean;
+  onClose: () => void;
+}) {
+  const formType = purpose === 0 ? 'Inquiry' : 'Registration';
+  const stepCount = getAdmissionWizardSteps(purpose).length;
+  const isPrintLayout = stepCount === 4 && activeStep === 3;
+  return (
+    <CustomDialog
+      open
+      handleClose={onClose}
+      guardUnsavedChanges={false}
+      disableClose={busy}
+      hasForm={false}
+      headerSx={isPrintLayout ? { py: 0.5 } : undefined}
+      title={
+        <Box component="span" sx={{ display: 'block' }}>
+          <Stack component="span" direction="row" spacing={1.25} alignItems="center">
+            <AdmissionDialogTitle
+              title={`${editing ? 'Edit' : 'Create'} ${formType} Form`}
+              helpText="Build the Reusable Fields, Validation, and Review Structure Used by Admission Applicants and Staff."
+              helpLabel={`${formType} Form Information`}
+            />
+          </Stack>
+          <LinearProgress
+            variant="determinate"
+            value={((activeStep + 1) / stepCount) * 100}
+            aria-label={`Step ${activeStep + 1} of ${stepCount}`}
+            sx={{
+              mt: isPrintLayout ? 0.5 : 1,
+              height: 4,
+              borderRadius: 1,
+              display: { xs: 'block', md: 'none' },
+              bgcolor: 'action.hover',
+              '& .MuiLinearProgress-bar': { bgcolor: 'success.main' },
+            }}
+          />
+        </Box>
+      }
+      maxWidth={false}
+      fullScreen
+      {...(immediate && { transitionDuration: 0 })}
+      paperProps={{
+        sx: {
+          width: 1,
+          height: '100dvh',
+          maxWidth: 'none',
+          maxHeight: 'none',
+          m: 0,
+          borderRadius: 0,
+          backgroundImage: 'none',
+          '& > .MuiBox-root > .MuiBox-root:first-of-type': { py: 1 },
+        },
+      }}
+    >
+      <DialogScrollContent
+        sx={{ p: 0, height: 1, minHeight: 0, overflow: 'hidden' }}
+        scrollBarProps={{
+          fillContent: true,
+          sx: {
+            flex: '1 1 auto',
+            minHeight: 0,
+            '& > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper > .simplebar-content':
+              { height: 1, minHeight: 0, overflow: 'hidden' },
+            '& > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper':
+              { overflowX: 'hidden !important' },
+            '& > .simplebar-track.simplebar-horizontal': { display: 'none' },
+          },
+        }}
+      >
+        {children}
+      </DialogScrollContent>
+    </CustomDialog>
+  );
 }
 
 function AdmissionFormEditor({
   onClose,
+  editingId,
   editing,
   initialPurpose,
   saving,
@@ -208,158 +292,104 @@ function AdmissionFormEditor({
     dirty: editorFormik.dirty,
     busy,
     reset: editorFormik.resetForm,
+    discardLabel: 'Discard',
   });
   const formType = editorFormik.values.purpose === 0 ? 'Inquiry' : 'Registration';
   const steps = getAdmissionWizardSteps(editorFormik.values.purpose);
-  const useCompactProgress = formType === 'Registration';
-  const isPrintLayout = steps.length === 4 && wizard.activeStep === 3;
+  const stepSlots =
+    !editing && wizard.activeStep === 0 ? getAdmissionWizardSteps(1).length : undefined;
+  const useCompactProgress =
+    formType === 'Registration' && (Boolean(editing) || wizard.activeStep > 0);
   return (
     <>
-      <CustomDialog
-        open
-        handleClose={() => closeGuard.requestNavigation(onClose)}
-        guardUnsavedChanges={false}
-        disableClose={busy}
-        hasForm={false}
-        headerSx={isPrintLayout ? { py: 0.5 } : undefined}
-        title={
-          <Box component="span" sx={{ display: 'block' }}>
-            <Stack component="span" direction="row" spacing={1.25} alignItems="center">
-              <AdmissionDialogTitle
-                title={`${editing ? 'Edit' : 'Create'} ${formType} Form`}
-                helpText="Build the Reusable Fields, Validation, and Review Structure Used by Admission Applicants and Staff."
-                helpLabel={`${formType} Form Information`}
-              />
-              <Label color="default" variant="soft">
-                Draft
-              </Label>
-            </Stack>
-            <LinearProgress
-              variant="determinate"
-              value={((wizard.activeStep + 1) / steps.length) * 100}
-              aria-label={`Step ${wizard.activeStep + 1} of ${steps.length}`}
-              sx={{
-                mt: isPrintLayout ? 0.5 : 1,
-                height: 4,
-                borderRadius: 1,
-                display: { xs: 'block', md: 'none' },
-                bgcolor: 'action.hover',
-                '& .MuiLinearProgress-bar': { bgcolor: 'success.main' },
-              }}
-            />
-          </Box>
-        }
-        maxWidth={false}
-        fullScreen
-        paperProps={{
-          sx: {
-            width: 1,
-            height: '100dvh',
-            maxWidth: 'none',
-            maxHeight: 'none',
-            m: 0,
-            borderRadius: 0,
-            backgroundImage: 'none',
-            '& > .MuiBox-root > .MuiBox-root:first-of-type': { py: 1 },
-          },
-        }}
+      <AdmissionFormEditorShell
+        purpose={editorFormik.values.purpose}
+        activeStep={wizard.activeStep}
+        busy={busy}
+        editing={Boolean(editing)}
+        immediate={Boolean(editingId)}
+        onClose={() => closeGuard.requestNavigation(onClose)}
       >
-        <DialogScrollContent
-          sx={{ p: 0, height: 1, minHeight: 0, overflow: 'hidden' }}
-          scrollBarProps={{
-            fillContent: true,
-            sx: {
-              flex: '1 1 auto',
-              minHeight: 0,
-              '& > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper > .simplebar-content':
-                { height: 1, minHeight: 0, overflow: 'hidden' },
-              '& > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper':
-                { overflowX: 'hidden !important' },
-              '& > .simplebar-track.simplebar-horizontal': { display: 'none' },
-            },
-          }}
-        >
-          <Box sx={getFormWizardLayout(wizard.activeStep, useCompactProgress)}>
-            <CustomStepperWithFormik
-              initialValues={wizard.initialValues}
-              formikInstance={editorFormik}
-              steps={steps}
-              progressDensity={useCompactProgress ? 'compact' : 'standard'}
-              activeStep={wizard.activeStep}
-              footerPlacement={wizard.activeStep === 1 ? 'content' : 'outside'}
-              validationSchema={wizard.validationSchema}
-              validateOnChange
-              scrollbarHeight="auto"
-              showSaveButton
-              saveButtonLabel="Save draft"
-              nextButtonLabel="Continue"
-              finalButtonLabel="Publish now"
-              validateFinalStep
-              disableSubmit={busy}
-              backButtonProps={{ size: 'small', disabled: busy }}
-              saveAndNextButtonProps={{
-                loading: busy,
-                disabled:
-                  (wizard.activeStep === 0 && nameIsBlocked) ||
-                  (wizard.activeStep === steps.length - 1 && Boolean(publishMessage)),
-                'aria-describedby':
-                  wizard.activeStep >= 2 && publishMessage ? 'admission-publish-block' : undefined,
-                startIcon:
-                  wizard.activeStep === steps.length - 1 ? (
-                    <Iconify icon="mdi:publish" width={18} />
-                  ) : undefined,
-                endIcon:
-                  wizard.activeStep < steps.length - 1 ? (
-                    <Iconify icon="mdi:arrow-right" width={18} />
-                  ) : undefined,
-                size: 'small',
-                onClickCapture: (event) => {
-                  if (event.detail > 1) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }
-                },
-              }}
-              saveButtonProps={{
-                loading: busy,
-                disabled: nameIsBlocked,
-                title: 'Save This Draft and Close the Form Builder',
-                startIcon: <Iconify icon="mdi:content-save-outline" width={18} />,
-                size: 'small',
-              }}
-              handleBack={() => {
-                if (!busy) wizard.back();
-              }}
-              handleNext={wizard.next}
-              onSave={wizard.saveDraft}
-              onStepClick={(index) => {
-                if (!busy) wizard.goTo(index);
-              }}
-              isStepClickable={(index) => !busy && index <= wizard.activeStep + 1}
-              validateForwardStepClick
-              renderItem={({ formik, footer }) => (
-                <FormBuilderWizardContent
-                  formik={formik}
-                  activeStep={wizard.activeStep}
-                  footer={footer}
-                  editing={editing}
-                  onInheritanceReadinessChange={(ready) => {
-                    inheritanceReadiness.current = {
-                      enabled: Boolean(editorFormik.values.inheritance?.enabled),
-                      ready,
-                    };
-                  }}
-                  nameConflictMessage={nameConflictMessage}
-                  checkingName={checkingName}
-                  publishMessage={publishMessage}
-                  publishIssueTarget={wizard.publishIssueTarget}
-                  onPublishIssueHandled={wizard.clearPublishIssueTarget}
-                />
-              )}
-            />
-          </Box>
-        </DialogScrollContent>
-      </CustomDialog>
+        <Box sx={getFormWizardLayout(wizard.activeStep, useCompactProgress, stepSlots)}>
+          <CustomStepperWithFormik
+            initialValues={wizard.initialValues}
+            formikInstance={editorFormik}
+            steps={steps}
+            progressDensity={useCompactProgress ? 'compact' : 'standard'}
+            activeStep={wizard.activeStep}
+            footerPlacement={wizard.activeStep === 1 ? 'content' : 'outside'}
+            validationSchema={wizard.validationSchema}
+            validateOnChange
+            scrollbarHeight="auto"
+            showSaveButton
+            saveButtonLabel="Draft"
+            nextButtonLabel="Continue"
+            finalButtonLabel="Publish"
+            validateFinalStep
+            disableSubmit={busy}
+            backButtonProps={{ size: 'small', disabled: busy }}
+            saveAndNextButtonProps={{
+              loading: busy,
+              disabled:
+                (wizard.activeStep === 0 && nameIsBlocked) ||
+                (wizard.activeStep === steps.length - 1 && Boolean(publishMessage)),
+              'aria-describedby':
+                wizard.activeStep >= 2 && publishMessage ? 'admission-publish-block' : undefined,
+              startIcon:
+                wizard.activeStep === steps.length - 1 ? (
+                  <Iconify icon="mdi:publish" width={18} />
+                ) : undefined,
+              endIcon:
+                wizard.activeStep < steps.length - 1 ? (
+                  <Iconify icon="mdi:arrow-right" width={18} />
+                ) : undefined,
+              size: 'small',
+              onClickCapture: (event) => {
+                if (event.detail > 1) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+              },
+            }}
+            saveButtonProps={{
+              loading: busy,
+              disabled: nameIsBlocked,
+              title: 'Save This Draft and Close the Form Builder',
+              startIcon: <Iconify icon="mdi:content-save-outline" width={18} />,
+              size: 'small',
+            }}
+            handleBack={() => {
+              if (!busy) wizard.back();
+            }}
+            handleNext={wizard.next}
+            onSave={wizard.saveDraft}
+            onStepClick={(index) => {
+              if (!busy) wizard.goTo(index);
+            }}
+            isStepClickable={(index) => !busy && index <= wizard.activeStep + 1}
+            validateForwardStepClick
+            renderItem={({ formik, footer }) => (
+              <FormBuilderWizardContent
+                formik={formik}
+                activeStep={wizard.activeStep}
+                footer={footer}
+                editing={editing}
+                onInheritanceReadinessChange={(ready) => {
+                  inheritanceReadiness.current = {
+                    enabled: Boolean(editorFormik.values.inheritance?.enabled),
+                    ready,
+                  };
+                }}
+                nameConflictMessage={nameConflictMessage}
+                checkingName={checkingName}
+                publishMessage={publishMessage}
+                publishIssueTarget={wizard.publishIssueTarget}
+                onPublishIssueHandled={wizard.clearPublishIssueTarget}
+              />
+            )}
+          />
+        </Box>
+      </AdmissionFormEditorShell>
       {closeGuard.confirmation}
     </>
   );

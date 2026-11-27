@@ -3,12 +3,14 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
 import Stack from '@mui/material/Stack';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import { Scrollbar } from 'src/components/scrollbar';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { useId, useRef, useState, useEffect } from 'react';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { FormFieldCoreFields } from './form-field-core-fields';
@@ -26,6 +28,11 @@ type Props = {
   navigationRequest?: BuilderNavigationRequest;
   linkedFieldReason?: string;
 };
+
+const SETTINGS_TABS = [
+  { value: 'basic', label: 'Basic', icon: GlobalIcons.academicFieldSettings },
+  { value: 'rules', label: 'Rules', icon: GlobalIcons.prerequisites },
+] as const;
 
 export function FormBuilderProperties({
   formik,
@@ -149,33 +156,27 @@ export function FormBuilderProperties({
   return (
     <Stack ref={settingsRef} sx={{ height: 1, minHeight: 0, bgcolor: 'background.paper' }}>
       <FieldPropertiesHeader field={field} sectionName={section?.name} />
-      <Tabs
+      <CustomTabs
+        density="compact"
+        guardUnsavedChanges={false}
         value={activeTab}
         onChange={(_, value: 'basic' | 'rules') => setActiveTab(value)}
         variant="fullWidth"
         aria-label="Field Settings Categories"
-        sx={{
-          flexShrink: 0,
-          borderBottom: 1,
-          borderColor: 'divider',
-          '& .MuiTab-root': { minHeight: 44 },
-          '& .Mui-selected': { color: 'text.primary' },
-          '& .MuiTabs-indicator': { bgcolor: 'common.black' },
-        }}
+        sx={{ borderBottom: 1, borderColor: 'divider' }}
       >
-        <Tab
-          value="basic"
-          label="Basic"
-          id={`${settingsId}-basic-tab`}
-          aria-controls={`${settingsId}-basic-panel`}
-        />
-        <Tab
-          value="rules"
-          label="Rules"
-          id={`${settingsId}-rules-tab`}
-          aria-controls={`${settingsId}-rules-panel`}
-        />
-      </Tabs>
+        {SETTINGS_TABS.map(({ value, label, icon }) => (
+          <Tab
+            key={value}
+            value={value}
+            label={label}
+            icon={<Iconify icon={icon} width={20} aria-hidden="true" />}
+            iconPosition="start"
+            id={`${settingsId}-${value}-tab`}
+            aria-controls={`${settingsId}-${value}-panel`}
+          />
+        ))}
+      </CustomTabs>
       <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
         <Stack
           key={field.id}
@@ -188,13 +189,14 @@ export function FormBuilderProperties({
           {activeTab === 'basic' && (
             <>
               <FormFieldCoreFields {...settingsProps} />
-              <SectionCard
+              <FormSectionCard
                 title="More Options"
-                paperProps={{ sx: { mb: 0, minWidth: 0 } }}
-                gridProps={{ sx: { display: 'block' } }}
+                icon={GlobalIcons.admissionDetails}
+                descriptionTooltip="Set a hint, a default answer, or make the field read-only."
+                sx={{ minWidth: 0 }}
               >
                 <FieldGuidanceSettings {...settingsProps} />
-              </SectionCard>
+              </FormSectionCard>
             </>
           )}
           {activeTab === 'rules' && (

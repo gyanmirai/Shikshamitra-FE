@@ -69,6 +69,7 @@ function OverflowActionMenuItem({
 const AdaptiveThreeDotsActions = ({
   actions,
   moreLabel = 'More actions',
+  moreTooltip,
   collapseOnOverflow = false,
   directActionLimit = DIRECT_ACTION_LIMIT,
   mobileDirectActionLimit,
@@ -129,6 +130,7 @@ const AdaptiveThreeDotsActions = ({
       directActions={directActions}
       showThreeDots={usesOverflowMenu}
       moreLabel={moreLabel}
+      moreTooltip={moreTooltip}
       onClickThreeDots={onClickThreeDots}
       onClosePopover={onClosePopover}
       disablePopoverClose={disablePopoverClose}

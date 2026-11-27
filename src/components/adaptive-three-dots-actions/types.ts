@@ -22,6 +22,7 @@ export type AdaptiveThreeDotsAction = AdaptiveActionSelection & {
 export interface AdaptiveThreeDotsActionsProps {
   actions: readonly AdaptiveThreeDotsAction[];
   moreLabel?: string;
+  moreTooltip?: string;
   /** Put the complete action set in the menu when it exceeds the direct-action limit. */
   collapseOnOverflow?: boolean;
   directActionLimit?: 0 | 1 | 2 | 3;

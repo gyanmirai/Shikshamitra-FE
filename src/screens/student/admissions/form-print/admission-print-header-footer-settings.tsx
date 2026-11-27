@@ -1,7 +1,8 @@
 import { useId } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Button, Typography } from '@mui/material';
+import CustomSelect from 'src/components/custom-select';
+import { Stack, Button, Divider, Typography } from '@mui/material';
 
 import { hasAdmissionPrintPhotoField } from './form-print-model';
 import {
@@ -30,9 +31,15 @@ export function AdmissionPrintHeaderFooterSettings({
   form,
   onChange,
   onEditHeader,
+  pageCount,
   update,
 }: AdmissionPrintAdvancedTabProps) {
   const { header, photo, footer } = advanced;
+  const { showLogo, showBanner, bannerPlacement, bannerPages } = advanced.branding;
+  const bannerPagesId = useId();
+  const pageNumbers = [
+    ...new Set([...Array.from({ length: pageCount ?? 1 }, (_, index) => index + 1), ...bannerPages]),
+  ].sort((left, right) => left - right);
   const hasPhotoField = hasAdmissionPrintPhotoField(form.sections);
   const contactHelpId = useId();
   const contacts = [
@@ -63,57 +70,146 @@ export function AdmissionPrintHeaderFooterSettings({
         }
         descriptionTooltip="Use the school identity configured in Institute Setup. These options do not change Institute Setup."
       >
-        {branding.schoolName && <Typography variant="subtitle2">{branding.schoolName}</Typography>}
-        {onEditHeader && (
-          <Button
-            type="button"
-            size="small"
-            variant="outlined"
-            color="inherit"
-            startIcon={<Iconify icon={GlobalIcons.edit} />}
-            onClick={onEditHeader}
-            sx={{ alignSelf: 'flex-start' }}
+        {(branding.schoolName || onEditHeader) && (
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            spacing={1}
+            useFlexGap
+            sx={{ flexWrap: 'wrap' }}
           >
-            Edit header
-          </Button>
+            {branding.schoolName && (
+              <Typography variant="subtitle2" sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+                {branding.schoolName}
+              </Typography>
+            )}
+            {onEditHeader && (
+              <Button
+                type="button"
+                size="small"
+                variant="outlined"
+                color="inherit"
+                startIcon={<Iconify icon={GlobalIcons.edit} />}
+                onClick={onEditHeader}
+                sx={{ flexShrink: 0 }}
+              >
+                Edit header
+              </Button>
+            )}
+          </Stack>
         )}
-        <PrintSettingToggle
-          label="School name"
-          checked={header.schoolName}
-          disabled={!settings.showSchoolHeader}
-          onChange={(schoolName) => update('header', { schoolName })}
-        />
-        <PrintSettingToggle
-          label="School address"
-          checked={header.address}
-          disabled={!settings.showSchoolHeader}
-          onChange={(address) => update('header', { address })}
-        />
-        {contacts.map(([key, label, value]) => (
+        <Stack spacing={1.5}>
           <PrintSettingToggle
-            key={key}
-            label={label}
-            checked={header[key]}
-            disabled={!settings.showSchoolHeader || !value}
-            descriptionId={!value ? contactHelpId : undefined}
-            onChange={(checked) => update('header', { [key]: checked })}
+            label="School header"
+            checked={settings.showSchoolHeader}
+            onChange={(showSchoolHeader) => onChange({ ...settings, showSchoolHeader })}
           />
-        ))}
-        {contacts.some(([, , value]) => !value) && (
-          <Typography id={contactHelpId} variant="caption" color="text.secondary">
-            Set missing school contact details in Institute Setup to include them.
-          </Typography>
+          <PrintSettingSelect
+            label="Continuation page header"
+            value={header.continuation}
+            options={[
+              ['compact', 'Compact school header'],
+              ['full', 'Full header'],
+              ['none', 'No school header'],
+            ]}
+            onChange={(continuation) => update('header', { continuation })}
+          />
+        </Stack>
+        {settings.showSchoolHeader && (branding.logoUrl || branding.bannerUrl) && (
+          <>
+            <Divider />
+            <Stack spacing={1.5}>
+              <Typography component="h3" variant="subtitle2">
+                Logo &amp; Banner
+              </Typography>
+              <PrintSettingsGrid>
+                {branding.logoUrl && (
+                  <PrintSettingToggle
+                    label="Logo"
+                    checked={showLogo}
+                    onChange={(value) => update('branding', { showLogo: value })}
+                  />
+                )}
+                {branding.bannerUrl && (
+                  <PrintSettingToggle
+                    label="Banner"
+                    checked={showBanner}
+                    onChange={(value) => update('branding', { showBanner: value })}
+                  />
+                )}
+              </PrintSettingsGrid>
+              {branding.bannerUrl && showBanner && (
+                <PrintSettingSelect
+                  label="Banner pages"
+                  value={bannerPlacement}
+                  options={[
+                    ['first', 'First page'],
+                    ['every', 'Every page'],
+                    ...(bannerPlacement === 'selected'
+                      ? [['selected', 'Selected pages (saved)'] as const]
+                      : []),
+                  ]}
+                  onChange={(placement) => update('branding', { bannerPlacement: placement })}
+                />
+              )}
+              {branding.bannerUrl && showBanner && bannerPlacement === 'selected' && (
+                <CustomSelect
+                  name={bannerPagesId}
+                  label="Pages with banner"
+                  size="small"
+                  fullWidth
+                  multiple
+                  disabledValues={bannerPages.length === 1 ? bannerPages : undefined}
+                  value={bannerPages}
+                  options={pageNumbers.map((page) => ({ value: page, label: `Page ${page}` }))}
+                  onChange={(pages) => {
+                    if (pages.length) {
+                      update('branding', {
+                        bannerPages: pages.map(Number).sort((left, right) => left - right),
+                      });
+                    }
+                  }}
+                />
+              )}
+            </Stack>
+          </>
         )}
-        <PrintSettingSelect
-          label="Continuation page header"
-          value={header.continuation}
-          options={[
-            ['compact', 'Compact school header'],
-            ['full', 'Full header'],
-            ['none', 'No school header'],
-          ]}
-          onChange={(continuation) => update('header', { continuation })}
-        />
+        <Divider />
+        <Stack spacing={1.5}>
+          <Typography component="h3" variant="subtitle2">
+            School Information
+          </Typography>
+          <PrintSettingsGrid>
+            <PrintSettingToggle
+              label="School name"
+              checked={header.schoolName}
+              disabled={!settings.showSchoolHeader}
+              onChange={(schoolName) => update('header', { schoolName })}
+            />
+            <PrintSettingToggle
+              label="School address"
+              checked={header.address}
+              disabled={!settings.showSchoolHeader}
+              onChange={(address) => update('header', { address })}
+            />
+            {contacts.map(([key, label, value]) => (
+              <PrintSettingToggle
+                key={key}
+                label={label}
+                checked={header[key]}
+                disabled={!settings.showSchoolHeader || !value}
+                descriptionId={!value ? contactHelpId : undefined}
+                onChange={(checked) => update('header', { [key]: checked })}
+              />
+            ))}
+          </PrintSettingsGrid>
+          {contacts.some(([, , value]) => !value) && (
+            <Typography id={contactHelpId} variant="caption" color="text.secondary">
+              Add missing contact details in Institute Setup to print them.
+            </Typography>
+          )}
+        </Stack>
       </PrintSettingsCard>
       <PrintSettingsCard
         title="Title & Admission Details"
@@ -123,7 +219,6 @@ export function AdmissionPrintHeaderFooterSettings({
             title="Title & Admission Details"
             onReset={() =>
               update('header', {
-                title: '',
                 subtitle: '',
                 alignment: 'center',
                 registrationNumber: true,
@@ -138,12 +233,6 @@ export function AdmissionPrintHeaderFooterSettings({
         }
         descriptionTooltip="Use a print-specific title or leave it empty to use the form name. Academic details use the selected admission context."
       >
-        <PrintSettingText
-          label="Print title"
-          value={header.title}
-          onChange={(title) => update('header', { title })}
-          helperText="Leave empty to use the form name."
-        />
         <PrintSettingText
           label="Subtitle"
           value={header.subtitle}
@@ -181,20 +270,13 @@ export function AdmissionPrintHeaderFooterSettings({
             <PrintSettingsResetButton
               title="Photo Space"
               onReset={() =>
-                onChange({
-                  ...settings,
-                  showPhoto: true,
-                  advanced: {
-                    ...settings.advanced,
-                    photo: {
-                      placement: 'first',
-                      alignment: 'right',
-                      width: 35,
-                      height: 45,
-                      caption: '',
-                      useSaved: true,
-                    },
-                  },
+                update('photo', {
+                  placement: 'header-top-right',
+                  alignment: 'right',
+                  width: 35,
+                  height: 45,
+                  caption: '',
+                  useSaved: true,
                 })
               }
             />
@@ -204,11 +286,6 @@ export function AdmissionPrintHeaderFooterSettings({
       >
         {hasPhotoField ? (
           <>
-            <PrintSettingToggle
-              label="Show photo space"
-              checked={settings.showPhoto}
-              onChange={(showPhoto) => onChange({ ...settings, showPhoto })}
-            />
             <PrintSettingSelect
               label="Photo placement"
               value={photo.placement}
@@ -280,7 +357,6 @@ export function AdmissionPrintHeaderFooterSettings({
                 pageNumbers: true,
                 registrationReference: false,
                 schoolName: false,
-                formTitle: false,
               })
             }
           />
@@ -312,7 +388,6 @@ export function AdmissionPrintHeaderFooterSettings({
             ['pageNumbers', 'Page numbers'],
             ['registrationReference', 'Registration reference'],
             ['schoolName', 'School name in footer'],
-            ['formTitle', 'Form title in footer'],
           ] as const
         ).map(([key, label]) => (
           <PrintSettingToggle

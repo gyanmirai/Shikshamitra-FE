@@ -3,7 +3,8 @@ import { vi, it, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from 'src/test/test-utils';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { FormBuilderSections } from './form-builder-sections';
@@ -23,7 +24,7 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
 
 it('adds a Radio field in Build form and edits its option name through Field settings', async () => {
   const user = userEvent.setup();
-  render(
+  renderWithProviders(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <Formik initialValues={getAdmissionFormInitialValues()} onSubmit={() => undefined}>
         {(formik) => (

@@ -11,6 +11,95 @@ import { CREATABLE_FIELD_TYPES } from '../form-dialog-model';
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
 
 describe('Admission Form Builder custom field palette', () => {
+  it('warns before adding a custom Country when the student Country is already present', () => {
+    const onAddField = vi.fn();
+    const onViewExisting = vi.fn();
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <CustomFieldPalette
+          onAddField={onAddField}
+          onViewExisting={onViewExisting}
+          usedBindings={['Address.Country']}
+          systemFields={[
+            {
+              key: 'Address.Country',
+              displayName: 'Country',
+              description: '',
+              fieldType: 6,
+              readOnly: false,
+            },
+          ]}
+        />
+      </ThemeProvider>
+    );
+    fireEvent.change(screen.getByLabelText('Question'), { target: { value: '  COUNTRY  ' } });
+    expect(screen.getByText(/already included in this form/i)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Add Custom Field' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'View existing field' }));
+    expect(onViewExisting).toHaveBeenCalledWith('Address.Country');
+    expect(onAddField).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Add a different question' }));
+    expect(screen.getByRole('button', { name: 'Add Custom Field' })).toBeEnabled();
+    fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'Country of birth' } });
+    expect(screen.queryByText(/already included in this form/i)).not.toBeInTheDocument();
+  });
+
+  it('asks before adding a separate Country preset when a student address is present', () => {
+    const onAddField = vi.fn();
+    const onViewExisting = vi.fn();
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <CustomFieldPalette
+          onAddField={onAddField}
+          onViewExisting={onViewExisting}
+          usedBindings={['Address.Country']}
+          systemFields={[
+            {
+              key: 'Address.Country',
+              displayName: 'Country',
+              description: '',
+              fieldType: 6,
+              readOnly: false,
+            },
+          ]}
+        />
+      </ThemeProvider>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'More Field Formats' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Country' }));
+    expect(onAddField).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'View existing field' }));
+    expect(onViewExisting).toHaveBeenCalledWith('Address.Country');
+    fireEvent.click(screen.getByRole('button', { name: 'Add a different question' }));
+    expect(onAddField).toHaveBeenCalledWith(
+      expect.anything(),
+      undefined,
+      expect.objectContaining({ key: 'country' })
+    );
+  });
+
+  it('does not mistake a permanent address for a current address question', () => {
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <CustomFieldPalette
+          onAddField={vi.fn()}
+          usedBindings={['PermanentAddress.Country']}
+          systemFields={[
+            {
+              key: 'PermanentAddress.Country',
+              displayName: 'Permanent address country',
+              description: '',
+              fieldType: 6,
+              readOnly: false,
+            },
+          ]}
+        />
+      </ThemeProvider>
+    );
+    fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'Country' } });
+    expect(screen.queryByText(/already included in this form/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Custom Field' })).toBeEnabled();
+  });
   it('creates the class-interest alias from Institute Setup without asking for manual choices', () => {
     const onAddField = vi.fn();
     render(
@@ -33,10 +122,12 @@ describe('Admission Form Builder custom field palette', () => {
   });
   it('requires confirmation before using an included Student field alias as a different custom question', () => {
     const onAddField = vi.fn();
+    const onViewExisting = vi.fn();
     render(
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <CustomFieldPalette
           onAddField={onAddField}
+          onViewExisting={onViewExisting}
           usedBindings={['Applicant.FirstName']}
           systemFields={[
             {
@@ -52,9 +143,9 @@ describe('Admission Form Builder custom field palette', () => {
     );
     fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'fname' } });
     expect(screen.getByRole('button', { name: 'Add Custom Field' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Go to Existing Field' }));
-    expect(onAddField).toHaveBeenLastCalledWith(0, 'Applicant.FirstName');
-    fireEvent.click(screen.getByRole('button', { name: 'Different Question' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View existing field' }));
+    expect(onViewExisting).toHaveBeenLastCalledWith('Applicant.FirstName');
+    fireEvent.click(screen.getByRole('button', { name: 'Add a different question' }));
     expect(screen.getByRole('button', { name: 'Add Custom Field' })).toBeEnabled();
   });
   it('collects choices while creating the question without a second settings visit', () => {

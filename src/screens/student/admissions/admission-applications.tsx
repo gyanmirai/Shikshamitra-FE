@@ -265,7 +265,7 @@ export default function AdmissionApplicationsScreen() {
                   !listQuery.isError &&
                   (listQuery.isLoading || (listQuery.isFetching && !data)))
               }
-              refreshIndicator="circular"
+              refreshIndicator="none"
               isRefreshing={!skip && listQuery.isFetching && Boolean(data)}
               onClearCriteria={() =>
                 update({ search: undefined, filters: undefined, status: undefined })

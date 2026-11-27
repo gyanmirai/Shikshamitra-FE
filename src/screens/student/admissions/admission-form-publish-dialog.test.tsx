@@ -26,15 +26,16 @@ const props = () => ({
 });
 
 describe('Admission form publish confirmation', () => {
-  it('shows the publish consequence and keeps the icon in the Publish Form button', () => {
+  it('shows the standard publish confirmation and its consequence', () => {
     const callbacks = props();
     render(<AdmissionFormPublishDialog {...callbacks} />);
 
-    expect(screen.getByRole('dialog', { name: 'Publish Admission inquiry?' })).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Publish Form?' })).toBeVisible();
+    expect(screen.getByTestId('CheckCircleIcon')).toHaveClass('MuiSvgIcon-colorSuccess');
     expect(screen.queryByTestId('WarningAmberIcon')).not.toBeInTheDocument();
     expect(screen.queryByTestId('InfoIcon')).not.toBeInTheDocument();
     expect(screen.queryByTestId('ErrorIcon')).not.toBeInTheDocument();
-    const publishButton = screen.getByRole('button', { name: 'Publish Form' });
+    const publishButton = screen.getByRole('button', { name: 'Publish' });
     expect(publishButton).toContainElement(screen.getByTestId('mdi:publish'));
     expect(
       screen.getByText(/Version 1 will become available for new admission offerings/)
@@ -49,7 +50,7 @@ describe('Admission form publish confirmation', () => {
     render(<AdmissionFormPublishDialog {...callbacks} />);
 
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-    const publish = screen.getByRole('button', { name: 'Publish Form' });
+    const publish = screen.getByRole('button', { name: 'Publish' });
     expect(publish).toBeDisabled();
     expect(screen.getAllByRole('progressbar')).toHaveLength(1);
     expect(publish).toContainElement(screen.getByRole('progressbar'));
@@ -66,7 +67,7 @@ describe('Admission form publish confirmation', () => {
     expect(screen.getByRole('dialog', { name: 'Form Needs Changes' })).toBeVisible();
     expect(screen.getByTestId('ErrorIcon')).toBeVisible();
     expect(screen.getByText('Add a required student name field.')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Publish Form' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Edit Draft' }));
     expect(callbacks.onEdit).toHaveBeenCalledOnce();
   });

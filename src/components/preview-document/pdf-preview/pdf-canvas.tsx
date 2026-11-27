@@ -1,7 +1,9 @@
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { alpha, keyframes } from '@mui/material/styles';
+import { alpha, keyframes, useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Stack, Alert, Button, Skeleton, IconButton, Typography } from '@mui/material';
 
 import { usePdfPage } from './use-pdf-page';
@@ -28,6 +30,32 @@ const pageButtonSx = {
   },
 };
 
+function AdjacentPage({ url, title, page }: { url: string; title: string; page: number }) {
+  const pdf = usePdfPage(url, page, 0, false, undefined, 1.5);
+  return (
+    <Box sx={{ minWidth: 0 }}>
+      {pdf.loading && (
+        <Skeleton aria-label="Rendering next PDF page" variant="rounded" height={400} />
+      )}
+      {pdf.error && (
+        <Alert severity="error">The next page could not be displayed. Select it to retry.</Alert>
+      )}
+      <Box
+        component="canvas"
+        ref={pdf.canvasRef}
+        role="img"
+        aria-label={`${title}, page ${page}`}
+        sx={{
+          display: pdf.loading || pdf.error ? 'none' : 'block',
+          width: 1,
+          height: 'auto',
+          bgcolor: 'common.white',
+        }}
+      />
+    </Box>
+  );
+}
+
 export default function PdfCanvas({
   url,
   title,
@@ -35,6 +63,8 @@ export default function PdfCanvas({
   controlsPosition = 'top',
   hideControlsForSinglePage = false,
   usePageSelector = false,
+  separateZoomControls = false,
+  showAdjacentPage = false,
   initialPage = 1,
   onPageChange,
   onPageCountChange,
@@ -48,6 +78,8 @@ export default function PdfCanvas({
   controlsPosition?: 'top' | 'bottom';
   hideControlsForSinglePage?: boolean;
   usePageSelector?: boolean;
+  separateZoomControls?: boolean;
+  showAdjacentPage?: boolean;
   initialPage?: number;
   onPageChange?: (page: number) => void;
   onPageCountChange?: (count: number) => void;
@@ -55,10 +87,13 @@ export default function PdfCanvas({
   reveal?: PdfPreviewReveal;
   onReveal?: (id: number, page?: number, marker?: HTMLDivElement | null) => void;
 }) {
+  const theme = useTheme();
+  const isWide = useMediaQuery(theme.breakpoints.up('lg'));
   const [page, setPage] = useState(initialPage);
   const [dismissedReveal, setDismissedReveal] = useState<number>();
   const [retry, setRetry] = useState(0);
   const [zoom, setZoom] = useState(false);
+  const [zoomPercent, setZoomPercent] = useState(100);
   const activeReveal = reveal?.id === dismissedReveal ? undefined : reveal;
   const target = activeReveal?.target;
   const showMarker = Boolean(
@@ -69,7 +104,8 @@ export default function PdfCanvas({
     activeReveal ? initialPage : page,
     retry,
     preservePageOnUpdate,
-    activeReveal
+    activeReveal,
+    separateZoomControls ? 3 : 1.5
   );
   const markRef = useRef<HTMLDivElement>(null);
   const revealed = useRef<{ id: number; url: string; page?: number }>(undefined);
@@ -150,20 +186,61 @@ export default function PdfCanvas({
       >
         <Iconify icon="solar:arrow-right-bold" width={18} />
       </IconButton>
-      <Button
-        size="small"
-        variant="outlined"
-        startIcon={
-          <Iconify
-            icon={zoom ? 'solar:minimize-square-linear' : 'solar:magnifer-zoom-in-linear'}
-            width={18}
-          />
-        }
-        disabled={(pdf.loading || pdf.error) && !showRenderedPage}
-        onClick={() => setZoom(!zoom)}
-      >
-        {zoom ? 'Fit Width' : 'Zoom In'}
-      </Button>
+      {separateZoomControls ? (
+        <Stack
+          direction="row"
+          alignItems="center"
+          sx={{ border: 1, borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}
+        >
+          <CustomTooltip title="Zoom out">
+            <span>
+              <IconButton
+                aria-label="Zoom out"
+                disabled={zoomPercent <= 50 || ((pdf.loading || pdf.error) && !showRenderedPage)}
+                onClick={() => setZoomPercent((value) => Math.max(50, value - 25))}
+                sx={{ width: 44, height: 44 }}
+              >
+                <Iconify icon="mdi:minus" width={20} />
+              </IconButton>
+            </span>
+          </CustomTooltip>
+          <Button
+            size="small"
+            aria-label="Reset zoom"
+            disabled={(pdf.loading || pdf.error) && !showRenderedPage}
+            onClick={() => setZoomPercent(100)}
+          >
+            {zoomPercent}%
+          </Button>
+          <CustomTooltip title="Zoom in">
+            <span>
+              <IconButton
+                aria-label="Zoom in"
+                disabled={zoomPercent >= 300 || ((pdf.loading || pdf.error) && !showRenderedPage)}
+                onClick={() => setZoomPercent((value) => Math.min(300, value + 25))}
+                sx={{ width: 44, height: 44 }}
+              >
+                <Iconify icon="mdi:plus" width={20} />
+              </IconButton>
+            </span>
+          </CustomTooltip>
+        </Stack>
+      ) : (
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={
+            <Iconify
+              icon={zoom ? 'solar:minimize-square-linear' : 'solar:magnifer-zoom-in-linear'}
+              width={18}
+            />
+          }
+          disabled={(pdf.loading || pdf.error) && !showRenderedPage}
+          onClick={() => setZoom(!zoom)}
+        >
+          {zoom ? 'Fit Width' : 'Zoom In'}
+        </Button>
+      )}
     </Stack>
   );
   return (
@@ -191,39 +268,65 @@ export default function PdfCanvas({
         aria-busy={pdf.loading}
         sx={{
           minWidth: 0,
-          overflow: 'auto',
+          overflow: separateZoomControls ? 'visible' : 'auto',
           display: pdf.loading || pdf.error ? (showRenderedPage ? 'block' : 'none') : 'block',
         }}
       >
-        <Box sx={{ position: 'relative', width: zoom ? '150%' : '100%' }}>
-          <Box
-            component="canvas"
-            ref={pdf.canvasRef}
-            role="img"
-            aria-label={`${title}, page ${pdf.renderedPage ?? currentPage}`}
-            sx={{ display: 'block', width: 1, height: 'auto', bgcolor: 'common.white' }}
-          />
-          {marked && showMarker && (
+        <Box
+          sx={{
+            width: separateZoomControls ? `${zoomPercent}%` : zoom ? '150%' : '100%',
+            ...(separateZoomControls && { mx: 'auto' }),
+            display: 'grid',
+            gap: 2,
+            gridTemplateColumns:
+              showAdjacentPage && isWide && currentPage < pdf.pageCount
+                ? 'minmax(0, 1fr) minmax(0, 1fr)'
+                : 'minmax(0, 1fr)',
+          }}
+        >
+          <Box sx={{ position: 'relative', minWidth: 0 }}>
             <Box
-              ref={markRef}
-              aria-hidden
-              sx={{
-                position: 'absolute',
-                top: `${marked.top}%`,
-                left: `${marked.left ?? 0}%`,
-                width: `${marked.width ?? 100}%`,
-                height: `${marked.height ?? 5}%`,
-                minHeight: 14,
-                border: 1,
-                borderColor: 'info.main',
-                bgcolor: (theme) => alpha(theme.palette.info.main, 0.1),
-                borderRadius: 0.5,
-                pointerEvents: 'none',
-                animation: `${revealIn} 280ms ease-out`,
-                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-              }}
+              component="canvas"
+              ref={pdf.canvasRef}
+              role="img"
+              aria-label={`${title}, page ${pdf.renderedPage ?? currentPage}`}
+              sx={{ display: 'block', width: 1, height: 'auto', bgcolor: 'common.white' }}
             />
-          )}
+            {marked && showMarker && (
+              <Box
+                ref={markRef}
+                aria-hidden
+                sx={{
+                  position: 'absolute',
+                  top: `${marked.top}%`,
+                  left: `${marked.left ?? 0}%`,
+                  width: `${marked.width ?? 100}%`,
+                  height: `${marked.height ?? 5}%`,
+                  minHeight: 14,
+                  border: 1,
+                  borderColor: 'info.main',
+                  bgcolor: (paletteTheme) => alpha(paletteTheme.palette.info.main, 0.1),
+                  borderRadius: 0.5,
+                  pointerEvents: 'none',
+                  animation: `${revealIn} 280ms ease-out`,
+                  '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                }}
+              />
+            )}
+          </Box>
+          {showAdjacentPage &&
+            isWide &&
+            currentPage < pdf.pageCount &&
+            (pdf.loading ? (
+              <Skeleton aria-label="Rendering next PDF page" variant="rounded" height={400} />
+            ) : (
+              <AdjacentPage
+                key={`${url}-${currentPage + 1}`}
+                url={url}
+                title={title}
+                page={currentPage + 1}
+              />
+            ))}
         </Box>
         {showPageText && pdf.text && (
           <Box component="details" sx={{ p: 1 }}>

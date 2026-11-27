@@ -47,6 +47,14 @@ async function selectType(
   await user.click(screen.getByRole('radio', { name: new RegExp(`${type} Form`, 'i') }));
 }
 
+it('uses the standard headers on the two details cards', () => {
+  renderDetails(0);
+  expect(screen.getByRole('heading', { name: 'Form Type', level: 2 })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Form Details', level: 2 })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Form Type information' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Form Details information' })).toBeVisible();
+});
+
 it('loads a matching starter on type change and carries the form details across switches', async () => {
   const user = userEvent.setup();
   const view = renderDetails(0);
@@ -110,6 +118,8 @@ it.each([0, 1] as const)(
     });
     expect(type).toBeDisabled();
     expect(type).toBeChecked();
+    expect(screen.getByText('Inquiry Form')).toHaveStyle({ fontWeight: '700' });
+    expect(screen.getByText('Registration Form')).toHaveStyle({ fontWeight: '700' });
     expect(view.values().fieldsPerRow).toBe(1);
   }
 );

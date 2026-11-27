@@ -4,8 +4,10 @@ import { Page, Text, View, Image, Document } from '@react-pdf/renderer';
 import { splitPdfScriptRuns } from 'src/components/customizabaleTable/indic-pdf-export';
 import { resolveAdmissionPrintAdvancedSettings } from 'src/redux/student/admissions/admission-form-print-settings';
 
+import { AdmissionPrintPageBorder } from './form-print-page-border';
 import { getAdmissionPrintHeaderElements } from './form-print-header-layout';
 import { estimatePrintTextLines, estimatePrintTextHeight } from './form-print-text-layout';
+import { PrintSectionStart, ContinuedPrintSection, continuedSectionTitle } from './form-print-continued-section';
 import {
   PRINT_MM,
   advancedFieldRows,
@@ -93,14 +95,32 @@ export function AdmissionAdvancedPaperTemplate({
     headerPhoto,
     firstBandHeight,
     laterBandHeight,
-    fullHeaderHeight,
+    fullHeaderHeight: defaultFullHeaderHeight,
     compactHeaderHeight,
     compactLogo,
     compactLogoSize,
     compactRegistrationWidth,
     footerHeight,
-    bodyCapacity,
+    bodyCapacity: defaultBodyCapacity,
   } = advancedHeaderGeometry(model, branding, options, geometry);
+  // Saved positions are relative to the original frame. Keep that coordinate system,
+  // but reserve only the space occupied by the positioned elements in the PDF flow.
+  const firstHeaderFrame = getAdmissionPrintHeaderElements(model, branding, 1);
+  const hasPositionedHeader = firstHeaderFrame.elements.some(
+    (item) => options.header.layout?.[item.key]
+  );
+  const positionedHeaderHeight = hasPositionedHeader
+    ? Math.max(
+        ...firstHeaderFrame.elements.map(
+          ({ placement }) => ((placement.y + placement.height) * firstHeaderFrame.height) / 100
+        )
+      ) + 8
+    : defaultFullHeaderHeight;
+  const fullHeaderHeight = Math.min(defaultFullHeaderHeight, positionedHeaderHeight);
+  const bodyCapacity =
+    defaultBodyCapacity +
+    Math.max(defaultFullHeaderHeight, compactHeaderHeight) -
+    Math.max(fullHeaderHeight, compactHeaderHeight);
   const photos =
     model.settings.showPhoto && ['first', 'last'].includes(options.photo.placement)
       ? collectAdvancedPrintPhotos(model)
@@ -241,7 +261,13 @@ export function AdmissionAdvancedPaperTemplate({
     if (!frame.elements.some((item) => options.header.layout?.[item.key])) return null;
 
     return (
-      <View style={{ width: frame.width, height: frame.height, position: 'relative' }}>
+      <View
+        style={{
+          width: frame.width,
+          height: page === 1 ? fullHeaderHeight - 8 : frame.height,
+          position: 'relative',
+        }}
+      >
         {frame.elements.map(({ key, placement, src, field, text, value }) => {
           const position = {
             position: 'absolute' as const,
@@ -398,55 +424,6 @@ export function AdmissionAdvancedPaperTemplate({
             </View>
           );
         }}
-      />
-    ) : null;
-  const renderBorder = () =>
-    options.border.enabled ? (
-      <View
-        fixed
-        style={{
-          position: 'absolute',
-          top: options.border.inset * PRINT_MM,
-          bottom: options.border.inset * PRINT_MM,
-          left: options.border.inset * PRINT_MM,
-          right: options.border.inset * PRINT_MM,
-        }}
-        render={({ pageNumber }) =>
-          options.border.placement === 'every' || pageNumber === 1 ? (
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: 0,
-                right: 0,
-                borderWidth:
-                  options.border.thickness === 'thick'
-                    ? 1.5
-                    : options.border.thickness === 'medium'
-                      ? 1
-                      : 0.5,
-                borderColor,
-                borderRadius: options.border.corners === 'rounded' ? 7 : 0,
-              }}
-            >
-              {options.border.style === 'double' ? (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 3,
-                    bottom: 3,
-                    left: 3,
-                    right: 3,
-                    borderWidth: 0.5,
-                    borderColor,
-                    borderRadius: options.border.corners === 'rounded' ? 5 : 0,
-                  }}
-                />
-              ) : null}
-            </View>
-          ) : null
-        }
       />
     ) : null;
   const renderFooter = () =>
@@ -733,60 +710,80 @@ export function AdmissionAdvancedPaperTemplate({
       .filter(({ rows }) => rows.length > 0);
     const keepHeading = config.keepHeading !== false;
     const sectionSpacing = config.spacing === 'spacious' ? 15 : 10;
+    const tracker = { started: false };
     const heading = (
       <>
+        <PrintSectionStart tracker={tracker} />
         {stepHeading}
         {sectionHeading(section)}
       </>
     );
+    const estimateRowHeight = (row: AdvancedPrintCell[]) =>
+      Math.max(
+        0,
+        ...row.map(({ field, width }) => {
+          const fieldOptions = options.fields[field.code.toUpperCase()] ?? {};
+          const cellWidth = contentWidth * width - padding * 2 - 2;
+          const inline =
+            fieldOptions.labelPosition === 'inline' &&
+            field.kind !== 'photo' &&
+            field.kind !== 'static';
+          const answerWidth = cellWidth * (inline ? 0.65 : 1);
+          const labelHeight =
+            estimatePrintTextHeight(field.label, cellWidth * (inline ? 0.35 : 1), fontSize - 1) + 4;
+          const answer =
+            model.mode === 'blank' || options.copies.selectedChoices === 'mark'
+              ? (field.options?.map((option) => option.label).join('    ') ?? field.value)
+              : field.value;
+          const writingLines = fieldOptions.writingLines ?? (field.kind === 'multiline' ? 3 : 1);
+          let answerHeight = Math.max(
+            (model.mode === 'blank' ? writingLines : 1) * (fontSize + 10),
+            estimatePrintTextHeight(answer, answerWidth, fontSize) + 5
+          );
+          if (field.kind === 'static') answerHeight = 0;
+          if (field.kind === 'photo') {
+            const widthPoints = Math.min(options.photo.width * PRINT_MM, answerWidth);
+            answerHeight =
+              (options.photo.height * widthPoints) / options.photo.width +
+              estimatePrintTextHeight(
+                options.photo.caption || field.label,
+                widthPoints,
+                fontSize - 2
+              ) +
+              13;
+          }
+          const helpHeight =
+            fieldOptions.showHelp && field.helpText
+              ? estimatePrintTextHeight(field.helpText, cellWidth, fontSize - 2) + 4
+              : 0;
+          const conditionalHeight =
+            model.mode === 'blank' && fieldOptions.showConditional !== false && field.conditional
+              ? estimatePrintTextHeight(model.labels.conditional, cellWidth, fontSize - 2) + 3
+              : 0;
+          const height =
+            (inline ? Math.max(labelHeight, answerHeight) : labelHeight + answerHeight) +
+            helpHeight +
+            conditionalHeight +
+            padding * 2 +
+            2;
+            return height;
+        })
+      );
     const rowCanWrap = (row: AdvancedPrintCell[], headingHeight = 0) =>
-      row.some(({ field, width }) => {
-        const fieldOptions = options.fields[field.code.toUpperCase()] ?? {};
-        const cellWidth = contentWidth * width - padding * 2 - 2;
-        const inline =
-          fieldOptions.labelPosition === 'inline' &&
-          field.kind !== 'photo' &&
-          field.kind !== 'static';
-        const answerWidth = cellWidth * (inline ? 0.65 : 1);
-        const labelHeight =
-          estimatePrintTextHeight(field.label, cellWidth * (inline ? 0.35 : 1), fontSize - 1) + 4;
-        const answer =
-          model.mode === 'blank' || options.copies.selectedChoices === 'mark'
-            ? (field.options?.map((option) => option.label).join('    ') ?? field.value)
-            : field.value;
-        const writingLines = fieldOptions.writingLines ?? (field.kind === 'multiline' ? 3 : 1);
-        let answerHeight = Math.max(
-          (model.mode === 'blank' ? writingLines : 1) * (fontSize + 10),
-          estimatePrintTextHeight(answer, answerWidth, fontSize) + 5
-        );
-        if (field.kind === 'static') answerHeight = 0;
-        if (field.kind === 'photo') {
-          const widthPoints = Math.min(options.photo.width * PRINT_MM, answerWidth);
-          answerHeight =
-            (options.photo.height * widthPoints) / options.photo.width +
-            estimatePrintTextHeight(
-              options.photo.caption || field.label,
-              widthPoints,
-              fontSize - 2
-            ) +
-            13;
-        }
-        const helpHeight =
-          fieldOptions.showHelp && field.helpText
-            ? estimatePrintTextHeight(field.helpText, cellWidth, fontSize - 2) + 4
-            : 0;
-        const conditionalHeight =
-          model.mode === 'blank' && fieldOptions.showConditional !== false && field.conditional
-            ? estimatePrintTextHeight(model.labels.conditional, cellWidth, fontSize - 2) + 3
-            : 0;
-        const height =
-          (inline ? Math.max(labelHeight, answerHeight) : labelHeight + answerHeight) +
-          helpHeight +
-          conditionalHeight +
-          padding * 2 +
-          2;
-        return height + headingHeight > continuationBodyHeight;
-      });
+      estimateRowHeight(row) + headingHeight > continuationBodyHeight;
+    // Keep oversized sections flowing, even when a complete section is preferred.
+    const wantsTogether = config.keepTogether ?? !options.flow.smartPageFitting;
+    const estimatedHeight = entries.reduce(
+      (height, { entry, rows }) =>
+        height +
+        rows.reduce((sum, row) => sum + estimateRowHeight(row), 0) +
+        (entry.label
+          ? estimatePrintTextHeight(entry.label, contentWidth - 2 * padding, fontSize) + 10
+          : 0),
+      estimatePrintTextHeight(section.title, contentWidth - 30, fontSize) +
+        20 + sectionSpacing + (stepHeading ? fontSize + 22 : 0)
+    );
+    const keepSectionTogether = wantsTogether && estimatedHeight <= bodyCapacity * 0.8;
     const renderRow = (
       row: AdvancedPrintCell[],
       key: string,
@@ -815,7 +812,10 @@ export function AdmissionAdvancedPaperTemplate({
     const nodes: ReactNode[] = keepHeading
       ? []
       : [
-          <View key={`${section.key}-heading`} wrap={false} break={startNewPage}>
+          <View
+            key={`${section.key}-heading`}
+            wrap={false}
+          >
             {heading}
           </View>,
         ];
@@ -839,7 +839,6 @@ export function AdmissionAdvancedPaperTemplate({
         <View
           key={`${key}-first`}
           wrap={firstRowCanWrap}
-          break={withHeading && startNewPage}
           style={{ marginBottom: lastEntry && !remainingRows.length ? sectionSpacing : 0 }}
         >
           {withHeading && heading}
@@ -861,7 +860,26 @@ export function AdmissionAdvancedPaperTemplate({
         );
       });
     });
-    return nodes;
+    if (keepSectionTogether) {
+      return [
+        <View key={`${section.key}-together`} wrap={false} break={startNewPage}>
+          {nodes}
+        </View>,
+      ];
+    }
+    return [
+      <ContinuedPrintSection
+        key={`${section.key}-flow`}
+        title={section.title}
+        language={model.language}
+        fontFamily={familyFor(section.title)}
+        fontSize={fontSize}
+        startNewPage={startNewPage}
+        tracker={tracker}
+      >
+        {nodes}
+      </ContinuedPrintSection>,
+    ];
   };
 
   const tableFields = (section: AdmissionPrintSection) =>
@@ -900,7 +918,8 @@ export function AdmissionAdvancedPaperTemplate({
   const renderTableHeading = (
     section: AdmissionPrintSection,
     link = true,
-    showStepTitle = true
+    showStepTitle = true,
+    continued = false
   ) => (
     <View wrap={false}>
       {showStepTitle && tableStepTitle(section) ? (
@@ -908,7 +927,12 @@ export function AdmissionAdvancedPaperTemplate({
           {runs(tableStepTitle(section)!)}
         </Text>
       ) : null}
-      {sectionHeading(section, link)}
+      {sectionHeading(
+        continued
+          ? { ...section, title: continuedSectionTitle(section.title, model.language) }
+          : section,
+        link
+      )}
       <View
         style={{
           flexDirection: 'row',
@@ -1090,61 +1114,68 @@ export function AdmissionAdvancedPaperTemplate({
         </Text>
       </View>
     ) : null;
+  const customSignatures = (copy.customSignatureLabels ?? [])
+    .map((label) => label.trim())
+    .filter(Boolean);
+  const signatureLines = [
+    {
+      key: 'parent',
+      enabled: options.content.parentSignature,
+      label: copy.parentLabel || model.labels.parentSignature,
+      image: options.content.parentSignatureImage,
+    },
+    {
+      key: 'office',
+      enabled: options.content.officeSignature,
+      label: copy.officeLabel || model.labels.officeSignature,
+      image: options.content.officeSignatureImage,
+    },
+    ...customSignatures.map((label, index) => ({
+      key: `custom-${index}`,
+      enabled: true,
+      label,
+      image: undefined,
+    })),
+  ].filter(({ enabled }) => enabled);
   const signatures = () =>
-    model.settings.showSignature &&
-    (options.content.parentSignature ||
-      options.content.officeSignature ||
-      options.content.signatureDate) ? (
-      <View key="signatures" wrap={false} style={{ marginTop: 18, marginBottom: 9 }}>
+    model.settings.showSignature && (signatureLines.length > 0 || options.content.signatureDate) ? (
+      <View
+        key="signatures"
+        wrap={customSignatures.length > 0}
+        style={{ marginTop: 18, marginBottom: 9 }}
+      >
         {contentHeading(model.labels.signature)}
-        <View
-          style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            paddingTop: 4,
-          }}
-        >
-          {[
-            {
-              key: 'parent',
-              enabled: options.content.parentSignature,
-              label: copy.parentLabel || model.labels.parentSignature,
-              image: options.content.parentSignatureImage,
-            },
-            {
-              key: 'office',
-              enabled: options.content.officeSignature,
-              label: copy.officeLabel || model.labels.officeSignature,
-              image: options.content.officeSignatureImage,
-            },
-          ]
-            .filter(({ enabled }) => enabled)
-            .map(({ key, label, image }) => (
-              <View
-                key={key}
-                style={{
-                  width:
-                    options.content.parentSignature && options.content.officeSignature
-                      ? '43%'
-                      : '100%',
-                }}
-              >
-                {image ? (
-                  <Image src={image} style={{ width: '100%', height: 28, objectFit: 'contain' }} />
-                ) : (
-                  <View
-                    style={{
-                      height: 28,
-                      borderBottomWidth: 0.5,
-                      borderBottomColor: borderColor,
-                    }}
-                  />
-                )}
-                <Text style={{ fontSize: fontSize - 1, paddingTop: 5 }}>{runs(label)}</Text>
-              </View>
-            ))}
-        </View>
+        {Array.from({ length: Math.ceil(signatureLines.length / 2) }, (_, index) => {
+          const row = signatureLines.slice(index * 2, index * 2 + 2);
+          return (
+            <View
+              key={row[0].key}
+              wrap={false}
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                paddingTop: index === 0 ? 4 : 8,
+              }}
+            >
+              {row.map(({ key, label, image }) => (
+                <View key={key} style={{ width: row.length === 2 ? '43%' : '100%' }}>
+                  {image ? (
+                    <Image src={image} style={{ width: '100%', height: 28, objectFit: 'contain' }} />
+                  ) : (
+                    <View
+                      style={{
+                        height: 28,
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: borderColor,
+                      }}
+                    />
+                  )}
+                  <Text style={{ fontSize: fontSize - 1, paddingTop: 5 }}>{runs(label)}</Text>
+                </View>
+              ))}
+            </View>
+          );
+        })}
         {options.content.signatureDate ? writingLine(model.labels.date, '', 0.45) : null}
       </View>
     ) : null;
@@ -1285,14 +1316,26 @@ export function AdmissionAdvancedPaperTemplate({
           if (table) {
             const [first, ...rest] = renderTableRows(section);
             const keepHeading = config.keepHeading !== false;
+            const tracker = { started: false };
             push(
-              <View key={section.key} break={startNewPage} wrap={keepHeading && first.canWrap}>
-                {renderTableHeading(section, true, Boolean(stepHeading))}
-                {keepHeading ? first.row : null}
-              </View>
+              <ContinuedPrintSection
+                key={section.key}
+                title={section.title}
+                language={model.language}
+                fontFamily={familyFor(section.title)}
+                fontSize={fontSize}
+                startNewPage={startNewPage}
+                tracker={tracker}
+              >
+                <View wrap={keepHeading && first.canWrap}>
+                  <PrintSectionStart tracker={tracker} />
+                  {renderTableHeading(section, true, Boolean(stepHeading))}
+                  {keepHeading ? first.row : null}
+                </View>
+                {!keepHeading && first.row}
+                {rest.map(({ row }) => row)}
+              </ContinuedPrintSection>
             );
-            if (!keepHeading) push(first.row);
-            regular.nodes.push(...rest.map(({ row }) => row));
           } else {
             regular.nodes.push(...renderRegularSection(section, stepHeading, startNewPage));
           }
@@ -1334,7 +1377,11 @@ export function AdmissionAdvancedPaperTemplate({
               color: textColor,
             }}
           >
-            {renderBorder()}
+            <AdmissionPrintPageBorder
+              border={options.border}
+              color={borderColor}
+              margin={Math.min(margins.top, margins.right, margins.bottom, margins.left)}
+            />
             {renderPageHeader()}
             {firstFlowHeader ? (
               <View
@@ -1372,7 +1419,7 @@ export function AdmissionAdvancedPaperTemplate({
                               : 0,
                         }}
                       >
-                        {renderTableHeading(part.table!, subPageNumber === 1)}
+                        {renderTableHeading(part.table!, subPageNumber === 1, true, subPageNumber > 1)}
                       </View>
                     )
                   }

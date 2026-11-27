@@ -712,7 +712,7 @@ export function AdmissionPublicInquiryLinks({
             })}
             isLoading={links.isLoading || (!links.currentData && links.isFetching)}
             isRefreshing={Boolean(links.currentData && links.isFetching)}
-            refreshIndicator="circular"
+            refreshIndicator="none"
             isPagination
             rowsPerPageOptions={[10, 25, 50, 100]}
             isSearch

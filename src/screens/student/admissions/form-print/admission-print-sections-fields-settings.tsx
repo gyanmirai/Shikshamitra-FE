@@ -116,8 +116,10 @@ export function AdmissionPrintSectionsFieldsSettings({
               <PrintSettingSelect
                 label="Section columns"
                 value={
-                  sectionSettings.columns ??
-                  Math.max(1, Math.min(4, section.fieldsPerRow ?? form.fieldsPerRow ?? 2))
+                  sectionSettings.fullWidth
+                    ? 1
+                    : (sectionSettings.columns ??
+                      Math.max(1, Math.min(4, section.fieldsPerRow ?? form.fieldsPerRow ?? 2)))
                 }
                 options={[
                   [1, '1 column'],
@@ -125,7 +127,7 @@ export function AdmissionPrintSectionsFieldsSettings({
                   [3, '3 columns'],
                   [4, '4 columns'],
                 ]}
-                onChange={(columns) => updateSection({ columns: columns as 1 | 2 | 3 | 4 })}
+                onChange={(columns) => updateSection({ columns: columns as 1 | 2 | 3 | 4, fullWidth: undefined })}
               />
               <PrintSettingSelect
                 label="Section spacing"
@@ -138,14 +140,14 @@ export function AdmissionPrintSectionsFieldsSettings({
               />
             </PrintSettingsGrid>
             <PrintSettingToggle
-              label="Full-width section"
-              checked={sectionSettings.fullWidth ?? false}
-              onChange={(fullWidth) => updateSection({ fullWidth })}
-            />
-            <PrintSettingToggle
               label="Start section on a new page"
               checked={sectionSettings.startNewPage ?? false}
               onChange={(startNewPage) => updateSection({ startNewPage })}
+            />
+            <PrintSettingToggle
+              label="Keep section together"
+              checked={sectionSettings.keepTogether ?? !advanced.flow.smartPageFitting}
+              onChange={(keepTogether) => updateSection({ keepTogether })}
             />
             <PrintSettingToggle
               label="Keep heading with first row"
@@ -241,11 +243,6 @@ export function AdmissionPrintSectionsFieldsSettings({
                 onChange={(writingLines) => updateField({ writingLines })}
               />
             </PrintSettingsGrid>
-            <PrintSettingToggle
-              label="Show required marker"
-              checked={fieldSettings.showRequired ?? true}
-              onChange={(showRequired) => updateField({ showRequired })}
-            />
             <PrintSettingToggle
               label="Show field help text"
               checked={fieldSettings.showHelp ?? false}

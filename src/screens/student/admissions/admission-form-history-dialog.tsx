@@ -32,6 +32,7 @@ import {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
+import { admissionFormActionErrorMessage } from './form-list/form-validation-errors';
 import { AdmissionFormComparisonResults } from './admission-form-comparison-results';
 
 type Props = {
@@ -111,7 +112,7 @@ export function AdmissionFormHistoryDialog({
       const problem = parseApiProblemDetail(error);
       if (problem.errorCode === 'Admissions.FormDraftAlreadyExists')
         setDraftConflict({ id: readExistingDraftId(error) });
-      else setRestoreError(problem.detail || restoreErrorMessage);
+      else setRestoreError(admissionFormActionErrorMessage(error, restoreErrorMessage, problem));
     } finally {
       setRestoring(false);
     }

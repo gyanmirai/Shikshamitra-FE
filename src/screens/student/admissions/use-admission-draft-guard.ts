@@ -8,12 +8,14 @@ export function useAdmissionDraftGuard({
   active = true,
   reset,
   push,
+  discardLabel,
 }: {
   dirty: boolean;
   busy?: boolean;
   active?: boolean;
   reset: () => void;
   push?: (href: string) => void;
+  discardLabel?: string;
 }) {
   useStudentSetupFormState({ dirty: active && dirty, busy: active && busy });
   return useUnsavedNavigation(active && dirty, {
@@ -22,6 +24,6 @@ export function useAdmissionDraftGuard({
     guardContextChanges: active,
     onNavigationApproved: reset,
     renderConfirmation: (keepEditing, discard) =>
-      renderUnsavedConfirmation(keepEditing, discard, { busy }),
+      renderUnsavedConfirmation(keepEditing, discard, { busy, discardLabel }),
   });
 }

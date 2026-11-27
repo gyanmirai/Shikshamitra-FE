@@ -26,16 +26,17 @@ export function getBuilderIssueActionLabel(target: BuilderIssueTarget) {
 
 export function getBuilderIssueRecoveryGuidance(target: BuilderIssueTarget): string | undefined {
   if (target.kind === 'field' && target.owner === 'inquiry')
-    return 'This question is defined in Inquiry. Review the source Inquiry form; its question definitions cannot be edited here.';
+    return 'Edit this question in its Inquiry form.';
   if (hasHiddenQuestionSetting(target))
-    return 'This question has saved settings that cannot be edited here. Add a replacement question, or restore a valid form version. Keep the current question until its replacement is ready.';
+    return 'Review this question or restore an earlier form version.';
   if (
     (target.kind === 'section' || target.kind === 'step') &&
     target.settingPath &&
+    !target.settingPath.endsWith('.fields') &&
     !target.settingPath.endsWith('.name') &&
     !target.settingPath.endsWith('.stepName')
   )
-    return `This ${target.kind} has saved settings that cannot be edited here. Recreate the affected ${target.kind}, or restore a valid form version. Keep its questions until the replacement is ready.`;
+    return `Review this ${target.kind} or restore an earlier form version.`;
   return undefined;
 }
 

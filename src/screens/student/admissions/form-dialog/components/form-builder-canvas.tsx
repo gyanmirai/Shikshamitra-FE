@@ -13,6 +13,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 import { FormBuilderStep } from '../form-builder-step';
+import { formStepTransition } from '../form-step-transition';
 import { setInheritedStepName } from '../form-inheritance-model';
 import { getAdmissionFormStepGroups } from '../form-step-groups';
 import { isLockedInquiryField } from '../inquiry-default-fields';
@@ -147,11 +148,11 @@ export function FormBuilderCanvas({
   return (
     <Stack
       direction={{ xs: 'column', md: 'row' }}
-      spacing={1.5}
+      spacing={1}
       sx={{
         height: 1,
         minHeight: 0,
-        p: { xs: 1.5, sm: 2 },
+        p: 1,
         bgcolor: 'background.paper',
         ...(footer && { pr: 0, pb: 0 }),
       }}
@@ -163,7 +164,7 @@ export function FormBuilderCanvas({
             flexShrink: 0,
             minHeight: 0,
             overflow: 'hidden',
-            mb: footer ? 2 : 0,
+            mb: footer ? 1 : 0,
           }}
         >
           <Card
@@ -274,7 +275,7 @@ export function FormBuilderCanvas({
             '& .simplebar-track.simplebar-horizontal': { display: 'none' },
           }}
         >
-          <Stack spacing={1} sx={{ pb: 0.5, pl: 0.25, pr: footer ? 2 : 0.25 }}>
+          <Stack spacing={1} sx={{ pb: 0.5, pr: footer ? 1 : 0.25 }}>
             {beforeSections}
             {!effectiveForm.sections.length && (
               <Typography variant="body2" color="text.secondary">
@@ -283,16 +284,17 @@ export function FormBuilderCanvas({
             )}
             {isStepper ? (
               (showAllSteps ? steps : activeStep ? [activeStep] : []).map((step) => (
-                <FormBuilderStep
-                  key={step.id}
-                  formik={formik}
-                  step={step}
-                  selectedSectionId={selectedSectionId}
-                  selectedFieldId={selectedFieldId}
-                  onSelectSection={selectSection}
-                  onSelectField={selectField}
-                  renderSection={renderSection}
-                />
+                <Box key={step.id} sx={formStepTransition}>
+                  <FormBuilderStep
+                    formik={formik}
+                    step={step}
+                    selectedSectionId={selectedSectionId}
+                    selectedFieldId={selectedFieldId}
+                    onSelectSection={selectSection}
+                    onSelectField={selectField}
+                    renderSection={renderSection}
+                  />
+                </Box>
               ))
             ) : (
               <SortableContext
