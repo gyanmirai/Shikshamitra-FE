@@ -11,10 +11,10 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { fDateTime, formatStr } from 'src/utils/format-time';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -22,6 +22,7 @@ import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useRef, useState, useEffect, type ReactNode } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
   useGetStudentOnboardingCaseQuery,
   usePreviewStudentOnboardingActivationQuery,
@@ -33,7 +34,6 @@ import {
   Button,
   Drawer,
   Divider,
-  Skeleton,
   Accordion,
   IconButton,
   Typography,
@@ -44,14 +44,18 @@ import {
 } from '@mui/material';
 
 import StudentOnboardingFees from './student-onboarding-fees';
-import StudentPhotoAvatar from '../../components/student-photo-avatar';
 import { StudentSetupLoadingFields } from './student-setup-loading';
+import StudentPhotoAvatar from '../../components/student-photo-avatar';
 import { hasAssignedDivision, type StudentSetupView } from './student-setup-view';
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
 import StudentOnboardingCaseOperations from './student-onboarding-case-operations';
 import StudentOnboardingStepWaiverDialog from './student-onboarding-step-waiver-dialog';
 import StudentOnboardingWorkflowDocuments from './student-onboarding-workflow-documents';
 import { ApplicationJourneyHistory } from '../../admissions/application-detail/application-journey-history';
+import {
+  ActivityHistorySkeleton,
+  ActivityHistoryTimeline,
+} from '../../components/activity-history-timeline';
 import {
   onboardingCheckMeta,
   onboardingStageMeta,
@@ -66,6 +70,8 @@ type StudentSetupDrawerProps = {
   open: boolean;
   student: StudentOnboardingItem | null;
   onClose: () => void;
+  exiting?: boolean;
+  onExited?: () => void;
   onAssignDivision?: () => void;
   onAssignGrNumber?: () => void;
   onAssignRollNumber?: () => void;
@@ -104,6 +110,15 @@ const DRAWER_TABS = [
 ] as const;
 
 type DrawerView = (typeof DRAWER_TABS)[number]['value'];
+
+const onboardingHistoryIcons: Record<string, string> = {
+  ReadinessRefreshed: 'mdi:clipboard-check-outline',
+  StepChanged: 'mdi:clipboard-edit-outline',
+  IdentifiersPrepared: 'mdi:card-account-details-outline',
+  Activated: 'mdi:check-circle-outline',
+  ActivationFailed: 'mdi:alert-circle-outline',
+  Cancelled: 'mdi:cancel',
+};
 
 function SectionCard({
   icon,
@@ -171,6 +186,8 @@ export default function StudentSetupDrawer({
   open,
   student,
   onClose,
+  exiting = false,
+  onExited,
   onAssignDivision,
   onAssignGrNumber,
   onAssignRollNumber,
@@ -212,7 +229,7 @@ export default function StudentSetupDrawer({
   const { value: view, setValue: setView, onChange: onViewChange } = useTabs(defaultView);
   const capturedFieldsQuery = useGetStudentOnboardingCaseQuery(activeStudent?.id ?? '', {
     skip:
-      !open ||
+      (!open && !exiting) ||
       (!detailsOnly && taskView === 'credentials' && view !== 'history') ||
       activeStudent?.source !== 'onboarding-case',
   });
@@ -224,6 +241,7 @@ export default function StudentSetupDrawer({
   const handlingEvents = historyCase
     ? historyCase.events.map(mapOnboardingEventToActivity)
     : (activeStudent?.activity ?? []);
+  const historyLoading = capturedFieldsQuery.isFetching && (!historyCase || !handlingEvents.length);
   const activationPreviewQuery = usePreviewStudentOnboardingActivationQuery(
     activeStudent?.id ?? '',
     {
@@ -246,7 +264,7 @@ export default function StudentSetupDrawer({
   }, [student]);
 
   useEffect(() => {
-    setView(defaultView);
+    if (open) setView(defaultView);
   }, [student?.id, defaultView, open, setView]);
 
   useEffect(() => {
@@ -301,8 +319,9 @@ export default function StudentSetupDrawer({
       anchor="right"
       open={open}
       onClose={drawerBusy ? undefined : onClose}
-      transitionDuration={{ enter: 300, exit: 250 }}
+      onTransitionExited={onExited}
       PaperProps={{
+        inert: !open || undefined,
         role: detailsOnly ? 'dialog' : undefined,
         'aria-modal': detailsOnly ? true : undefined,
         'aria-labelledby': 'student-setup-drawer-title',
@@ -317,10 +336,9 @@ export default function StudentSetupDrawer({
     >
       <Stack
         component="header"
-        direction={{ xs: 'column', sm: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ xs: 'stretch', sm: 'center' }}
-        spacing={{ xs: 0.5, sm: 2 }}
+        direction="row"
+        alignItems="flex-start"
+        spacing={1}
         sx={{
           px: { xs: 1.5, sm: 2 },
           py: 1.5,
@@ -332,60 +350,50 @@ export default function StudentSetupDrawer({
       >
         <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
           <StudentPhotoAvatar
-            studentId={open ? activeStudent.studentId : undefined}
+            studentId={open || exiting ? activeStudent.studentId : undefined}
             alt={activeStudent.studentName}
             sx={{ bgcolor: 'action.selected', color: 'text.secondary', width: 44, height: 44 }}
           >
             {activeStudent.studentName.charAt(0).toUpperCase()}
           </StudentPhotoAvatar>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography
-              id="student-setup-drawer-title"
-              component="h2"
-              variant="subtitle1"
-              fontWeight={700}
-              noWrap
-            >
-              {activeStudent.studentName}
-            </Typography>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Stack direction="row" alignItems="center" flexWrap="wrap" columnGap={0.5}>
+              <Typography
+                id="student-setup-drawer-title"
+                component="h2"
+                variant="h6"
+                sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
+              >
+                {activeStudent.studentName}
+              </Typography>
+              <Label color={status.color} variant="outlined">
+                {status.label}
+              </Label>
+              <InfoTooltipIcon
+                title={
+                  detailsOnly
+                    ? 'Saved admission details, academic placement and assigned student numbers.'
+                    : activeStudent.source === 'onboarding-case'
+                      ? 'This live case saves readiness and activation changes to the onboarding service. Actions require the appropriate permission.'
+                      : 'This Student Records view cannot change admission readiness, approvals, or account state.'
+                }
+                label="Student onboarding case information"
+              />
+            </Stack>
             <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
               {activeStudent.applicationNumber} · {activeStudent.standardName} /{' '}
               {activeStudent.divisionName}
             </Typography>
           </Box>
         </Stack>
-        <Stack
-          direction="row"
-          spacing={0.5}
-          alignItems="center"
-          sx={{ flexShrink: 0, alignSelf: { xs: 'flex-end', sm: 'center' } }}
+        <IconButton
+          aria-label="Close Student Setup"
+          onClick={onClose}
+          disabled={drawerBusy}
+          sx={{ width: 44, height: 44, flexShrink: 0 }}
         >
-          <Label color={status.color} variant="outlined">
-            {status.label}
-          </Label>
-          <CustomTooltip
-            title={
-              detailsOnly
-                ? 'Saved admission details, academic placement and assigned student numbers.'
-                : activeStudent.source === 'onboarding-case'
-                  ? 'This live case saves readiness and activation changes to the onboarding service. Actions require the appropriate permission.'
-                  : 'This Student Records view cannot change admission readiness, approvals, or account state.'
-            }
-            arrow
-          >
-            <IconButton size="small" aria-label="Student onboarding case information">
-              <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} />
-            </IconButton>
-          </CustomTooltip>
-          <IconButton
-            aria-label="Close Student Setup"
-            onClick={onClose}
-            disabled={drawerBusy}
-            sx={{ minWidth: 44, minHeight: 44 }}
-          >
-            <Iconify icon="mdi:close" width={20} />
-          </IconButton>
-        </Stack>
+          <Iconify icon={GlobalIcons.cancel} width={20} />
+        </IconButton>
       </Stack>
 
       {!detailsOnly && taskView === 'readiness' && (
@@ -980,14 +988,10 @@ export default function StudentSetupDrawer({
                 sx={{ display: view === 'history' ? 'block' : 'none' }}
               >
                 <Stack spacing={1.5}>
-                  {capturedFieldsQuery.isFetching && !historyCase && (
-                    <Skeleton
-                      variant="rounded"
-                      height={160}
-                      aria-label="Loading handling history"
-                    />
+                  {view === 'history' && canViewAdmissions && historyCase?.applicantId && (
+                    <ApplicationJourneyHistory applicantId={historyCase.applicantId} />
                   )}
-                  {capturedFieldsQuery.isError && (
+                  {capturedFieldsQuery.isError && !historyLoading ? (
                     <StudentFeedback
                       notificationKey="STU-1049"
                       presentation="toast"
@@ -1000,63 +1004,48 @@ export default function StudentSetupDrawer({
                     >
                       Handling history could not be loaded.
                     </StudentFeedback>
-                  )}
-                  {!capturedFieldsQuery.isFetching &&
-                    !capturedFieldsQuery.isError &&
-                    handlingEvents.length === 0 && (
-                      <StudentFeedback
-                        notificationKey="STU-1050"
-                        presentation="inline"
-                        severity="info"
-                      >
-                        No onboarding activity recorded yet.
-                      </StudentFeedback>
-                    )}
-                  {view === 'history' && canViewAdmissions && historyCase?.applicantId && (
-                    <ApplicationJourneyHistory applicantId={historyCase.applicantId} />
-                  )}
-                  {!capturedFieldsQuery.isError && handlingEvents.length > 0 && (
-                    <SectionCard
+                  ) : (
+                    <FormSectionCard
                       icon="mdi:history"
                       title="Activity & Audit"
-                      description="A chronological record of preparation, approval and activation events."
+                      titleTypographyProps={{ component: 'h3' }}
+                      descriptionTooltip="Preparation, approval and activation events for this onboarding case."
+                      action={
+                        !historyLoading &&
+                        handlingEvents.length > 0 && (
+                          <Typography variant="caption" color="text.secondary">
+                            Newest first
+                          </Typography>
+                        )
+                      }
                     >
-                      <Stack spacing={1}>
-                        {handlingEvents.map((event) => (
-                          <Stack key={event.id} direction="row" spacing={1} alignItems="flex-start">
-                            <Box
-                              sx={{
-                                width: 8,
-                                height: 8,
-                                mt: 0.75,
-                                borderRadius: '50%',
-                                bgcolor: 'text.disabled',
-                                flexShrink: 0,
-                              }}
-                            />
-                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                              <Typography variant="body2" fontWeight={600}>
-                                {event.title}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {event.detail}
-                                {' · Handled by: '}
-                                {event.actorName || 'Name not recorded'}
-                              </Typography>
-                            </Box>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ flexShrink: 0 }}
-                            >
-                              {Number.isNaN(Date.parse(event.occurredAt))
-                                ? event.occurredAt
-                                : fDateTime(event.occurredAt, formatStr.split.dateTime)}
-                            </Typography>
-                          </Stack>
-                        ))}
-                      </Stack>
-                    </SectionCard>
+                      {historyLoading ? (
+                        <ActivityHistorySkeleton ariaLabel="Loading handling history" />
+                      ) : handlingEvents.length > 0 ? (
+                        <ActivityHistoryTimeline
+                          ariaLabel="Onboarding activity and audit"
+                          items={handlingEvents.map((event) => ({
+                            id: event.id,
+                            title: event.title.replace(
+                              /(?<=[a-z\d])([A-Z][a-z]+)/g,
+                              (word) => ` ${word.toLowerCase()}`
+                            ),
+                            icon: onboardingHistoryIcons[event.title] ?? 'mdi:history',
+                            actor: `Handled by: ${event.actorName?.trim() || 'Name not recorded'}`,
+                            description: event.detail,
+                            occurredAt: event.occurredAt,
+                          }))}
+                        />
+                      ) : (
+                        <StudentFeedback
+                          notificationKey="STU-1050"
+                          presentation="inline"
+                          severity="info"
+                        >
+                          No onboarding activity recorded yet.
+                        </StudentFeedback>
+                      )}
+                    </FormSectionCard>
                   )}
                 </Stack>
               </Box>

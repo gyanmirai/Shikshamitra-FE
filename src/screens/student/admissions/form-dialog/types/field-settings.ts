@@ -5,4 +5,5 @@ export type FieldSettingsProps = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   sectionIndex: number;
   fieldIndex: number;
+  linkedFieldReason?: string;
 };

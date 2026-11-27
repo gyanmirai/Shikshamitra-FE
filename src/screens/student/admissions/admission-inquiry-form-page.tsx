@@ -171,7 +171,7 @@ export default function AdmissionInquiryFormPage() {
           aria-label="Inquiry Form Fields"
           sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 1.5, sm: 2 } }}
         >
-          <FormBusyRegion busy={controller.busy} label="Saving Inquiry…">
+          <FormBusyRegion busy={controller.busy} label="Saving Inquiry…" showLabel={false}>
             <Stack spacing={2}>
               {controller.offeringsError && !hierarchySelected && (
                 <StudentFeedback

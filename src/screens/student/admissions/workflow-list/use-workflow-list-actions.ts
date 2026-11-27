@@ -96,25 +96,6 @@ export function useWorkflowListActions(returnTo?: string) {
         `${studentPaths.enrollment.settings.workflows}/${workflow.id}${panel ? `?panel=${panel}` : ''}`
       )
     );
-  const runAction = async (
-    action: () => Promise<AdmissionWorkflow | void>,
-    message: string,
-    goToResult = false
-  ) => {
-    try {
-      const result = await action();
-      shikshaMitraToast.success({ message });
-      if (goToResult && result && 'id' in result) navigate(result);
-    } catch (error) {
-      const problem = parseApiProblemDetail(error);
-      if (problem.errorCode !== DUPLICATE_WORKFLOW_NAME_CODE) {
-        shikshaMitraToast.error({
-          message: problem.detail || 'Unable to complete the workflow action.',
-        });
-      }
-      throw error;
-    }
-  };
   const create = async ({
     starterJourney,
     registrationFormDefinitionId,
@@ -146,12 +127,22 @@ export function useWorkflowListActions(returnTo?: string) {
     }
   };
   const clone = async (values: WorkflowDetails) => {
-    if (cloneSource)
-      await runAction(
-        () => cloneWorkflow({ id: cloneSource.id, body: values }).unwrap(),
-        'Workflow cloned',
-        true
-      );
+    if (!cloneSource) return undefined;
+    try {
+      const result = await cloneWorkflow({ id: cloneSource.id, body: values }).unwrap();
+      shikshaMitraToast.success({ message: 'Workflow cloned' });
+      return () => {
+        if (result?.id) navigate(result);
+      };
+    } catch (error) {
+      const problem = parseApiProblemDetail(error);
+      if (problem.errorCode !== DUPLICATE_WORKFLOW_NAME_CODE) {
+        shikshaMitraToast.error({
+          message: problem.detail || 'Unable to complete the workflow action.',
+        });
+      }
+      throw error;
+    }
   };
   const openClone = (workflow: AdmissionWorkflow) => {
     setCloneSource(workflow);

@@ -8,24 +8,30 @@ import { Box, Stack, Drawer, Divider, IconButton, Typography } from '@mui/materi
 
 export function ApplicationFormCorrectionFrame({
   busy = false,
+  closing = false,
   onClose,
+  onExited,
   children,
 }: {
   busy?: boolean;
+  closing?: boolean;
   onClose: () => void;
+  onExited?: () => void;
   children: ReactNode;
 }) {
   const titleId = useId();
   return (
     <Drawer
       anchor="right"
-      open
+      open={!closing}
       onClose={onClose}
+      onTransitionExited={onExited}
       slotProps={{
         paper: {
           role: 'dialog',
           'aria-modal': true,
           'aria-labelledby': titleId,
+          inert: closing || undefined,
           sx: {
             width: { xs: '100%', md: 960 },
             maxWidth: '100%',
@@ -41,7 +47,7 @@ export function ApplicationFormCorrectionFrame({
         <Typography id={titleId} component="h2" variant="h6">
           Edit Application Form
         </Typography>
-        <CustomTooltip title="Correct the Saved Registration Form Before Finalization. Approval, Application Number and Payment History Are Retained.">
+        <CustomTooltip title="Correct the saved registration form before finalization. Approval, application number and payment history are retained.">
           <IconButton size="small" aria-label="About Application Corrections">
             <Iconify icon={GlobalIcons.info} color="info.main" />
           </IconButton>

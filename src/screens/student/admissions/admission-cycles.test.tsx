@@ -313,29 +313,30 @@ describe('Admission periods table states', () => {
     expect(screen.getByRole('button', { name: /full.?screen/i })).toBeInTheDocument();
   });
 
-  it('places Publish before the draft period menu and keeps Edit inside it', async () => {
+  it('places Publish and Edit before the draft period menu', async () => {
     mocks.result.currentData = { items: [cycle], totalCount: 1 };
     renderScreen();
 
     const publish = screen.getByRole('button', { name: 'Publish' });
+    const edit = screen.getByRole('button', { name: 'Edit' });
     const more = screen.getByRole('button', { name: 'More actions for Fresh Admission' });
-    expect(within(publish.closest('td')!).getAllByRole('button')).toEqual([publish, more]);
+    expect(within(publish.closest('td')!).getAllByRole('button')).toEqual([publish, edit, more]);
     fireEvent.click(more);
-    expect(await screen.findByRole('menuitem', { name: 'Edit' })).toBeVisible();
+    expect(screen.queryByRole('menuitem', { name: 'Edit' })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Publish' })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Clone as Draft' })).not.toBeInTheDocument();
   });
 
-  it('shows shared progress at the bottom while retaining records and headings', () => {
+  it('shows a refresh spinner while retaining records and headings', () => {
     mocks.result.currentData = { items: [cycle], totalCount: 1 };
     mocks.result.isFetching = true;
     renderScreen();
     expect(screen.getByText('Fresh Admission')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
-    expect(screen.getByRole('progressbar', { name: 'Refreshing Admission Periods' })).toHaveStyle({
-      position: 'absolute',
-      bottom: '0px',
-    });
+    expect(screen.getByRole('progressbar', { name: 'Refreshing Admission Periods' })).toHaveClass(
+      'MuiCircularProgress-root'
+    );
+    expect(document.querySelector('.MuiLinearProgress-root')).not.toBeInTheDocument();
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true');
     expect(document.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
   });

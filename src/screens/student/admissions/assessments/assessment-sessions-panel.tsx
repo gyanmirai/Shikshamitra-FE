@@ -260,6 +260,7 @@ export function AssessmentSessionsPanel({
           rowProps={(row) => ({ 'aria-selected': row.id === selectedSessionId })}
           columns={columns}
           isLoading={isLoading}
+          refreshIndicator="circular"
           isRefreshing={isFetching && !isLoading}
           isSearch
           showColumns

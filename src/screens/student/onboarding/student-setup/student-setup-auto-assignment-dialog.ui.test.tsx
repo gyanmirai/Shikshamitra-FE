@@ -95,7 +95,7 @@ it('retains the selected target when cancellation is declined', async () => {
   expect(screen.getByRole('combobox', { name: 'Target division' })).toHaveTextContent('B');
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
   await user.click(screen.getByRole('button', { name: 'Discard changes' }));
-  expect(props.onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(props.onClose).toHaveBeenCalledOnce());
 });
 it('disables target, submit and close while assignments are saving', () => {
   renderDialog({ ...defaults(), busy: true });

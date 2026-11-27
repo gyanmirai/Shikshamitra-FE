@@ -23,7 +23,6 @@ import {
   ListItem,
   TextField,
   Typography,
-  DialogActions,
   InputAdornment,
 } from '@mui/material';
 import {
@@ -210,6 +209,7 @@ export function AdmissionFormHistoryDialog({
       hasForm={false}
       guardUnsavedChanges={false}
       disableClose={restoring}
+      closeOnBackdropClick
       maxWidth="md"
       paperProps={{ sx: { '& .MuiTypography-h6': { overflowWrap: 'anywhere' } } }}
     >
@@ -458,17 +458,6 @@ export function AdmissionFormHistoryDialog({
           </FormSectionCard>
         </Stack>
       </DialogScrollContent>
-      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<Iconify icon="mdi:close" />}
-          disabled={restoring}
-          onClick={onClose}
-        >
-          Close
-        </Button>
-      </DialogActions>
     </CustomDialog>
   );
 }

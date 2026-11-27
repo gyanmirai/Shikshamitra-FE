@@ -154,6 +154,7 @@ export function AdmissionOfferingTable(props: Props) {
         },
       })}
       isLoading={loading}
+      refreshIndicator="circular"
       isRefreshing={refreshing}
       errorContent={errorContent}
       isPagination

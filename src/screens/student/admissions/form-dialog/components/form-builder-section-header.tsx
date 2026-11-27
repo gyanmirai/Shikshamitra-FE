@@ -10,6 +10,7 @@ import ButtonBase from '@mui/material/ButtonBase';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
@@ -40,6 +41,7 @@ type Props = {
   onDelete: () => void;
   readOnly?: boolean;
   deleteDisabled?: boolean;
+  deleteBlockedReason?: string;
 };
 
 export function FormBuilderSectionHeader({
@@ -60,6 +62,7 @@ export function FormBuilderSectionHeader({
   onDelete,
   readOnly = false,
   deleteDisabled = false,
+  deleteBlockedReason,
 }: Props) {
   const name = section.name || `Section ${sectionIndex + 1}`;
   const confirmDelete = useBoolean();
@@ -210,21 +213,29 @@ export function FormBuilderSectionHeader({
             </IconButton>
           </CustomTooltip>
           <CustomTooltip
-            title={deleteDisabled ? 'This Section Contains Protected Core Fields.' : 'Delete'}
+            title={
+              deleteBlockedReason ||
+              (deleteDisabled ? 'This Section Contains Protected Core Fields.' : 'Delete')
+            }
           >
             <span>
               <IconButton
                 size="small"
                 aria-label={`Delete ${name} Section`}
-                color="error"
-                disabled={deleteDisabled}
+                color={deleteBlockedReason ? 'default' : 'error'}
+                disabled={deleteDisabled && !deleteBlockedReason}
                 sx={sectionActionButtonSx}
                 onClick={() => {
                   actions.onClose();
-                  confirmDelete.onTrue();
+                  if (deleteBlockedReason)
+                    shikshaMitraToast.warning({ message: deleteBlockedReason });
+                  else confirmDelete.onTrue();
                 }}
               >
-                <Iconify icon={GlobalIcons.delete} width={16} />
+                <Iconify
+                  icon={deleteBlockedReason ? 'mdi:lock-outline' : GlobalIcons.delete}
+                  width={16}
+                />
               </IconButton>
             </span>
           </CustomTooltip>
@@ -234,7 +245,7 @@ export function FormBuilderSectionHeader({
         name={name}
         unit="section"
         onDelete={() => {
-          if (!deleteDisabled) onDelete();
+          if (!deleteDisabled && !deleteBlockedReason) onDelete();
         }}
         open={confirmDelete.value}
         onClose={confirmDelete.onFalse}

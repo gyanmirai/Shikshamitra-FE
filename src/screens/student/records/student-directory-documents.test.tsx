@@ -1,7 +1,7 @@
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
 import { it, vi, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 
 import StudentDirectoryDocuments from './student-directory-documents';
 
@@ -184,4 +184,61 @@ it('retains the source year and disables the open I-card workflow after a global
     academicYearId: 'year-1',
     contextInvalid: true,
   });
+});
+
+it.each(['drawer', 'builder'] as const)(
+  'guards closing through the %s when there are photo edits',
+  (source) => {
+    const onClose = vi.fn();
+    render(
+      <StudentDirectoryDocuments
+        request={{ kind: 'id-card', students: [student], academicYearId: 'year-1' }}
+        onClose={onClose}
+      />
+    );
+    act(() => state.builder.mock.lastCall?.[0].onDirtyChange?.(true));
+    const dismiss = () => act(() => state[source].mock.lastCall?.[0].onClose());
+
+    dismiss();
+    expect(screen.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByRole('dialog', { name: 'Print I-Cards' })).toBeInTheDocument();
+
+    dismiss();
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(state.drawer.mock.lastCall?.[0].open).toBe(false);
+    expect(onClose).not.toHaveBeenCalled();
+    act(() => state.drawer.mock.lastCall?.[0].onExited?.());
+    expect(onClose).toHaveBeenCalledTimes(1);
+  }
+);
+
+it('blocks dismissal during card issuance and closes after confirmed success', () => {
+  const onClose = vi.fn();
+  render(
+    <StudentDirectoryDocuments
+      request={{ kind: 'id-card', students: [student], academicYearId: 'year-1' }}
+      onClose={onClose}
+    />
+  );
+  act(() => {
+    state.builder.mock.lastCall?.[0].onDirtyChange?.(true);
+    state.builder.mock.lastCall?.[0].onBusyChange(true);
+  });
+  act(() => state.drawer.mock.lastCall?.[0].onClose());
+  act(() => state.builder.mock.lastCall?.[0].onClose());
+  expect(onClose).not.toHaveBeenCalled();
+  expect(
+    screen.queryByRole('dialog', { name: 'Discard Unsaved Changes?' })
+  ).not.toBeInTheDocument();
+
+  act(() => state.builder.mock.lastCall?.[0].onIssued?.());
+  expect(state.drawer.mock.lastCall?.[0].open).toBe(false);
+  expect(onClose).not.toHaveBeenCalled();
+  act(() => state.drawer.mock.lastCall?.[0].onExited?.());
+  expect(onClose).toHaveBeenCalledTimes(1);
+  expect(
+    screen.queryByRole('dialog', { name: 'Discard Unsaved Changes?' })
+  ).not.toBeInTheDocument();
 });

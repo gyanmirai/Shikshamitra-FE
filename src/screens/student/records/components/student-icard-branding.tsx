@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { IdCardTemplate } from 'src/redux/student/records/student-record-documents-api';
 
 import { GlobalIcons } from 'src/utils/icons';
@@ -10,13 +11,13 @@ export function StudentICardBranding({
   template,
   onChange,
   disabled,
-  canConfigureSignature,
+  signatureContent,
   onBusyChange,
 }: {
   template: IdCardTemplate;
   onChange: (patch: Partial<IdCardTemplate>) => void;
   disabled?: boolean;
-  canConfigureSignature: boolean;
+  signatureContent?: ReactNode;
   onBusyChange?: (busy: boolean) => void;
 }) {
   return (
@@ -68,16 +69,7 @@ export function StudentICardBranding({
         onChange={(logo) => onChange({ logo })}
         showInheritanceHelp={false}
       />
-      {canConfigureSignature && (
-        <TemplateIdentityAsset
-          kind="signature"
-          value={template.signature}
-          disabled={disabled}
-          onBusy={onBusyChange}
-          onChange={(signature) => onChange({ signature })}
-          showInheritanceHelp={false}
-        />
-      )}
+      {signatureContent}
     </Stack>
   );
 }

@@ -14,6 +14,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import {
   Box,
   Chip,
@@ -26,7 +27,7 @@ import {
   TextField,
   IconButton,
   Typography,
-  LinearProgress,
+  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 
@@ -147,20 +148,31 @@ export function FormInheritancePanel() {
               available.
             </Typography>
           )}
-          {inheritance.connectionsLoading && (
-            <LinearProgress aria-label="Loading Retained Inquiry Versions" />
+          {inheritance.connectionsLoading && !inheritance.hasMoreConnections && (
+            <CircularProgress
+              size={16}
+              aria-label="Loading retained inquiry versions"
+              sx={{ alignSelf: 'flex-start', color: 'text.secondary' }}
+            />
           )}
           {inheritance.hasMoreConnections && (
             <Button
               size="small"
               variant="outlined"
-              disabled={inheritance.connectionsLoading || formik.isSubmitting}
+              loading={inheritance.connectionsLoading}
+              disabled={formik.isSubmitting}
               onClick={inheritance.loadMoreConnections}
             >
               Load More Inquiry Versions
             </Button>
           )}
-          {inheritance.loading && <LinearProgress aria-label="Checking Inquiry Questions" />}
+          {inheritance.loading && (
+            <CircularProgress
+              size={16}
+              aria-label="Checking inquiry questions"
+              sx={{ alignSelf: 'flex-start', color: 'text.secondary' }}
+            />
+          )}
           {checkedPreview && (
             <>
               {!checkedPreview.isValid && (
@@ -271,24 +283,44 @@ export { InheritedFormSections as InheritedFieldsCanvas } from './inherited-form
 export function InheritedFieldDrawer() {
   const inheritance = useFormInheritance();
   const theme = useTheme();
+  const { closing, closeAfterExit, onExited, reopen } = useStudentDrawerExit();
+  const fieldId = inheritance?.selectedField?.id;
+  useEffect(() => {
+    reopen();
+  }, [fieldId, reopen]);
+
   if (!inheritance) return null;
+  const requestClose = () => closeAfterExit(() => inheritance.selectField(null));
+
   return (
     <Drawer
-      open={Boolean(inheritance.selectedField)}
+      open={Boolean(inheritance.selectedField) && !closing}
       anchor="right"
-      onClose={() => inheritance.selectField(null)}
-      aria-labelledby="inherited-field-settings-title"
+      onClose={requestClose}
+      onTransitionExited={onExited}
       sx={{ zIndex: theme.zIndex.modal }}
-      slotProps={{ paper: { sx: { width: { xs: 1, sm: 440 }, maxWidth: 1 } } }}
+      slotProps={{
+        paper: {
+          'aria-labelledby': 'inherited-field-settings-title',
+          inert: closing,
+          sx: { width: { xs: 1, sm: 440 }, maxWidth: 1 },
+        },
+      }}
     >
       <Stack sx={{ height: 1, minHeight: 0 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 1.5 }}>
-          <Typography id="inherited-field-settings-title" variant="subtitle1">
-            Inquiry Question Settings
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={0.75}>
+            <Typography id="inherited-field-settings-title" component="h2" variant="h6">
+              Inquiry Question Settings
+            </Typography>
+            <InfoTooltipIcon
+              label="Inquiry question settings information"
+              title="Review this question from the source inquiry and link it to a matching registration question."
+            />
+          </Stack>
           <IconButton
             aria-label="Close Inherited Field Settings"
-            onClick={() => inheritance.selectField(null)}
+            onClick={requestClose}
           >
             <Iconify icon="mdi:close" />
           </IconButton>
@@ -313,7 +345,7 @@ export function InheritedFieldDrawer() {
           justifyContent="flex-end"
           sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}
         >
-          <Button size="small" variant="contained" onClick={() => inheritance.selectField(null)}>
+          <Button size="small" variant="contained" onClick={requestClose}>
             Done
           </Button>
         </Stack>
@@ -360,7 +392,7 @@ export function InheritedFieldSettings({
       <FormSectionCard
         title="Source"
         icon="mdi:link-variant"
-        descriptionTooltip="Inherited Definitions Are Managed in the Source Inquiry. Preview Opens Separately and Preserves This Draft."
+        descriptionTooltip="Inherited questions are managed in the source inquiry. Preview opens separately and preserves this draft."
       >
         <Typography variant="body2">{sourceName}</Typography>
         <Button
@@ -373,7 +405,7 @@ export function InheritedFieldSettings({
           variant="outlined"
           endIcon={<Iconify icon="mdi:open-in-new" />}
         >
-          Open Inquiry Form
+          Open inquiry form
         </Button>
         {inheritance && !inheritance.canViewSources && (
           <Typography variant="caption" color="text.secondary">
@@ -384,7 +416,7 @@ export function InheritedFieldSettings({
       <FormSectionCard
         title="Basic Settings"
         icon="mdi:form-textbox"
-        descriptionTooltip="Question Labels, Types, Options, Requirements, Rules and Placement Are Managed in Inquiry. Registration Applicants Can Correct Their Prefilled Answers."
+        descriptionTooltip="Manage question labels, types, options, requirements, rules and placement in the source inquiry. Applicants can correct prefilled answers during registration."
       >
         <TextField label="Field Label" value={field.label} disabled fullWidth size="small" />
         <TextField
@@ -407,17 +439,17 @@ export function InheritedFieldSettings({
         />
         <Typography variant="caption" color="text.secondary">
           {capturedReference
-            ? 'The Captured Inquiry Answer Is a Read-only Reference.'
+            ? 'The captured inquiry answer is a read-only reference.'
             : required
-              ? 'Required by the Source Inquiry.'
-              : 'Optional in the Source Inquiry.'}
+              ? 'Required by the source inquiry.'
+              : 'Optional in the source inquiry.'}
         </Typography>
       </FormSectionCard>
       {!!mappingCandidates.length && (
         <FormSectionCard
           title="Question Mapping"
           icon="mdi:link-variant"
-          descriptionTooltip="Choose an Existing Registration Question Only When It Asks for the Same Information. Names Alone Do Not Establish a Match."
+          descriptionTooltip="Choose an existing registration question only when it asks for the same information. Check the question itself before mapping it."
         >
           <CustomSelect
             label="Same Question in Registration"
@@ -452,7 +484,7 @@ export function InheritedFieldSettings({
         disabled
         startIcon={<Iconify icon="mdi:lock-outline" />}
       >
-        Delete Field
+        Delete field
       </Button>
       <Typography variant="caption" color="text.secondary">
         Inherited fields are managed in Inquiry.

@@ -115,6 +115,10 @@ export function getAdmissionPrintPreviewTarget(
     beforeContent.showInstructions !== content.showInstructions ||
     beforeContent.instructionsPlacement !== content.instructionsPlacement ||
     beforeContent.instructionSection !== content.instructionSection ||
+    beforeContent.instructionHeadingSize !== content.instructionHeadingSize ||
+    beforeContent.instructionTextSize !== content.instructionTextSize ||
+    beforeContent.instructionTextWeight !== content.instructionTextWeight ||
+    beforeContent.instructionTextColor !== content.instructionTextColor ||
     previousTranslation?.instructions !== translation?.instructions
   ) {
     const section = sections.find((item) => item.code.toUpperCase() === content.instructionSection);

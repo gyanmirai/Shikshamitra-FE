@@ -14,6 +14,7 @@ import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { Box, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { useLazyGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
 import { useGetAdmissionOfferingClassIdentitiesQuery } from 'src/redux/student/admissions/admission-offerings-api';
 
@@ -56,11 +57,19 @@ export function BulkAdmissionOfferingDialog({
   onCreated,
   onCycleChange,
 }: Props) {
+  const { closing, closeAfterExit, onExited, reopen } = useStudentDrawerExit();
+  const finishClose = (action: () => void) =>
+    closeAfterExit(() => {
+      action();
+      reopen();
+    });
   const [activeStep, setActiveStep] = useState(0);
   const [classesReady, setClassesReady] = useState(true);
   const [dirty, setDirty] = useState(false);
   const formikRef = useRef<FormikProps<BulkOfferingValues> | null>(null);
-  const bulk = useBulkAdmissionOffering(cycle, open, onCreated ?? onClose);
+  const bulk = useBulkAdmissionOffering(cycle, open, (values) =>
+    finishClose(() => (onCreated ? onCreated(values) : onClose()))
+  );
   const [loadCycles, cyclesQuery] = useLazyGetAdmissionCyclesQuery();
   const [cycleOptionsRevision, setCycleOptionsRevision] = useState(0);
   const fetchCycles = useCallback(
@@ -93,7 +102,7 @@ export function BulkAdmissionOfferingDialog({
   const selectedCount = bulk.preview?.items.length ?? 0;
 
   const guard = useAdmissionCloseGuard(dirty, bulk.loading, open);
-  const requestClose = () => guard.requestNavigation(onClose);
+  const requestClose = () => guard.requestNavigation(() => finishClose(onClose));
 
   const handleNext = async (
     _isLastStep: boolean,
@@ -123,9 +132,11 @@ export function BulkAdmissionOfferingDialog({
   return (
     <Drawer
       anchor="right"
-      open={open}
+      open={open && !closing}
       onClose={bulk.loading ? undefined : requestClose}
+      onTransitionExited={onExited}
       PaperProps={{
+        inert: closing || undefined,
         'aria-labelledby': 'bulk-admission-offering-title',
         sx: {
           width: { xs: 1, sm: 840 },
@@ -181,7 +192,8 @@ export function BulkAdmissionOfferingDialog({
           disableSubmit={activeStep === 1 && !bulk.canSaveInactive}
           saveAndNextButtonProps={{
             disabled: activeStep === 0 && !classesReady,
-            endIcon: activeStep === 0 ? <Iconify icon="mdi:eye-outline" width={18} /> : undefined,
+            startIcon: activeStep === 0 ? <Iconify icon="mdi:eye-outline" width={18} /> : undefined,
+            endIcon: activeStep === 0 ? null : undefined,
           }}
           renderItem={({ formik }) => {
             formikRef.current = formik;

@@ -19,4 +19,6 @@ export type ConfirmDialogProps = Omit<DialogProps, 'title' | 'content'> & {
   /** Opt into a blocking body loader; legacy action-loading behavior is unchanged. */
   bodyBusy?: boolean;
   busyLabel?: string;
+  /** Let short confirmation content determine its idle height. */
+  compactBody?: boolean;
 };

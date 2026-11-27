@@ -547,7 +547,7 @@ export default function AdmissionCyclesScreen() {
           <AdaptiveThreeDotsActions
             placement="right-top"
             moreLabel={`More actions for ${cycle.name}`}
-            directActionLimit={showPublish ? 1 : 2}
+            directActionLimit={2}
             collapseOnOverflow={false}
             sx={{ justifyContent: 'flex-start' }}
             actions={actions}
@@ -734,6 +734,7 @@ export default function AdmissionCyclesScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           errorContent={isError ? <AdmissionQueryError onRetry={() => refetch()} /> : undefined}
           isLoading={isLoading || (isFetching && !data)}
+          refreshIndicator="circular"
           isRefreshing={isFetching && !isLoading && Boolean(data)}
           isPagination
           isSearch

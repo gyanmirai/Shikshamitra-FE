@@ -356,7 +356,8 @@ export function AdmissionAdvancedPaperTemplate({
           if (options.header.continuation === 'full') return fullHeader(pageNumber);
           return (
             <View>
-              {positionedHeader(pageNumber) ?? renderBrandingBand(pageNumber, laterBandHeight, false)}
+              {positionedHeader(pageNumber) ??
+                renderBrandingBand(pageNumber, laterBandHeight, false)}
               {options.header.continuation === 'compact' && (
                 <View
                   style={{
@@ -743,7 +744,9 @@ export function AdmissionAdvancedPaperTemplate({
         const fieldOptions = options.fields[field.code.toUpperCase()] ?? {};
         const cellWidth = contentWidth * width - padding * 2 - 2;
         const inline =
-          fieldOptions.labelPosition === 'inline' && field.kind !== 'photo' && field.kind !== 'static';
+          fieldOptions.labelPosition === 'inline' &&
+          field.kind !== 'photo' &&
+          field.kind !== 'static';
         const answerWidth = cellWidth * (inline ? 0.65 : 1);
         const labelHeight =
           estimatePrintTextHeight(field.label, cellWidth * (inline ? 0.35 : 1), fontSize - 1) + 4;
@@ -761,7 +764,11 @@ export function AdmissionAdvancedPaperTemplate({
           const widthPoints = Math.min(options.photo.width * PRINT_MM, answerWidth);
           answerHeight =
             (options.photo.height * widthPoints) / options.photo.width +
-            estimatePrintTextHeight(options.photo.caption || field.label, widthPoints, fontSize - 2) +
+            estimatePrintTextHeight(
+              options.photo.caption || field.label,
+              widthPoints,
+              fontSize - 2
+            ) +
             13;
         }
         const helpHeight =
@@ -890,7 +897,11 @@ export function AdmissionAdvancedPaperTemplate({
       )
     );
   };
-  const renderTableHeading = (section: AdmissionPrintSection, link = true, showStepTitle = true) => (
+  const renderTableHeading = (
+    section: AdmissionPrintSection,
+    link = true,
+    showStepTitle = true
+  ) => (
     <View wrap={false}>
       {showStepTitle && tableStepTitle(section) ? (
         <Text style={{ fontSize: fontSize + 1, fontWeight: 700, paddingBottom: 7 }}>
@@ -986,15 +997,61 @@ export function AdmissionAdvancedPaperTemplate({
   const instructions = () =>
     options.content.showInstructions && copy.instructions?.trim() ? (
       <View key="instructions" style={{ marginVertical: 10 }}>
-        {contentHeading(model.labels.instructions)}
+        <Text
+          minPresenceAhead={40}
+          style={{
+            fontWeight: 700,
+            fontSize:
+              options.content.instructionHeadingSize === 'default'
+                ? fontSize + 1
+                : Number(options.content.instructionHeadingSize),
+            marginBottom: 7,
+            color:
+              options.content.instructionTextColor === 'default'
+                ? undefined
+                : options.content.instructionTextColor,
+          }}
+        >
+          {runs(model.labels.instructions)}
+        </Text>
         {copy.instructions
           .split(/\r?\n/)
           .map((item) => item.trim())
           .filter(Boolean)
           .map((item, index) => (
             <View key={index} style={{ flexDirection: 'row', marginBottom: 4 }}>
-              <Text style={{ width: 12 }}>{runs('•')}</Text>
-              <Text style={{ flex: 1 }} orphans={2} widows={2}>
+              <Text
+                style={{
+                  width: 12,
+                  fontSize:
+                    options.content.instructionTextSize === 'default'
+                      ? fontSize
+                      : Number(options.content.instructionTextSize),
+                  fontWeight: options.content.instructionTextWeight === 'bold' ? 700 : 400,
+                  color:
+                    options.content.instructionTextColor === 'default'
+                      ? undefined
+                      : options.content.instructionTextColor,
+                }}
+              >
+                {runs('•')}
+              </Text>
+              <Text
+                style={{
+                  flex: 1,
+                  fontSize:
+                    options.content.instructionTextSize === 'default'
+                      ? fontSize
+                      : Number(options.content.instructionTextSize),
+                  fontWeight: options.content.instructionTextWeight === 'bold' ? 700 : 400,
+                  color:
+                    options.content.instructionTextColor === 'default'
+                      ? undefined
+                      : options.content.instructionTextColor,
+                }}
+                orphans={2}
+                widows={2}
+              >
                 {runs(item)}
               </Text>
             </View>

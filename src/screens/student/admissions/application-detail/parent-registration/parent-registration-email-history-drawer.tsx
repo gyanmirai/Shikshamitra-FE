@@ -10,6 +10,7 @@ import { EmptyContent } from 'src/components/empty-content';
 import { fDateTime, formatStr } from 'src/utils/format-time';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import {
   Box,
   Alert,
@@ -64,16 +65,24 @@ export function ParentRegistrationEmailHistoryDrawer({
   isError: boolean;
   onRetry: () => void;
 }) {
+  const { closing, closeAfterExit, onExited, reopen } = useStudentDrawerExit();
+  const close = () =>
+    closeAfterExit(() => {
+      onClose();
+      reopen();
+    });
   return (
     <Drawer
       anchor="right"
-      open={open}
-      onClose={onClose}
+      open={open && !closing}
+      onClose={close}
+      onTransitionExited={onExited}
       slotProps={{
         paper: {
           role: 'dialog',
           'aria-modal': true,
           'aria-labelledby': 'parent-registration-email-history-title',
+          inert: closing || undefined,
           sx: {
             width: { xs: 1, sm: 560 },
             maxWidth: 1,
@@ -93,7 +102,7 @@ export function ParentRegistrationEmailHistoryDrawer({
           title="Recorded email attempts for parent registration links. Sent means the email sender accepted the message; inbox delivery is not confirmed."
         />
         <Box sx={{ flex: 1 }} />
-        <IconButton aria-label="Close email history" onClick={onClose}>
+        <IconButton aria-label="Close email history" onClick={close}>
           <Iconify icon={GlobalIcons.cancel} />
         </IconButton>
       </Stack>
@@ -235,18 +244,6 @@ export function ParentRegistrationEmailHistoryDrawer({
           )}
         </Box>
       </Scrollbar>
-      <Divider />
-      <Stack direction="row" justifyContent="flex-end" sx={{ p: 2 }}>
-        <Button
-          size="small"
-          variant="outlined"
-          color="inherit"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
-        >
-          Close
-        </Button>
-      </Stack>
     </Drawer>
   );
 }

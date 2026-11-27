@@ -8,8 +8,16 @@ import { createTheme } from 'src/theme/create-theme';
 import { render, screen, within, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
+import { addAddressFieldGroup } from './address-field-group';
 import { FormBuilderSections } from './form-builder-sections';
-import { getBlankAdmissionFormInitialValues } from './form-dialog-model';
+import { addAcademicClassSelector } from './academic-class-selector';
+import { newField, getBlankAdmissionFormInitialValues } from './form-dialog-model';
+
+const warning = vi.hoisted(() => vi.fn());
+vi.mock('src/components/toast', async (importOriginal) => {
+  const original = await importOriginal<typeof import('src/components/toast')>();
+  return { ...original, shikshaMitraToast: { ...original.shikshaMitraToast, warning } };
+});
 
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <svg aria-hidden="true" data-icon={icon} />,
@@ -44,6 +52,110 @@ function renderBuilder(
 function savedForm(): CreateUpdateAdmissionForm {
   return JSON.parse(screen.getByTestId('form-json').textContent ?? '{}');
 }
+
+it('moves the whole address group to another step and removes only that group after confirmation', async () => {
+  const user = userEvent.setup({ delay: null });
+  const form = { ...getBlankAdmissionFormInitialValues(1), layoutType: 1 as const };
+  const source = form.sections[0];
+  const destination = {
+    ...source,
+    id: 'destination',
+    code: 'CONTACT',
+    name: 'Contact',
+    displayOrder: 1,
+    stepId: 'another-step',
+    stepName: 'Family',
+    stepDisplayOrder: 1,
+    fields: [],
+  };
+  form.sections.push(destination);
+  form.sections = addAddressFieldGroup(
+    form,
+    source.id,
+    { name: 'City', group: 'Address' },
+    [],
+    []
+  ).sections;
+  form.sections = addAddressFieldGroup(
+    form,
+    source.id,
+    { name: 'City', group: 'PermanentAddress' },
+    [],
+    []
+  ).sections;
+  renderBuilder(form);
+
+  await user.click(screen.getByRole('button', { name: 'Actions For City field' }));
+  await user.click(screen.getByRole('menuitem', { name: 'Move to' }));
+  const move = screen.getByRole('dialog', { name: 'Move address fields' });
+  await user.click(within(move).getByRole('combobox', { name: 'Destination section' }));
+  await user.click(screen.getByRole('option', { name: 'Contact' }));
+  await user.click(within(move).getByRole('button', { name: 'Move fields' }));
+  expect(savedForm().sections[1].fields.map((field) => field.bindingKey)).toEqual([
+    'Address.Country',
+    'Address.State',
+    'Address.City',
+  ]);
+  await user.click(screen.getByRole('button', { name: 'Actions For State field' }));
+  await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+  const cancelDelete = screen.getByRole('dialog', { name: 'Delete address fields?' });
+  await user.click(within(cancelDelete).getByRole('button', { name: 'Cancel' }));
+  expect(savedForm().sections[1].fields).toHaveLength(3);
+  await user.click(screen.getByRole('button', { name: 'Actions For Country field' }));
+  await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+  const confirmDelete = screen.getByRole('dialog', { name: 'Delete address fields?' });
+  await user.click(within(confirmDelete).getByRole('button', { name: 'Delete fields' }));
+  expect(savedForm().sections[1].fields).toHaveLength(0);
+  expect(
+    savedForm().sections[0].fields.filter((field) =>
+      field.bindingKey?.startsWith('PermanentAddress.')
+    )
+  ).toHaveLength(3);
+}, 15000);
+
+it('moves an ordinary field to another section of a single-page form', async () => {
+  const user = userEvent.setup({ delay: null });
+  const form = getBlankAdmissionFormInitialValues(0);
+  const source = form.sections[0];
+  const field = { ...newField(source.id, source.fields.length), label: 'School notes' };
+  source.fields.push(field);
+  form.sections.push({
+    ...source,
+    id: 'contact',
+    code: 'CONTACT',
+    name: 'Contact',
+    displayOrder: 1,
+    fields: [],
+  });
+  renderBuilder(form);
+  await user.click(screen.getByRole('button', { name: 'Actions For School notes field' }));
+  await user.click(screen.getByRole('menuitem', { name: 'Move to' }));
+  const dialog = screen.getByRole('dialog', { name: 'Move field' });
+  expect(within(dialog).getByRole('button', { name: 'Move field' })).toBeDisabled();
+  await user.click(within(dialog).getByRole('combobox', { name: 'Destination section' }));
+  await user.click(screen.getByRole('option', { name: 'Contact' }));
+  await user.click(within(dialog).getByRole('button', { name: 'Move field' }));
+  const moved = savedForm();
+  expect(moved.sections[0].fields.some((item) => item.id === field.id)).toBe(false);
+  expect(moved.sections[1].fields).toEqual([{ ...field, displayOrder: 0, sectionId: 'contact' }]);
+}, 15000);
+
+it('keeps linked questions when the user tries to delete a field or its step', async () => {
+  const user = userEvent.setup({ delay: null });
+  const form = { ...getBlankAdmissionFormInitialValues(1), layoutType: 1 as const };
+  renderBuilder(addAcademicClassSelector(form, form.sections[0].id).form);
+  const before = savedForm();
+  await user.click(screen.getByRole('button', { name: 'Actions For Medium field' }));
+  await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+  expect(warning).toHaveBeenLastCalledWith({
+    message: 'Board, Medium and Class must stay together so the class choices work.',
+  });
+  const stepActions = screen.getByRole('button', { name: /Actions For .* step$/i });
+  await user.click(stepActions);
+  await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+  expect(warning).toHaveBeenCalledTimes(2);
+  expect(savedForm()).toEqual(before);
+});
 
 it.each([0, 1] as const)('shows inquiry toolbar actions for layout %s', (layoutType) => {
   renderBuilder({ ...getBlankAdmissionFormInitialValues(0), layoutType });

@@ -504,7 +504,8 @@ it.each(['inline', 'header'] as const)(
     expect(screen.getByRole('button', { name: 'Send email' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Email history' })).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Email history' }));
-    expect(await screen.findByRole('dialog', { name: 'Email History' })).toBeVisible();
+    const history = await screen.findByRole('dialog', { name: 'Email History' });
+    expect(history).toBeVisible();
     expect(screen.getByText(/Link expires/)).toHaveTextContent('11/11/2026');
     expect(screen.getByText(/04\/11\/2026/)).toBeVisible();
     expect(screen.getByText('saved@example.test')).toBeVisible();
@@ -512,6 +513,9 @@ it.each(['inline', 'header'] as const)(
       screen.getByText('Accepted by the email sender. Inbox delivery is not confirmed.')
     ).toBeVisible();
     expect(state.historyOptions.skip).toBe(false);
+    expect(within(history).queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+    fireEvent.click(within(history).getByRole('button', { name: 'Close email history' }));
+    await waitFor(() => expect(history).not.toBeVisible());
   }
 );
 

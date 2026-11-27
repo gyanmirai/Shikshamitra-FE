@@ -14,6 +14,6 @@ it('removes Review outcome presets and blocks configuring a retired-stage route'
   expect(
     screen.getByText('Replace retired stage types before configuring their next steps.')
   ).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Save Path' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Save path' })).toBeDisabled();
   expect(onSave).not.toHaveBeenCalled();
 });

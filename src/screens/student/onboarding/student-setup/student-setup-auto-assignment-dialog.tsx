@@ -8,6 +8,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Stack, Button, Typography, DialogActions, LinearProgress } from '@mui/material';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetStudentOnboardingPlacementOptionsQuery } from 'src/redux/student/onboarding/student-onboarding-api';
 
@@ -39,6 +40,7 @@ export default function StudentSetupAutoAssignmentDialog({
   onAssign: (divisionId?: string) => Promise<unknown>;
   onClose: () => void;
 }) {
+  const exit = useStudentDrawerExit();
   const divisions = useGetStudentOnboardingPlacementOptionsQuery(students[0]?.id ?? '', {
     skip: type !== 'division' || !students.length,
     refetchOnMountOrArgChange: true,
@@ -64,17 +66,22 @@ export default function StudentSetupAutoAssignmentDialog({
   const finished = results.length === students.length && !busy;
   const failed = results.filter((result) => result.status === 'failed').length;
   const saving = busy || form.isSubmitting;
-  const { requestNavigation, confirmation } = useUnsavedNavigation(form.dirty && !finished, {
-    guardContextChanges: true,
-    renderConfirmation: renderUnsavedConfirmation,
-    blockNavigation: saving,
-  });
+  const { requestNavigation, confirmation } = useUnsavedNavigation(
+    form.dirty && !finished && !exit.closing,
+    {
+      guardContextChanges: true,
+      renderConfirmation: renderUnsavedConfirmation,
+      blockNavigation: saving,
+    }
+  );
   const close = () => {
-    if (!saving) requestNavigation(onClose);
+    if (!saving) requestNavigation(() => exit.closeAfterExit(onClose));
   };
   return (
     <>
       <StudentAssignmentDrawer
+        open={!exit.closing}
+        onExited={exit.onExited}
         title={`Assign ${titles[type]}`}
         onClose={close}
         busy={saving}

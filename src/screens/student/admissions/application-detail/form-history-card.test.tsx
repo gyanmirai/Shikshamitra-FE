@@ -34,7 +34,7 @@ it('shows correction reason and field labels while preserving older entries with
       ]}
     />
   );
-  expect(screen.getByText('DraftSaved')).toBeVisible();
+  expect(screen.getByText('Draft saved')).toBeVisible();
   expect(screen.getByText('Verified birth certificate')).toBeVisible();
   expect(screen.getByText('Date of birth')).toBeVisible();
   expect(screen.queryByText(/private-hash/)).not.toBeInTheDocument();

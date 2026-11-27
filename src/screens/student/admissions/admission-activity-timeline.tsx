@@ -1,16 +1,6 @@
-import { useState } from 'react';
-import Timeline from '@mui/lab/Timeline';
-import TimelineDot from '@mui/lab/TimelineDot';
-import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
-import { Button, Typography } from '@mui/material';
-import TimelineContent from '@mui/lab/TimelineContent';
-import TimelineSeparator from '@mui/lab/TimelineSeparator';
-import TimelineConnector from '@mui/lab/TimelineConnector';
 import { EmptyContent } from 'src/components/empty-content';
-import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem';
+import { ActivityHistoryTimeline } from 'src/screens/student/components/activity-history-timeline';
 
-import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
 import { getActivityPresentation } from './applicant-360/admission-applicant-360-model';
 
 export type AdmissionActivityTimelineItem = {
@@ -33,73 +23,36 @@ export function AdmissionActivityTimeline({
   emptyDescription,
   initiallyVisible = 6,
 }: Props) {
-  const [expanded, setExpanded] = useState(false);
-  const visibleActivities = expanded ? activities : activities.slice(0, initiallyVisible);
-
   if (!activities.length)
     return (
       <EmptyContent
         filled
         title="No Activity Recorded"
         description={emptyDescription}
-        sx={{ minHeight: 180, mt: 2 }}
+        sx={{ minHeight: 160 }}
         slotProps={{ img: { maxWidth: 80 } }}
       />
     );
 
   return (
-    <>
-      <Timeline
-        sx={{
-          px: 0,
-          mt: 2,
-          mb: 0,
-          [`& .${timelineItemClasses.root}:before`]: { display: 'none' },
-        }}
-      >
-        {visibleActivities.map((activity, index) => {
-          const presentation = getActivityPresentation(activity);
-          const isLast = index === visibleActivities.length - 1;
-          return (
-            <TimelineItem key={activity.id}>
-              <TimelineSeparator>
-                <TimelineDot
-                  variant="outlined"
-                  color={presentation.color === 'default' ? 'grey' : presentation.color}
-                  sx={{ m: 0, mt: 0.5 }}
-                >
-                  <Iconify icon={presentation.icon} width={17} />
-                </TimelineDot>
-                {!isLast && <TimelineConnector />}
-              </TimelineSeparator>
-              <TimelineContent sx={{ pt: 0.25, pb: 2.25, minWidth: 0 }}>
-                <Typography variant="subtitle2">{presentation.title}</Typography>
-                {activity.description && activity.description !== presentation.title && (
-                  <Typography variant="body2" color="text.secondary">
-                    {activity.description}
-                  </Typography>
-                )}
-                <Typography variant="caption" color="text.secondary">
-                  Handled By:{' '}
-                  {activity.actorName ||
-                    (activity.creatorId ? 'Staff Name Unavailable' : 'No Staff Recorded')}
-                  {' · '}
-                  {fDateTime(activity.occurredAt, ADMISSION_DATE_TIME_FORMAT) || 'Time Not Recorded'}
-                </Typography>
-              </TimelineContent>
-            </TimelineItem>
-          );
-        })}
-      </Timeline>
-      {activities.length > initiallyVisible && (
-        <Button
-          size="small"
-          onClick={() => setExpanded((value) => !value)}
-          endIcon={<Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />}
-        >
-          {expanded ? 'Show Recent Activity' : `Show all ${activities.length} events`}
-        </Button>
-      )}
-    </>
+    <ActivityHistoryTimeline
+      ariaLabel="Admission activity"
+      initiallyVisible={initiallyVisible}
+      items={activities.map((activity) => {
+        const { title, icon } = getActivityPresentation(activity);
+        const staff =
+          activity.actorName?.trim() ||
+          (activity.creatorId ? 'Staff name unavailable' : 'No staff recorded');
+        const description = activity.description?.trim();
+        return {
+          id: activity.id,
+          title,
+          icon,
+          occurredAt: activity.occurredAt,
+          actor: `Handled by: ${staff}`,
+          description: description?.toLowerCase() === title.toLowerCase() ? undefined : description,
+        };
+      })}
+    />
   );
 }

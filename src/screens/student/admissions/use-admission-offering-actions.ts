@@ -1,6 +1,6 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
+import type { RootState, AppDispatch } from 'src/redux/store';
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 import type {
   AdmissionOffering,
@@ -10,13 +10,13 @@ import type {
 } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { studentPermissions } from 'src/constants/student-menu';
 import {
-  useLazyGetAdmissionOfferingQuery,
+  admissionOfferingsApi,
   useCloneAdmissionOfferingMutation,
   useCreateAdmissionOfferingMutation,
   useUpdateAdmissionOfferingMutation,
@@ -44,7 +44,7 @@ export function useAdmissionOfferingActions(
   onSavedScopeChange?: (offering: AdmissionOffering) => void
 ) {
   const granted = useSelector((state: RootState) => state.auth.permissions);
-  const [loadOffering] = useLazyGetAdmissionOfferingQuery();
+  const dispatch = useDispatch<AppDispatch>();
   const [createOffering, createState] = useCreateAdmissionOfferingMutation();
   const [updateOffering, updateState] = useUpdateAdmissionOfferingMutation();
   const [cloneOffering, cloneState] = useCloneAdmissionOfferingMutation();
@@ -71,9 +71,24 @@ export function useAdmissionOfferingActions(
   const requirementsRead = useRef<{ offeringId: string } | null>(null);
   const permissions = getAdmissionOfferingPermissions(granted);
 
+  // These reads are snapshots. A retained subscription would refetch the deleted Offering.
+  const readOffering = (id: string) =>
+    dispatch(
+      admissionOfferingsApi.endpoints.getAdmissionOffering.initiate(id, {
+        subscribe: false,
+        forceRefetch: true,
+      })
+    ).unwrap();
+
   const stopRequirementsCheck = () => {
     requirementsRead.current = null;
     setCheckingRequirements(false);
+  };
+
+  const cancelDetailRequest = () => {
+    detailRequest.current += 1;
+    detailLock.current = null;
+    activeDetail.current = null;
   };
 
   const openDetailed = async (mode: 'view' | 'edit' | 'clone', row: AdmissionOfferingListItem) => {
@@ -89,7 +104,7 @@ export function useAdmissionOfferingActions(
     setDetailsOpen(mode === 'view');
     setDialogMode(mode === 'view' ? null : mode);
     try {
-      const detail = await loadOffering(row.id).unwrap();
+      const detail = await readOffering(row.id);
       if (request !== detailRequest.current) return;
       setSelected(detail);
     } catch (error) {
@@ -104,7 +119,11 @@ export function useAdmissionOfferingActions(
     }
   };
 
-  const save = async (values: AdmissionOfferingWriteInput, targetCycleId: string) => {
+  const save = async (
+    values: AdmissionOfferingWriteInput,
+    targetCycleId: string,
+    finishAfterExit: (finish: () => void) => void = (finish) => finish()
+  ) => {
     if (!cycle || !dialogMode) return;
     try {
       let saved: AdmissionOffering | undefined;
@@ -140,9 +159,7 @@ export function useAdmissionOfferingActions(
               ? 'Offering updated'
               : 'Offering created',
       });
-      setDialogMode(null);
-      setSelected(null);
-      if (
+      const revealSavedScope =
         saved &&
         (dialogMode !== 'edit' ||
           (selected &&
@@ -155,10 +172,12 @@ export function useAdmissionOfferingActions(
                 'standardId',
                 'campusId',
               ] as const
-            ).some((field) => (saved[field] ?? null) !== (selected[field] ?? null))))
-      ) {
-        onSavedScopeChange?.(saved);
-      }
+            ).some((field) => (saved[field] ?? null) !== (selected[field] ?? null))));
+      finishAfterExit(() => {
+        setDialogMode(null);
+        setSelected(null);
+        if (saved && revealSavedScope) onSavedScopeChange?.(saved);
+      });
     } catch (error) {
       shikshaMitraToast.error({
         message: getAdmissionApiError(error, 'Unable to save the offering.'),
@@ -178,7 +197,7 @@ export function useAdmissionOfferingActions(
     commandLock.current = true;
     commandBusy.onTrue();
     try {
-      const detail = await loadOffering(pendingAction.row.id).unwrap();
+      const detail = await readOffering(pendingAction.row.id);
       if (pendingAction.type === 'activate' && detail.configuration?.isValid === false) {
         setActivationErrors(detail.configuration.errors);
         return;
@@ -235,6 +254,7 @@ export function useAdmissionOfferingActions(
       deactivateState.isLoading ||
       deleteState.isLoading,
     permissions,
+    cancelDetailRequest,
     openCreate: () => {
       detailRequest.current += 1;
       detailLock.current = null;
@@ -257,18 +277,14 @@ export function useAdmissionOfferingActions(
       setPendingAction({ type: 'deactivate', row: selected });
     },
     closeDialog: () => {
-      detailRequest.current += 1;
-      detailLock.current = null;
-      activeDetail.current = null;
+      cancelDetailRequest();
       setLoadingDetail(false);
       setDetailError(null);
       setDialogMode(null);
       setSelected(null);
     },
     closeDetails: () => {
-      detailRequest.current += 1;
-      detailLock.current = null;
-      activeDetail.current = null;
+      cancelDetailRequest();
       setLoadingDetail(false);
       setDetailError(null);
       setDetailsOpen(false);
@@ -287,7 +303,7 @@ export function useAdmissionOfferingActions(
         setCheckingRequirements(true);
         (async () => {
           try {
-            const latest = await loadOffering(row.id).unwrap();
+            const latest = await readOffering(row.id);
             if (requirementsRead.current !== request) return;
             setActivationErrors(
               latest.configuration?.isValid === false ? latest.configuration.errors : []

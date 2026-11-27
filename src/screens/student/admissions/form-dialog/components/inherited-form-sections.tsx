@@ -17,6 +17,8 @@ type SectionProps = {
   selectedFieldId: string | null;
   onSelect: (sectionId: string, fieldId: string | null) => void;
   navigationRequest?: BuilderNavigationRequest;
+  linkedFieldLocks?: ReadonlyMap<string, string>;
+  onFieldAction?: (fieldId: string, type: 'move' | 'delete') => void;
 };
 
 /** Render the effective structure while every editable path still addresses the base draft. */
@@ -28,6 +30,8 @@ export function EffectiveFormBuilderSection({
   selectedFieldId,
   onSelect,
   navigationRequest,
+  linkedFieldLocks,
+  onFieldAction,
 }: SectionProps) {
   const section = effectiveForm.sections[sectionIndex];
   const baseIndex = formik.values.sections.findIndex((base) => base.id === section.id);
@@ -39,6 +43,8 @@ export function EffectiveFormBuilderSection({
       displaySection={section}
       readOnly={readOnly}
       navigationRequest={navigationRequest}
+      linkedFieldLocks={linkedFieldLocks}
+      onFieldAction={onFieldAction}
       selectedSectionId={selectedSectionId}
       selectedFieldId={selectedFieldId}
       onSelectSection={(id) => onSelect(id, null)}

@@ -7,6 +7,7 @@ import { vi, it, expect, describe } from 'vitest';
 import { shikshaMitraToast } from 'src/components/toast';
 
 import { reorderFormBuilder } from './reorder-form-builder';
+import { addAcademicClassSelector } from './academic-class-selector';
 import { newField, getBlankAdmissionFormInitialValues } from './form-dialog-model';
 
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { warning: vi.fn() } }));
@@ -60,6 +61,21 @@ function move(active: string, over: string | null) {
 }
 
 describe('form builder reordering', () => {
+  it('keeps Board ahead of Medium when a drag would reverse their order', () => {
+    const initial = makeForm();
+    const values = addAcademicClassSelector(initial, 'first').form;
+    const [board, medium] = values.sections[0].fields.slice(-3);
+    const setFieldValue = vi.fn();
+    reorderFormBuilder(
+      { active: { id: `field:first:${board.id}` }, over: { id: `field:first:${medium.id}` } },
+      { values, setFieldValue },
+      vi.fn()
+    );
+    expect(setFieldValue).not.toHaveBeenCalled();
+    expect(shikshaMitraToast.warning).toHaveBeenLastCalledWith({
+      message: 'Move canceled. Board must come before Medium, and Medium before Class.',
+    });
+  });
   it('does not move an inherited Inquiry question through a direct reorder request', () => {
     const values = makeForm();
     values.purpose = 1;

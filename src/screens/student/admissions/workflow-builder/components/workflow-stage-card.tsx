@@ -11,6 +11,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { readAdmissionDocumentPolicy } from 'src/redux/student/admissions/admission-document-policy';
 import {
   Box,
   Card,
@@ -90,8 +91,27 @@ export function WorkflowStageCard({
     if (hasMissingIncomingRoute && code === 'Admissions.WorkflowUnreachableStage') return false;
     return true;
   });
-  const issueCount = visibleIssues.length;
+  const documentPolicy =
+    stage.stageType === 5 ? readAdmissionDocumentPolicy(stage.configurationJson) : null;
+  const isMissingDocumentIssue = (issue: AdmissionWorkflowValidationIssue) =>
+    stage.stageType === 5 &&
+    issue.code === 'Admissions:Documents:InvalidPolicy' &&
+    /configure between 1 and 30 document requirements/i.test(issue.message) &&
+    (!documentPolicy || documentPolicy.requirements.length === 0);
+  const issueCount = visibleIssues.filter((issue) => !isMissingDocumentIssue(issue)).length;
   const renderIssue = (issue: AdmissionWorkflowValidationIssue, index: number) => {
+    if (isMissingDocumentIssue(issue)) {
+      return (
+        <Typography
+          key={`missing-documents-${index}`}
+          variant="caption"
+          color="error.main"
+          sx={{ display: 'block', mt: 0.5 }}
+        >
+          At least one document is required for this stage.
+        </Typography>
+      );
+    }
     const issueTransition = transitions.find((item) => item.id === issue.transitionId);
     let action = onEdit;
     let actionLabel = readOnly ? 'View Stage' : 'Edit Stage';
@@ -205,8 +225,11 @@ export function WorkflowStageCard({
             <Typography
               variant="caption"
               color="text.secondary"
-              noWrap
-              sx={{ display: { xs: 'none', sm: 'block' } }}
+              sx={{
+                display: { xs: 'none', sm: 'block' },
+                lineHeight: 1.5,
+                overflowWrap: 'anywhere',
+              }}
             >
               {stage.description}
             </Typography>

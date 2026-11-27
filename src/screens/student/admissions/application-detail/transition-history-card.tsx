@@ -2,43 +2,62 @@ import type { AdmissionApplicationWorkflow } from 'src/redux/student/admissions/
 
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
-import { Box, Card, Stack, Typography, CardContent } from '@mui/material';
+import { List, Stack, ListItem, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
+import { applicationHistoryCardProps } from './application-history-card-props';
 
 export function TransitionHistoryCard({ workflow }: { workflow?: AdmissionApplicationWorkflow }) {
   if (!workflow?.history.length) return null;
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Transition History
-        </Typography>
-        <Stack spacing={1.5}>
-          {workflow.history.map((history) => {
-            const from = workflow.stages.find((stage) => stage.id === history.fromStageInstanceId);
-            const to = workflow.stages.find((stage) => stage.id === history.toStageInstanceId);
-            return (
-              <Stack key={history.id} direction="row" spacing={1.5}>
-                <Iconify
-                  icon={history.action === 1 ? 'mdi:skip-next-outline' : 'mdi:source-branch'}
-                  color={history.action === 2 ? 'warning.main' : 'primary.main'}
-                />
-                <Box>
-                  <Typography variant="body2" fontWeight={600}>
-                    {from?.name ?? 'Stage'} {to ? `→ ${to.name}` : '→ Completed'}
+    <FormSectionCard
+      {...applicationHistoryCardProps}
+      title="Transition History"
+      titleTypographyProps={{ component: 'h4' }}
+      descriptionTooltip="Recorded moves between admission stages, with the staff member and reason when available."
+      icon="mdi:source-branch"
+    >
+      <List disablePadding>
+        {workflow.history.map((history, index) => {
+          const from = workflow.stages.find((stage) => stage.id === history.fromStageInstanceId);
+          const to = workflow.stages.find((stage) => stage.id === history.toStageInstanceId);
+          const destination = history.toStageInstanceId ? (to?.name ?? 'Stage') : 'Completed';
+          return (
+            <ListItem
+              key={history.id}
+              disableGutters
+              divider={index < workflow.history.length - 1}
+              sx={{ alignItems: 'flex-start', gap: 1, minWidth: 0, py: 0.75 }}
+            >
+              <Iconify
+                icon={history.action === 1 ? 'mdi:skip-next-outline' : 'mdi:source-branch'}
+                width={16}
+                sx={{ mt: 0.25, color: history.action === 2 ? 'warning.main' : 'text.secondary' }}
+                aria-hidden
+              />
+              <Stack spacing={0.25} sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+                <Typography variant="subtitle2">
+                  {from?.name ?? 'Stage'} → {destination}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Handled by: {history.actorName || 'Name not recorded'} ·{' '}
+                  {fDateTime(history.occurredAt, ADMISSION_DATE_TIME_FORMAT)}
+                </Typography>
+                {history.reason && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ whiteSpace: 'pre-wrap' }}
+                  >
+                    {history.reason}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Handled By: {history.actorName || 'Name Not Recorded'} ·{' '}
-                    {fDateTime(history.occurredAt, ADMISSION_DATE_TIME_FORMAT)}
-                    {history.reason ? ` · ${history.reason}` : ''}
-                  </Typography>
-                </Box>
+                )}
               </Stack>
-            );
-          })}
-        </Stack>
-      </CardContent>
-    </Card>
+            </ListItem>
+          );
+        })}
+      </List>
+    </FormSectionCard>
   );
 }

@@ -41,6 +41,7 @@ export function ConfirmDialog({
   showCloseButton = false,
   bodyBusy,
   busyLabel = 'Working…',
+  compactBody = false,
   ...other
 }: ConfirmDialogProps) {
   const theme = useTheme();
@@ -106,7 +107,7 @@ export function ConfirmDialog({
           {' '}
           {bodyBusy !== undefined ? (
             <FormBusyRegion busy={Boolean(isBusy)} label={busyLabel}>
-              <Box sx={{ minHeight: 64 }}>{content}</Box>
+              <Box sx={{ minHeight: compactBody && !isBusy ? 0 : 64 }}>{content}</Box>
             </FormBusyRegion>
           ) : (
             <Box component="fieldset" disabled={isBusy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>

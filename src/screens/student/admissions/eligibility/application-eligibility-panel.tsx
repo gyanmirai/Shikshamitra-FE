@@ -3,7 +3,7 @@ import type { AdmissionApplicationStage } from 'src/redux/student/admissions/adm
 
 import { useState } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
-import { Card, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { Card, Stack, Button, Skeleton, Typography } from '@mui/material';
 import { useGetApplicationEligibilityQuery } from 'src/redux/student/admissions/admission-eligibility-api';
 
 import { AdmissionQueryError } from '../admission-query-error';
@@ -48,7 +48,12 @@ export function ApplicationEligibilityPanel({
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
           <Typography variant="h6">{stage.name}</Typography>
           {permissions.view && (
-            <Button size="small" disabled={query.isFetching || advancing} onClick={query.refetch}>
+            <Button
+              size="small"
+              loading={query.isFetching && Boolean(summary?.eligibilityEnabled)}
+              disabled={query.isFetching || advancing}
+              onClick={query.refetch}
+            >
               Refresh
             </Button>
           )}
@@ -69,7 +74,6 @@ export function ApplicationEligibilityPanel({
           </StudentFeedback>
         ) : (
           <>
-            {query.isFetching && <LinearProgress aria-label="Refreshing Eligibility Results" />}
             <EligibilityResultContent
               summary={summary}
               permissions={permissions}

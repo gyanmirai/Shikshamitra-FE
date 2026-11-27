@@ -24,6 +24,7 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import {
   Box,
   Stack,
@@ -60,6 +61,8 @@ type Props = {
 class RollBatchVerificationError extends Error {}
 function RollAssignmentSurface({
   quick,
+  open,
+  onExited,
   children,
   actions,
   title,
@@ -68,6 +71,8 @@ function RollAssignmentSurface({
   busy,
 }: {
   quick: boolean;
+  open: boolean;
+  onExited: () => void;
   children: ReactNode;
   actions: ReactNode;
   title: string;
@@ -89,7 +94,15 @@ function RollAssignmentSurface({
       {actions}
     </CustomDialog>
   ) : (
-    <StudentAssignmentDrawer title={title} wide onClose={onClose} busy={busy} actions={actions}>
+    <StudentAssignmentDrawer
+      open={open}
+      onExited={onExited}
+      title={title}
+      wide
+      onClose={onClose}
+      busy={busy}
+      actions={actions}
+    >
       {children}
     </StudentAssignmentDrawer>
   );
@@ -142,6 +155,7 @@ export default function StudentRollNumberWorkspace({
   onApplied,
 }: Props) {
   const quick = presentation === 'quick';
+  const drawerExit = useStudentDrawerExit();
   const context = useGetRollNumberBatchContextQuery(scope);
   const [preview, previewState] = usePreviewRollNumberBatchMutation();
   const [load, loadState] = useLazyGetRollNumberBatchQuery();
@@ -186,7 +200,7 @@ export default function StudentRollNumberWorkspace({
     applyState.isLoading ||
     form.isSubmitting;
   const { requestNavigation, confirmation } = useUnsavedNavigation(
-    form.dirty && (batch?.status === 'Preview' || Boolean(batch?.canDecide)),
+    !drawerExit.closing && form.dirty && (batch?.status === 'Preview' || Boolean(batch?.canDecide)),
     {
       blockNavigation: busy,
       guardContextChanges: true,
@@ -194,7 +208,9 @@ export default function StudentRollNumberWorkspace({
     }
   );
   const close = () => {
-    if (!pending.current && !busy) requestNavigation(onClose);
+    if (!pending.current && !busy) {
+      requestNavigation(quick ? onClose : () => drawerExit.closeAfterExit(onClose));
+    }
   };
   const verify = (data: RollNumberBatch) => {
     if (
@@ -371,6 +387,8 @@ export default function StudentRollNumberWorkspace({
     <>
       <RollAssignmentSurface
         quick={quick}
+        open={!drawerExit.closing}
+        onExited={drawerExit.onExited}
         title={quick ? 'Roll Number Policy' : batch ? label : 'Manage Roll Numbers'}
         onClose={close}
         onSubmit={(event) => {

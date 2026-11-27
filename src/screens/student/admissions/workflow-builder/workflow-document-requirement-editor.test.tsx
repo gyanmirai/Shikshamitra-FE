@@ -122,7 +122,7 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     );
     await user.click(confirmation.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('Clear scan')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(
       JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification.requirements
@@ -164,14 +164,14 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
         screen.queryByRole('dialog', { name: 'Configure Document Requirement' })
       ).not.toBeInTheDocument()
     );
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(
       JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification.requirements[0]
         .standardIds
     ).toEqual([id]);
   });
-  it('creates two custom requirements with server-generated references and optional/required toggles', async () => {
+  it('creates two custom requirements with unique references and optional/required toggles', async () => {
     const { user, onSave } = await setupDocumentEditor();
     const addRequirement = async (name: string) => {
       await user.click(screen.getByRole('button', { name: 'Add Custom Document' }));
@@ -204,13 +204,23 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     };
     await addRequirement('Transfer proof');
     await addRequirement('Address evidence');
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(
       JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification.requirements
     ).toMatchObject([
-      { code: '', name: 'Transfer proof', requirement: 'required', collectionMode: 'upload' },
-      { code: '', name: 'Address evidence', requirement: 'optional', collectionMode: 'upload' },
+      {
+        code: 'DOC_TRANSFER_PROOF',
+        name: 'Transfer proof',
+        requirement: 'required',
+        collectionMode: 'upload',
+      },
+      {
+        code: 'DOC_ADDRESS_EVIDENCE',
+        name: 'Address evidence',
+        requirement: 'optional',
+        collectionMode: 'upload',
+      },
     ]);
   });
   it('uses a shared discard dialog and preserves unsaved values when cancellation is declined', async () => {

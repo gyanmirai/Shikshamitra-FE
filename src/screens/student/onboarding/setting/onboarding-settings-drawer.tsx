@@ -8,6 +8,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { Box, Card, Stack, Button, Drawer, Divider, IconButton, Typography, CircularProgress } from '@mui/material';
 
 export function SettingsDrawer({
@@ -19,6 +20,7 @@ export function SettingsDrawer({
   statusLabel,
   footerNote,
   onClose,
+  onExited,
   children,
   onSubmit,
   submitLabel = 'Apply configuration',
@@ -37,6 +39,7 @@ export function SettingsDrawer({
   statusLabel: string;
   footerNote?: string;
   onClose: () => void;
+  onExited?: () => void;
   children: ReactNode;
   onSubmit: () => void;
   submitLabel?: string;
@@ -52,8 +55,9 @@ export function SettingsDrawer({
       anchor="right"
       open={open}
       onClose={busy ? undefined : onClose}
-      transitionDuration={{ enter: 300, exit: 250 }}
+      onTransitionExited={onExited}
       PaperProps={{
+        inert: !open || undefined,
         role: 'dialog',
         'aria-modal': true,
         'aria-label': title,
@@ -100,17 +104,13 @@ export function SettingsDrawer({
           )}
           <Box sx={{ minWidth: 0 }}>
             <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Typography component="h2" variant="subtitle1" fontWeight={700}>
+              <Typography component="h2" variant="h6" sx={{ overflowWrap: 'anywhere' }}>
                 {title}
               </Typography>
               {descriptionDisplay === 'tooltip' && (
                 <>
                   {statusLabel && <Label color="default" variant="outlined">{statusLabel}</Label>}
-                  <CustomTooltip arrow placement="bottom" title={description}>
-                    <IconButton size="small" aria-label={`${title} information`}>
-                      <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
-                    </IconButton>
-                  </CustomTooltip>
+                  <InfoTooltipIcon title={description} label={`${title} information`} />
                 </>
               )}
             </Stack>
@@ -135,7 +135,7 @@ export function SettingsDrawer({
             disabled={busy}
             sx={{ minWidth: 44, minHeight: 44 }}
           >
-            <Iconify icon="mdi:close" width={20} />
+            <Iconify icon={GlobalIcons.cancel} width={20} />
           </IconButton>
         </Stack>
       </Stack>

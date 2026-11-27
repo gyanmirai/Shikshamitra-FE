@@ -20,6 +20,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Box, Paper, Stack, Button, Checkbox, Typography } from '@mui/material';
 import { downloadRecordPdf } from 'src/redux/student/records/student-record-documents-api';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import {
   isICardAssignmentConflict,
   useIssueAssignedICardsMutation,
@@ -177,6 +178,7 @@ export default function StudentICardAssignmentRoster({
   const assigned = Boolean(assignment.templateId && concurrencyStamp && templateConcurrencyStamp);
   const [selected, setSelected] = useState<Record<string, ICardAssignmentStudent>>({});
   const [cardReview, setCardReview] = useState<CardReview | null>(null);
+  const reviewExit = useStudentDrawerExit();
   const review = cardReview?.key === reviewKey ? cardReview : null;
   const pendingIssue = review?.pendingIssue;
   const [previewCards, { isLoading: previewing }] = usePreviewAssignedICardsMutation();
@@ -281,6 +283,7 @@ export default function StudentICardAssignmentRoster({
     try {
       const cards = await previewCards(request).unwrap();
       if (!cards.length) throw new Error('Empty card preview');
+      reviewExit.reopen();
       setCardReview({ key: reviewKey, cards, studentId: cards[0].studentId, pendingIssue: null });
     } catch (error) {
       handleFailure(error, 'I-Cards could not be previewed. Please try again.');
@@ -324,9 +327,11 @@ export default function StudentICardAssignmentRoster({
       shikshaMitraToast.success({
         message: `${cards.length} ${cards.length === 1 ? 'I-Card' : 'I-Cards'} issued.`,
       });
-      setCardReview(null);
-      setSelected({});
       issueKey.current = null;
+      reviewExit.closeAfterExit(() => {
+        setCardReview(null);
+        setSelected({});
+      });
     } catch (error) {
       handleFailure(
         error,
@@ -522,6 +527,8 @@ export default function StudentICardAssignmentRoster({
       </Box>
       {review && currentCard && (
         <StudentICardAssignmentPreview
+          open={!reviewExit.closing}
+          onExited={reviewExit.onExited}
           standardName={standardName}
           busy={busy}
           printError={review.printError}
@@ -532,7 +539,7 @@ export default function StudentICardAssignmentRoster({
             card.studentSnapshot.StudentName ?? selected[card.studentId]?.studentName ?? 'Student'
           }
           onStudentChange={(studentId) => setCardReview({ ...review, studentId })}
-          onClose={() => setCardReview(null)}
+          onClose={() => reviewExit.closeAfterExit(() => setCardReview(null))}
           actions={
             canIssue && (
               <Stack
@@ -574,7 +581,7 @@ export default function StudentICardAssignmentRoster({
         />
       )}
       <ConfirmDialog
-        open={Boolean(pendingIssue && canIssue)}
+        open={Boolean(pendingIssue && canIssue) && !reviewExit.closing}
         title="Issue I-Cards?"
         icon="info"
         bodyBusy={issuing}

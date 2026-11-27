@@ -132,6 +132,10 @@ export type AdmissionPrintAdvancedSettings = {
     showInstructions?: boolean;
     instructionsPlacement?: 'first' | 'section' | 'before-declaration' | 'separate-page';
     instructionSection?: string;
+    instructionHeadingSize?: 'default' | '10' | '12' | '14' | '16';
+    instructionTextSize?: 'default' | '10' | '12' | '14' | '16';
+    instructionTextWeight?: 'regular' | 'bold';
+    instructionTextColor?: 'default' | 'black' | 'gray';
     showChecklist?: boolean;
     checklistPlacement?: 'first' | 'last' | 'separate-page';
     showDeclaration?: boolean;
@@ -283,6 +287,10 @@ export function resolveAdmissionPrintAdvancedSettings(
       showInstructions: false,
       instructionsPlacement: 'first' as const,
       instructionSection: '',
+      instructionHeadingSize: 'default' as const,
+      instructionTextSize: 'default' as const,
+      instructionTextWeight: 'regular' as const,
+      instructionTextColor: 'default' as const,
       showChecklist: false,
       checklistPlacement: 'last' as const,
       showDeclaration: false,

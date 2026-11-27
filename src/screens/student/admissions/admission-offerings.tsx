@@ -1,10 +1,12 @@
 'use client';
 
+import { useRef } from 'react';
 import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { studentPaths } from 'src/constants/student-menu';
 import { StudentFeedback } from 'src/components/student-feedback';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { StudentSetupManagerHeader as CustomBreadcrumbs } from 'src/screens/student/setup/embedding';
 
 import { AdmissionQueryError } from './admission-query-error';
@@ -20,6 +22,22 @@ import { BulkAdmissionOfferingActivation } from './bulk-admission-offering-activ
 
 export default function AdmissionOfferingsScreen() {
   const screen = useAdmissionOfferingsScreen();
+  const editorExit = useStudentDrawerExit();
+  const detailsExit = useStudentDrawerExit();
+  const afterEditorClose = useRef<(() => void) | null>(null);
+  const closeEditor = () => {
+    screen.cancelDetailRequest();
+    editorExit.closeAfterExit(() => {
+      const next = afterEditorClose.current;
+      afterEditorClose.current = null;
+      screen.closeDialog();
+      next?.();
+    });
+  };
+  const closeDetails = () => {
+    screen.cancelDetailRequest();
+    detailsExit.closeAfterExit(screen.closeDetails);
+  };
   const hasActiveFilters = Boolean(
     screen.filters.campusId ||
     screen.filters.stageId ||
@@ -193,6 +211,11 @@ export default function AdmissionOfferingsScreen() {
       {screen.cycle && screen.dialogMode && (
         <AdmissionOfferingDialog
           open
+          closing={editorExit.closing}
+          onExited={() => {
+            editorExit.onExited();
+            editorExit.reopen();
+          }}
           mode={screen.dialogMode}
           cycle={screen.cycle}
           cycles={screen.cycles}
@@ -201,9 +224,15 @@ export default function AdmissionOfferingsScreen() {
           detailError={screen.detailError}
           onRetryDetail={screen.retryDetail}
           saving={screen.saving}
-          onClose={screen.closeDialog}
-          onSave={screen.save}
-          onDeactivate={screen.permissions.deactivate ? screen.deactivateFromEditor : undefined}
+          onClose={closeEditor}
+          onSave={(values, cycleId) => screen.save(values, cycleId, editorExit.closeAfterExit)}
+          onDeactivate={
+            screen.permissions.deactivate
+              ? () => {
+                  afterEditorClose.current = screen.deactivateFromEditor;
+                }
+              : undefined
+          }
         />
       )}
       {screen.cycle && screen.bulkOpen && (
@@ -216,12 +245,16 @@ export default function AdmissionOfferingsScreen() {
         />
       )}
       <AdmissionOfferingDetailsDrawer
-        open={screen.detailsOpen}
+        open={screen.detailsOpen && !detailsExit.closing}
         loadingDetail={screen.loadingDetail}
         detailError={screen.detailError}
         onRetryDetail={screen.retryDetail}
         offering={screen.selected}
-        onClose={screen.closeDetails}
+        onClose={closeDetails}
+        onExited={() => {
+          detailsExit.onExited();
+          detailsExit.reopen();
+        }}
         canReviewForms={screen.formAccess?.canView}
         canRestoreForms={screen.formAccess?.canView && screen.formAccess?.canManage}
         canReviewWorkflows={screen.workflowAccess?.canView}

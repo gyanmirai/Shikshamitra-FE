@@ -29,6 +29,9 @@ const hooks = vi.hoisted(() => ({
   },
   create: vi.fn(),
   rename: vi.fn(),
+  getCopyToken: vi.fn(),
+  resetCopyToken: vi.fn(),
+  regenerate: vi.fn(),
   expiryPickerProps: vi.fn(),
   infoToast: vi.fn(),
   successToast: vi.fn(),
@@ -80,6 +83,11 @@ vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
   },
   useCreateAdmissionPublicInquiryLinkMutation: () => [hooks.create, { isLoading: false }],
   useRenameAdmissionPublicInquiryLinkMutation: () => [hooks.rename, { isLoading: false }],
+  useGetAdmissionPublicInquiryLinkCopyTokenMutation: () => [
+    hooks.getCopyToken,
+    { reset: hooks.resetCopyToken },
+  ],
+  useRegenerateAdmissionPublicInquiryLinkMutation: () => [hooks.regenerate, { isLoading: false }],
   useRevokeAdmissionPublicInquiryLinkMutation: () => [
     hooks.revoke,
     { isLoading: hooks.revokeLoading },
@@ -238,6 +246,7 @@ describe('create public inquiry link', () => {
     hooks.create.mockReturnValue({
       unwrap: () => Promise.resolve({ ...activeLink, name: 'School fair', token: 'fixture-token' }),
     });
+    hooks.getCopyToken.mockReturnValue({ unwrap: async () => ({ token: 'fixture-token' }) });
   });
 
   it('offers every eligible form while excluding an unlinked published form', async () => {
@@ -500,7 +509,7 @@ describe('create public inquiry link', () => {
         expiresAtUtc: null,
       })
     );
-    expect(hooks.close).toHaveBeenCalledOnce();
+    await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
   });
 
   it('keeps the newly created address in its row action before the refreshed list arrives', async () => {
@@ -536,14 +545,14 @@ describe('create public inquiry link', () => {
     expect(copy).toBeEnabled();
     expect(
       screen.getByRole('button', { name: 'Copy Inquiry Link For Existing link' })
-    ).toBeDisabled();
+    ).toBeEnabled();
     expect(screen.queryByText(/Copy this link now/)).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Inquiry Link' })).not.toBeInTheDocument();
     await user.click(copy);
     expect(clipboard).toHaveBeenCalledWith(
       `${window.location.origin}/admission-inquiry/fixture-token`
     );
-    expect(hooks.successToast).toHaveBeenCalledWith({ message: 'Inquiry link copied.' });
+    expect(hooks.successToast).toHaveBeenCalledWith({ message: 'Link copied' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
     hooks.links = [{ ...activeLink, name: 'School fair' }];
@@ -554,9 +563,11 @@ describe('create public inquiry link', () => {
     expect(screen.getByRole('button', { name: 'Copy Inquiry Link For School fair' })).toBeEnabled();
     unmount();
     renderList();
-    expect(
-      screen.getByRole('button', { name: 'Copy Inquiry Link For School fair' })
-    ).toBeDisabled();
+    const reloadedCopy = screen.getByRole('button', { name: 'Copy Inquiry Link For School fair' });
+    expect(reloadedCopy).toBeEnabled();
+    await user.click(reloadedCopy);
+    expect(hooks.getCopyToken).toHaveBeenNthCalledWith(2, activeLink.id);
+    expect(clipboard).toHaveBeenCalledTimes(2);
   });
 
   it('keeps a newly created row copyable when the initial list request failed', async () => {
@@ -608,7 +619,7 @@ describe('create public inquiry link', () => {
     expect(copy).toBeEnabled();
     await user.click(copy);
     expect(clipboard).toHaveBeenCalledTimes(2);
-    expect(hooks.successToast).toHaveBeenCalledWith({ message: 'Inquiry link copied.' });
+    expect(hooks.successToast).toHaveBeenCalledWith({ message: 'Link copied' });
   });
 
   it.each([
@@ -718,7 +729,7 @@ describe('create public inquiry link', () => {
           })
         )
       );
-      expect(hooks.close).toHaveBeenCalledOnce();
+      await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
       expect(hooks.setupQuery).not.toHaveBeenCalled();
       expect(
         screen.queryByRole('combobox', { name: /Admission Intake Setup/ })
@@ -737,6 +748,7 @@ const activeLink: AdmissionPublicInquiryLink = {
   sourceDetail: 'School campaign',
   expiresAtUtc: null,
   isActive: true,
+  canCopy: true,
   concurrencyStamp: 'stamp-1',
 };
 const renderList = (canEdit = true) =>
@@ -774,6 +786,7 @@ describe('public inquiry link details and actions', () => {
     hooks.linksError = false;
     hooks.linksFetching = false;
     hooks.revokeLoading = false;
+    hooks.getCopyToken.mockReturnValue({ unwrap: async () => ({ token: 'fixture-token' }) });
     hooks.forms.data.items = [
       { id: 'form-1', name: 'Inquiry form', version: 1, status: 1, purpose: 0 },
     ];
@@ -960,6 +973,86 @@ describe('public inquiry link details and actions', () => {
     expect(hooks.revoke).not.toHaveBeenCalled();
   });
 
+  it('copies a saved URL from link details and clears the token response', async () => {
+    const user = userEvent.setup();
+    const clipboard = vi.spyOn(navigator.clipboard, 'writeText');
+    renderList();
+    await user.click(screen.getByRole('cell', { name: activeLink.name }));
+    const dialog = within(screen.getByRole('dialog'));
+    await user.click(dialog.getByRole('button', { name: 'Copy Link' }));
+    expect(hooks.getCopyToken).toHaveBeenCalledWith(activeLink.id);
+    expect(clipboard).toHaveBeenCalledWith(
+      `${window.location.origin}/admission-inquiry/fixture-token`
+    );
+    expect(hooks.successToast).toHaveBeenCalledWith({ message: 'Link copied' });
+    expect(hooks.resetCopyToken).toHaveBeenCalledOnce();
+  });
+
+  it('warns before regenerating a legacy link and sends the current concurrency stamp', async () => {
+    hooks.links = [{ ...activeLink, canCopy: false }];
+    hooks.regenerate.mockReturnValue({
+      unwrap: async () => {
+        const updatedLink = { ...activeLink, concurrencyStamp: 'stamp-2' };
+        hooks.links = [updatedLink];
+        return updatedLink;
+      },
+    });
+    const user = userEvent.setup();
+    renderList();
+    await user.click(screen.getByRole('cell', { name: activeLink.name }));
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Regenerate Link' })
+    );
+    let confirm = within(screen.getByRole('dialog', { name: 'Regenerate Inquiry Link?' }));
+    expect(confirm.getByText(/old address from working/)).toBeVisible();
+    await user.click(confirm.getByRole('button', { name: 'Cancel' }));
+    expect(hooks.regenerate).not.toHaveBeenCalled();
+    const details = within(
+      screen.getByRole('dialog', { name: `Inquiry Link: ${activeLink.name}` })
+    );
+    await user.click(details.getByRole('button', { name: 'Regenerate Link' }));
+    confirm = within(screen.getByRole('dialog', { name: 'Regenerate Inquiry Link?' }));
+    await user.click(confirm.getByRole('button', { name: 'Regenerate Link' }));
+    expect(hooks.regenerate).toHaveBeenCalledExactlyOnceWith({
+      id: activeLink.id,
+      concurrencyStamp: activeLink.concurrencyStamp,
+    });
+    expect(await screen.findByRole('button', { name: 'Copy Link' })).toBeEnabled();
+  });
+
+  it('offers confirmation if a saved token can no longer be read', async () => {
+    hooks.getCopyToken.mockReturnValueOnce({
+      unwrap: async () => {
+        throw Object.assign(new Error('Token unavailable'), {
+          status: 400,
+          data: { error: { code: 'Admissions.PublicInquiry.CopyTokenUnavailable' } },
+        });
+      },
+    });
+    const user = userEvent.setup();
+    renderList();
+    await user.click(
+      screen.getByRole('button', { name: `Copy Inquiry Link For ${activeLink.name}` })
+    );
+    const confirm = within(screen.getByRole('dialog', { name: 'Regenerate Inquiry Link?' }));
+    expect(confirm.getByText(/old address from working/)).toBeVisible();
+    expect(hooks.regenerate).not.toHaveBeenCalled();
+  });
+
+  it('does not allow copying an expired link', async () => {
+    hooks.links = [{ ...activeLink, expiresAtUtc: '2000-01-01T00:00:00Z' }];
+    const user = userEvent.setup();
+    renderList();
+    expect(
+      screen.getByRole('button', { name: `Copy Inquiry Link For ${activeLink.name}` })
+    ).toBeDisabled();
+    await user.click(screen.getByRole('cell', { name: activeLink.name }));
+    expect(
+      within(screen.getByRole('dialog')).queryByRole('button', { name: 'Copy Link' })
+    ).not.toBeInTheDocument();
+    expect(hooks.getCopyToken).not.toHaveBeenCalled();
+  });
+
   it('disables Revoke Link while revocation is in progress', async () => {
     hooks.revokeLoading = true;
     renderList();
@@ -1012,7 +1105,9 @@ describe('public inquiry link details and actions', () => {
       const menu = screen.getByRole('menu', { name: `More Actions For ${activeLink.name}` });
       expect(within(menu).getByRole('menuitem', { name: 'Rename Link' })).toBeVisible();
       expect(within(menu).getByRole('menuitem', { name: 'Revoke Link' })).toBeVisible();
-      expect(within(menu).queryByRole('menuitem', { name: 'Set Inquiry Form' })).not.toBeInTheDocument();
+      expect(
+        within(menu).queryByRole('menuitem', { name: 'Set Inquiry Form' })
+      ).not.toBeInTheDocument();
       expect(screen.queryByRole('dialog', { name: 'Set Inquiry Form' })).not.toBeInTheDocument();
     } finally {
       window.matchMedia = originalMatchMedia;

@@ -35,6 +35,7 @@ import CertificateExitCaseSelect from './certificate-exit-case-select';
 import { useCertificateGeneration } from './use-certificate-generation';
 import CertificateDocumentPreview from './certificate-document-preview';
 import { certificateRequest, certificateChoices } from './certificate-flow';
+import { useStudentDrawerExit } from '../../components/use-student-drawer-exit';
 import StudentAssignmentDrawer from '../../onboarding/student-setup/student-assignment-drawer';
 
 import type { CertificateFormValues } from './certificate-flow';
@@ -52,6 +53,7 @@ export default function CertificateGenerationDrawer({
   onClose,
   onViewHistory,
 }: CertificateGenerationDrawerProps) {
+  const exit = useStudentDrawerExit();
   const router = useRouter();
   const formId = useId();
   const brandingHelpId = useId();
@@ -115,15 +117,18 @@ export default function CertificateGenerationDrawer({
   const issueDay = dayjs(form.values.issueDate);
   const validIssueDate = issueDay.isValid();
   const flow = useCertificateGeneration(requests, focusedId, allowed && validIssueDate);
-  const guard = useUnsavedNavigation(!flow.complete && (form.dirty || flow.attempted), {
-    push: router.push,
-    blockNavigation: flow.busy,
-    guardContextChanges: true,
-    description: flow.attempted
-      ? 'A generation attempt may have saved certificates. Retry this request or review student history before starting another. Closing does not remove issued certificates.'
-      : undefined,
-  });
-  const close = () => guard.requestNavigation(onClose);
+  const guard = useUnsavedNavigation(
+    !flow.complete && !exit.closing && (form.dirty || flow.attempted),
+    {
+      push: router.push,
+      blockNavigation: flow.busy,
+      guardContextChanges: true,
+      description: flow.attempted
+        ? 'A generation attempt may have saved certificates. Retry this request or review student history before starting another. Closing does not remove issued certificates.'
+        : undefined,
+    }
+  );
+  const close = () => guard.requestNavigation(() => exit.closeAfterExit(onClose));
   const locked = form.isSubmitting || flow.busy || flow.attempted || !allowed;
   const title = flow.complete
     ? 'Certificates Ready'
@@ -143,6 +148,8 @@ export default function CertificateGenerationDrawer({
   return (
     <>
       <StudentAssignmentDrawer
+        open={!exit.closing}
+        onExited={exit.onExited}
         expanded
         contentLayout={flow.complete ? 'scroll' : 'split'}
         title={title}
@@ -241,7 +248,7 @@ export default function CertificateGenerationDrawer({
                     color="inherit"
                     disabled={flow.busy || !allowed}
                     startIcon={<Iconify icon={GlobalIcons.history} />}
-                    onClick={() => onViewHistory(students[0].studentId)}
+                    onClick={() => exit.closeAfterExit(() => onViewHistory(students[0].studentId))}
                   >
                     View student history
                   </Button>

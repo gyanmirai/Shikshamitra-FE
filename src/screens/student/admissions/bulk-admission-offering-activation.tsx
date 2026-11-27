@@ -75,6 +75,7 @@ export function BulkAdmissionOfferingActivation({
         disableCancel={activation.busy}
         disableEscapeKeyDown={activation.busy}
         bodyBusy={activation.busy}
+        compactBody
         busyLabel={
           activation.progress
             ? `Activating ${activation.progress.completed} of ${activation.progress.total} offerings…`

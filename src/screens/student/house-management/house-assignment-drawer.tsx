@@ -7,6 +7,7 @@ import type {
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useId, useRef, useState, useEffect } from 'react';
@@ -54,6 +55,7 @@ export default function HouseAssignmentDrawer({
   onCommit,
 }: Props) {
   const titleId = useId();
+  const exit = useStudentDrawerExit();
   const submitting = useRef(false);
   const requestVersion = useRef(0);
   const entireDivision = scope === 'division';
@@ -82,15 +84,15 @@ export default function HouseAssignmentDrawer({
     requestVersion.current += 1;
     submitting.current = false;
     setBusy(false);
-    onClose();
+    exit.closeAfterExit(onClose);
   };
   const { close, confirmation } = useHouseCloseGuard(
-    Boolean(house || reviewed || includeAssigned || mode !== initialMode),
+    !exit.closing && Boolean(house || reviewed || includeAssigned || mode !== initialMode),
     writing,
     closeDraft
   );
   const submit = async () => {
-    if (submitting.current) return;
+    if (submitting.current || exit.closing) return;
     setTouched(true);
     if ((entireDivision || mode === 'assign') && !house) return;
     if (entireDivision && preview?.students.length === 0) return;
@@ -103,7 +105,7 @@ export default function HouseAssignmentDrawer({
     try {
       if (reviewed) {
         await onCommit({ ...reviewed.input, previewToken: reviewed.result.previewToken });
-        if (version === requestVersion.current) onClose();
+        if (version === requestVersion.current) exit.closeAfterExit(onClose);
       } else {
         const input: HouseAssignment =
           entireDivision && house
@@ -153,26 +155,41 @@ export default function HouseAssignmentDrawer({
     <>
       <Drawer
         anchor="right"
-        open
+        open={!exit.closing}
         onClose={close}
+        onTransitionExited={exit.onExited}
         PaperProps={{
+          inert: exit.closing || undefined,
           role: 'dialog',
           'aria-modal': true,
           'aria-labelledby': titleId,
           sx: { width: { xs: 1, sm: 680 }, maxWidth: 1, display: 'flex', flexDirection: 'column' },
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
-          <Typography id={titleId} variant="h6" sx={{ flex: 1 }}>
-            Change House Membership
-          </Typography>
-          <InfoTooltipIcon
-            title="Review the affected students and leadership changes before confirming."
-            label="Membership change information"
+        <Stack
+          component="header"
+          direction="row"
+          alignItems="center"
+          spacing={1}
+          sx={{ px: { xs: 2, sm: 3 }, py: 2, flexShrink: 0 }}
+        >
+          <Stack direction="row" alignItems="center" flexWrap="wrap" sx={{ flex: 1, minWidth: 0 }}>
+            <Typography id={titleId} component="h2" variant="h6">
+              Change House Membership
+            </Typography>
+            <InfoTooltipIcon
+              title="Review the affected students and leadership changes before confirming."
+              label="Membership change information"
+              disabled={writing}
+            />
+          </Stack>
+          <IconButton
+            aria-label="Close Change House Membership"
             disabled={writing}
-          />
-          <IconButton aria-label="Close Change House Membership" disabled={writing} onClick={close}>
-            <Iconify icon={GlobalIcons.cancel} />
+            onClick={close}
+            sx={{ width: 44, height: 44, flexShrink: 0 }}
+          >
+            <Iconify icon={GlobalIcons.cancel} width={20} />
           </IconButton>
         </Stack>
         <Divider />

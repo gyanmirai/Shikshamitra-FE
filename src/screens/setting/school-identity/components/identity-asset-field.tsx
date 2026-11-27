@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import Box from '@mui/material/Box';
 import { useId, useRef } from 'react';
 import Stack from '@mui/material/Stack';
@@ -30,6 +32,9 @@ export function IdentityAssetField({
   allowCustom = true,
   enableFormatting = false,
   errors,
+  settingControl,
+  description,
+  showCustomEditor = true,
   onChange,
   onUpload,
   onPreparing,
@@ -43,6 +48,9 @@ export function IdentityAssetField({
   allowCustom?: boolean;
   enableFormatting?: boolean;
   errors?: { assetId?: string; principalName?: string; designation?: string };
+  settingControl?: ReactNode;
+  description?: string;
+  showCustomEditor?: boolean;
   onChange: (selection: IdentitySelection) => void;
   onUpload: (file: File) => void;
   onPreparing?: (busy: boolean) => void;
@@ -72,29 +80,31 @@ export function IdentityAssetField({
       <FormSectionCard
         title={sections[kind].title}
         icon={sections[kind].icon}
-        descriptionTooltip={sections[kind].description}
+        descriptionTooltip={description ?? sections[kind].description}
       >
         <Stack spacing={1.5}>
-          <TextField
-            id={`${fieldId}-setting`}
-            size="small"
-            fullWidth
-            select
-            label={`${label} setting`}
-            SelectProps={{ SelectDisplayProps: { 'aria-labelledby': `${fieldId}-setting-label` } }}
-            value={value.mode}
-            disabled={disabled}
-            onChange={(event) =>
-              onChange(changedSelection(Number(event.target.value) as IdentityMode, kind))
-            }
-          >
-            <MenuItem value={0}>{inheritLabel}</MenuItem>
-            <MenuItem value={1} disabled={!allowCustom}>
-              Use custom asset
-            </MenuItem>
-            <MenuItem value={2}>Do not display</MenuItem>
-          </TextField>
-          {value.mode === 1 && (
+          {settingControl ?? (
+            <TextField
+              id={`${fieldId}-setting`}
+              size="small"
+              fullWidth
+              select
+              label={`${label} setting`}
+              SelectProps={{ SelectDisplayProps: { 'aria-labelledby': `${fieldId}-setting-label` } }}
+              value={value.mode}
+              disabled={disabled}
+              onChange={(event) =>
+                onChange(changedSelection(Number(event.target.value) as IdentityMode, kind))
+              }
+            >
+              <MenuItem value={0}>{inheritLabel}</MenuItem>
+              <MenuItem value={1} disabled={!allowCustom}>
+                Use custom asset
+              </MenuItem>
+              <MenuItem value={2}>Do not display</MenuItem>
+            </TextField>
+          )}
+          {value.mode === 1 && showCustomEditor && (
             <>
               <IdentityImageUpload
                 kind={kind}

@@ -20,6 +20,13 @@ type Props = AdmissionOfferingActionProps & { row: AdmissionOfferingListItem };
 export function AdmissionOfferingRowActions({ row, ...actions }: Props) {
   const activationAllowed = row.canActivate || row.configurationStatus === 1;
   const rowActions: AdaptiveThreeDotsAction[] = [];
+  if (!row.isActive && actions.canActivate && activationAllowed)
+    rowActions.push({
+      id: 'activate',
+      label: `Activate`,
+      icon: GlobalIcons.publish,
+      onClick: () => actions.onToggleActive(row),
+    });
   if (actions.canEdit)
     rowActions.push({
       id: 'edit',
@@ -41,13 +48,6 @@ export function AdmissionOfferingRowActions({ row, ...actions }: Props) {
       id: 'deactivate',
       label: `Deactivate`,
       icon: GlobalIcons.lockIcon,
-      onClick: () => actions.onToggleActive(row),
-    });
-  if (!row.isActive && actions.canActivate && activationAllowed)
-    rowActions.push({
-      id: 'activate',
-      label: `Activate`,
-      icon: GlobalIcons.publish,
       onClick: () => actions.onToggleActive(row),
     });
   if (!row.isActive && actions.canActivate && !activationAllowed && actions.canEdit)

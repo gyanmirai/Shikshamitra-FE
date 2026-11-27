@@ -9,9 +9,11 @@ import { useRouter } from 'next/navigation';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { Button, Typography, DialogActions } from '@mui/material';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import StudentICardBuilder from './student-icard-builder';
+import { useStudentDrawerExit } from '../components/use-student-drawer-exit';
 import CertificateGenerationDrawer from './components/certificate-generation-drawer';
 import StudentAssignmentDrawer from '../onboarding/student-setup/student-assignment-drawer';
 
@@ -51,7 +53,6 @@ function DirectoryDocuments({
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const [openedYear] = useState(currentYear);
-  const [busy, setBusy] = useState(false);
   const feature = request.kind === 'id-card' ? 'StudentICard' : 'Certificates';
   const canIssue =
     hasGrantedPermission(permissions, `Students.Records.${feature}.View`) &&
@@ -99,15 +100,44 @@ function DirectoryDocuments({
     );
   if (request.kind === 'id-card')
     return (
+      <DirectoryICardFlow request={request} contextInvalid={contextInvalid} onClose={onClose} />
+    );
+  return <DirectoryCertificateFlow request={request} onClose={onClose} />;
+}
+
+function DirectoryICardFlow({
+  request,
+  contextInvalid,
+  onClose,
+}: {
+  request: DirectoryDocumentRequest;
+  contextInvalid: boolean;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const exit = useStudentDrawerExit();
+  const { requestNavigation, confirmation } = useUnsavedNavigation(dirty, {
+    push: router.push,
+    blockNavigation: busy,
+    guardContextChanges: true,
+    description: 'Your photo edits for this print session will be discarded.',
+  });
+  const close = () => exit.closeAfterExit(onClose);
+  const requestClose = () => requestNavigation(close);
+
+  return (
+    <>
       <StudentAssignmentDrawer
+        open={!exit.closing}
+        onExited={exit.onExited}
         title="Print I-Cards"
         titleInfo="Select students, review their cards, then download a print PDF or issue numbered cards into student history."
         contentLayout="workspace"
         wide
         busy={busy}
-        onClose={() => {
-          if (!busy) onClose();
-        }}
+        onClose={requestClose}
         actions={null}
       >
         <StudentICardBuilder
@@ -117,11 +147,14 @@ function DirectoryDocuments({
           academicYearId={request.academicYearId}
           contextInvalid={contextInvalid}
           onBusyChange={setBusy}
-          onClose={onClose}
+          onDirtyChange={setDirty}
+          onClose={requestClose}
+          onIssued={close}
         />
       </StudentAssignmentDrawer>
-    );
-  return <DirectoryCertificateFlow request={request} onClose={onClose} />;
+      {confirmation}
+    </>
+  );
 }
 
 function DirectoryCertificateFlow({

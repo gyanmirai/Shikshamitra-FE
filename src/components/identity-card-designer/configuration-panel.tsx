@@ -21,6 +21,7 @@ export function DesignerConfigurationPanel(
     tab,
     onTabChange,
     brandingContent,
+    signatureContent,
     canPlaceSignature,
     configurationPanelSize,
     showConfigurationHints,
@@ -139,6 +140,7 @@ export function DesignerConfigurationPanel(
           {tab === 'layout' && <LayoutSettings {...props} />}
           {tab === 'elements' && (
             <>
+              {selected?.type === 'signature' && signatureContent}
               <ElementInspector
                 element={selected}
                 fields={fields}

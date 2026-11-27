@@ -2,10 +2,7 @@
 
 import type { Dayjs } from 'dayjs';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
-import type {
-  AdmissionPublicInquiryLink,
-  CreatedAdmissionPublicInquiryLink,
-} from 'src/redux/student/admissions/admission-intake-profiles-api';
+import type { AdmissionPublicInquiryLink } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -14,10 +11,10 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
 import { useRef, useState, useEffect } from 'react';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
-import { fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -31,6 +28,7 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import { useGetAdmissionFormsQuery } from 'src/redux/student/admissions/admission-forms-api';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
 import {
   Box,
@@ -54,14 +52,16 @@ import {
   useRenameAdmissionPublicInquiryLinkMutation,
   useRevokeAdmissionPublicInquiryLinkMutation,
   useGetAdmissionPublicInquiryLinkOptionsQuery,
+  useRegenerateAdmissionPublicInquiryLinkMutation,
+  useGetAdmissionPublicInquiryLinkCopyTokenMutation,
 } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import { AdmissionTableText } from './admission-table-text';
 import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionIntakeNotice } from './admission-intake-notice';
 import { useAdmissionCloseGuard } from './use-admission-close-guard';
-import { INQUIRY_SOURCE_OPTIONS } from './inquiry-management/admission-inquiry-list-options';
 import { ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
+import { INQUIRY_SOURCE_OPTIONS } from './inquiry-management/admission-inquiry-list-options';
 
 const publicSources = INQUIRY_SOURCE_OPTIONS.filter((item) =>
   [0, 3, 4, 10, 11, 12].includes(item.value)
@@ -69,6 +69,8 @@ const publicSources = INQUIRY_SOURCE_OPTIONS.filter((item) =>
 const formEligibilityDescription =
   'Select a published inquiry form linked to an active inquiry offering in this admission period.';
 const duplicateLinkNameCode = 'Admissions.PublicInquiryLinkNameExists';
+const copyTokenUnavailableCode = 'Admissions.PublicInquiry.CopyTokenUnavailable';
+const linkUnavailableCode = 'Admissions.PublicInquiry.LinkUnavailable';
 const duplicateLinkNameMessage =
   'An inquiry link with this name already exists. Enter a different name.';
 const noEligibleFormsHelp =
@@ -177,6 +179,8 @@ export function AdmissionPublicInquiryLinks({
   const [create, createState] = useCreateAdmissionPublicInquiryLinkMutation();
   const [rename, renameState] = useRenameAdmissionPublicInquiryLinkMutation();
   const [revoke, revokeState] = useRevokeAdmissionPublicInquiryLinkMutation();
+  const [getCopyToken, copyTokenState] = useGetAdmissionPublicInquiryLinkCopyTokenMutation();
+  const [regenerate, regenerateState] = useRegenerateAdmissionPublicInquiryLinkMutation();
   // Existing links carry IDs, so their visible labels need these lookups even in read-only lists.
   const needsPeriodLabels = Boolean(links.currentData?.length);
   const needsFormLabels = Boolean(links.currentData?.some((link) => link.inquiryFormDefinitionId));
@@ -189,6 +193,7 @@ export function AdmissionPublicInquiryLinks({
     { skip: !createOpen && !needsFormLabels }
   );
   const [revokeTarget, setRevokeTarget] = useState<AdmissionPublicInquiryLink | null>(null);
+  const [regenerateTarget, setRegenerateTarget] = useState<LinkRow | null>(null);
   const [renameTarget, setRenameTarget] = useState<AdmissionPublicInquiryLink | null>(null);
   const [renameError, setRenameError] = useState('');
   const [rejectedName, setRejectedName] = useState<string | null>(null);
@@ -196,14 +201,15 @@ export function AdmissionPublicInquiryLinks({
   const [viewLinkId, setViewLinkId] = useState<string | null>(null);
   const [optionalOpen, setOptionalOpen] = useState(true);
   const [formMenuOpen, setFormMenuOpen] = useState(false);
-  const [createdLinks, setCreatedLinks] = useState<
-    Record<string, CreatedAdmissionPublicInquiryLink>
-  >({});
+  const [createdLinks, setCreatedLinks] = useState<Record<string, AdmissionPublicInquiryLink>>({});
+  const [unreadableLinkStamps, setUnreadableLinkStamps] = useState<Record<string, string>>({});
+  const linkActionInFlight = useRef(false);
   const [copyingLinkId, setCopyingLinkId] = useState<string | null>(null);
   const [createdTableContext, setCreatedTableContext] = useState<
     Pick<IParams, 'page' | 'searchTerm' | 'filters' | 'sorts'> | undefined
   >();
   const [error, setError] = useState('');
+  const { closing, closeAfterExit, onExited, reopen } = useStudentDrawerExit();
   const publishedCycles = (cycles.data?.items ?? []).filter((cycle) => cycle.status === 1);
   const publishedForms = (forms.data?.items ?? []).filter(
     (form) => form.status === 1 && form.purpose === 0
@@ -230,7 +236,7 @@ export function AdmissionPublicInquiryLinks({
           );
           return;
         }
-        const result = await create({
+        const { token: _token, ...result } = await create({
           admissionCycleId: values.cycleId,
           counsellorAssignmentProfileId: null,
           inquiryFormDefinitionId: values.formId,
@@ -241,12 +247,8 @@ export function AdmissionPublicInquiryLinks({
         }).unwrap();
         setCreatedLinks((current) => ({ ...current, [result.id]: result }));
         setCreatedTableContext({ page: 0, searchTerm: '', filters: [], sorts: [] });
-        setRejectedName(null);
-        formik.resetForm();
-        onCreateClose();
-        shikshaMitraToast.success({
-          message: 'Inquiry link created. Copy it from the row actions before leaving this page.',
-        });
+        closeAfterExit(resetAndClose);
+        shikshaMitraToast.success({ message: 'Inquiry link created.' });
       } catch (problem) {
         const parsed = parseApiProblemDetail(problem);
         if (parsed.errorCode === duplicateLinkNameCode) {
@@ -302,10 +304,9 @@ export function AdmissionPublicInquiryLinks({
           concurrencyStamp: renameTarget.concurrencyStamp,
           name: name.trim(),
         }).unwrap();
-        setCreatedLinks((current) => {
-          const token = current[updated.id]?.token;
-          return token ? { ...current, [updated.id]: { ...updated, token } } : current;
-        });
+        setCreatedLinks((current) =>
+          current[updated.id] ? { ...current, [updated.id]: updated } : current
+        );
         renameEditor.resetForm();
         setRenameTarget(null);
         shikshaMitraToast.success({ message: 'Inquiry link renamed.' });
@@ -335,9 +336,14 @@ export function AdmissionPublicInquiryLinks({
   const renameNameError = renameEditor.touched.name ? renameEditor.errors.name : undefined;
 
   useStudentSetupFormState({
-    dirty: createOpen || Boolean(revokeTarget) || Boolean(renameTarget),
-    busy: createState.isLoading || revokeState.isLoading || renameBusy,
+    dirty:
+      createOpen || Boolean(revokeTarget) || Boolean(renameTarget) || Boolean(regenerateTarget),
+    busy: createState.isLoading || revokeState.isLoading || renameBusy || regenerateState.isLoading,
   });
+
+  useEffect(() => {
+    if (!createOpen) reopen();
+  }, [createOpen, reopen]);
 
   useEffect(() => {
     setFormMenuOpen(false);
@@ -357,14 +363,14 @@ export function AdmissionPublicInquiryLinks({
     return () => window.clearTimeout(timer);
   }, [createOpen, expiryMinimum]);
 
-  const discardAndClose = () => {
+  const resetAndClose = () => {
     formik.resetForm();
     setError('');
     setRejectedName(null);
     onCreateClose();
   };
-  const createGuard = useAdmissionCloseGuard(dirty, createState.isLoading, createOpen);
-  const closeDrawer = () => createGuard.requestNavigation(discardAndClose);
+  const createGuard = useAdmissionCloseGuard(dirty, createState.isLoading || closing, createOpen);
+  const closeDrawer = () => createGuard.requestNavigation(() => closeAfterExit(resetAndClose));
 
   const createLink = async () => {
     const errors = await formik.validateForm();
@@ -399,29 +405,100 @@ export function AdmissionPublicInquiryLinks({
     }
   };
 
-  const copyLink = async (link: AdmissionPublicInquiryLink) => {
-    const token = createdLinks[link.id]?.token;
-    if (!token || copyingLinkId) return;
+  const copyLink = async (link: LinkRow) => {
+    if (!canEdit || link.status !== 'Active' || linkActionInFlight.current) return;
+    linkActionInFlight.current = true;
     setCopyingLinkId(link.id);
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/admission-inquiry/${token}`);
-      shikshaMitraToast.success({ message: 'Inquiry link copied.' });
+      let token: string;
+      try {
+        ({ token } = await getCopyToken(link.id).unwrap());
+      } catch (problem) {
+        const { errorCode } = parseApiProblemDetail(problem);
+        if (errorCode === copyTokenUnavailableCode) {
+          setUnreadableLinkStamps((current) => ({ ...current, [link.id]: link.concurrencyStamp }));
+          setRegenerateTarget(link);
+        } else {
+          shikshaMitraToast.error({
+            message:
+              errorCode === linkUnavailableCode
+                ? 'This inquiry link is no longer active.'
+                : 'Unable to retrieve the inquiry link. Try again.',
+          });
+        }
+        return;
+      }
+      const url = new URL(
+        `/admission-inquiry/${encodeURIComponent(token)}`,
+        window.location.origin
+      );
+      await navigator.clipboard.writeText(url.href);
+      shikshaMitraToast.success({ message: 'Link copied' });
     } catch {
       shikshaMitraToast.error({
         message: 'Unable to copy the link. Allow clipboard access and try again.',
       });
     } finally {
+      copyTokenState.reset();
+      linkActionInFlight.current = false;
       setCopyingLinkId(null);
     }
   };
 
+  const regenerateLink = async (link: LinkRow) => {
+    if (!canEdit || linkActionInFlight.current) return;
+    linkActionInFlight.current = true;
+    try {
+      const updated = await regenerate({
+        id: link.id,
+        concurrencyStamp: link.concurrencyStamp,
+      }).unwrap();
+      setCreatedLinks((current) =>
+        current[updated.id] ? { ...current, [updated.id]: updated } : current
+      );
+      setRegenerateTarget(null);
+      shikshaMitraToast.success({
+        message: 'Inquiry link regenerated. Copy the new link from its actions.',
+      });
+    } catch (problem) {
+      const { errorCode } = parseApiProblemDetail(problem);
+      shikshaMitraToast.error({
+        message:
+          errorCode === linkUnavailableCode
+            ? 'This inquiry link is no longer active.'
+            : 'Unable to regenerate the inquiry link. Refresh the list and try again.',
+      });
+      links.refetch();
+      setRegenerateTarget(null);
+    } finally {
+      linkActionInFlight.current = false;
+    }
+  };
+
+  const getLinkShareAction = (link: LinkRow) => {
+    const needsRegeneration =
+      link.status === 'Active' &&
+      (!link.canCopy || unreadableLinkStamps[link.id] === link.concurrencyStamp);
+    const name = needsRegeneration ? 'Regenerate Link' : 'Copy Link';
+    return {
+      id: needsRegeneration ? 'regenerate' : 'copy',
+      name,
+      label: needsRegeneration
+        ? `Regenerate Inquiry Link For ${link.name}`
+        : `Copy Inquiry Link For ${link.name}`,
+      icon: needsRegeneration ? GlobalIcons.refresh : 'mdi:content-copy',
+      disabled: link.status !== 'Active' || Boolean(copyingLinkId) || regenerateState.isLoading,
+      loading: copyingLinkId === link.id,
+      tooltip: link.status === 'Expired' ? 'This inquiry link has expired.' : name,
+      onClick: needsRegeneration ? () => setRegenerateTarget(link) : () => copyLink(link),
+    };
+  };
+
   const listedLinks = links.currentData ?? [];
-  const sessionLinks = Object.values(createdLinks)
+  const recentLinks = Object.values(createdLinks)
     .reverse()
-    .map(
-      ({ token: _token, ...link }) => listedLinks.find((listed) => listed.id === link.id) ?? link
-    );
-  const visibleLinks = [...sessionLinks, ...listedLinks.filter((link) => !createdLinks[link.id])];
+    .map((link) => listedLinks.find((listed) => listed.id === link.id) ?? link);
+  const visibleLinks = [...recentLinks, ...listedLinks.filter((link) => !createdLinks[link.id])];
   const rows: LinkRow[] = visibleLinks.map((link) => {
     const expired = Boolean(link.expiresAtUtc && Date.parse(link.expiresAtUtc) <= Date.now());
     return {
@@ -438,6 +515,8 @@ export function AdmissionPublicInquiryLinks({
     };
   });
   const viewLink = rows.find((row) => row.id === viewLinkId);
+  const detailShareAction =
+    canEdit && viewLink?.status === 'Active' ? getLinkShareAction(viewLink) : null;
   const columns: IColumn[] = [
     {
       id: 'name',
@@ -476,7 +555,11 @@ export function AdmissionPublicInquiryLinks({
         const { expiresAtUtc } = row as LinkRow;
         return (
           <AdmissionTableText
-            text={expiresAtUtc ? (fDateTime(expiresAtUtc, ADMISSION_DATE_TIME_FORMAT) ?? '—') : 'No expiry'}
+            text={
+              expiresAtUtc
+                ? (fDateTime(expiresAtUtc, ADMISSION_DATE_TIME_FORMAT) ?? '—')
+                : 'No expiry'
+            }
           />
         );
       },
@@ -543,22 +626,7 @@ export function AdmissionPublicInquiryLinks({
             actions={
               link.isActive
                 ? [
-                    {
-                      id: 'copy',
-                      label: `Copy Inquiry Link For ${link.name}`,
-                      icon: 'mdi:content-copy',
-                      disabled:
-                        !createdLinks[link.id]?.token ||
-                        link.status !== 'Active' ||
-                        Boolean(copyingLinkId),
-                      tooltip:
-                        link.status !== 'Active'
-                          ? 'This Inquiry Link Has Expired.'
-                          : createdLinks[link.id]?.token
-                            ? 'Copy This Link Before Leaving the Page. Its Full Address Is Only Available After Creation.'
-                            : 'The Full Address Is Only Available During the Session in Which This Link Was Created.',
-                      onClick: () => copyLink(link),
-                    },
+                    getLinkShareAction(link),
                     renameAction,
                     {
                       id: 'revoke',
@@ -633,6 +701,7 @@ export function AdmissionPublicInquiryLinks({
             })}
             isLoading={links.isLoading || (!links.currentData && links.isFetching)}
             isRefreshing={Boolean(links.currentData && links.isFetching)}
+            refreshIndicator="circular"
             isPagination
             rowsPerPageOptions={[10, 25, 50, 100]}
             isSearch
@@ -643,7 +712,7 @@ export function AdmissionPublicInquiryLinks({
       </Box>
 
       <CustomDialog
-        open={Boolean(viewLink)}
+        open={Boolean(viewLink) && !regenerateTarget}
         handleClose={() => setViewLinkId(null)}
         title={viewLink ? `Inquiry Link: ${viewLink.name}` : 'Inquiry Link Details'}
         titleInfo="Review the saved admission period, inquiry form, source and availability of this link."
@@ -704,14 +773,28 @@ export function AdmissionPublicInquiryLinks({
           >
             Close
           </Button>
+          {detailShareAction && (
+            <LoadingButton
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon={detailShareAction.icon} width={18} />}
+              loading={detailShareAction.loading}
+              disabled={detailShareAction.disabled}
+              onClick={detailShareAction.onClick}
+            >
+              {detailShareAction.name}
+            </LoadingButton>
+          )}
         </DialogActions>
       </CustomDialog>
 
       <Drawer
         anchor="right"
-        open={createOpen}
+        open={createOpen && !closing}
         onClose={closeDrawer}
+        onTransitionExited={onExited}
         PaperProps={{
+          inert: closing,
           sx: {
             width: { xs: 1, sm: 440 },
             maxWidth: 1,
@@ -1072,6 +1155,26 @@ export function AdmissionPublicInquiryLinks({
       </CustomDialog>
       {renameGuard.confirmation}
       {createGuard.confirmation}
+      <ConfirmDialog
+        open={Boolean(regenerateTarget)}
+        onClose={() => setRegenerateTarget(null)}
+        title="Regenerate Inquiry Link?"
+        icon="warning"
+        content={`Regenerating ${regenerateTarget?.name ?? 'this link'} will stop the old address from working. Share the new link wherever you used the old one.`}
+        action={
+          <LoadingButton
+            size="small"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
+            loading={regenerateState.isLoading}
+            onClick={() => {
+              if (regenerateTarget) regenerateLink(regenerateTarget);
+            }}
+          >
+            Regenerate Link
+          </LoadingButton>
+        }
+      />
       <ConfirmDialog
         open={Boolean(revokeTarget)}
         onClose={() => !revokeState.isLoading && setRevokeTarget(null)}

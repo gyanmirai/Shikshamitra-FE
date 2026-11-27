@@ -2,9 +2,10 @@
 
 import type { ReactNode } from 'react';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { useId, useRef, useState, useEffect } from 'react';
+import { useId, useRef, useState, useEffect, useCallback } from 'react';
 import { Box, Stack, Drawer, IconButton, Typography } from '@mui/material';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 
@@ -13,6 +14,8 @@ export default function StudentAssignmentDrawer({
   title,
   busy,
   onClose,
+  open = true,
+  onExited,
   children,
   actions,
   wide = false,
@@ -24,6 +27,8 @@ export default function StudentAssignmentDrawer({
   title: string;
   busy: boolean;
   onClose: () => void;
+  open?: boolean;
+  onExited?: () => void;
   children: ReactNode;
   actions: ReactNode;
   wide?: boolean;
@@ -34,32 +39,47 @@ export default function StudentAssignmentDrawer({
 }) {
   const titleId = useId();
   const mounted = useRef(false);
+  const isOpen = useRef(open);
+  isOpen.current = open;
   const split = contentLayout === 'split';
   const [returnFocusTarget] = useState(() =>
     typeof document !== 'undefined' && document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null
   );
+  const restoreFocus = useCallback(() => {
+    if (!returnFocusTarget?.isConnected) return;
+    const activeDialog = document.activeElement?.closest('[role="dialog"]');
+    if (activeDialog && !activeDialog.contains(returnFocusTarget)) return;
+    const target = returnFocusTarget.matches(':disabled')
+      ? returnFocusTarget.closest<HTMLElement>('[role="region"][tabindex]')
+      : returnFocusTarget;
+    target?.focus();
+  }, [returnFocusTarget]);
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
       // The workspace unlocks its initiating control during unmount. Restore after that update.
       window.requestAnimationFrame(() => {
-        if (mounted.current || !returnFocusTarget?.isConnected) return;
-        const target = returnFocusTarget.matches(':disabled')
-          ? returnFocusTarget.closest<HTMLElement>('[role="region"][tabindex]')
-          : returnFocusTarget;
-        target?.focus();
+        if (!mounted.current) restoreFocus();
       });
     };
-  }, [returnFocusTarget]);
+  }, [restoreFocus]);
+  const handleExited = () => {
+    onExited?.();
+    window.requestAnimationFrame(() => {
+      if (mounted.current && !isOpen.current) restoreFocus();
+    });
+  };
   return (
     <Drawer
-      open
+      open={open}
       anchor="right"
+      onTransitionExited={onExited ? handleExited : undefined}
+      ModalProps={{ disableRestoreFocus: Boolean(onExited) }}
       onClose={() => {
-        if (!busy) onClose();
+        if (open && !busy) onClose();
       }}
       slotProps={{
         paper: {
@@ -67,6 +87,7 @@ export default function StudentAssignmentDrawer({
           'aria-modal': true,
           'aria-labelledby': titleId,
           'aria-busy': busy,
+          inert: !open || undefined,
           sx: {
             width: { xs: '100%', sm: expanded ? 'min(1440px, 96vw)' : wide ? 800 : 560 },
             maxWidth: '100%',
@@ -95,15 +116,20 @@ export default function StudentAssignmentDrawer({
           <Typography
             id={titleId}
             component="h2"
-            variant={expanded ? 'h6' : 'subtitle1'}
-            sx={{ minWidth: 0 }}
+            variant="h6"
+            sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
           >
             {title}
           </Typography>
           {titleInfo && <InfoTooltipIcon title={titleInfo} label={`${title} information`} />}
         </Stack>
-        <IconButton aria-label={`Close ${title}`} disabled={busy} onClick={onClose}>
-          <Iconify icon="mdi:close" width={20} />
+        <IconButton
+          aria-label={`Close ${title}`}
+          disabled={busy || !open}
+          onClick={onClose}
+          sx={{ flexShrink: 0 }}
+        >
+          <Iconify icon={GlobalIcons.cancel} width={20} />
         </IconButton>
       </Stack>
       {context}

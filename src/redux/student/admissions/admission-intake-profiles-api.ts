@@ -103,12 +103,13 @@ export type AdmissionPublicInquiryLink = {
   sourceDetail?: string | null;
   expiresAtUtc?: string | null;
   isActive: boolean;
+  canCopy?: boolean;
   concurrencyStamp: string;
 };
 
 export type CreateAdmissionPublicInquiryLink = Omit<
   AdmissionPublicInquiryLink,
-  'id' | 'isActive' | 'concurrencyStamp'
+  'id' | 'isActive' | 'canCopy' | 'concurrencyStamp'
 >;
 
 export type CreatedAdmissionPublicInquiryLink = AdmissionPublicInquiryLink & { token: string };
@@ -271,6 +272,43 @@ export const admissionIntakeProfilesApi = api.injectEndpoints({
       transformResponse: (response: Envelope<AdmissionPublicInquiryLink>) => unwrap(response),
       invalidatesTags: (_result, error) => (error ? [] : [tag]),
     }),
+    getAdmissionPublicInquiryLinkCopyToken: builder.mutation<{ token: string }, string>({
+      query: (id) => ({
+        url: `/student/enrollment/admissions/public-inquiry-links/${id}/copy-token`,
+        method: 'GET',
+        cache: 'no-store',
+      }),
+      transformResponse: (response: Envelope<{ token: string }>) => unwrap(response),
+    }),
+    regenerateAdmissionPublicInquiryLink: builder.mutation<
+      AdmissionPublicInquiryLink,
+      { id: string; concurrencyStamp: string }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/enrollment/admissions/public-inquiry-links/${id}/regenerate`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Envelope<AdmissionPublicInquiryLink>) => unwrap(response),
+      invalidatesTags: (_result, error) => (error ? [] : [tag]),
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            admissionIntakeProfilesApi.util.updateQueryData(
+              'getAdmissionPublicInquiryLinks',
+              undefined,
+              (links) => {
+                const index = links.findIndex((link) => link.id === data.id);
+                if (index !== -1) links[index] = data;
+              }
+            )
+          );
+        } catch {
+          // The editor displays the request error.
+        }
+      },
+    }),
     revokeAdmissionPublicInquiryLink: builder.mutation<
       void,
       { id: string; concurrencyStamp: string }
@@ -302,5 +340,7 @@ export const {
   useGetAdmissionPublicInquiryLinkOptionsQuery,
   useCreateAdmissionPublicInquiryLinkMutation,
   useRenameAdmissionPublicInquiryLinkMutation,
+  useGetAdmissionPublicInquiryLinkCopyTokenMutation,
+  useRegenerateAdmissionPublicInquiryLinkMutation,
   useRevokeAdmissionPublicInquiryLinkMutation,
 } = admissionIntakeProfilesApi;

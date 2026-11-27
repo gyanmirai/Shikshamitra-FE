@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -11,6 +11,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { useGetAdmissionApplicant360Query } from 'src/redux/student/admissions/admission-applicants-api';
 import {
   List,
@@ -38,6 +39,8 @@ import {
 export default function AdmissionApplicant360Screen() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { closing, closeAfterExit, onExited, reopen } = useStudentDrawerExit();
+  const drawerPaper = useRef<HTMLDivElement>(null);
   const params = useSearchParams();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(permissions, 'Students.Admissions.Applicants.View');
@@ -65,8 +68,11 @@ export default function AdmissionApplicant360Screen() {
       !identity.value &&
       !notes.value &&
       !explicitIdentity
-    )
-      router.replace(getApplicantApplicationUrl(returnTo, single.id));
+    ) {
+      const forward = () => router.replace(getApplicantApplicationUrl(returnTo, single.id));
+      if (drawerPaper.current) closeAfterExit(forward);
+      else forward();
+    }
   }, [
     single,
     canView,
@@ -76,15 +82,25 @@ export default function AdmissionApplicant360Screen() {
     explicitIdentity,
     returnTo,
     router,
+    closeAfterExit,
   ]);
-  const close = () => router.replace(returnUrl);
+  const close = () => closeAfterExit(() => router.replace(returnUrl));
+  const switchToDialog = (openDialog: () => void) =>
+    closeAfterExit(() => {
+      openDialog();
+      reopen();
+    });
+  const navigateAfterExit = (event: { preventDefault: () => void }, href: string) => {
+    event.preventDefault();
+    closeAfterExit(() => router.push(href));
+  };
   if (identity.value)
     return (
       <ApplicationApplicantIdentityDialog
         open
         applicantId={id}
         onClose={() => {
-          if (explicitIdentity) close();
+          if (explicitIdentity) router.replace(returnUrl);
           else identity.onFalse();
         }}
       />
@@ -94,10 +110,13 @@ export default function AdmissionApplicant360Screen() {
 
   return (
     <Drawer
-      open
+      open={!closing}
       anchor="right"
       onClose={close}
+      onTransitionExited={onExited}
       PaperProps={{
+        ref: drawerPaper,
+        inert: closing || undefined,
         role: 'dialog',
         'aria-modal': true,
         'aria-labelledby': 'applicant-route-title',
@@ -180,6 +199,12 @@ export default function AdmissionApplicant360Screen() {
                             variant="outlined"
                             component={Link}
                             href={getApplicantApplicationUrl(returnTo, application.id)}
+                            onNavigate={(event: { preventDefault: () => void }) =>
+                              navigateAfterExit(
+                                event,
+                                getApplicantApplicationUrl(returnTo, application.id)
+                              )
+                            }
                           >
                             Open Application
                           </Button>
@@ -200,6 +225,9 @@ export default function AdmissionApplicant360Screen() {
                   variant="outlined"
                   component={Link}
                   href={returnUrl}
+                  onNavigate={(event: { preventDefault: () => void }) =>
+                    navigateAfterExit(event, returnUrl)
+                  }
                   sx={{ alignSelf: 'flex-start' }}
                 >
                   Manage Inquiry
@@ -212,7 +240,7 @@ export default function AdmissionApplicant360Screen() {
                   disabled={data.applications.some((application) =>
                     [10, 11].includes(application.status)
                   )}
-                  onClick={identity.onTrue}
+                  onClick={() => switchToDialog(identity.onTrue)}
                   sx={{ alignSelf: 'flex-start' }}
                 >
                   Edit Identity
@@ -221,7 +249,7 @@ export default function AdmissionApplicant360Screen() {
               <Button
                 size="small"
                 variant="outlined"
-                onClick={notes.onTrue}
+                onClick={() => switchToDialog(notes.onTrue)}
                 sx={{ alignSelf: 'flex-start' }}
               >
                 Applicant Notes

@@ -91,7 +91,7 @@ describe('workflow transition safety', () => {
 
     expect(screen.getByRole('region', { name: 'Next-Step Configuration' })).toBeInTheDocument();
     expect(screen.getByText('This is the default route', { exact: false })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Save Path' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
@@ -112,7 +112,7 @@ describe('workflow transition safety', () => {
     };
     const onSave = renderDrawer(null, [existing]);
 
-    await user.click(screen.getByRole('button', { name: 'Save Path' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
 
     expect(await screen.findByText('This stage already has a default route')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
@@ -138,7 +138,7 @@ describe('workflow transition safety', () => {
     };
     const onSave = renderDrawer(current, [current, other]);
 
-    await user.click(screen.getByRole('button', { name: 'Save Path' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
 
     expect(
       await screen.findByText('Use a unique priority for each conditional route from this stage')

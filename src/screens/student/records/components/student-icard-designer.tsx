@@ -10,6 +10,7 @@ import { useIdentityPermissions } from 'src/screens/setting/school-identity/hook
 
 import { StudentICardBranding } from './student-icard-branding';
 import { StudentICardSignaturePreview } from './student-icard-signature-preview';
+import { StudentICardSignatureSettings } from './student-icard-signature-settings';
 import {
   STUDENT_ICARD_FIELDS,
   STUDENT_ICARD_TOKENS,
@@ -44,6 +45,14 @@ export function StudentICardDesigner({
   const hasSignature = hasStudentICardSignatureLayer(layout);
   const canConfigureSignature = permissions.canView && permissions.canAccessSignature;
   const showSignature = canConfigureSignature && template.signature?.mode !== 2;
+  const signatureContent = canConfigureSignature ? (
+    <StudentICardSignatureSettings
+      value={template.signature}
+      disabled={disabled}
+      onBusy={onBusyChange}
+      onChange={(signature) => onChange({ signature })}
+    />
+  ) : undefined;
   const values = {
     ...card?.studentSnapshot,
     schoolName: template.schoolName,
@@ -71,11 +80,12 @@ export function StudentICardDesigner({
             template={template}
             onChange={onChange}
             disabled={disabled}
-            canConfigureSignature={canConfigureSignature}
+            signatureContent={signatureContent}
             onBusyChange={onBusyChange}
           />
         </Stack>
       }
+      signatureContent={signatureContent}
       layout={layout}
       values={values}
       fields={STUDENT_ICARD_FIELDS}

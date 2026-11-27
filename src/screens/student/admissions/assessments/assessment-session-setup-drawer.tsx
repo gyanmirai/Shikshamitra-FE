@@ -12,6 +12,7 @@ import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { Box, Stack, Drawer, Button, Divider, Typography, IconButton } from '@mui/material';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 
 import { assessmentErrorMessage } from './assessment-utils';
 import { AdmissionDialogTitle } from '../admission-dialog-title';
@@ -92,6 +93,7 @@ function SessionSetupContent({
   onSave,
 }: Omit<AssessmentSessionSetupDrawerProps, 'open'>) {
   const titleId = useId();
+  const { closing, closeAfterExit, onExited } = useStudentDrawerExit();
   const readOnly = permissionReadOnly || session?.canManage === false;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -145,7 +147,7 @@ function SessionSetupContent({
         pending.current = null;
         setRetryPending(false);
       }
-      onClose();
+      closeAfterExit(onClose);
     } catch (failure) {
       const status =
         failure && typeof failure === 'object' && 'status' in failure ? failure.status : undefined;
@@ -182,16 +184,18 @@ function SessionSetupContent({
       ? 'The last confirmation response was not received. Retry Submit to check the same request safely before closing.'
       : undefined
   );
-  const close = () => guard.requestNavigation(onClose);
+  const close = () => guard.requestNavigation(() => closeAfterExit(onClose));
   const disabled =
     locked || form.isSubmitting || readOnly || Boolean(resourcesError) || (editing && !onSave);
   return (
     <>
       <Drawer
         anchor="right"
-        open
+        open={!closing}
         onClose={close}
+        onTransitionExited={onExited}
         PaperProps={{
+          inert: closing || undefined,
           role: 'dialog',
           'aria-modal': true,
           'aria-labelledby': titleId,
@@ -220,7 +224,7 @@ function SessionSetupContent({
             <Typography id={titleId} variant="h6">
               <AdmissionDialogTitle
                 title={editing ? 'Edit Session' : 'Create Session'}
-                helpText="Choose the Assessment, Classes, Schedule and Institute Room. Book Students From the Student Tab After Creating the Session."
+                helpText="Choose the assessment, classes, schedule and institute room. Book students from the Student tab after creating the session."
               />
             </Typography>
             <IconButton
@@ -239,10 +243,10 @@ function SessionSetupContent({
               busy={locked}
               label={
                 resourcesLoading
-                  ? 'Loading Session Options…'
+                  ? 'Loading session options…'
                   : editing
-                    ? 'Saving Session…'
-                    : 'Creating Session…'
+                    ? 'Saving session…'
+                    : 'Creating session…'
               }
             >
               <Stack spacing={2} sx={{ p: { xs: 2, sm: 3 } }}>

@@ -8,6 +8,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { useId } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { StudentFeedback } from 'src/components/student-feedback';
@@ -55,6 +56,8 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
     forms: resolvedForms,
     confirmation,
     requestClose,
+    closing,
+    onExited,
     isLastStage,
   } = useWorkflowStageEditor({
     open,
@@ -75,9 +78,14 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
     <>
       <Drawer
         anchor="right"
-        open={open}
+        open={open && !closing}
         onClose={requestClose}
-        PaperProps={{ 'aria-labelledby': titleId, sx: { width: { xs: 1, sm: 720 }, maxWidth: 1 } }}
+        onTransitionExited={onExited}
+        PaperProps={{
+          'aria-labelledby': titleId,
+          inert: closing,
+          sx: { width: { xs: 1, sm: 720 }, maxWidth: 1 },
+        }}
       >
         <Box sx={{ height: 1, display: 'flex', flexDirection: 'column' }}>
           <Stack
@@ -164,31 +172,44 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 />
               )}
             </Scrollbar>
-            <Stack
-              direction="row"
-              spacing={1}
-              justifyContent="flex-end"
-              sx={{ px: 2, py: 1.5, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
-            >
-              {!readOnly && (
-                <Button size="small" variant="outlined" onClick={requestClose}>
-                  Back
-                </Button>
-              )}
-              <Button
-                size="small"
-                variant="contained"
-                type={readOnly ? 'button' : 'submit'}
-                onClick={readOnly ? requestClose : undefined}
-                disabled={
-                  !readOnly &&
-                  (!isApplicationStageType(formik.values.stageType) || invalidDocumentSettings)
-                }
-                startIcon={<Iconify icon={readOnly ? 'mdi:close' : 'mdi:content-save-outline'} />}
+            {!readOnly && (
+              <Stack
+                direction="row"
+                spacing={1}
+                justifyContent="flex-end"
+                alignItems="center"
+                sx={{
+                  px: { xs: 2, sm: 3 },
+                  py: 1.75,
+                  borderTop: 1,
+                  borderColor: 'divider',
+                  flexShrink: 0,
+                }}
               >
-                {readOnly ? 'Close' : 'Apply Changes'}
-              </Button>
-            </Stack>
+                <Button
+                  type="button"
+                  size="small"
+                  color="inherit"
+                  variant="outlined"
+                  startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+                  onClick={requestClose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="small"
+                  color="inherit"
+                  variant="contained"
+                  disabled={
+                    !isApplicationStageType(formik.values.stageType) || invalidDocumentSettings
+                  }
+                  startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
+                >
+                  Apply changes
+                </Button>
+              </Stack>
+            )}
           </Box>
         </Box>
       </Drawer>

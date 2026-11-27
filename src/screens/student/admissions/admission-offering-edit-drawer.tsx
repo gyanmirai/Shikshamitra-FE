@@ -1,7 +1,7 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
+import type { Ref, ReactNode } from 'react';
 import type { Standards } from 'src/types/school';
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 import type {
@@ -11,11 +11,11 @@ import type {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { useRef, useState, useEffect } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { useRef, useState, useEffect, useImperativeHandle } from 'react';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
   Box,
@@ -49,6 +49,8 @@ import type { AdmissionOfferingFormValues } from './admission-offering-model';
 
 type Props = {
   open: boolean;
+  closing?: boolean;
+  onExited?: () => void;
   onClose: () => void;
   cycle: AdmissionCycle;
   offering?: AdmissionOffering | null;
@@ -63,10 +65,27 @@ type Props = {
 const EDIT_STEPS = ['Configure', 'Preview'];
 
 export function AdmissionOfferingEditDrawer(props: Props) {
-  const { offering, open, cycle, onClose, detailError, onRetryDetail, saving } = props;
-  if (!offering) {
-    return (
-      <AdmissionOfferingEditShell open={open} busy={saving} onClose={onClose}>
+  const { offering, open, closing, onExited, cycle, onClose, detailError, onRetryDetail, saving } =
+    props;
+  const requestCloseRef = useRef<(() => void) | null>(null);
+  const [formBusy, setFormBusy] = useState(false);
+  return (
+    <AdmissionOfferingEditShell
+      open={open}
+      closing={closing}
+      onExited={onExited}
+      busy={saving || Boolean(offering && formBusy)}
+      onClose={() => (requestCloseRef.current ?? onClose)()}
+      isActive={offering?.isActive}
+    >
+      {offering ? (
+        <AdmissionOfferingEditForm
+          {...props}
+          offering={offering}
+          requestCloseRef={requestCloseRef}
+          onBusyChange={setFormBusy}
+        />
+      ) : (
         <Stack spacing={2} sx={{ p: 2, flex: 1, minHeight: 0, overflow: 'auto' }}>
           <Skeleton variant="rounded" height={56} />
           <AdmissionOfferingCycleContext cycle={cycle} showCode={false} />
@@ -93,20 +112,23 @@ export function AdmissionOfferingEditDrawer(props: Props) {
             </Box>
           )}
         </Stack>
-      </AdmissionOfferingEditShell>
-    );
-  }
-  return <AdmissionOfferingEditForm {...props} offering={offering} />;
+      )}
+    </AdmissionOfferingEditShell>
+  );
 }
 
 function AdmissionOfferingEditShell({
   open,
+  closing,
+  onExited,
   busy,
   onClose,
   children,
   isActive,
 }: {
   open: boolean;
+  closing?: boolean;
+  onExited?: () => void;
   busy: boolean;
   onClose: () => void;
   children: ReactNode;
@@ -115,9 +137,11 @@ function AdmissionOfferingEditShell({
   return (
     <Drawer
       anchor="right"
-      open={open}
+      open={open && !closing}
       onClose={busy ? undefined : onClose}
+      onTransitionExited={onExited}
       PaperProps={{
+        inert: closing || undefined,
         'aria-labelledby': 'edit-admission-offering-title',
         sx: {
           width: { xs: 1, sm: 840 },
@@ -190,8 +214,12 @@ function AdmissionOfferingEditForm({
   saving,
   onSave,
   onDeactivate,
-}: Omit<Props, 'loadingDetail' | 'detailError' | 'onRetryDetail'> & {
+  requestCloseRef,
+  onBusyChange,
+}: Pick<Props, 'open' | 'onClose' | 'cycle' | 'saving' | 'onSave' | 'onDeactivate'> & {
   offering: AdmissionOffering;
+  requestCloseRef: Ref<() => void>;
+  onBusyChange: (busy: boolean) => void;
 }) {
   const [activeStep, setActiveStep] = useState(0);
   const [dirty, setDirty] = useState(false);
@@ -232,6 +260,8 @@ function AdmissionOfferingEditForm({
       onClose();
     });
   };
+  useImperativeHandle(requestCloseRef, () => requestClose);
+  useEffect(() => onBusyChange(writeBusy), [onBusyChange, writeBusy]);
 
   const requestDeactivate = () => {
     if (!onDeactivate || writeBusy || savingIntentRef.current || editor.validating) return;
@@ -275,12 +305,7 @@ function AdmissionOfferingEditForm({
   };
 
   return (
-    <AdmissionOfferingEditShell
-      open={open}
-      busy={writeBusy}
-      onClose={requestClose}
-      isActive={offering.isActive}
-    >
+    <>
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomStepperWithFormik
           key={offering.id}
@@ -329,7 +354,7 @@ function AdmissionOfferingEditForm({
         />
       </Box>
       {guard.confirmation}
-    </AdmissionOfferingEditShell>
+    </>
   );
 }
 

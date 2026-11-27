@@ -99,6 +99,10 @@ export function FormBuilderReview({ formik }: Props) {
         maxWidth: 1440,
         mx: 'auto',
         p: { xs: 1.5, sm: 2 },
+        bgcolor: 'background.paper',
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 2,
         overflow: 'hidden',
       }}
     >
@@ -106,7 +110,8 @@ export function FormBuilderReview({ formik }: Props) {
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1.5}
         justifyContent="space-between"
-        sx={{ minWidth: 0, flexShrink: 0 }}
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        sx={{ minWidth: 0, flexShrink: 0, pb: 1.5, borderBottom: 1, borderColor: 'divider' }}
       >
         <Typography
           component="h2"
@@ -138,8 +143,10 @@ export function FormBuilderReview({ formik }: Props) {
             formControlProps={{ sx: { width: { xs: 1, sm: 220 }, flexShrink: 0 } }}
           />
         )}
+        <Box sx={{ alignSelf: { xs: 'flex-end', sm: 'center' }, flexShrink: 0 }}>
+          <FormValidationPanel form={validationForm} />
+        </Box>
       </Stack>
-      <FormValidationPanel form={validationForm} />
       {inheritance?.enabled && <FormInheritancePanel />}
       <Stack
         direction={{ xs: 'column', md: 'row' }}

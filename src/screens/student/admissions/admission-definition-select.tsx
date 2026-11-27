@@ -60,6 +60,7 @@ export function AdmissionDefinitionSelect({
       disabled={disabled}
       fetchOptions={fetchOptions}
       minChars={0}
+      clearSearchOnOpen
       debounceMs={300}
       getOptionLabel={getAdmissionDefinitionLabel}
       getOptionKey={(option) => option.id}

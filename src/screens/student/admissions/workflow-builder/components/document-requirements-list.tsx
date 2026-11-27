@@ -7,7 +7,10 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Stack, Button, Typography } from '@mui/material';
-import { createDocumentRequirement } from 'src/redux/student/admissions/admission-document-policy';
+import {
+  createDocumentRequirement,
+  assignMissingDocumentCodes,
+} from 'src/redux/student/admissions/admission-document-policy';
 
 import { DocumentRequirementItem } from './document-requirement-item';
 import { DocumentRequirementDialog } from './document-requirement-dialog';
@@ -130,9 +133,11 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
           onClose={() => setEditing(null)}
           onSave={(value) =>
             onChange(
-              editing.index < 0
-                ? [...requirements, value]
-                : requirements.map((item, index) => (index === editing.index ? value : item))
+              assignMissingDocumentCodes(
+                editing.index < 0
+                  ? [...requirements, value]
+                  : requirements.map((item, index) => (index === editing.index ? value : item))
+              )
             )
           }
         />

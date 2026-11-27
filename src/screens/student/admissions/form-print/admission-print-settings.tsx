@@ -175,7 +175,7 @@ export function AdmissionPrintSettingsPanel({
         {settings.showSchoolHeader && (
           <>
             {(branding.bannerUrl || branding.logoUrl) && (
-              <>
+              <Stack direction="row" flexWrap="wrap" columnGap={1}>
                 {(
                   [
                     { asset: 'logo', label: 'Logo', flag: 'showLogo' },
@@ -195,7 +195,7 @@ export function AdmissionPrintSettingsPanel({
                     }
                   />
                 ))}
-              </>
+              </Stack>
             )}
             <CustomSelect
               label="Header on later pages"

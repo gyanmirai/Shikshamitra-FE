@@ -33,6 +33,7 @@ import {
 } from 'src/redux/student/admissions/admission-assessment-planning-api';
 
 import { AdmissionQueryError } from './admission-query-error';
+import AdmissionApplicationDetailScreen from './admission-application-detail';
 import { AdmissionAcademicFilters } from './admission-academic-filters';
 import { AssessmentBatchDialog } from './assessments/assessment-batch-dialog';
 import { AssessmentActionDialog } from './assessments/assessment-action-dialog';
@@ -98,6 +99,7 @@ export default function AdmissionAssessmentsScreen() {
   const retryList = scopes.isError ? scopes.refetch : applicants.refetch;
   const sessionPanel = state.tab === 'sessions';
   const [details, setDetails] = useState<AssessmentRosterItem | null>(null);
+  const [applicationId, setApplicationId] = useState<string | null>(null);
   const [viewingSession, setViewingSession] = useState<AssessmentSession | null>(null);
   const [action, setAction] = useState<{
     row: AssessmentRosterItem;
@@ -319,7 +321,6 @@ export default function AdmissionAssessmentsScreen() {
             }}
           >
             <CustomTabs
-              density="compact"
               value={state.tab}
               aria-label="Assessment Workspace"
               sx={{ minWidth: 0, bgcolor: 'transparent' }}
@@ -560,6 +561,7 @@ export default function AdmissionAssessmentsScreen() {
                       <AdmissionQueryError onRetry={retryList} />
                     ) : undefined
                   }
+                  refreshIndicator="circular"
                   isRefreshing={applicants.isFetching && !!applicants.currentData}
                   filters={tableFilters}
                   onServerFilter={(next) =>
@@ -633,8 +635,20 @@ export default function AdmissionAssessmentsScreen() {
               openStudentBooking([row]);
             else setAction({ row, action: next });
           }}
-          returnUrl={workbench.href({})}
+          onOpenApplication={(id) => {
+            setDetails(null);
+            setApplicationId(id);
+          }}
           onClose={() => setDetails(null)}
+        />
+      )}
+      {applicationId && canViewApplication && (
+        <AdmissionApplicationDetailScreen
+          key={applicationId}
+          applicationId={applicationId}
+          presentation="drawer"
+          returnTo={workbench.href({})}
+          onClose={() => setApplicationId(null)}
         />
       )}
       {action?.action === 'continue' && (

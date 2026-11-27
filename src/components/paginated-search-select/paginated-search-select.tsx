@@ -66,6 +66,7 @@ export function PaginatedSearchSelect<
   error,
   isLoading,
   loadingLabel = 'Loading options',
+  clearSearchOnOpen = false,
   getOptionLabel,
   getOptionKey,
   renderOption,
@@ -140,8 +141,16 @@ export function PaginatedSearchSelect<
   return (
     <Autocomplete
       open={open}
-      onOpen={() => setOpen(true)}
-      onClose={() => setOpen(false)}
+      onOpen={() => {
+        if (clearSearchOnOpen) handleInputChange('');
+        setOpen(true);
+      }}
+      onClose={() => {
+        setOpen(false);
+        if (clearSearchOnOpen && props.value && !Array.isArray(props.value)) {
+          handleInputChange(getOptionText(props.value as T));
+        }
+      }}
       openOnFocus
       options={options || []}
       loading={loading}

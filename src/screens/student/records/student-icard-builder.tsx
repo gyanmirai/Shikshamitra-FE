@@ -114,6 +114,7 @@ const studentName = (student: StudentDirectoryItem) =>
 
 export default function StudentICardBuilder({
   onClose,
+  onIssued = onClose,
   initialTemplate,
   initialStudents,
   initialAcademicScope,
@@ -124,6 +125,7 @@ export default function StudentICardBuilder({
   onDirtyChange,
 }: {
   onClose: () => void;
+  onIssued?: () => void;
   initialTemplate?: IdCardTemplate | null;
   initialStudents?: StudentDirectoryItem[];
   initialAcademicScope?: StudentICardAcademicScope;
@@ -769,7 +771,7 @@ export default function StudentICardBuilder({
       shikshaMitraToast.success({
         message: 'I-Cards issued. Select a student to view history.',
       });
-      onClose();
+      onIssued();
     } catch {
       if (isCurrentContext(generation))
         setError('Cards could not be issued. You can retry without creating duplicates.');

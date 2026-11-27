@@ -37,3 +37,23 @@ it('reacts to cut marks, count, gap and mirrored back placement', () => {
   );
   expect(page.querySelectorAll('[data-cut-mark]')).toHaveLength(8);
 });
+
+it('zooms only the sheet and retains the selected side and cut marks', () => {
+  const layout = createIdentityCardPreset('classic-identity');
+  render(
+    <IdentityCardSheetPreview
+      layout={layout}
+      settings={DEFAULT_IDENTITY_CARD_PRINT_SETTINGS}
+      backSideEnabled
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Back sheet' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
+  expect(screen.getByRole('button', { name: 'Reset sheet zoom' })).toHaveTextContent('125%');
+  expect(
+    screen.getByRole('img', { name: 'Back A4 sheet preview' }).querySelectorAll('[data-cut-mark]')
+      .length
+  ).toBeGreaterThan(0);
+  fireEvent.click(screen.getByRole('button', { name: 'Reset sheet zoom' }));
+  expect(screen.getByRole('button', { name: 'Reset sheet zoom' })).toHaveTextContent('100%');
+});

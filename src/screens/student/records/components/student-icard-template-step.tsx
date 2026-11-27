@@ -91,15 +91,25 @@ export function StudentICardTemplateStep({ template, nameError, onNameBlur, onCh
   };
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1.5}>
       <FormSectionCard
         title="Template Details"
         aria-label="Template Details"
         icon={GlobalIcons.academicFieldSettings}
         descriptionTooltip="Use a name staff can recognize. Orientation controls the printed card direction."
+        contentSpacing={1.5}
+        contentSx={{ containerType: 'inline-size' }}
       >
-        <Stack spacing={2} alignItems="flex-start">
-          <ShakingTextField error={nameError} sx={{ width: 1 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr)',
+            alignItems: 'start',
+            gap: 1.5,
+            '@container (min-width: 480px)': { gridTemplateColumns: 'minmax(0, 1fr) auto' },
+          }}
+        >
+          <ShakingTextField error={nameError}>
             <TextField
               fullWidth
               size="small"
@@ -114,7 +124,17 @@ export function StudentICardTemplateStep({ template, nameError, onNameBlur, onCh
               helperText={nameError ? 'Template name is required.' : undefined}
             />
           </ShakingTextField>
-          <Stack spacing={0.5} alignItems="flex-start">
+          <Stack
+            sx={{
+              alignItems: 'flex-start',
+              gap: 0.5,
+              '@container (min-width: 480px)': {
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 1,
+              },
+            }}
+          >
             <Typography variant="body2" fontWeight={600}>
               Orientation
             </Typography>
@@ -149,22 +169,26 @@ export function StudentICardTemplateStep({ template, nameError, onNameBlur, onCh
               ))}
             </ToggleButtonGroup>
           </Stack>
-        </Stack>
+        </Box>
       </FormSectionCard>
       <FormSectionCard
         title="Choose a Base Template"
         aria-label="Choose a Base Template"
         icon={GlobalIcons.admissionDetails}
         descriptionTooltip="Choose a starting design to customize in Designer."
+        contentSpacing={1.5}
+        contentSx={{ containerType: 'inline-size' }}
       >
         <Box
           role="group"
           aria-label="Card templates"
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
-            gridAutoRows: { sm: '1fr' },
-            gap: 1.5,
+            gridTemplateColumns: 'minmax(0, 1fr)',
+            gap: 1,
+            '@container (min-width: 400px)': { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
+            '@container (min-width: 630px)': { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
+            '@container (min-width: 850px)': { gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' },
           }}
         >
           {presets.map((preset) => {
@@ -177,10 +201,10 @@ export function StudentICardTemplateStep({ template, nameError, onNameBlur, onCh
                 onClick={() => selectPreset(preset)}
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: '32px minmax(0, 1fr) 18px',
+                  gridTemplateColumns: '28px minmax(0, 1fr) 18px',
                   gap: 1,
-                  p: 1.5,
-                  minHeight: 72,
+                  p: 1.25,
+                  minHeight: 64,
                   textAlign: 'left',
                   border: 1,
                   borderRadius: 1,
@@ -197,7 +221,7 @@ export function StudentICardTemplateStep({ template, nameError, onNameBlur, onCh
                 <Box
                   component="span"
                   aria-hidden
-                  sx={{ width: 32, height: 22, borderRadius: 0.75, bgcolor: preset.color }}
+                  sx={{ width: 28, height: 20, borderRadius: 0.75, bgcolor: preset.color }}
                 />
                 <Box component="span" sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
                   <Typography component="span" variant="subtitle2" display="block">

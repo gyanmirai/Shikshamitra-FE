@@ -9,7 +9,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Stack, IconButton, Typography, LinearProgress } from '@mui/material';
+import { Stack, IconButton, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { TableOverflowText } from 'src/components/customizabaleTable/components/TableOverflowText';
 
@@ -122,6 +122,18 @@ export function getAdmissionInquiryActions(
       disabled: options.isMoving,
       onClick: () => options.onHistory?.(inquiry),
     });
+  // Promote the available handoff alongside Edit, while keeping other actions in the menu.
+  if (
+    options.canMove &&
+    (!inquiryHandoffBlocker(inquiry) || options.movingInquiryId === inquiry.id)
+  ) {
+    const index = actions.findIndex((action) => action.id === 'move');
+    if (index >= 0) {
+      const [move] = actions.splice(index, 1);
+      const editIndex = actions.findIndex((action) => action.id === 'edit');
+      actions.splice(editIndex + 1, 0, move);
+    }
+  }
   return actions;
 }
 
@@ -142,7 +154,7 @@ function InquiryRowActions({ inquiry, options }: { inquiry: AdmissionInquiry; op
   }, [paper]);
 
   return (
-    <Stack sx={{ position: 'relative' }}>
+    <Stack>
       <AdaptiveThreeDotsActions
         directActionLimit={2}
         collapseOnOverflow={false}
@@ -181,12 +193,6 @@ function InquiryRowActions({ inquiry, options }: { inquiry: AdmissionInquiry; op
         }}
         actions={getAdmissionInquiryActions(inquiry, options)}
       />
-      {moving && (
-        <LinearProgress
-          aria-label={`Starting Application for ${inquiry.applicantName}`}
-          sx={{ position: 'absolute', inset: 'auto 0 0', height: 2, pointerEvents: 'none' }}
-        />
-      )}
     </Stack>
   );
 }

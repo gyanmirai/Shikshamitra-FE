@@ -135,6 +135,27 @@ describe('five-stage configuration boundaries', () => {
       requirements: [requirement],
     });
   });
+  it('assigns unique codes to missing references while preserving existing codes', () => {
+    const result = configuration(
+      normalizeStageConfiguration(
+        stage(5, {
+          documentVerification: {
+            ...DEFAULT_DOCUMENT_POLICY,
+            requirements: [
+              createDocumentRequirement('DOC_CERTIFICATE', 'Existing'),
+              createDocumentRequirement('', 'Certificate'),
+              createDocumentRequirement('', 'Certificate'),
+              createDocumentRequirement('', '૧૨'),
+            ],
+          },
+        })
+      )
+    );
+    expect(
+      result.documentVerification.requirements.map((item: { code: string }) => item.code)
+    ).toEqual(['DOC_CERTIFICATE', 'DOC_CERTIFICATE_2', 'DOC_CERTIFICATE_3', 'DOC_']);
+    expect(getDocumentConfigurationError(JSON.stringify(result))).toBeUndefined();
+  });
   it('removes the legacy Payment collection configuration without changing sibling settings', () => {
     expect(
       configuration(

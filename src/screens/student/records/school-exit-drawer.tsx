@@ -33,6 +33,7 @@ import {
 } from 'src/redux/student/records/student-record-transitions-api';
 
 import StudentAssignmentDrawer from '../onboarding/student-setup/student-assignment-drawer';
+import { useStudentDrawerExit } from '../components/use-student-drawer-exit';
 
 const exitTypes = [
   { value: 'Withdraw', label: 'Withdrawal' },
@@ -58,6 +59,7 @@ type Props = {
 };
 
 export default function SchoolExitDrawer({ studentId, academicYearId, studentName, grNumber, className, status, transition, onClose, onSaved }: Props) {
+  const exit = useStudentDrawerExit();
   const router = useRouter();
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -94,18 +96,24 @@ export default function SchoolExitDrawer({ studentId, academicYearId, studentNam
   const failedRead = summary.isError || Boolean(transition && read.isError);
   const locked = busy || yearChanged || loading || missing || failedRead || !canWrite || Boolean(uncertain);
   const editLocked = busy || yearChanged || !canWrite || Boolean(uncertain);
-  const navigation = useUnsavedNavigation(Boolean(form.dirty || approvalReason || uncertain), { push: router.push, blockNavigation: busy });
+  const navigation = useUnsavedNavigation(
+    !exit.closing && Boolean(form.dirty || approvalReason || uncertain),
+    { push: router.push, blockNavigation: busy }
+  );
   const currentAuthority = useRef({ canWrite, yearChanged });
   currentAuthority.current = { canWrite, yearChanged };
+  const dismiss = () => exit.closeAfterExit(onClose);
   const close = () => {
     if (busy) return;
     if (form.dirty || approvalReason || uncertain) setDiscard(true);
-    else onClose();
+    else dismiss();
   };
   const success = (message: string) => {
     shikshaMitraToast.success({ message });
-    onSaved?.();
-    onClose();
+    exit.closeAfterExit(() => {
+      onSaved?.();
+      onClose();
+    });
   };
   async function requestExit() {
     if (inFlight.current || !data?.canSubmit || !canWrite || failedRead || !validDate || yearChanged || pending || transition) return;
@@ -152,7 +160,13 @@ export default function SchoolExitDrawer({ studentId, academicYearId, studentNam
   const errorFor = (name: keyof typeof form.values) => Boolean(form.touched[name] && form.errors[name]);
   return (
     <>
-      <StudentAssignmentDrawer title="School Exit" titleInfo="Request or independently review a school exit. Attendance, financial, library and document history is retained." busy={busy} onClose={close}
+      <StudentAssignmentDrawer
+        open={!exit.closing}
+        onExited={exit.onExited}
+        title="School Exit"
+        titleInfo="Request or independently review a school exit. Attendance, financial, library and document history is retained."
+        busy={busy}
+        onClose={close}
         actions={<Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ p: 2 }}>
           <Button size="small" variant="outlined" color="inherit" disabled={busy} startIcon={<Iconify icon={GlobalIcons.cancel} />} onClick={close}>{transition ? 'Close' : 'Cancel'}</Button>
           {transition && canWrite && saved?.canApprove && <Button size="small" color="error" disabled={locked} onClick={() => decision('reject')}>Reject</Button>}
@@ -198,7 +212,14 @@ export default function SchoolExitDrawer({ studentId, academicYearId, studentNam
           </Stack>
         </FormBusyRegion>
       </StudentAssignmentDrawer>
-      <ConfirmDialog open={discard} onClose={() => setDiscard(false)} title="Discard Unsaved Changes?" content={uncertain ? 'A submission may already be recorded. Check Year-End & Transitions before starting another request.' : 'Your unsaved school exit details will be discarded.'} cancelText="Keep editing" action={<Button color="error" variant="contained" onClick={onClose}>Discard changes</Button>} />
+      <ConfirmDialog
+        open={discard && !exit.closing}
+        onClose={() => setDiscard(false)}
+        title="Discard Unsaved Changes?"
+        content={uncertain ? 'A submission may already be recorded. Check Year-End & Transitions before starting another request.' : 'Your unsaved school exit details will be discarded.'}
+        cancelText="Keep editing"
+        action={<Button color="error" variant="contained" onClick={dismiss}>Discard changes</Button>}
+      />
       {navigation.confirmation}
     </>
   );

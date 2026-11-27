@@ -18,9 +18,9 @@ import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { useRef, useState, useEffect, useCallback } from 'react';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
 import {
@@ -44,6 +44,7 @@ import { FormBuilderFieldDragPreview } from './form-builder-field';
 import { FormBuilderCanvas } from './components/form-builder-canvas';
 import { FormBuilderWorkspace } from './components/form-builder-workspace';
 import { useFormBuilderCommands } from './hooks/use-form-builder-commands';
+import { getLinkedFieldDeletionReasons } from './form-builder-linked-fields';
 import { useFormBuilderSelection } from './hooks/use-form-builder-selection';
 import { FormBuilderLivePreview } from './components/form-builder-live-preview';
 import { getBuilderIssueRecoveryGuidance } from './form-builder-issue-navigation';
@@ -92,12 +93,13 @@ export function FormBuilderSections({
     ...formik,
     values: markInheritedRegistrationFields(formik.values, inheritance?.preview?.definition),
   };
-  const effectiveForm = getInheritanceBuilderValues(
-    formik.values,
+  const projectForm = (form: CreateUpdateAdmissionForm) => getInheritanceBuilderValues(
+    form,
     inheritance?.preview?.definition,
     inheritance?.previewBaseSectionIds,
     inheritance?.preview?.inquiryContextSections
   );
+  const effectiveForm = projectForm(formik.values);
   const selection = useFormBuilderSelection(effectiveForm.sections);
   const selectSection = selection.select;
   const viewedSource = useRef<string | null>(null);
@@ -271,7 +273,7 @@ export function FormBuilderSections({
         sx={{ px: 2, py: 1.5 }}
       >
         <Stack direction="row" spacing={0.75} alignItems="center">
-          <Typography id="admission-form-field-settings-title" variant="subtitle1">
+          <Typography id="admission-form-field-settings-title" component="h2" variant="h6">
             Field Settings
           </Typography>
           <InfoTooltipIcon
@@ -279,8 +281,8 @@ export function FormBuilderSections({
             keepSidePlacement
             title={
               <Box component="span" sx={{ display: 'block', maxWidth: '10rem' }}>
-                Configure the Field, Answer Options, and Visibility. Changes Stay in This Draft
-                Until You Save.
+                Configure the field, answer options and visibility. Changes stay in this draft
+                until you save.
               </Box>
             }
           />
@@ -318,6 +320,10 @@ export function FormBuilderSections({
             formik={builderFormik}
             selectedLocation={selectedBaseLocation}
             navigationRequest={navigationRequest}
+            linkedFieldReason={selection.selectedFieldId
+              ? getLinkedFieldDeletionReasons(effectiveForm.sections.flatMap((section) => section.fields))
+                .get(selection.selectedFieldId)
+              : undefined}
           />
         )}
       </Box>
@@ -338,14 +344,7 @@ export function FormBuilderSections({
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={(event) => {
-        reorderFormBuilder(event, formik, selection.selectForReorder, (form) =>
-          getInheritanceBuilderValues(
-            form,
-            inheritance?.preview?.definition,
-            inheritance?.previewBaseSectionIds,
-            inheritance?.preview?.inquiryContextSections
-          )
-        );
+        reorderFormBuilder(event, formik, selection.selectForReorder, projectForm);
         setActiveFieldDrag(null);
       }}
       onDragCancel={() => setActiveFieldDrag(null)}
@@ -510,6 +509,15 @@ export function FormBuilderSections({
                     selectedSectionId={selection.selectedSectionId}
                     selectedFieldId={selection.selectedFieldId}
                     onSelect={selectCanvasField}
+                    projectForm={projectForm}
+                    onMoveComplete={(sectionId, fieldId) => {
+                      selection.selectForReorder(sectionId, fieldId);
+                      const section = effectiveForm.sections.find((item) => item.id === sectionId);
+                      if (section) setNavigationRequest((previous) => ({
+                        target: { kind: 'field', owner: 'registration', sectionId, fieldId, stepId: getSectionStepId(section) },
+                        sequence: (previous?.sequence ?? 0) + 1,
+                      }));
+                    }}
                     newStepId={newStepId}
                     onNewStepReady={setNewStepId}
                     footer={desktop ? footer : undefined}
@@ -559,10 +567,14 @@ export function FormBuilderSections({
           anchor="right"
           open={sidePanel !== null}
           onClose={() => setSidePanel(null)}
-          aria-labelledby="admission-form-field-settings-title"
           // Portal order keeps settings above the wizard and newly opened menus above settings.
           sx={{ zIndex: theme.zIndex.modal }}
-          slotProps={{ paper: { sx: { width: { xs: 1, sm: 440 }, maxWidth: 1 } } }}
+          slotProps={{
+            paper: {
+              'aria-labelledby': 'admission-form-field-settings-title',
+              sx: { width: { xs: 1, sm: 440 }, maxWidth: 1 },
+            },
+          }}
         >
           {settingsContent}
         </Drawer>

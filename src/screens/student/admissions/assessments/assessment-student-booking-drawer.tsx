@@ -7,6 +7,7 @@ import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import {
   Box,
@@ -29,8 +30,13 @@ import { studentBookingReason, existingStudentBooking } from './assessment-stude
 import type { StudentBookingProps } from './use-assessment-student-booking';
 
 export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
-  const { canBook, onViewBooking } = props;
-  const data = useAssessmentStudentBooking(props);
+  const { canBook, onClose, onBooked, onViewBooking } = props;
+  const { closing, closeAfterExit, onExited } = useStudentDrawerExit();
+  const data = useAssessmentStudentBooking({
+    ...props,
+    onClose: () => closeAfterExit(onClose),
+    onBooked: () => closeAfterExit(onBooked),
+  });
   const titleId = useId();
   const locked = data.busy;
   const readonly = !canBook;
@@ -40,9 +46,11 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
     <>
       <Drawer
         anchor="right"
-        open
+        open={!closing}
         onClose={() => data.navigate()}
+        onTransitionExited={onExited}
         PaperProps={{
+          inert: closing || undefined,
           role: 'dialog',
           'aria-modal': true,
           'aria-labelledby': titleId,
@@ -66,7 +74,7 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
             <Typography id={titleId} variant="h6">
               <AdmissionDialogTitle
                 title="Book Session"
-                helpText="Book the Selected Students Into a Session. Room Availability and Eligibility Are Checked Before Confirmation."
+                helpText="Book the selected students into a session. Room availability and eligibility are checked before confirmation."
               />
             </Typography>
             <IconButton
@@ -80,7 +88,7 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
           </Stack>
           <Divider />
           <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <FormBusyRegion busy={locked} label="Checking and Booking Selected Students…">
+            <FormBusyRegion busy={locked} label="Checking and booking selected students…">
               <Stack spacing={2} sx={{ p: { xs: 2, sm: 3 } }}>
                 <FormSectionCard
                   icon={GlobalIcons.calendar}
@@ -90,7 +98,7 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                       <Label>{count}</Label>
                     </Stack>
                   }
-                  descriptionTooltip="Only These Students Will Be Booked. Remove Unavailable Students Explicitly Before Confirming."
+                  descriptionTooltip="Remove unavailable students before confirming the booking for the selected students."
                 >
                   <Stack divider={<Divider />}>
                     {data.rows.map((row) => {
@@ -146,10 +154,10 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                                 variant="outlined"
                                 color="inherit"
                                 disabled={locked || data.retryPending}
-                                aria-label={`View Booking For ${row.applicantName}`}
-                                onClick={() => onViewBooking(row)}
+                                aria-label={`View booking for ${row.applicantName}`}
+                                onClick={() => closeAfterExit(() => onViewBooking(row))}
                               >
-                                View Booking
+                                View booking
                               </Button>
                             )}
                             <IconButton
@@ -189,7 +197,7 @@ export function AssessmentStudentBookingDrawer(props: StudentBookingProps) {
                   <FormSectionCard
                     title="Available Sessions"
                     icon={GlobalIcons.calendar}
-                    descriptionTooltip="Choose a Session for the Selected Students."
+                    descriptionTooltip="Choose a session for the selected students."
                   >
                     <TextField
                       size="small"

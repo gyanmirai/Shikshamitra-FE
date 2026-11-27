@@ -31,6 +31,28 @@ export const DEFAULT_DOCUMENT_POLICY: AdmissionDocumentPolicy = {
   requirements: [],
 };
 
+export function assignMissingDocumentCodes(
+  requirements: AdmissionDocumentRequirementPolicy[]
+): AdmissionDocumentRequirementPolicy[] {
+  const codes = new Set(requirements.map((item) => item.code.trim().toUpperCase()).filter(Boolean));
+  return requirements.map((item) => {
+    if (item.code.trim()) return item;
+    const suffixName = item.name
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+    const stem = `DOC_${suffixName}`.slice(0, 54);
+    let code = stem;
+    let suffix = 2;
+    while (codes.has(code)) {
+      code = `${stem}_${suffix}`;
+      suffix += 1;
+    }
+    codes.add(code);
+    return { ...item, code };
+  });
+}
+
 export function createDocumentRequirement(
   code: string,
   name = ''

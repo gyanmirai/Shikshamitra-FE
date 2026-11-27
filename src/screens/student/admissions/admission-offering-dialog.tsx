@@ -37,6 +37,8 @@ import { AdmissionOfferingConfigurationFields } from './admission-offering-confi
 
 type Props = {
   open: boolean;
+  closing?: boolean;
+  onExited?: () => void;
   onClose: () => void;
   cycle: AdmissionCycle;
   cycles: AdmissionCycle[];
@@ -53,6 +55,8 @@ type Props = {
 export function AdmissionOfferingDialog(props: Props) {
   const {
     open,
+    closing,
+    onExited,
     onClose,
     cycle,
     cycles,
@@ -70,6 +74,8 @@ export function AdmissionOfferingDialog(props: Props) {
     return (
       <AdmissionOfferingEditDrawer
         open={open}
+        closing={closing}
+        onExited={onExited}
         cycle={cycle}
         offering={offering}
         loadingDetail={loadingDetail}
@@ -83,63 +89,19 @@ export function AdmissionOfferingDialog(props: Props) {
     );
   }
 
-  if (mode === 'clone' && !offering) {
-    return (
-      <Drawer
-        anchor="right"
-        open={open}
-        onClose={onClose}
-        PaperProps={{ sx: { width: { xs: 1, sm: 760 }, maxWidth: 1 } }}
-      >
-        <Stack direction="row" alignItems="center" sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{ flex: 1 }}>
-            Clone Admission Offering
-          </Typography>
-          <IconButton aria-label="Close Admission Offering" onClick={onClose}>
-            <Iconify icon="mdi:close" />
-          </IconButton>
-        </Stack>
-        <Divider />
-        <Stack
-          spacing={2}
-          sx={{ p: 2 }}
-          aria-busy={Boolean(loadingDetail)}
-          role={detailError ? undefined : 'status'}
-          aria-label={detailError ? undefined : 'Loading Offering Details'}
-        >
-          {detailError ? (
-            <StudentFeedback
-              notificationKey="admission-offering:clone-detail"
-              presentation="toast"
-              severity="error"
-              toastAction={
-                <Button size="small" color="inherit" onClick={onRetryDetail}>
-                  Retry
-                </Button>
-              }
-            >
-              {detailError}
-            </StudentFeedback>
-          ) : (
-            <>
-              <Skeleton variant="rounded" height={56} />
-              <Skeleton variant="rounded" height={160} />
-              <Skeleton variant="rounded" height={160} />
-            </>
-          )}
-        </Stack>
-      </Drawer>
-    );
-  }
-
   return (
     <AdmissionOfferingLegacyDialog
       open={open}
+      closing={closing}
+      onExited={onExited}
       onClose={onClose}
       cycle={cycle}
       cycles={cycles}
       mode={mode}
       offering={offering}
+      loadingDetail={loadingDetail}
+      detailError={detailError}
+      onRetryDetail={onRetryDetail}
       saving={saving}
       onSave={onSave}
     />
@@ -148,22 +110,36 @@ export function AdmissionOfferingDialog(props: Props) {
 
 function AdmissionOfferingLegacyDialog({
   open,
+  closing,
+  onExited,
   onClose,
   cycle,
   cycles,
   mode = 'create',
   offering,
+  loadingDetail,
+  detailError,
+  onRetryDetail,
   saving,
   onSave,
-}: Omit<Props, 'loadingDetail' | 'detailError' | 'onRetryDetail'>) {
+}: Omit<Props, 'onDeactivate'>) {
   const titleId = useId();
+  const waitingForClone = mode === 'clone' && !offering;
   const [targetCycleId, setTargetCycleId] = useState(cycle.id);
   const targetCycle =
     mode === 'clone' ? (cycles.find((item) => item.id === targetCycleId) ?? cycle) : cycle;
-  const form = useAdmissionOfferingForm({ open, cycle: targetCycle, mode, offering, onSave });
+  const form = useAdmissionOfferingForm({
+    open: open && !waitingForClone,
+    cycle: targetCycle,
+    mode,
+    offering,
+    onSave,
+  });
   const closeDialog = () => {
-    form.formik.resetForm();
-    form.clearReadiness();
+    if (!onExited) {
+      form.formik.resetForm();
+      form.clearReadiness();
+    }
     onClose();
   };
   const guard = useAdmissionCloseGuard(
@@ -176,9 +152,11 @@ function AdmissionOfferingLegacyDialog({
   return (
     <Drawer
       anchor="right"
-      open={open}
+      open={open && !closing}
       onClose={saving || form.validating ? undefined : cancelDialog}
+      onTransitionExited={onExited}
       PaperProps={{
+        inert: closing || undefined,
         'aria-labelledby': titleId,
         sx: {
           width: { xs: 1, sm: 760 },
@@ -211,158 +189,190 @@ function AdmissionOfferingLegacyDialog({
         </IconButton>
       </Stack>
       <Divider />
-
-      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
-        <FormSectionCard
-          title="Academic Identity"
-          icon={GlobalIcons.notebook}
-          descriptionTooltip="Choose the admission cycle and academic class that will own this offering."
-          titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+      {waitingForClone ? (
+        <Stack
+          spacing={2}
+          sx={{ p: 2 }}
+          aria-busy={Boolean(loadingDetail)}
+          role={detailError ? undefined : 'status'}
+          aria-label={detailError ? undefined : 'Loading Offering Details'}
         >
-          <Stack spacing={2}>
-            {mode === 'clone' && (
-              <ShakingTextField error={Boolean(!targetCycleId && form.formik.submitCount > 0)}>
-                <CustomSelect
-                  options={cycles}
-                  label="Target admission cycle"
-                  required
-                  error={Boolean(!targetCycleId && form.formik.submitCount > 0)}
-                  labelKey="name"
-                  valueKey="id"
-                  value={targetCycle.id}
-                  onChange={(value) => {
-                    setTargetCycleId(String(value));
-                    form.formik.setValues({
-                      ...form.formik.values,
-                      campusId: null,
-                      boardId: '',
-                      mediumId: '',
-                      stageId: '',
-                      standardId: '',
-                    });
-                    form.clearReadiness();
-                  }}
-                  helperText={
-                    !targetCycleId && form.formik.submitCount > 0
-                      ? 'Choose a target admission cycle.'
-                      : 'Choose the cycle that should receive the cloned offering.'
+          {detailError ? (
+            <StudentFeedback
+              notificationKey="admission-offering:clone-detail"
+              presentation="toast"
+              severity="error"
+              toastAction={
+                <Button size="small" color="inherit" onClick={onRetryDetail}>
+                  Retry
+                </Button>
+              }
+            >
+              {detailError}
+            </StudentFeedback>
+          ) : (
+            <>
+              <Skeleton variant="rounded" height={56} />
+              <Skeleton variant="rounded" height={160} />
+              <Skeleton variant="rounded" height={160} />
+            </>
+          )}
+        </Stack>
+      ) : (
+        <>
+          <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
+            <FormSectionCard
+              title="Academic Identity"
+              icon={GlobalIcons.notebook}
+              descriptionTooltip="Choose the admission cycle and academic class that will own this offering."
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+            >
+              <Stack spacing={2}>
+                {mode === 'clone' && (
+                  <ShakingTextField error={Boolean(!targetCycleId && form.formik.submitCount > 0)}>
+                    <CustomSelect
+                      options={cycles}
+                      label="Target admission cycle"
+                      required
+                      error={Boolean(!targetCycleId && form.formik.submitCount > 0)}
+                      labelKey="name"
+                      valueKey="id"
+                      value={targetCycle.id}
+                      onChange={(value) => {
+                        setTargetCycleId(String(value));
+                        form.formik.setValues({
+                          ...form.formik.values,
+                          campusId: null,
+                          boardId: '',
+                          mediumId: '',
+                          stageId: '',
+                          standardId: '',
+                        });
+                        form.clearReadiness();
+                      }}
+                      helperText={
+                        !targetCycleId && form.formik.submitCount > 0
+                          ? 'Choose a target admission cycle.'
+                          : 'Choose the cycle that should receive the cloned offering.'
+                      }
+                    />
+                  </ShakingTextField>
+                )}
+                <AdmissionOfferingCycleContext cycle={targetCycle} />
+                <Box component="p" sx={{ m: 0, typography: 'body2', color: 'text.secondary' }}>
+                  Connect this class and admission track to the dates, workflow, and forms used for
+                  new inquiries or direct registrations.
+                </Box>
+                {form.queryFailed && (
+                  <StudentFeedback notificationKey="STU-0118" presentation="toast" severity="error">
+                    Some academic or admission configuration options could not be loaded. Retry
+                    before saving.
+                  </StudentFeedback>
+                )}
+                {form.hierarchyEmpty && (
+                  <StudentFeedback
+                    notificationKey="STU-0119"
+                    presentation="persistent"
+                    severity="warning"
+                  >
+                    No academic hierarchy is configured for this academic year. Configure the board,
+                    medium, stage, and standards in Institute Setup before creating an offering.{' '}
+                    <Link href="/setting/academic-setup/" underline="hover">
+                      Open Institute Setup
+                    </Link>
+                  </StudentFeedback>
+                )}
+                {mode === 'clone' && (
+                  <StudentFeedback notificationKey="STU-0120" presentation="inline" severity="info">
+                    Select a valid academic identity for the target cycle. Its cycle dates apply
+                    automatically. The source offering&apos;s workflow, forms, and code will be
+                    copied and revalidated by the server. Applications are never copied.
+                  </StudentFeedback>
+                )}
+                <AdmissionOfferingHierarchyFields
+                  compact
+                  formik={form.formik}
+                  hierarchy={form.hierarchy}
+                  standards={form.standards}
+                  hierarchyLoading={form.hierarchyLoading}
+                  standardsLoading={form.standardsLoading}
+                  identityLocked={false}
+                  initialCampus={
+                    offering?.campusId && offering.campusName
+                      ? {
+                          id: offering.campusId,
+                          name: offering.campusName,
+                          code: '',
+                          isActive: true,
+                        }
+                      : null
                   }
                 />
-              </ShakingTextField>
-            )}
-            <AdmissionOfferingCycleContext cycle={targetCycle} />
-            <Box component="p" sx={{ m: 0, typography: 'body2', color: 'text.secondary' }}>
-              Connect this class and admission track to the dates, workflow, and forms used for new
-              inquiries or direct registrations.
-            </Box>
-            {form.queryFailed && (
-              <StudentFeedback notificationKey="STU-0118" presentation="toast" severity="error">
-                Some academic or admission configuration options could not be loaded. Retry before
-                saving.
-              </StudentFeedback>
-            )}
-            {form.hierarchyEmpty && (
-              <StudentFeedback
-                notificationKey="STU-0119"
-                presentation="persistent"
-                severity="warning"
+              </Stack>
+            </FormSectionCard>
+            {mode !== 'clone' && (
+              <FormSectionCard
+                title="Admission Configuration"
+                icon={GlobalIcons.notebook}
+                descriptionTooltip="Choose the published workflow and forms used by applicants for this offering."
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
               >
-                No academic hierarchy is configured for this academic year. Configure the board,
-                medium, stage, and standards in Institute Setup before creating an offering.{' '}
-                <Link href="/setting/academic-setup/" underline="hover">
-                  Open Institute Setup
-                </Link>
-              </StudentFeedback>
+                <AdmissionOfferingConfigurationFields
+                  compact
+                  formik={form.formik}
+                  fetchWorkflows={form.fetchWorkflows}
+                  fetchInquiryForms={form.fetchInquiryForms}
+                />
+              </FormSectionCard>
             )}
-            {mode === 'clone' && (
-              <StudentFeedback notificationKey="STU-0120" presentation="inline" severity="info">
-                Select a valid academic identity for the target cycle. Its cycle dates apply
-                automatically. The source offering&apos;s workflow, forms, and code will be copied
-                and revalidated by the server. Applications are never copied.
-              </StudentFeedback>
-            )}
-            <AdmissionOfferingHierarchyFields
-              compact
-              formik={form.formik}
-              hierarchy={form.hierarchy}
-              standards={form.standards}
-              hierarchyLoading={form.hierarchyLoading}
-              standardsLoading={form.standardsLoading}
-              identityLocked={false}
-              initialCampus={
-                offering?.campusId && offering.campusName
-                  ? {
-                      id: offering.campusId,
-                      name: offering.campusName,
-                      code: '',
-                      isActive: true,
-                    }
-                  : null
-              }
-            />
+            <AdmissionOfferingReadiness result={form.readiness} />
           </Stack>
-        </FormSectionCard>
-        {mode !== 'clone' && (
-          <FormSectionCard
-            title="Admission Configuration"
-            icon={GlobalIcons.notebook}
-            descriptionTooltip="Choose the published workflow and forms used by applicants for this offering."
-            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            spacing={1}
+            sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
           >
-            <AdmissionOfferingConfigurationFields
-              compact
-              formik={form.formik}
-              fetchWorkflows={form.fetchWorkflows}
-              fetchInquiryForms={form.fetchInquiryForms}
-            />
-          </FormSectionCard>
-        )}
-        <AdmissionOfferingReadiness result={form.readiness} />
-      </Stack>
-      <Stack
-        direction="row"
-        justifyContent="flex-end"
-        spacing={1}
-        sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
-      >
-        <Button
-          variant="outlined"
-          color="inherit"
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={cancelDialog}
-          disabled={saving || form.validating}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          variant="outlined"
-          size="small"
-          startIcon={<Iconify icon="mdi:content-save-outline" />}
-          loading={
-            form.submitIntent === 'inactive' &&
-            (saving || form.validating || form.formik.isSubmitting)
-          }
-          disabled={form.queryFailed || form.hierarchyEmpty || Boolean(form.submitIntent)}
-          onClick={() => form.submitWithActiveState(false)}
-        >
-          {mode === 'clone' ? 'Clone as Inactive' : 'Save as Inactive'}
-        </LoadingButton>
-        <LoadingButton
-          variant="contained"
-          size="small"
-          startIcon={<Iconify icon="mdi:check-decagram-outline" />}
-          loading={
-            form.submitIntent === 'activate' &&
-            (saving || form.validating || form.formik.isSubmitting)
-          }
-          disabled={form.queryFailed || form.hierarchyEmpty || Boolean(form.submitIntent)}
-          onClick={() => form.submitWithActiveState(true)}
-        >
-          {mode === 'clone' ? 'Clone and Activate' : 'Validate and Activate'}
-        </LoadingButton>
-      </Stack>
-      {guard.confirmation}
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={cancelDialog}
+              disabled={saving || form.validating}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="outlined"
+              size="small"
+              startIcon={<Iconify icon="mdi:content-save-outline" />}
+              loading={
+                form.submitIntent === 'inactive' &&
+                (saving || form.validating || form.formik.isSubmitting)
+              }
+              disabled={form.queryFailed || form.hierarchyEmpty || Boolean(form.submitIntent)}
+              onClick={() => form.submitWithActiveState(false)}
+            >
+              {mode === 'clone' ? 'Clone as Inactive' : 'Save as Inactive'}
+            </LoadingButton>
+            <LoadingButton
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="mdi:check-decagram-outline" />}
+              loading={
+                form.submitIntent === 'activate' &&
+                (saving || form.validating || form.formik.isSubmitting)
+              }
+              disabled={form.queryFailed || form.hierarchyEmpty || Boolean(form.submitIntent)}
+              onClick={() => form.submitWithActiveState(true)}
+            >
+              {mode === 'clone' ? 'Clone and Activate' : 'Validate and Activate'}
+            </LoadingButton>
+          </Stack>
+          {guard.confirmation}
+        </>
+      )}
     </Drawer>
   );
 }

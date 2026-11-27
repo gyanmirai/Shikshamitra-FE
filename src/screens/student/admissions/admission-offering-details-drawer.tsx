@@ -32,6 +32,7 @@ type Props = AdmissionOfferingRecoveryAccess & {
   open: boolean;
   offering: AdmissionOffering | null;
   onClose: () => void;
+  onExited?: () => void;
   loadingDetail?: boolean;
   detailError?: string | null;
   onRetryDetail?: () => void;
@@ -54,6 +55,7 @@ export function AdmissionOfferingDetailsDrawer({
   open,
   offering,
   onClose,
+  onExited,
   loadingDetail,
   detailError,
   onRetryDetail,
@@ -68,7 +70,9 @@ export function AdmissionOfferingDetailsDrawer({
       anchor="right"
       open={open}
       onClose={onClose}
+      onTransitionExited={onExited}
       PaperProps={{
+        inert: !open || undefined,
         'aria-labelledby': 'admission-offering-details-title',
         sx: {
           width: { xs: 1, sm: 720 },

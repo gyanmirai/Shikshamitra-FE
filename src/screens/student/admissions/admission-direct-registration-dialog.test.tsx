@@ -708,6 +708,7 @@ describe('Special direct-registration entry', () => {
     expect(state.close).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
-    expect(state.close).toHaveBeenCalledOnce();
+    expect(state.close).not.toHaveBeenCalled();
+    await waitFor(() => expect(state.close).toHaveBeenCalledOnce());
   });
 });

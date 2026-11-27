@@ -7,11 +7,11 @@ import type {
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import { useState, Suspense, useEffect } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { useRef, useState, Suspense, useEffect } from 'react';
+import { Stack, Button, Skeleton, Typography } from '@mui/material';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import {
   useGetAdmissionApplicationQuery,
   useGetAdmissionApplicationFormQuery,
@@ -47,6 +47,10 @@ function OpenFormCorrection({
   onSaved: () => void;
   onRefresh?: () => void;
 }) {
+  const { closing, closeAfterExit, onExited } = useStudentDrawerExit();
+  const frameCloseRef = useRef<(() => void) | null>(null);
+  const [frameBusy, setFrameBusy] = useState(false);
+  const close = () => closeAfterExit(onClose);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const permitted =
     hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.view) &&
@@ -67,6 +71,7 @@ function OpenFormCorrection({
   } | null>(null);
   useEffect(() => {
     if (
+      !closing &&
       !snapshot &&
       application.currentData &&
       form.currentData &&
@@ -78,6 +83,7 @@ function OpenFormCorrection({
       setSnapshot({ application: application.currentData, form: form.currentData });
     }
   }, [
+    closing,
     snapshot,
     application.currentData,
     application.isFetching,
@@ -95,93 +101,80 @@ function OpenFormCorrection({
       form.currentData &&
       canCorrectApplicationForm(application.currentData, form.currentData)
     );
-  if (snapshot)
-    return (
-      <Suspense
-        fallback={
-          <ApplicationFormCorrectionFrame onClose={onClose}>
-            <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                <ApplicationWorkspaceSkeleton layout="form" label="Loading Application Editor" />
-              </Box>
-              <Button
-                size="small"
-                color="inherit"
-                variant="outlined"
-                onClick={onClose}
-                startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                sx={{ alignSelf: 'flex-end', flexShrink: 0 }}
-              >
-                Close
-              </Button>
-            </Stack>
-          </ApplicationFormCorrectionFrame>
-        }
-      >
-        <ApplicationFormCorrectionEditor
-          application={snapshot.application}
-          form={snapshot.form}
-          allowed={currentAllowed}
-          canRetry={permitted}
-          blockedReason={
-            !permitted
-              ? 'You do not have permission to correct this application.'
-              : form.currentData?.correctionBlockedReason
-          }
-          onClose={onClose}
-          onSaved={() => {
-            onSaved();
-            onClose();
-          }}
-          onRefresh={() => onRefresh?.()}
-        />
-      </Suspense>
-    );
   const loading = permitted && (application.isFetching || form.isFetching);
   const failed = application.isError || form.isError;
   return (
-    <ApplicationFormCorrectionFrame onClose={onClose}>
-      <Stack spacing={2} useFlexGap sx={{ flex: 1, minHeight: 0 }}>
-        {loading ? (
-          <Stack role="status" aria-label="Loading Application Form">
-            <Skeleton height={48} />
-            <Skeleton height={96} />
-            <Skeleton height={48} />
-          </Stack>
-        ) : (
-          <>
-            <Typography variant="body2" color="text.secondary">
-              {!permitted
-                ? 'You Do Not Have Permission to Correct This Application.'
-                : failed
-                  ? 'The Application Form Could Not Be Loaded.'
-                  : 'The Application Form Is Unavailable.'}
-            </Typography>
-            {permitted && (
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => {
-                  application.refetch();
-                  form.refetch();
-                }}
-              >
-                Retry
-              </Button>
-            )}
-          </>
-        )}
-        <Button
-          size="small"
-          color="inherit"
-          variant="outlined"
-          onClick={onClose}
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          sx={{ alignSelf: 'flex-end', mt: 'auto' }}
+    <ApplicationFormCorrectionFrame
+      busy={frameBusy}
+      closing={closing}
+      onClose={() => (frameCloseRef.current ?? close)()}
+      onExited={onExited}
+    >
+      {snapshot ? (
+        <Suspense
+          fallback={
+            <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+              <ApplicationWorkspaceSkeleton layout="form" label="Loading application editor" />
+            </Scrollbar>
+          }
         >
-          Close
-        </Button>
-      </Stack>
+          <ApplicationFormCorrectionEditor
+            application={snapshot.application}
+            form={snapshot.form}
+            allowed={currentAllowed}
+            canRetry={permitted}
+            blockedReason={
+              !permitted
+                ? 'You do not have permission to correct this application.'
+                : form.currentData?.correctionBlockedReason
+            }
+            onClose={close}
+            onSaved={() =>
+              closeAfterExit(() => {
+                onSaved();
+                onClose();
+              })
+            }
+            onRefresh={() => onRefresh?.()}
+            frameCloseRef={frameCloseRef}
+            onFrameBusyChange={setFrameBusy}
+          />
+        </Suspense>
+      ) : (
+        <Stack spacing={2} useFlexGap sx={{ flex: 1, minHeight: 0 }}>
+          {loading ? (
+            <Stack role="status" aria-label="Loading application form">
+              <Skeleton height={48} />
+              <Skeleton height={96} />
+              <Skeleton height={48} />
+            </Stack>
+          ) : (
+            <>
+              <Typography variant="body2" color="text.secondary">
+                {!permitted
+                  ? 'You do not have permission to correct this application.'
+                  : failed
+                    ? 'The application form could not be loaded.'
+                    : 'The application form is unavailable.'}
+              </Typography>
+              {permitted && (
+                <Button
+                  size="small"
+                  color="inherit"
+                  variant="outlined"
+                  sx={{ alignSelf: 'flex-start' }}
+                  onClick={() => {
+                    application.refetch();
+                    form.refetch();
+                  }}
+                >
+                  Retry
+                </Button>
+              )}
+            </>
+          )}
+        </Stack>
+      )}
     </ApplicationFormCorrectionFrame>
   );
 }

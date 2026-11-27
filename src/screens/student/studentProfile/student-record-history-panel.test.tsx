@@ -156,6 +156,21 @@ it('offers keyboard-accessible audit scope help while retaining the saved timeli
   expect(query.read).toHaveBeenCalledWith('', { skip: true });
 });
 
+it('uses history placeholders only before the current page has entries', () => {
+  const loading = renderAudit({ changes: [], isFetching: true });
+  expect(screen.getByLabelText('Loading record changes')).toBeVisible();
+  expect(screen.queryByText('No record changes yet')).not.toBeInTheDocument();
+  loading.unmount();
+
+  renderAudit({ isFetching: true });
+  expect(screen.getByRole('list', { name: 'Student record audit history' })).toBeVisible();
+  expect(screen.queryByLabelText('Loading record changes')).not.toBeInTheDocument();
+  expect(
+    screen.getByRole('button', { name: 'View Registration form change history' })
+  ).toBeDisabled();
+  expect(query.read).toHaveBeenLastCalledWith('', { skip: true });
+});
+
 it('lazily shows source-bound before and after values with actor and reason inside the profile', async () => {
   renderAudit();
   expect(diff.read).toHaveBeenLastCalledWith(undefined, [source]);
@@ -163,6 +178,12 @@ it('lazily shows source-bound before and after values with actor and reason insi
     screen.getByRole('button', { name: 'View Registration form change history' })
   );
   const dialog = screen.getByRole('dialog', { name: 'Record Change History' });
+  const title = within(dialog).getByRole('heading', { name: 'Record Change History' });
+  const help = within(dialog).getByRole('button', { name: 'Record Change History information' });
+  expect(title.parentElement).toContainElement(help);
+  await userEvent.hover(help);
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(/reason and field changes/i);
+  expect(within(dialog).queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
   expect(within(dialog).getByText('Anita Shah')).toBeVisible();
   expect(within(dialog).getByText('Verified with guardian')).toBeVisible();
   expect(within(dialog).getByText('Blood group')).toBeVisible();
@@ -171,8 +192,10 @@ it('lazily shows source-bound before and after values with actor and reason insi
   expect(diff.read).toHaveBeenLastCalledWith(change, [source]);
   expect(query.read).toHaveBeenLastCalledWith('change-1', { skip: false });
   expect(within(dialog).queryAllByRole('link')).toHaveLength(0);
-  await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
-  expect(query.read).toHaveBeenLastCalledWith('', { skip: true });
+  await userEvent.click(
+    within(dialog).getByRole('button', { name: 'Close record change history' })
+  );
+  await waitFor(() => expect(query.read).toHaveBeenLastCalledWith('', { skip: true }));
 });
 
 it('masks payloads and reasons while preserving permitted audit attribution', async () => {
@@ -225,7 +248,39 @@ it('keeps list recovery in the error toast without empty history or an orphan re
   expect(retry).toHaveBeenCalledOnce();
 });
 
-it('locks dismissal during the detail read and reports read failures as a toast', async () => {
+it('allows dismissal during detail loading without displaying data from the closed entry', async () => {
+  query.currentData = undefined;
+  query.isFetching = true;
+  const view = renderAudit();
+  const openChange = screen.getByRole('button', { name: 'View Registration form change history' });
+  await userEvent.click(openChange);
+  const dialog = screen.getByRole('dialog', { name: 'Record Change History' });
+  expect(within(dialog).getByLabelText('Loading record change details')).toBeVisible();
+  const close = within(dialog).getByRole('button', { name: 'Close record change history' });
+  expect(close).toBeEnabled();
+  await userEvent.click(close);
+  expect(query.read).toHaveBeenLastCalledWith(change.id, { skip: false });
+  expect(within(dialog).getByLabelText('Loading record change details')).toBeInTheDocument();
+  await waitFor(() => expect(query.read).toHaveBeenLastCalledWith('', { skip: true }));
+
+  query.currentData = change;
+  query.isFetching = false;
+  view.rerender(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <StudentRecordHistoryPanel
+        student={student}
+        changes={[change]}
+        sources={[source]}
+        canReadChanges
+      />
+    </ThemeProvider>
+  );
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(query.read).toHaveBeenLastCalledWith('', { skip: true });
+  expect(diff.read).toHaveBeenLastCalledWith(undefined, [source]);
+});
+
+it('reports detail read failures as a toast', async () => {
   query.currentData = undefined;
   query.isFetching = true;
   const view = renderAudit();
@@ -233,7 +288,7 @@ it('locks dismissal during the detail read and reports read failures as a toast'
     screen.getByRole('button', { name: 'View Registration form change history' })
   );
   const dialog = screen.getByRole('dialog');
-  expect(within(dialog).getByRole('button', { name: 'Close' })).toBeDisabled();
+  const closeButton = within(dialog).getByRole('button', { name: 'Close record change history' });
   query.isFetching = false;
   query.isError = true;
   view.rerender(
@@ -257,9 +312,9 @@ it('locks dismissal during the detail read and reports read failures as a toast'
   await userEvent.click(within(recovery.container).getByRole('button', { name: 'Retry' }));
   expect(query.refetch).toHaveBeenCalledOnce();
   recovery.unmount();
-  expect(within(dialog).getByRole('button', { name: 'Close' })).toBeEnabled();
-  await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
-  expect(query.read).toHaveBeenLastCalledWith('', { skip: true });
+  expect(closeButton).toBeEnabled();
+  await userEvent.click(closeButton);
+  await waitFor(() => expect(query.read).toHaveBeenLastCalledWith('', { skip: true }));
 });
 
 it('reports a label lookup error as a toast without displaying a partial diff', async () => {

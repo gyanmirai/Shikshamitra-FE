@@ -7,11 +7,12 @@ import type {
   AdmissionWorkflowGovernanceHistory,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { useId } from 'react';
+import { useId, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
+import { Box, Stack, Drawer, Divider, IconButton, Typography } from '@mui/material';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 
 import { WorkflowPanelContent } from './workflow-panel-content';
 import { AdmissionDialogTitle } from '../../admission-dialog-title';
@@ -74,14 +75,21 @@ export function WorkflowSidePanel({
   onClose,
 }: Props) {
   const titleId = useId();
-  const readOnlyPanel = Boolean(panel && panel !== 'simulation');
+  const { closing, closeAfterExit, onExited, reopen } = useStudentDrawerExit();
+  useEffect(() => {
+    if (!panel) reopen();
+  }, [panel, reopen]);
+  const requestClose = () => closeAfterExit(onClose);
+
   return (
     <Drawer
       anchor="right"
-      open={Boolean(panel)}
-      onClose={onClose}
+      open={Boolean(panel) && !closing}
+      onClose={requestClose}
+      onTransitionExited={onExited}
       PaperProps={{
         'aria-labelledby': titleId,
+        inert: closing,
         sx: {
           width: { xs: 1, sm: 560 },
           maxWidth: 1,
@@ -117,7 +125,7 @@ export function WorkflowSidePanel({
         </Box>
         <IconButton
           aria-label="Close Panel"
-          onClick={onClose}
+          onClick={requestClose}
           sx={{ width: 44, height: 44, flexShrink: 0 }}
         >
           <Iconify icon={GlobalIcons.cancel} />
@@ -152,23 +160,6 @@ export function WorkflowSidePanel({
           </Stack>
         </Scrollbar>
       </Box>
-      {readOnlyPanel && (
-        <Stack
-          direction="row"
-          justifyContent="flex-end"
-          sx={{ p: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
-        >
-          <Button
-            size="small"
-            variant="outlined"
-            color="inherit"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={onClose}
-          >
-            Close
-          </Button>
-        </Stack>
-      )}
     </Drawer>
   );
 }

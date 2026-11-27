@@ -17,6 +17,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { PaletteFieldButton } from './palette-field-button';
 import { CUSTOM_FIELD_PRESETS } from '../form-field-presets';
+import { getAddressGroupChoice } from '../address-field-group';
 import { matchesStudentField } from '../student-field-configuration';
 import { findExistingStudentFieldAlias } from '../form-inheritance-model';
 import { fieldTypeIcon, CREATABLE_FIELD_TYPES } from '../form-dialog-model';
@@ -215,7 +216,11 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
               <PaletteFieldButton
                 key={preset.key}
                 label={preset.label}
-                description={preset.description}
+                description={
+                  getAddressGroupChoice(undefined, preset.key)
+                    ? 'Adds linked Country, State and City fields'
+                    : preset.description
+                }
                 icon={preset.icon}
                 onClick={() => onAddField(preset.fieldType, undefined, preset)}
               />

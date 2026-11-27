@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
 
 import { StudioLayers } from './studio/studio-layers';
 import { StudioCanvas } from './editor/studio-canvas';
@@ -108,18 +109,18 @@ export function DesignerWorkspace({
       </Box>
       <Box sx={{ gridArea: 'canvas', display: 'flex', minHeight: 0, minWidth: 0 }}>
         {showPrintPreview ? (
-          <Box
+          <Scrollbar
             role="region"
             aria-label="Print Preview"
             tabIndex={0}
-            sx={{ width: 1, overflow: 'auto', p: 1.5, bgcolor: 'background.neutral' }}
+            sx={{ width: 1, p: 1.5, bgcolor: 'background.neutral' }}
           >
             <IdentityCardSheetPreview
               {...previewProps}
               settings={props.printSettings}
               backSideEnabled={props.backSideEnabled}
             />
-          </Box>
+          </Scrollbar>
         ) : <StudioCanvas
           {...previewProps}
           controller={studio}

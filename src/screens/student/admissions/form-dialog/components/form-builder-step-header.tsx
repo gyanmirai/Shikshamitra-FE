@@ -24,6 +24,7 @@ type Props = {
   namePath?: string;
   onRename?: (name: string) => void;
   navigationRequest?: BuilderNavigationRequest;
+  linkedFieldLocks?: ReadonlyMap<string, string>;
 };
 
 export function FormBuilderStepHeader({
@@ -37,15 +38,21 @@ export function FormBuilderStepHeader({
   namePath,
   onRename,
   navigationRequest,
+  linkedFieldLocks,
 }: Props) {
   const settings = useBoolean(newlyAdded);
+  const stepSections = formik.values.sections.filter((section) =>
+    step.sections.some((item) => item.section.id === section.id)
+  );
+  const linkedFieldReason = stepSections
+    .flatMap((section) => section.fields)
+    .map((field) => linkedFieldLocks?.get(field.id))
+    .find(Boolean);
   const deleteDisabled =
     Boolean(onRename) ||
     hasLockedInquiryFields(
       formik.values.purpose,
-      formik.values.sections.filter((section) =>
-        step.sections.some((item) => item.section.id === section.id)
-      ),
+      stepSections,
       formik.values.coreFieldPolicyVersion
     );
   const { onTrue: openSettings } = settings;
@@ -162,13 +169,14 @@ export function FormBuilderStepHeader({
           name={step.name}
           unit="step"
           disabled={formik.isSubmitting}
-          deleteDisabled={deleteDisabled}
+          deleteDisabled={deleteDisabled && !linkedFieldReason}
+          deleteBlockedReason={linkedFieldReason}
           onEdit={() => {
             onSelect();
             settings.onTrue();
           }}
           onDelete={() => {
-            if (deleteDisabled) return;
+            if (deleteDisabled || linkedFieldReason) return;
             formik.setFieldValue(
               'sections',
               formik.values.sections.filter((section) => (section.stepId ?? section.id) !== step.id)

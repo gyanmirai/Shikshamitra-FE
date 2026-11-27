@@ -4,7 +4,7 @@ import type { AdmissionOffering } from 'src/redux/student/admissions/admission-o
 import { vi, it, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { AdmissionOfferingDialog } from './admission-offering-dialog';
@@ -65,9 +65,9 @@ describe('Admission Offering dialog routing', () => {
         />
       </ThemeProvider>
     );
-    const title=mode==='clone'?'Clone Admission Offering':'Add Admission Offering';
-    expect(screen.getByRole('dialog',{name:title})).toBeVisible();
-    expect(screen.getByRole('heading',{name:title,level:2})).toBeVisible();
+    const title = mode === 'clone' ? 'Clone Admission Offering' : 'Add Admission Offering';
+    expect(screen.getByRole('dialog', { name: title })).toBeVisible();
+    expect(screen.getByRole('heading', { name: title, level: 2 })).toBeVisible();
     expect(screen.getByText('Offering class configuration')).toBeVisible();
     expect(screen.queryByRole('combobox', { name: 'Admission Window' })).not.toBeInTheDocument();
     expect(
@@ -82,23 +82,34 @@ describe('Admission Offering dialog routing', () => {
         'true'
       );
   });
-  it('opens the clone shell immediately and keeps inputs absent until source details load', () => {
-    render(
+  it('keeps the clone shell mounted if source details arrive during exit', async () => {
+    const onExited = vi.fn();
+    const drawer = (offering: AdmissionOffering | null, closing = false) => (
       <AdmissionOfferingDialog
         open
         mode="clone"
         cycle={cycle}
         cycles={[cycle]}
-        offering={null}
-        loadingDetail
+        offering={offering}
+        loadingDetail={!offering}
+        closing={closing}
+        onExited={onExited}
         saving={false}
         onClose={vi.fn()}
         onSave={vi.fn()}
       />
     );
+    const view = render(drawer(null));
+    const paper = screen.getByRole('dialog', { name: 'Clone Admission Offering' });
     expect(screen.getByRole('heading', { name: 'Clone Admission Offering' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Close Admission Offering' })).toBeEnabled();
     expect(screen.queryByText('Offering class configuration')).not.toBeInTheDocument();
+    view.rerender(drawer({ id: 'offering-1' } as AdmissionOffering, true));
+    expect(paper).toBeInTheDocument();
+    expect(paper).toHaveAttribute('inert');
+    expect(onExited).not.toHaveBeenCalled();
+    await waitFor(() => expect(onExited).toHaveBeenCalledOnce());
+    expect(paper).not.toBeInTheDocument();
   });
   it('uses the edit shell while details are still loading instead of the create form', () => {
     render(

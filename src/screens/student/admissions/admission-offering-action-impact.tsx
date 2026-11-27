@@ -1,7 +1,6 @@
 import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 
-import { Stack, AlertTitle, Typography } from '@mui/material';
-import { StudentFeedback } from 'src/components/student-feedback';
+import { Typography } from '@mui/material';
 
 type Props = {
   action: 'activate' | 'deactivate' | 'delete';
@@ -27,41 +26,10 @@ export function AdmissionOfferingActionImpact({ action, offering }: Props) {
     );
   }
 
-  const applications = `${offering.applicationCount} ${
-    offering.applicationCount === 1 ? 'application' : 'applications'
-  }`;
-
-  const impact = {
-    deactivate: {
-      severity: 'warning' as const,
-      title: 'New Inquiries and Applications Will Stop Immediately',
-      message: `${applications} already linked to this offering will remain available for processing.`,
-    },
-  }[action];
-
   return (
-    <Stack spacing={1.5}>
-      <Stack spacing={0.25}>
-        <Typography variant="subtitle2">
-          {offering.name || offering.code} · {offering.standardName}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {offering.campusName || 'All Campuses'} · {offering.boardName} · {offering.mediumName} ·{' '}
-          {offering.stageName}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Current Usage: {applications}
-        </Typography>
-      </Stack>
-      <StudentFeedback
-        notificationKey="STU-0109"
-        presentation="persistent"
-        severity={impact.severity}
-        variant="outlined"
-      >
-        <AlertTitle>{impact.title}</AlertTitle>
-        {impact.message}
-      </StudentFeedback>
-    </Stack>
+    <Typography variant="body2">
+      Are you sure you want to deactivate this offering? New inquiries and applications will stop,
+      but existing applications will remain available.
+    </Typography>
   );
 }

@@ -96,6 +96,7 @@ export type IdentityCardDesignerProps = IdentityCardPreviewProps & {
   onPhotoEdit?: (edit: IdentityCardPhotoEdit) => void;
   onEditorBusyChange?: (busy: boolean) => void;
   brandingContent?: ReactNode;
+  signatureContent?: ReactNode;
   canPlaceSignature?: boolean;
   configurationPanelSize?: 'regular' | 'wide';
   showConfigurationHints?: boolean;

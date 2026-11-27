@@ -11,6 +11,8 @@ import { StudentCardPreview } from './components/student-card-preview';
 import StudentAssignmentDrawer from '../onboarding/student-setup/student-assignment-drawer';
 
 type Props = {
+  open: boolean;
+  onExited: () => void;
   standardName: string;
   cards: IdCard[];
   currentCard: IdCard;
@@ -24,6 +26,8 @@ type Props = {
 };
 
 export default function StudentICardAssignmentPreview({
+  open,
+  onExited,
   standardName,
   cards,
   currentCard,
@@ -41,6 +45,8 @@ export default function StudentICardAssignmentPreview({
 
   return (
     <StudentAssignmentDrawer
+      open={open}
+      onExited={onExited}
       title={`Preview I-Cards for ${standardName}`}
       titleInfo="Review and print the selected cards, or issue numbered cards where needed."
       busy={busy}

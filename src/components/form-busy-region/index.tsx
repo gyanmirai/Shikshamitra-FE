@@ -10,6 +10,8 @@ type Props = {
   children: ReactNode;
   /** Preserve control-level feedback without covering it with a second loader. */
   showOverlay?: boolean;
+  /** Keep the accessible status label without displaying text beside the loader. */
+  showLabel?: boolean;
   /** Continue the owning workspace's flex layout through the blocking region. */
   fillContent?: boolean;
   /** Allow a full-height flex layout to pass through the fieldset's anonymous content box. */
@@ -24,6 +26,7 @@ export function FormBusyRegion({
   label = 'Saving…',
   children,
   showOverlay = true,
+  showLabel = true,
   fillContent = false,
   flattenFieldset = false,
   blockInteraction = true,
@@ -97,7 +100,7 @@ export function FormBusyRegion({
           }}
         >
           <CircularProgress size={24} aria-hidden="true" />
-          <Typography variant="body2">{label}</Typography>
+          {showLabel && <Typography variant="body2">{label}</Typography>}
         </Stack>
       )}
     </Box>

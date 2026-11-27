@@ -4,6 +4,17 @@ import { render, screen } from '@testing-library/react';
 
 import { FormBusyRegion } from './index';
 
+it('can hide the visible label while preserving its accessible status', () => {
+  render(
+    <FormBusyRegion busy label="Loading Follow-Up" showLabel={false}>
+      <div>Content</div>
+    </FormBusyRegion>
+  );
+  const status = screen.getByRole('status', { name: 'Loading Follow-Up' });
+  expect(status).toBeVisible();
+  expect(status).not.toHaveTextContent('Loading Follow-Up');
+});
+
 it('keeps entered values and blocks changes until the form is unlocked', async () => {
   const user = userEvent.setup();
   const form = (busy: boolean) => (

@@ -6,6 +6,7 @@ import type { AdmissionApplication } from 'src/redux/student/admissions/admissio
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -15,6 +16,7 @@ import { fDateTime, fTimestamp } from 'src/utils/format-time';
 import { useId, useState, useEffect, useCallback } from 'react';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { useGetAdmissionApplicant360Query } from 'src/redux/student/admissions/admission-applicants-api';
 import {
   Box,
@@ -54,6 +56,7 @@ export function ApplicationActivityDrawer({ open, ...props }: Props) {
 }
 
 function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit<Props, 'open'>) {
+  const { closing, closeAfterExit, onExited } = useStudentDrawerExit();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canViewNotes =
     Boolean(application.applicantId) &&
@@ -100,7 +103,7 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
     title: 'Discard Unsaved Activity?',
     description: 'Your unsaved note or follow-up changes will be discarded.',
   });
-  const close = () => guard.requestNavigation(onClose);
+  const close = () => guard.requestNavigation(() => closeAfterExit(onClose));
   const titleId = useId();
   useEffect(() => {
     onBusyChange?.(writeBusy);
@@ -184,13 +187,15 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
     <>
       <Drawer
         anchor="right"
-        open
+        open={!closing}
         onClose={close}
+        onTransitionExited={onExited}
         slotProps={{
           paper: {
             role: 'dialog',
             'aria-modal': true,
             'aria-labelledby': titleId,
+            inert: closing || undefined,
             sx: {
               width: { xs: '100%', sm: 560 },
               maxWidth: '100%',
@@ -325,7 +330,14 @@ function ApplicationActivityContent({ application, onClose, onBusyChange }: Omit
           justifyContent="flex-end"
           sx={{ p: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
         >
-          <Button size="small" variant="outlined" disabled={writeBusy} onClick={close}>
+          <Button
+            size="small"
+            color="inherit"
+            variant="outlined"
+            disabled={writeBusy}
+            onClick={close}
+            startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+          >
             Close
           </Button>
         </Stack>

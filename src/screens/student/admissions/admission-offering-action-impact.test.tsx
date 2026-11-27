@@ -19,8 +19,10 @@ describe('AdmissionOfferingActionImpact', () => {
   it('explains that deactivation stops new intake without removing existing applications', () => {
     render(<AdmissionOfferingActionImpact action="deactivate" offering={offering} />);
 
-    expect(screen.getByText('New Inquiries and Applications Will Stop Immediately')).toBeVisible();
-    expect(screen.getByText(/12 applications already linked/)).toBeVisible();
+    expect(screen.getByText(/Are you sure you want to deactivate this offering\?/)).toHaveTextContent(
+      'New inquiries and applications will stop, but existing applications will remain available.'
+    );
+    expect(screen.queryByText(/ADM-GRADE-5|Grade 5|Current Usage/)).not.toBeInTheDocument();
   });
 
   it.each([0, 12])('keeps deletion text simple with %i linked applications', (applicationCount) => {

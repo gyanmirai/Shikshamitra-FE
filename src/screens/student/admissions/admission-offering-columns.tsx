@@ -121,7 +121,7 @@ export const buildAdmissionOfferingColumns = (
     isFilter: true,
     filterType: 'date',
     filterOperators: ['equals', 'after', 'before'],
-    align: 'right',
+    align: 'left',
     headerAlign: 'left',
     minWidth: 120,
     render: (value) => <AdmissionTableText text={formatDateOnly(value, ADMISSION_DATE_FORMAT)} />,

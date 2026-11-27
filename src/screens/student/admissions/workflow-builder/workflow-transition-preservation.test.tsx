@@ -30,7 +30,7 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
     const priority = screen.getByRole('spinbutton', { name: 'Route Order *' });
     await user.clear(priority);
     await user.type(priority, '4');
-    await user.click(screen.getByRole('button', { name: 'Save Path' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toEqual({
       id: 'transition-1',
@@ -51,7 +51,7 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
     expect(screen.getByText('Its rule is preserved', { exact: false })).toBeVisible();
     expect(screen.queryByLabelText('Default Route')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Use a condition')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save Path' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
       fromStageId: 'form-1',
@@ -75,10 +75,10 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Save Path' })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Close' })).toHaveLength(1);
-    await user.click(screen.getByRole('button', { name: 'Close' }));
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Save path' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close Next-Step Editor' }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(onSave).not.toHaveBeenCalled();
   });
 });

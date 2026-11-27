@@ -125,7 +125,7 @@ it('offers only pre-created sessions and carries the selected students', () => {
   expect(screen.getByText('Sweta')).toBeVisible();
   expect(screen.getByText('Nikhil')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Create Session' })).not.toBeInTheDocument();
-  expect(screen.queryByText('Create & Book')).not.toBeInTheDocument();
+  expect(screen.queryByText('Create & book')).not.toBeInTheDocument();
 });
 
 it('retains a selected session when staff keep editing and closes only after discard', async () => {
@@ -142,7 +142,7 @@ it('retains a selected session when staff keep editing and closes only after dis
   expect(onClose).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Close Student Booking' }));
   await user.click(screen.getByRole('button', { name: 'Discard changes' }));
-  expect(onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   expect(api.confirm).not.toHaveBeenCalled();
 });
 
@@ -287,8 +287,8 @@ it('explains an existing booking and opens its details without previewing or con
   expect(api.get).not.toHaveBeenCalled();
   expect(api.preview).not.toHaveBeenCalled();
   expect(api.confirm).not.toHaveBeenCalled();
-  await userEvent.click(screen.getByRole('button', { name: 'View Booking For Sweta' }));
-  expect(onViewBooking).toHaveBeenCalledExactlyOnceWith(booked);
+  await userEvent.click(screen.getByRole('button', { name: 'View booking for Sweta' }));
+  await waitFor(() => expect(onViewBooking).toHaveBeenCalledExactlyOnceWith(booked));
 });
 
 it('requires explicit removal of an already booked student before booking the eligible student', async () => {

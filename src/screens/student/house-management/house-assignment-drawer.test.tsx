@@ -83,6 +83,13 @@ it('defaults division previews to unassigned and requires a new review after cho
       />
     </ThemeProvider>
   );
+  const title = screen.getByRole('heading', { name: 'Change House Membership' });
+  expect(title.parentElement).toContainElement(
+    screen.getByRole('button', { name: 'Membership change information' })
+  );
+  expect(title.parentElement).not.toContainElement(
+    screen.getByRole('button', { name: 'Close Change House Membership' })
+  );
   expect(screen.getByText('Class 6 / A')).toBeVisible();
   const includeAssigned = screen.getByRole('checkbox', {
     name: 'Include students already assigned to a house',
@@ -175,9 +182,11 @@ it.each(['Cancel', 'X', 'Escape'])(
           name: method === 'X' ? 'Close Change House Membership' : method,
         })
       );
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByText('Change House Membership')).toBeInTheDocument();
     await act(async () => finishPreview(previewResult));
     expect(screen.queryByRole('button', { name: 'Confirm change' })).not.toBeInTheDocument();
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   }
 );
 
@@ -209,7 +218,7 @@ it('keeps an edited membership draft after cancelling a pending read and discard
   expect(onClose).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
-  expect(onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   await act(async () => finishPreview(previewResult));
   expect(screen.queryByRole('button', { name: 'Confirm change' })).not.toBeInTheDocument();
 });
@@ -226,21 +235,26 @@ it('does not replace a newer preview token with a discarded read result', async 
     )
     .mockResolvedValueOnce({ ...previewResult, previewToken: 'new-token' });
   const onCommit = vi.fn().mockResolvedValue(undefined);
-  render(
+  const onClose = vi.fn();
+  const drawer = (key: string) => (
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <HouseAssignmentDrawer
+        key={key}
         academicMediumId="m1"
         divisionId="d1"
         enrollmentIds={['e1']}
         initialMode="remove"
-        onClose={vi.fn()}
+        onClose={onClose}
         onPreview={onPreview}
         onCommit={onCommit}
       />
     </ThemeProvider>
   );
+  const { rerender } = render(drawer('previous'));
   fireEvent.click(screen.getByRole('button', { name: 'Preview change' }));
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  rerender(drawer('next'));
   fireEvent.click(screen.getByRole('button', { name: 'Preview change' }));
   await screen.findByRole('button', { name: 'Confirm change' });
   await act(async () => finishOld({ ...previewResult, previewToken: 'old-token' }));
@@ -281,7 +295,7 @@ it('keeps dismissal and duplicate submission locked while confirming a membershi
   expect(onClose).not.toHaveBeenCalled();
   expect(onCommit).toHaveBeenCalledOnce();
   await act(async () => finishWrite());
-  expect(onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
 });
 it('requires a preview and names cleared house leadership before confirming removal', async () => {
   const student = {
@@ -331,5 +345,5 @@ it('requires a preview and names cleared house leadership before confirming remo
       previewToken: 'token',
     })
   );
-  expect(onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
 });

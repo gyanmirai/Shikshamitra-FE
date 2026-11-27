@@ -18,7 +18,10 @@ const mocks = vi.hoisted(() => ({
   success: vi.fn(),
   granted: [] as { name: string; isGranted: boolean }[],
 }));
-vi.mock('react-redux', () => ({ useSelector: () => mocks.granted }));
+vi.mock('react-redux', () => ({
+  useSelector: () => mocks.granted,
+  useDispatch: () => (query: unknown) => query,
+}));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
     warning: vi.fn(),
@@ -29,7 +32,11 @@ vi.mock('src/components/toast', () => ({
   },
 }));
 vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
-  useLazyGetAdmissionOfferingQuery: () => [mocks.load, { isFetching: false }],
+  admissionOfferingsApi: {
+    endpoints: {
+      getAdmissionOffering: { initiate: (id: string) => mocks.load(id) },
+    },
+  },
   useUpdateAdmissionOfferingMutation: () => [mocks.update, { isLoading: false }],
   useCreateAdmissionOfferingMutation: () => [mocks.other, { isLoading: false }],
   useCloneAdmissionOfferingMutation: () => [mocks.other, { isLoading: false }],
@@ -330,6 +337,35 @@ describe('Offering edit detail loading', () => {
     });
     expect(result.current.selected?.id).toBe(newer.id);
   });
+});
+
+it('keeps delete confirmation open on failure and reads a fresh stamp on retry', async () => {
+  vi.clearAllMocks();
+  mocks.granted = [{ name: 'Students.Admissions.Offerings.Delete', isGranted: true }];
+  mocks.load
+    .mockReturnValueOnce({ unwrap: async () => detail })
+    .mockReturnValueOnce({
+      unwrap: async () => ({ ...detail, concurrencyStamp: 'retry-stamp' }),
+    });
+  mocks.other
+    .mockReturnValueOnce({
+      unwrap: async () => {
+        throw new Error('Offering changed');
+      },
+    })
+    .mockReturnValueOnce({ unwrap: async () => undefined });
+  const { result } = renderHook(() => useAdmissionOfferingActions(cycle));
+
+  act(() => result.current.requestDelete(row));
+  await act(async () => result.current.confirmAction());
+  expect(result.current.pendingAction?.type).toBe('delete');
+  expect(result.current.commanding).toBe(false);
+  expect(mocks.error).toHaveBeenCalledOnce();
+
+  await act(async () => result.current.confirmAction());
+  expect(mocks.other).toHaveBeenNthCalledWith(1, { id: row.id, concurrencyStamp: 'latest-stamp' });
+  expect(mocks.other).toHaveBeenNthCalledWith(2, { id: row.id, concurrencyStamp: 'retry-stamp' });
+  expect(result.current.pendingAction).toBeNull();
 });
 
 describe('Offering activation confirmation', () => {

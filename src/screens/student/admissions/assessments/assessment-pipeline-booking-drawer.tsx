@@ -4,6 +4,7 @@ import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { useId, useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -11,6 +12,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { StudentFeedback } from 'src/components/student-feedback';
 import { InfoTooltipIcon } from 'src/components/custom-tooltip/info-tooltip-icon';
+import { useStudentDrawerExit } from 'src/screens/student/components/use-student-drawer-exit';
 import { renderUnsavedConfirmation } from 'src/components/confirm-dialog/render-unsaved-confirmation';
 import { useGetAdmissionApplicationQuery } from 'src/redux/student/admissions/admission-applications-api';
 import {
@@ -68,6 +70,8 @@ export function AssessmentPipelineBookingDrawer({
   onClose,
 }: Props) {
   const titleId = useId();
+  const { closing, closeAfterExit, onExited } = useStudentDrawerExit();
+  const close = () => closeAfterExit(onClose);
   const permissions = useAssessmentPermissions();
   const [snapshot] = useState(assessment);
   const [mode, setMode] = useState<'book' | 'create'>('book');
@@ -124,7 +128,7 @@ export function AssessmentPipelineBookingDrawer({
       try {
         await run('book', values);
         shikshaMitraToast.success({ message: 'Assessment slot booked' });
-        onClose();
+        close();
       } catch (failure) {
         setError(assessmentErrorMessage(failure));
       } finally {
@@ -181,7 +185,7 @@ export function AssessmentPipelineBookingDrawer({
           retry.current
         );
         shikshaMitraToast.success({ message: 'Slot created and booked' });
-        onClose();
+        close();
       } catch (failure) {
         setError(assessmentErrorMessage(failure));
       } finally {
@@ -198,7 +202,7 @@ export function AssessmentPipelineBookingDrawer({
     else if (next === 'book') {
       setMode('book');
       setError('');
-    } else onClose();
+    } else close();
   };
   const selectedSession = getAvailableAssessmentSessions(sessions.currentData ?? []).find(
     (item) => item.id === bookForm.values.sessionId
@@ -213,9 +217,11 @@ export function AssessmentPipelineBookingDrawer({
     <>
       <Drawer
         anchor="right"
-        open
+        open={!closing}
         onClose={() => requestNavigation('close')}
+        onTransitionExited={onExited}
         PaperProps={{
+          inert: closing || undefined,
           role: 'dialog',
           'aria-modal': true,
           'aria-labelledby': titleId,
@@ -232,7 +238,7 @@ export function AssessmentPipelineBookingDrawer({
               <IconButton
                 size="small"
                 disabled={locked}
-                aria-label="Back to Booking"
+                aria-label="Back to booking"
                 onClick={() => requestNavigation('book')}
               >
                 <Iconify icon="mdi:arrow-left" />
@@ -262,8 +268,8 @@ export function AssessmentPipelineBookingDrawer({
               busy={busy}
               label={
                 mode === 'book'
-                  ? 'Booking Assessment Slot…'
-                  : 'Creating and Booking Assessment Slot…'
+                  ? 'Booking assessment slot…'
+                  : 'Creating and booking assessment slot…'
               }
             >
               <Stack spacing={2} sx={{ p: 2 }}>
@@ -367,10 +373,19 @@ export function AssessmentPipelineBookingDrawer({
             </FormBusyRegion>
           </Scrollbar>
           <Divider />
-          <Stack direction="row" justifyContent="space-between" sx={{ p: 2 }}>
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            alignItems="center"
+            spacing={1}
+            sx={{ px: { xs: 2, sm: 3 }, py: 1.75, flexShrink: 0 }}
+          >
             <Button
+              type="button"
               size="small"
+              color="inherit"
               variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
               disabled={locked}
               onClick={() => requestNavigation('close')}
             >
@@ -378,8 +393,10 @@ export function AssessmentPipelineBookingDrawer({
             </Button>
             <LoadingButton
               size="small"
+              color="inherit"
               variant="contained"
               type="submit"
+              startIcon={<Iconify icon={GlobalIcons.calendar} width={18} />}
               loading={busy}
               disabled={
                 !(canBook || (mode === 'create' && canReplayConfirmation)) ||
@@ -393,7 +410,7 @@ export function AssessmentPipelineBookingDrawer({
                     application.isError)
               }
             >
-              {mode === 'book' ? 'Book Slot' : 'Create & Book'}
+              {mode === 'book' ? 'Book slot' : 'Create & book'}
             </LoadingButton>
           </Stack>
         </Box>
@@ -411,7 +428,7 @@ export function AssessmentPipelineBookingDrawer({
               createForm.resetForm();
               setMode('book');
               setError('');
-            } else onClose();
+            } else close();
           },
           { busy }
         )}

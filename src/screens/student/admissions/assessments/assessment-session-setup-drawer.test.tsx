@@ -26,7 +26,7 @@ it('allows leaving session setup while the initial options are loading', async (
   expect(screen.getByRole('button', { name: 'Close Session Setup' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
   await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-  expect(options.onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(options.onClose).toHaveBeenCalledOnce());
 });
 
 vi.mock('src/components/toast', () => ({
@@ -151,7 +151,7 @@ it('submits one session with zero bookings even when preview proposes applicants
     { skipCount: 0, maxResultCount: 1 }
   );
   expect(options.onSubmit).toHaveBeenCalledWith(options.onPreview.mock.calls[0][0], 'fresh', []);
-  expect(options.onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(options.onClose).toHaveBeenCalledOnce());
   expect(screen.queryByText('Applicant')).not.toBeInTheDocument();
 });
 it('does not preview or create invalid session details', async () => {
@@ -179,7 +179,7 @@ it.each([500, 408, 'FETCH_ERROR'])(
     await waitFor(() => expect(options.onSubmit).toHaveBeenCalledTimes(2));
     expect(options.onPreview).toHaveBeenCalledOnce();
     expect(options.onSubmit.mock.calls[1]).toEqual(options.onSubmit.mock.calls[0]);
-    expect(options.onClose).toHaveBeenCalledOnce();
+    await waitFor(() => expect(options.onClose).toHaveBeenCalledOnce());
   }
 );
 it('allows correcting rejected input and gets a fresh fingerprint after a definitive conflict', async () => {
@@ -234,7 +234,7 @@ it('saves existing arrangements and version without previewing or booking studen
   );
   expect(options.onPreview).not.toHaveBeenCalled();
   expect(options.onSubmit).not.toHaveBeenCalled();
-  expect(options.onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(options.onClose).toHaveBeenCalledOnce());
 });
 it('preserves the draft while resources and live permissions block Submit', async () => {
   const options = props();
@@ -256,7 +256,7 @@ it('requires discard confirmation before closing an edited session', async () =>
   await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(options.onClose).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
-  expect(options.onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(options.onClose).toHaveBeenCalledOnce());
 });
 it('does not confirm when permission is revoked while availability is loading', async () => {
   const options = props();

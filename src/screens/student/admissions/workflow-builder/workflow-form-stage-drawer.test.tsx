@@ -81,6 +81,7 @@ function setup(
   availableForms: AdmissionForm[] = [form]
 ) {
   const onSave = vi.fn();
+  const onClose = vi.fn();
   const editorStage = {
     ...stage,
     ...stageChanges,
@@ -94,11 +95,11 @@ function setup(
       forms={availableForms}
       stages={stages}
       readOnly={false}
-      onClose={vi.fn()}
+      onClose={onClose}
       onSave={onSave}
     />
   );
-  return { onSave, user: userEvent.setup() };
+  return { onSave, onClose, user: userEvent.setup() };
 }
 
 describe('single-page stage drawer', { timeout: 15000 }, () => {
@@ -149,11 +150,11 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       [form, inquiry]
     );
     expect(screen.getByText(/Inquiry forms cannot be used in this stage/)).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();
     await user.click(screen.getByRole('combobox', { name: 'Published Form Version *' }));
     await user.click(screen.getByRole('option', { name: 'Application form · v2' }));
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
       formDefinitionId: form.id,
@@ -238,14 +239,14 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     expect(
       screen.queryByRole('switch', { name: 'Move to the next stage automatically' })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply Changes' })).toHaveClass(
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toHaveClass(
       'MuiButton-sizeSmall'
     );
-    expect(screen.getByRole('button', { name: 'Back' }).parentElement).toHaveStyle({
+    expect(screen.getByRole('button', { name: 'Cancel' }).parentElement).toHaveStyle({
       justifyContent: 'flex-end',
     });
     await user.click(behavior.getByRole('switch', { name: 'Allow Corrections' }));
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     const saved = onSave.mock.calls[0][0];
     expect(saved).toMatchObject({
@@ -286,7 +287,7 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     expect(
       screen.getByText('End Of Journey', { selector: '.MuiFormControlLabel-label' })
     ).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).form).toMatchObject(
       DEFAULT_FORM_STAGE_POLICY
@@ -299,7 +300,7 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Sections Staff Must Verify')).not.toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Allow Corrections' })).toBeChecked();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).form).toMatchObject({
       requireSectionVerification: false,
@@ -318,17 +319,17 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }), {}, [stage]);
     expect(screen.getByRole('switch', { name: 'Entry Stage' })).toBeChecked();
     await user.click(screen.getByRole('switch', { name: 'Entry Stage' }));
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0].isEntryStage).toBe(false);
   });
   it('blocks an unattached form and exposes the published-form validation', async () => {
     const { user, onSave } = setup();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(await screen.findByText('Select a published registration form.')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });
-  it.each(['field blur', 'Apply Changes'])(
+  it.each(['field blur', 'Apply changes'])(
     'resets the required form selector after a type change following %s',
     async (interaction) => {
       const { user, onSave } = setup();
@@ -338,7 +339,7 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
         await user.click(screen.getByRole('combobox', { name: 'Stage Type *' }));
         await user.click(screen.getByRole('option', { name }));
       };
-      const apply = () => user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+      const apply = () => user.click(screen.getByRole('button', { name: 'Apply changes' }));
       expect(getFormSelector()).not.toHaveAttribute('aria-invalid', 'true');
 
       if (interaction === 'field blur') {
@@ -363,27 +364,33 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
   it('preserves field validation and entered values when applying invalid stage details', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
     await user.clear(screen.getByRole('textbox', { name: 'Stage Name *' }));
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(await screen.findByText('Stage name is required')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });
   it('explains invalid saved internal references without exposing a code input', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }), { code: '' });
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(await screen.findByText(/This stage has invalid saved details/)).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Stage code *' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Stage Name *' })).toHaveValue(stage.name);
     expect(onSave).not.toHaveBeenCalled();
   });
-  it('protects unsaved changes when Back closes the editor', async () => {
-    const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
-    await user.type(screen.getByRole('textbox', { name: 'Stage Name *' }), ' changed');
-    await user.click(screen.getByRole('button', { name: 'Back' }));
+  it('protects unsaved changes when Cancel closes the editor', async () => {
+    const { user, onSave, onClose } = setup(JSON.stringify({ formDefinitionId: form.id }));
+    const name = screen.getByRole('textbox', { name: 'Stage Name *' });
+    await user.type(name, ' changed');
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(
       await screen.findByRole('heading', { name: 'Discard Unsaved Changes?', level: 2 })
     ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Keep editing' }));
-    expect(screen.getByRole('textbox', { name: 'Stage Name *' })).toHaveValue('Form changed');
+    expect(name).toHaveValue('Form changed');
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(name).toHaveValue('Form changed');
+    expect(onClose).not.toHaveBeenCalled();
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(onSave).not.toHaveBeenCalled();
   });
   it('allows read-only closing without validating or saving', async () => {
@@ -404,9 +411,10 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     expect(screen.getByText('Required stage')).toBeVisible();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Apply Changes' })).not.toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Close' }));
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Close Stage Editor' }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(onSave).not.toHaveBeenCalled();
   });
   it('clears legacy verification without loading full form sections or blocking Apply changes', async () => {
@@ -434,8 +442,8 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     expect(
       screen.queryByRole('switch', { name: /Require Staff Verification/ })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply Changes' })).toBeEnabled();
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    expect(screen.getByRole('button', { name: 'Apply changes' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(loadSections).not.toHaveBeenCalled();
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
@@ -465,7 +473,7 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     );
     await user.click(screen.getByRole('combobox', { name: 'Published Form Version *' }));
     await user.click(screen.getByRole('option', { name: 'Application form · v2' }));
-    await user.click(screen.getByRole('button', { name: 'Apply Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(loadSections).not.toHaveBeenCalled();
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({

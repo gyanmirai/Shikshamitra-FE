@@ -6,7 +6,12 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 
 import type { FieldSettingsProps } from '../types/field-settings';
 
-export function FieldGuidanceSettings({ formik, sectionIndex, fieldIndex }: FieldSettingsProps) {
+export function FieldGuidanceSettings({
+  formik,
+  sectionIndex,
+  fieldIndex,
+  linkedFieldReason,
+}: FieldSettingsProps) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
   const path = `sections[${sectionIndex}].fields[${fieldIndex}]`;
   return (
@@ -36,7 +41,7 @@ export function FieldGuidanceSettings({ formik, sectionIndex, fieldIndex }: Fiel
           <Switch
             size="small"
             checked={field.readOnly}
-            disabled={field.fieldType === 12}
+            disabled={field.fieldType === 12 || Boolean(linkedFieldReason)}
             onChange={(event) => formik.setFieldValue(`${path}.readOnly`, event.target.checked)}
           />
         }

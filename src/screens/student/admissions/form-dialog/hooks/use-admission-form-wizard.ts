@@ -12,13 +12,10 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 import { SavedAdmissionFormValidationError } from '../form-publish-validation';
 import { UnchangedAdmissionFormError } from '../../form-list/form-validation-errors';
+import { getNewAdmissionFormInitialValues } from '../admission-form-template-catalog';
 import { getAdmissionWizardSteps, getAdmissionWizardSchema } from '../form-wizard-model';
 import { getInquiryFormConfigurationIssues } from '../../admission-inquiry-field-bindings';
-import {
-  getAdmissionFormInitialValues,
-  getAdmissionFormPrintSettings,
-  getBlankAdmissionFormInitialValues,
-} from '../form-dialog-model';
+import { getAdmissionFormInitialValues, getAdmissionFormPrintSettings } from '../form-dialog-model';
 
 import type { BuilderIssueTarget } from '../form-builder-issue-navigation';
 
@@ -48,7 +45,7 @@ export function useAdmissionFormWizard({
   const [initialValues] = useState(() =>
     editing
       ? getAdmissionFormInitialValues(editing, initialPurpose)
-      : getBlankAdmissionFormInitialValues(initialPurpose)
+      : getNewAdmissionFormInitialValues(initialPurpose)
   );
   const submitting = useBoolean();
   const savingRef = useRef(false);
@@ -81,15 +78,19 @@ export function useAdmissionFormWizard({
         shikshaMitraToast.error({
           message: error.message,
           alertProps: (toastId) => ({
-            action: createElement(Button, {
-              size: 'small',
-              color: 'inherit',
-              onClick: () => {
-                shikshaMitraToast.dismiss(toastId);
-                setPublishIssueTarget(target);
-                setActiveStep(1);
+            action: createElement(
+              Button,
+              {
+                size: 'small',
+                color: 'inherit',
+                onClick: () => {
+                  shikshaMitraToast.dismiss(toastId);
+                  setPublishIssueTarget(target);
+                  setActiveStep(1);
+                },
               },
-            }, 'Go to field'),
+              'Go to field'
+            ),
           }),
         });
       } else {

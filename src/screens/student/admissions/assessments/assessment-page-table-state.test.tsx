@@ -14,9 +14,13 @@ import AdmissionAssessmentsScreen from '../admission-assessments';
 
 const mocks = vi.hoisted(() => ({
   book: false,
+  canViewApplication: false,
   setup: null as { scopes: any[] } | null,
   select: undefined as ((rows: any[], checked: boolean) => void) | undefined,
-  table: null as Pick<ICustomizableTableProps, 'filters' | 'onServerFilter' | 'onClearCriteria'> | null,
+  table: null as Pick<
+    ICustomizableTableProps,
+    'filters' | 'onServerFilter' | 'onClearCriteria'
+  > | null,
   workbench: {
     academic: { academicYearId: 'year', boardId: 'board-1', mediumId: 'medium-1', standardId: '' },
     scopes: {
@@ -43,7 +47,8 @@ const mocks = vi.hoisted(() => ({
     },
     applicants: {
       currentData: undefined as
-        { items: { applicantName: string }[]; totalCount: number } | undefined,
+        | { items: { applicantName: string; applicationId?: string }[]; totalCount: number }
+        | undefined,
       isError: false,
       isFetching: false,
       refetch: vi.fn(),
@@ -61,6 +66,24 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => mocks.canViewApplication }));
+vi.mock('../admission-application-detail', () => ({
+  default: ({ applicationId, presentation, returnTo, onClose }: any) => (
+    <div role="dialog" aria-label="Application workspace">
+      {applicationId} · {presentation} · {returnTo}
+      <button type="button" onClick={onClose}>
+        Close application
+      </button>
+    </div>
+  ),
+}));
+vi.mock('./assessment-workbench-drawers', () => ({
+  AssessmentApplicantDrawer: ({ row, onOpenApplication }: any) => (
+    <button type="button" onClick={() => onOpenApplication(row.applicationId)}>
+      Open application
+    </button>
+  ),
+}));
 vi.mock('./use-assessment-workspace-data', () => ({
   useAssessmentWorkspaceData: (_canView: boolean, pause: boolean) => ({
     ...mocks.workbench,
@@ -84,18 +107,25 @@ vi.mock('./assessment-applicant-table', () => ({
     onServerFilter,
     onClearCriteria,
     onSelectionChange,
+    onDetails,
   }: {
     items: { applicantName: string }[];
     errorContent?: ReactNode;
     noDataText?: ReactNode;
     onSelectionChange?: (rows: any[], checked: boolean) => void;
+    onDetails?: (row: any) => void;
   } & Pick<ICustomizableTableProps, 'filters' | 'onServerFilter' | 'onClearCriteria'>) => {
     mocks.table = { filters, onServerFilter, onClearCriteria };
     mocks.select = onSelectionChange;
     return (
       <div>
         {items.map((row) => (
-          <span key={row.applicantName}>{row.applicantName}</span>
+          <span key={row.applicantName}>
+            {row.applicantName}
+            <button type="button" onClick={() => onDetails?.(row)}>
+              View assessment
+            </button>
+          </span>
         ))}
         {errorContent || noDataText}
       </div>
@@ -150,6 +180,7 @@ beforeEach(() => {
   mocks.setup = null;
   mocks.workbench.academic.standardId = '';
   mocks.book = false;
+  mocks.canViewApplication = false;
   mocks.workbench.scopes.currentData = [];
   mocks.workbench.state.status = 'all';
   mocks.workbench.state.tab = 'applicants';
@@ -159,6 +190,27 @@ beforeEach(() => {
   mocks.workbench.applicants.isError = false;
   mocks.workbench.applicants.isFetching = false;
   mocks.workbench.applicants.currentData = undefined;
+});
+
+it('opens and closes the application in a drawer without leaving assessments', () => {
+  mocks.canViewApplication = true;
+  mocks.workbench.applicants.currentData = {
+    items: [{ applicantName: 'QA Student', applicationId: 'app-1' }],
+    totalCount: 1,
+  };
+  renderPage();
+  fireEvent.click(screen.getByRole('button', { name: 'View assessment' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Open application' }));
+  expect(screen.getByRole('dialog', { name: 'Application workspace' })).toHaveTextContent(
+    'app-1 · drawer'
+  );
+  expect(screen.getByRole('dialog', { name: 'Application workspace' })).toHaveTextContent(
+    '/student/admissions/assessments?'
+  );
+  expect(screen.getByRole('tab', { name: 'Student' })).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Close application' }));
+  expect(screen.queryByRole('dialog', { name: 'Application workspace' })).not.toBeInTheDocument();
+  expect(screen.getByRole('tab', { name: 'Student' })).toBeVisible();
 });
 
 it('keeps session setup within the selected Board and Medium while allowing every class in it', () => {
