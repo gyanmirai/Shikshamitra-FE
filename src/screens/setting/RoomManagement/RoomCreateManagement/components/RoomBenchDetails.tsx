@@ -1,4 +1,5 @@
 import { Grid, TextField } from '@mui/material';
+import { DetailField } from 'src/components/detail-view';
 import { FormSectionCard } from 'src/components/form-section-card';
 
 import { RoomColumnRows } from './RoomColumnRows';
@@ -61,21 +62,21 @@ export function RoomBenchDetails({ formik }: { formik: RoomFormik }) {
           <RoomColumnRows formik={formik} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField
-            fullWidth
-            size="small"
+          <DetailField
             label="Total benches"
-            value={total}
-            slotProps={{ input: { readOnly: true } }}
+            labelAppearance="standard"
+            value={<output aria-label="Total benches">{total}</output>}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField
-            fullWidth
-            size="small"
+          <DetailField
             label="Total student capacity"
-            value={total * Number(formik.values.benchCapacity)}
-            slotProps={{ input: { readOnly: true } }}
+            labelAppearance="standard"
+            value={
+              <output aria-label="Total student capacity">
+                {total * Number(formik.values.benchCapacity)}
+              </output>
+            }
           />
         </Grid>
       </Grid>

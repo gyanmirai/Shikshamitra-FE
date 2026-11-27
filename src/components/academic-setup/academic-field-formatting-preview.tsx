@@ -28,7 +28,7 @@ export function AcademicFieldFormattingPreview({ value, mode, disabled, onChange
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="stretch">
         <TextField
           size="small"
-          label="You type"
+          label="Example text"
           value={value}
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}

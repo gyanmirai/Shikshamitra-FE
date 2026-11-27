@@ -41,7 +41,7 @@ afterEach(async () => {
 
 it('selects every editable academic field and preserves the disabled official board code', async () => {
   renderAcademicOrder(<AcademicFieldFormattingPopover />, store);
-  fireEvent.click(screen.getByRole('button', { name: 'Field settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Field formatting' }));
   await screen.findByRole('radio', { name: /^Default/ });
   const dialog = screen.getByRole('dialog', { name: 'Field Formatting' });
   fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: 'Field' }));

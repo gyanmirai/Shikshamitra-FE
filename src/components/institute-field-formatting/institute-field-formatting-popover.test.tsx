@@ -44,12 +44,12 @@ it('shows a fresh-read error instead of opening stale cached settings', async ()
     )
   );
   renderAcademicOrder(<InstituteFieldFormattingPopover scope="buildings" />, store);
-  fireEvent.click(screen.getByRole('button', { name: 'Field settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Field formatting' }));
   await screen.findByRole('radio', { name: /^Default/ });
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   fail = true;
-  fireEvent.click(screen.getByRole('button', { name: 'Field settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Field formatting' }));
   await screen.findByText('Could not load formatting settings.');
   expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled();
   expect(screen.queryByRole('radio')).not.toBeInTheDocument();

@@ -14,7 +14,7 @@ import { test, expect } from '@playwright/test';
     await expect(
       page.getByRole('button', { name: 'Open Stage primary stage', exact: true })
     ).toBeVisible();
-    const trigger = page.getByRole('button', { name: 'Field settings', exact: true });
+    const trigger = page.getByRole('button', { name: 'Field formatting', exact: true });
     await trigger.click();
     const popover = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
     await expect(popover).toBeVisible();
@@ -36,7 +36,7 @@ import { test, expect } from '@playwright/test';
     await popover.getByRole('button', { name: 'Submit', exact: true }).click();
     await expect(popover).toHaveCount(0);
     await page.reload();
-    await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+    await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
     await expect(popover.getByRole('radio', { name: /^PascalCase/ })).toBeChecked();
     state = await (await request.get('/fixture/state')).json();
     expect(state.rules.stage).toBe(3);
@@ -65,7 +65,7 @@ test('Select All formats editable academic fields while official board codes sta
 }) => {
   await request.post('/fixture/reset');
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
   await dialog.getByRole('combobox', { name: 'Field', exact: true }).click();
   await expect(page.getByRole('option', { name: /Board name/ })).toBeDisabled();
@@ -84,7 +84,7 @@ test('view-only school user does not receive the settings action', async ({ page
   await request.post('/fixture/reset');
   await page.goto('/?access=view');
   await expect(page.getByRole('heading', { name: 'Academic Setup', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Field settings', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Field formatting', exact: true })).toHaveCount(0);
   const state = await (await request.get('/fixture/state')).json();
   expect(state.writes).toEqual([]);
 });
@@ -95,7 +95,7 @@ test('Uppercase saves, previews Unicode, and keeps existing names unchanged', as
 }) => {
   await request.post('/fixture/reset');
   await page.goto('/');
-  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
   const popover = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
   await expect(popover.getByRole('radio', { name: /^Default/ })).toBeChecked();
   await popover.getByRole('radio', { name: /^Uppercase/ }).check();
@@ -105,9 +105,9 @@ test('Uppercase saves, previews Unicode, and keeps existing names unchanged', as
   await popover.getByRole('button', { name: 'Submit', exact: true }).click();
   await expect(popover).toHaveCount(0);
   await page.reload();
-  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
   await expect(popover.getByRole('radio', { name: /^Uppercase/ })).toBeChecked();
-  const input = popover.getByRole('textbox', { name: 'You type', exact: true });
+  const input = popover.getByRole('textbox', { name: 'Example text', exact: true });
   await input.fill('école primaire');
   await expect(popover.getByLabel('New entry will be saved as', { exact: true })).toHaveText(
     'ÉCOLE PRIMAIRE'
@@ -130,9 +130,9 @@ test('Unicode preview preserves raw input and uses the authoritative PascalCase 
 }) => {
   await request.post('/fixture/reset');
   await page.goto('/');
-  await page.getByRole('button', { name: 'Field settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Field formatting', exact: true }).click();
   const popover = page.getByRole('dialog', { name: 'Field Formatting', exact: true });
-  const input = popover.getByRole('textbox', { name: 'You type', exact: true });
+  const input = popover.getByRole('textbox', { name: 'Example text', exact: true });
   const output = popover.getByLabel('New entry will be saved as', { exact: true });
   await input.fill('ßeta');
   await expect(output).toHaveText('ßeta');

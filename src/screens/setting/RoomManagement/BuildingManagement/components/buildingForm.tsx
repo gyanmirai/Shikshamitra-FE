@@ -4,8 +4,8 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import SubmitButton from 'src/components/submit-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
-import { Box, Stack, Alert, Button, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Stack, Alert, Button, Typography, DialogActions } from '@mui/material';
 
 import { useBuildingForm } from './use-building-form';
 import { useBuildingClose } from './use-building-close';
@@ -48,7 +48,7 @@ const BuildingForm = (props: IBuildingFormProps) => {
             sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}
           >
             <DialogScrollContent>
-              <FormBusyRegion busy={formik.isSubmitting} label="Saving building...">
+              <FormBusyRegion busy={formik.isSaving} label="Saving building...">
                 <Stack spacing={2}>
                   {formik.usageError && (
                     <Alert
@@ -70,17 +70,22 @@ const BuildingForm = (props: IBuildingFormProps) => {
                     onDraggingChange={setIsDragging}
                   />
                   {editData && (
-                    <Box>
+                    <Stack spacing={0.5} alignItems="flex-start">
                       <Button
                         type="button"
                         size="small"
-                        disabled={formik.loadingUsage}
+                        disabled={formik.isSubmitting}
+                        loading={formik.loadingUsage}
+                        loadingPosition="start"
                         onClick={formik.refreshUsage}
                         startIcon={<Iconify icon={GlobalIcons.refresh} />}
                       >
                         Refresh room counts
                       </Button>
-                    </Box>
+                      <Typography variant="caption" color="text.secondary">
+                        Use after moving or deleting rooms to check which floors are still in use.
+                      </Typography>
+                    </Stack>
                   )}
                   {formik.status && <Alert severity="error">{formik.status}</Alert>}
                 </Stack>
@@ -98,8 +103,8 @@ const BuildingForm = (props: IBuildingFormProps) => {
                 Cancel
               </Button>
               <SubmitButton
-                loading={formik.isSubmitting || formik.loadingUsage}
-                disabled={formik.usageError}
+                loading={formik.isSaving}
+                disabled={formik.isSubmitting || formik.loadingUsage || formik.usageError}
                 startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
               />
             </DialogActions>

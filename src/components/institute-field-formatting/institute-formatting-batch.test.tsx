@@ -55,7 +55,7 @@ afterEach(async () => {
 
 async function open() {
   renderAcademicOrder(<InstituteFieldFormattingPopover scope="buildings" />, store);
-  fireEvent.click(screen.getByRole('button', { name: 'Field settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Field formatting' }));
   await screen.findByRole('radio', { name: /^Default/ });
   return screen.getByRole('dialog', { name: 'Field Formatting' });
 }

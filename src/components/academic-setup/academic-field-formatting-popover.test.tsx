@@ -28,7 +28,7 @@ const header = () => (
   />
 );
 const open = async () => {
-  fireEvent.click(screen.getByRole('button', { name: 'Field settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Field formatting' }));
   await screen.findByRole('radio', { name: /Default/ });
   return screen.getByRole('dialog', { name: 'Field Formatting' });
 };
@@ -57,11 +57,19 @@ afterEach(async () => {
 });
 
 describe('Academic Setup field formatting', () => {
+  it('labels the current breadcrumb Academic Setup', () => {
+    renderAcademicOrder(header(), store);
+
+    const breadcrumb = screen.getByRole('navigation');
+    expect(within(breadcrumb).getByText('Academic Setup')).toBeVisible();
+    expect(within(breadcrumb).getByRole('link', { name: 'Institute Setup' })).toBeVisible();
+  });
+
   it('opens a school settings popover with Default and preserves entered case', async () => {
     renderAcademicOrder(header(), store);
     const dialog = await open();
     expect(within(dialog).getByRole('radio', { name: /Default/ })).toBeChecked();
-    fireEvent.change(within(dialog).getByLabelText('You type'), {
+    fireEvent.change(within(dialog).getByLabelText('Example text'), {
       target: { value: 'mIxEd stage' },
     });
     expect(within(dialog).getByLabelText('New entry will be saved as')).toHaveTextContent(
@@ -120,13 +128,13 @@ describe('Academic Setup field formatting', () => {
     );
     renderAcademicOrder(header(), store);
     const dialog = await open();
-    fireEvent.change(within(dialog).getByLabelText('You type'), { target: { value: 'ßeta' } });
+    fireEvent.change(within(dialog).getByLabelText('Example text'), { target: { value: 'ßeta' } });
     fireEvent.click(within(dialog).getByRole('radio', { name: /PascalCase/ }));
     await waitFor(() =>
       expect(within(dialog).getByLabelText('New entry will be saved as')).toHaveTextContent('ßeta')
     );
     expect(requestBody).toEqual({ value: 'ßeta', textCase: 3 });
-    expect(within(dialog).getByLabelText('You type')).toHaveValue('ßeta');
+    expect(within(dialog).getByLabelText('Example text')).toHaveValue('ßeta');
   });
 
   it('preserves a failed draft for retry and guards dirty cancellation', async () => {
@@ -155,6 +163,6 @@ describe('Academic Setup field formatting', () => {
   it('hides school formatting settings without the edit permission', () => {
     store = createAcademicOrderStore(false);
     renderAcademicOrder(header(), store);
-    expect(screen.queryByRole('button', { name: 'Field settings' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Field formatting' })).not.toBeInTheDocument();
   });
 });

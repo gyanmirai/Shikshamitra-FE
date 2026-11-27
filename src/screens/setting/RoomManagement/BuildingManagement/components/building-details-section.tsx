@@ -6,6 +6,8 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useInstituteFieldPreview } from 'src/components/institute-field-formatting/use-institute-field-preview';
 
+import { BUILDING_DESCRIPTION_MAX_LENGTH, BUILDING_DESCRIPTION_LENGTH_ERROR } from './validationSchema';
+
 import type { IBuildingFormValues } from '../types';
 
 export function BuildingDetailsSection({
@@ -30,9 +32,8 @@ export function BuildingDetailsSection({
   const nameError = Boolean(
     (formik.touched.buildingName || formik.submitCount > 0) && formik.errors.buildingName
   );
-  const descriptionError = Boolean(
-    (formik.touched.description || formik.submitCount > 0) && formik.errors.description
-  );
+  const descriptionLength = formik.values.description.length;
+  const descriptionError = descriptionLength > BUILDING_DESCRIPTION_MAX_LENGTH;
   return (
     <FormSectionCard
       icon={GlobalIcons.building}
@@ -72,10 +73,11 @@ export function BuildingDetailsSection({
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           error={descriptionError}
+          slotProps={{ htmlInput: { maxLength: BUILDING_DESCRIPTION_MAX_LENGTH } }}
           helperText={
             descriptionError
-              ? formik.errors.description
-              : descriptionPreview || `${formik.values.description.length}/500 characters`
+              ? BUILDING_DESCRIPTION_LENGTH_ERROR
+              : descriptionPreview || `${descriptionLength}/${BUILDING_DESCRIPTION_MAX_LENGTH} characters`
           }
         />
       </Stack>

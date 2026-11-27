@@ -26,8 +26,8 @@ export function useBuildingForm({ editData, onClose, onBusyChange }: IBuildingFo
     ...floor,
     roomCount: conflictCounts[floor.id] ?? floor.roomCount,
   }));
-  const [addBuilding] = useAddBuildingMutation();
-  const [updateBuilding] = useUpdateBuildingMutation();
+  const [addBuilding, { isLoading: isAdding }] = useAddBuildingMutation();
+  const [updateBuilding, { isLoading: isUpdating }] = useUpdateBuildingMutation();
   const saving = useRef(false);
   const focusedSubmit = useRef(0);
   const formik = useFormik({
@@ -92,6 +92,7 @@ export function useBuildingForm({ editData, onClose, onBusyChange }: IBuildingFo
 
   return {
     ...formik,
+    isSaving: isAdding || isUpdating,
     occupiedFloorIds: new Set(floors.filter((floor) => (floor.roomCount ?? 0) > 0).map((floor) => floor.id)),
     loadingUsage: Boolean(editData && usage.isFetching),
     usageError: Boolean(editData && usage.isError),

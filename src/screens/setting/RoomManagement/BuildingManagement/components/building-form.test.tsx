@@ -3,7 +3,7 @@ import { mswServer } from 'src/test/mswServer';
 import { _api as iconifyApi } from '@iconify/react';
 import { vi, it, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { screen, waitFor, fireEvent } from '@testing-library/react';
+import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { renderBuildingForm, createBuildingFormStore } from './building-form-test-utils';
 
@@ -51,6 +51,58 @@ it('blocks an invalid decrease next to the floor field without submitting', asyn
   expect(await screen.findByText('Floor must have at least 1 room')).toBeInTheDocument();
   expect(writes).toBe(0);
   expect(onClose).not.toHaveBeenCalled();
+});
+
+it('shows an over-limit description immediately and preserves it for correction', async () => {
+  const overLimit = 'a'.repeat(532);
+  renderBuildingForm(createBuildingFormStore(), onClose, { ...building, description: overLimit });
+  const description = screen.getByRole('textbox', { name: 'Description' });
+
+  expect(description).toHaveValue(overLimit);
+  expect(description).toHaveAttribute('maxlength', '500');
+  expect(description).toHaveAccessibleDescription('Use 500 characters or fewer');
+  expect(description).toBeInvalid();
+  fireEvent.change(description, { target: { value: 'a'.repeat(500) } });
+  await waitFor(() => expect(description).toBeValid());
+  expect(description).toHaveAccessibleDescription('500/500 characters');
+});
+
+it('shows progress on Refresh room counts and on Submit only for their own requests', async () => {
+  const refreshResponse = Promise.withResolvers<void>();
+  const saveResponse = Promise.withResolvers<void>();
+  let refreshRequested = false;
+  mswServer.use(
+    http.get('*/api/institute-setup/buildings/1', async () => {
+      if (refreshRequested) await refreshResponse.promise;
+      return HttpResponse.json(building);
+    }),
+    http.put('*/api/institute-setup/buildings/1', async () => {
+      await saveResponse.promise;
+      return HttpResponse.json(building);
+    })
+  );
+  renderBuildingForm(createBuildingFormStore(), onClose, building, null, false);
+  const submit = screen.getByRole('button', { name: 'Submit' });
+  const refresh = screen.getByRole('button', { name: 'Refresh room counts' });
+  try {
+    await waitFor(() => expect(submit).toBeEnabled(), { timeout: 5000 });
+    refreshRequested = true;
+    fireEvent.click(refresh);
+    expect(await within(refresh).findByRole('progressbar')).toBeInTheDocument();
+    expect(submit).toBeDisabled();
+    expect(within(submit).queryByRole('progressbar')).not.toBeInTheDocument();
+    refreshResponse.resolve();
+
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    expect(await within(submit).findByRole('progressbar')).toBeInTheDocument();
+    expect(within(refresh).queryByRole('progressbar')).not.toBeInTheDocument();
+    saveResponse.resolve();
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  } finally {
+    refreshResponse.resolve();
+    saveResponse.resolve();
+  }
 });
 
 it('allows editing another field after focusing an invalid submission', async () => {

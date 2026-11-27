@@ -227,6 +227,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     serverSidePagination: serverSidePagination || !isPagination,
     searchableFields,
   });
+  const isEmpty = !isLoading && !errorContent && paginatedData.length === 0;
 
   const rowsPerPageOptions = useMemo(() => {
     if (configuredRowsPerPageOptions) {
@@ -686,6 +687,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             )}
             <TableContainer
               component={Scrollbar}
+              fillContent={isEmpty}
               sx={{
                 flex: 1,
                 minHeight: 0,
@@ -710,6 +712,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 aria-busy={(isLoading || isRefreshing) && !errorContent ? true : undefined}
                 size={dense ? 'small' : 'medium'}
                 sx={{
+                  flexGrow: isEmpty ? 1 : undefined,
                   height:
                     summaryRow && !isLoading && !errorContent && paginatedData.length
                       ? '100%'
@@ -956,6 +959,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       headerRefs,
       getStickyStyle,
       isLoading,
+      isEmpty,
       isRefreshing,
       refreshIndicator,
       refreshLabel,

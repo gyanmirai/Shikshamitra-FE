@@ -1,5 +1,5 @@
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import ChargesTable from './ChargesTable';
 
@@ -45,6 +45,7 @@ vi.mock('src/components/customizabaleTable', () => ({
     mocks.table(props);
     return (
       <div>
+        {props.data.length === 0 && props.noDataText}
         {props.data.map((row: any) => (
           <div key={row.chargeId}>
             {props.columns
@@ -72,7 +73,6 @@ vi.mock('src/components/adaptive-three-dots-actions', () => ({
 const props = {
   onView: vi.fn(),
   onEdit: vi.fn(),
-  onAddCharge: vi.fn(),
   onApprove: vi.fn(),
   onReject: vi.fn(),
   onVoid: vi.fn(),
@@ -110,6 +110,29 @@ describe('Charge lifecycle inbox', () => {
       isLoading: false,
       isFetching: false,
     }));
+  });
+
+  it('uses the page Add Charge action below the empty message', () => {
+    mocks.query.mockReturnValue({ data: { items: [], totalCount: 0 } });
+    const openCharge = vi.fn();
+    render(
+      <ChargesTable
+        {...props}
+        selectedTab={0}
+        primaryAction={
+          <button type="button" onClick={openCharge}>
+            Add Charge
+          </button>
+        }
+      />
+    );
+
+    const emptyMessage = screen.getByText('No charges found.');
+    const emptyAction = within(emptyMessage.parentElement!).getByRole('button', {
+      name: 'Add Charge',
+    });
+    fireEvent.click(emptyAction);
+    expect(openCharge).toHaveBeenCalledOnce();
   });
 
   it('shows all four server counts and queries the selected lifecycle', async () => {
