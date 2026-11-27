@@ -93,6 +93,7 @@ type Options = {
   locked?: boolean;
   columnTypes?: Record<string, FieldType>;
   genericSearch?: boolean;
+  freshnessSeconds?: number;
 };
 
 /** Keep existing screen mappers and mutation workflows. Active criteria read the complete,
@@ -115,7 +116,10 @@ export function useHrTableQuery<T extends object>(options: Options, original: T)
       offset: options.page * options.size,
       size: options.size,
     },
-    { skip: !active || options.skip, refetchOnMountOrArgChange: true }
+    {
+      skip: !active || options.skip,
+      refetchOnMountOrArgChange: options.freshnessSeconds ?? true,
+    }
   );
   const tableProps: Pick<
     ICustomizableTableProps,

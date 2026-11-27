@@ -94,5 +94,5 @@ export default defineConfig({
     'process.env': JSON.stringify({ NEXT_PUBLIC_API_URL: '', BUILD_STATIC_EXPORT: 'false' }),
   },
   esbuild: { jsx: 'automatic' },
-  server: { host: '127.0.0.1', port: 5197, strictPort: true, fs: { allow: [repo] } },
+  server: { host: '127.0.0.1', port: 5198, strictPort: true, fs: { allow: [repo] } },
 });

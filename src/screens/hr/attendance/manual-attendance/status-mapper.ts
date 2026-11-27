@@ -323,12 +323,12 @@ export const isManualAttendanceRowDirty = (
 export const getDirtyManualAttendanceRows = <TRow extends ManualAttendanceSaveRow>(
   rows: TRow[],
   originalRows: ManualAttendanceSaveRow[]
-) =>
-  rows.filter((row) => {
-    const rowId = row.employeeId || row.id;
-    const original = originalRows.find((item) => (item.employeeId || item.id) === rowId);
-    return isManualAttendanceRowDirty(row, original);
-  });
+) => {
+  const originalsByStaff = new Map(originalRows.map((row) => [row.employeeId || row.id, row]));
+  return rows.filter((row) =>
+    isManualAttendanceRowDirty(row, originalsByStaff.get(row.employeeId || row.id))
+  );
+};
 
 export const toAttendanceTableTimeValue = (value?: string | null) => {
   if (!value) return '';
