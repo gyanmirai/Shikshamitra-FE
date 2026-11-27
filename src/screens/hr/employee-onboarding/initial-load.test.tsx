@@ -3,11 +3,18 @@ import { api } from 'src/redux/service';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
+import { employeeApi } from 'src/redux/hr/employeeApi';
+import { hrPermissions } from 'src/constants/hr-menus';
 import { it, vi, expect, afterEach, beforeEach } from 'vitest';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
 import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import EmployeeOnboardingScreen from './index';
+import {
+  staffDirectoryQuery,
+  initialStaffDirectoryFilters,
+  staffDirectoryCacheFreshnessSeconds,
+} from '../employee/staff-directory-query';
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
@@ -56,23 +63,29 @@ vi.mock('src/components/customizabaleTable', () => ({
   ),
 }));
 
-let store: ReturnType<typeof configureStore>;
 let requests: URL[];
+let directoryRequests: URL[];
 let fail: boolean;
 let filterBodies: any[];
-beforeEach(() => {
-  clearCachedAuthSession();
-  requests = [];
-  filterBodies = [];
-  fail = false;
-  store = configureStore({
+
+const createTestStore = (permissions: { name: string; isGranted: boolean }[]) =>
+  configureStore({
     reducer: {
       [api.reducerPath]: api.reducer,
-      auth: (): { permissions: unknown[] } => ({ permissions: [] }),
+      auth: (): { permissions: typeof permissions } => ({ permissions }),
       globalState: (): { currentYear: { id: string } } => ({ currentYear: { id: 'year' } }),
     },
     middleware: (getDefault) => getDefault().concat(api.middleware),
   });
+
+let store: ReturnType<typeof createTestStore>;
+
+beforeEach(() => {
+  clearCachedAuthSession();
+  requests = [];
+  directoryRequests = [];
+  filterBodies = [];
+  fail = false;
   mswServer.use(
     http.get('*/api/auth/session', () => HttpResponse.json({ accessToken: 'synthetic-token' })),
     http.get('*/api/employee-applications', ({ request }) => {
@@ -91,6 +104,10 @@ beforeEach(() => {
             ],
           });
     }),
+    http.get('*/api/employees', ({ request }) => {
+      directoryRequests.push(new URL(request.url));
+      return HttpResponse.json({ totalCount: 1, items: [{ id: 'staff' }] });
+    }),
     http.post('*/api/hr/table-query', async ({ request }) => {
       filterBodies.push(await request.json());
       return fail
@@ -107,15 +124,17 @@ afterEach(() => {
   store.dispatch(api.util.resetApiState());
   clearCachedAuthSession();
 });
-const mount = () =>
-  render(
+const mount = (permissions: Parameters<typeof createTestStore>[0] = []) => {
+  store = createTestStore(permissions);
+  return render(
     <Provider store={store}>
       <EmployeeOnboardingScreen />
     </Provider>
   );
+};
 
-it('loads one paged request without detail, export, lookup, or salary reads; search resets paging', async () => {
-  mount();
+it('loads the application list without directory View access and resets paging on search', async () => {
+  mount([{ name: hrPermissions.employee.list, isGranted: true }]);
   expect(await screen.findByText('Page 0')).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Staff Onboarding' })).toBeInTheDocument();
   expect(requests).toHaveLength(1);
@@ -127,6 +146,27 @@ it('loads one paged request without detail, export, lookup, or salary reads; sea
   expect(await screen.findByText('Page 0')).toBeInTheDocument();
   expect(requests.at(-1)?.searchParams.get('search')).toBe('teacher');
   expect(requests.at(-1)?.searchParams.get('skipCount')).toBe('0');
+  expect(directoryRequests).toHaveLength(0);
+});
+
+it('prefetches the first directory page into the same cache used on navigation', async () => {
+  const query = staffDirectoryQuery(initialStaffDirectoryFilters);
+  mount([{ name: `${hrPermissions.employee.list}.View`, isGranted: true }]);
+
+  await waitFor(() => {
+    expect(employeeApi.endpoints.getEmployee.select(query)(store.getState()).data).toEqual({
+      totalCount: 1,
+      items: [{ id: 'staff' }],
+    });
+  });
+  const subscription = store.dispatch(
+    employeeApi.endpoints.getEmployee.initiate(query, {
+      forceRefetch: staffDirectoryCacheFreshnessSeconds,
+    })
+  );
+  await subscription.unwrap();
+  subscription.unsubscribe();
+  expect(directoryRequests.map((url) => url.search)).toEqual(['?page=1&pageSize=10']);
 });
 
 it('keeps list errors explicit and retries the owning query', async () => {

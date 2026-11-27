@@ -33,12 +33,8 @@ import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { RoleColorIndicator } from 'src/components/role-color/RoleColorIndicator';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
+import { useGetEmployeeQuery, useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
-import {
-  useGetEmployeeQuery,
-  useGetEmployeeByIdQuery,
-  normalizeIsTeachingFilter,
-} from 'src/redux/hr/employeeApi';
 import {
   EmployeeStatusType,
   EmployeeStatusTypeColor,
@@ -67,6 +63,11 @@ import ChangeStatusForm from './chnage-status-form';
 import { getEmployeeStatusDisplayValue } from './employee-status-display';
 import { salaryEditorHref } from '../payroll/structure/salary-editor-navigation';
 import { withStaffDirectoryCapabilities } from './staff-directory-column-capabilities';
+import {
+  staffDirectoryQuery,
+  initialStaffDirectoryFilters,
+  staffDirectoryCacheFreshnessSeconds,
+} from './staff-directory-query';
 
 const EmployeeFrom = dynamic(() => import('./employee-form'), {
   loading: () => <LoadingScreen />,
@@ -121,12 +122,7 @@ const HrEmployee = () => {
   }, [open]);
 
   const [employeeParams, setEmployeeParams] = useState({
-    page: 1,
-    pageSize: 10,
-    search: '',
-    mediumStageId: 'All',
-    isTeaching: 'All',
-    status: 'All',
+    ...initialStaffDirectoryFilters,
     reportingManagerStatus: searchParams.reportingManagerStatus || '',
   });
 
@@ -183,17 +179,8 @@ const HrEmployee = () => {
     setEmployeeParams((pre) => ({ ...pre, page: 1, search }));
   }, []);
 
-  // Process params for API - convert 'All' to empty string
   const processedEmployeeParams = useMemo(
-    () => ({
-      page: employeeParams.page,
-      pageSize: employeeParams.pageSize,
-      search: employeeParams.search,
-      mediumStageId: employeeParams.mediumStageId === 'All' ? '' : employeeParams.mediumStageId,
-      isTeaching: normalizeIsTeachingFilter(employeeParams.isTeaching),
-      status: employeeParams.status === 'All' ? '' : employeeParams.status,
-      reportingManagerStatus: employeeParams.reportingManagerStatus,
-    }),
+    () => staffDirectoryQuery(employeeParams),
     [employeeParams]
   );
 
@@ -218,7 +205,7 @@ const HrEmployee = () => {
       params: processedEmployeeParams,
       options: {
         skip: open || Boolean(searchParams.employee),
-        refetchOnMountOrArgChange: 30,
+        refetchOnMountOrArgChange: staffDirectoryCacheFreshnessSeconds,
       },
     })
   );
