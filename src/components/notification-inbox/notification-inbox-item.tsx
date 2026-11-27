@@ -31,6 +31,7 @@ export function NotificationInboxRow({ item, owner, attention, onOpen }: {
   const mustAcknowledge = item.requiresAcknowledgement && !acknowledgedAt;
   const { title, message, isLessonPlan, link } = presentNotification(item);
   const isReportDownload = link !== null && academicReportDownload.test(link);
+  const hasSummaryActions = item.requiresReview || mustAcknowledge || isReportDownload || acknowledgedAt;
 
   async function changeItem(action: 'read' | 'acknowledge') {
     if (sending.current) return;
@@ -67,7 +68,10 @@ export function NotificationInboxRow({ item, owner, attention, onOpen }: {
             <Button ref={titleButton} size="small" color="inherit" aria-expanded={expanded} aria-controls={contentId}
               aria-describedby={!readAt ? `${contentId}-unread` : undefined}
               onClick={() => setExpanded((previous) => !previous)}
-              sx={{ minWidth: 0, px: 0, textAlign: 'left', whiteSpace: 'normal', overflowWrap: 'anywhere', fontWeight: readAt ? 600 : 700 }}>
+              sx={{
+                minWidth: 0, minHeight: 30, height: 'auto', maxWidth: 1, px: 0,
+                textAlign: 'left', whiteSpace: 'normal', overflowWrap: 'anywhere', fontWeight: readAt ? 600 : 700,
+              }}>
               {!readAt && <Box component="span" aria-hidden sx={{
                 mr: 0.75, width: 7, height: 7, borderRadius: '50%', bgcolor: 'primary.main', flexShrink: 0,
               }} />}
@@ -81,18 +85,24 @@ export function NotificationInboxRow({ item, owner, attention, onOpen }: {
           </Typography>
         </Stack>
         {!expanded && message && <Typography variant="body2" color="text.secondary" sx={{
-          display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', overflowWrap: 'anywhere',
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', overflowWrap: 'anywhere',
         }}>{message}</Typography>}
-        <Stack direction="row" flexWrap="wrap" gap={0.5}>
-          {item.requiresReview && <Button size="small" color="primary" aria-expanded={expanded} aria-controls={contentId}
-            onClick={() => setExpanded((previous) => !previous)} sx={{ px: 0 }}>
-            {expanded ? 'Hide feedback' : 'Review feedback'}
-          </Button>}
-          {mustAcknowledge && <Button size="small" color="primary" loading={mutation.isLoading}
-            onClick={() => changeItem('acknowledge')} sx={{ px: 0 }}>Acknowledge</Button>}
-          {isReportDownload && <Button size="small" component="a" href={link} sx={{ px: 0 }}>Download report</Button>}
-          {acknowledgedAt && <Label color="success" sx={{ alignSelf: 'center' }}>Acknowledged</Label>}
-        </Stack>
+        {hasSummaryActions && (
+          <Stack direction="row" flexWrap="wrap" gap={0.75} sx={{ mt: 0.5 }}>
+            {item.requiresReview && <Button size="small" color="primary" aria-expanded={expanded} aria-controls={contentId}
+              onClick={() => setExpanded((previous) => !previous)} sx={{ px: 0 }}>
+              {expanded ? 'Hide feedback' : 'Review feedback'}
+            </Button>}
+            {mustAcknowledge && <Button size="small" color="primary" loading={mutation.isLoading}
+              onClick={() => changeItem('acknowledge')} sx={{ px: 0 }}>Acknowledge</Button>}
+            {isReportDownload && (
+              <Button size="small" variant="soft" color="primary" component="a" href={link}>
+                Download report
+              </Button>
+            )}
+            {acknowledgedAt && <Label color="success" sx={{ alignSelf: 'center' }}>Acknowledged</Label>}
+          </Stack>
+        )}
         {error && <Alert severity="error" sx={{ mt: 0.5 }}>{error}</Alert>}
         <Box id={contentId} hidden={!expanded} sx={expanded ? { pb: 0.25 } : undefined}>
           {message && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{message}</Typography>}
