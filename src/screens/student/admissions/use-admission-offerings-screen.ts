@@ -172,6 +172,12 @@ export function useAdmissionOfferingsScreen() {
     filterState.filters.boardId,
     filterState.filters.mediumId
   );
+  const scopeLoading =
+    Boolean(cycle) &&
+    !hierarchyQuery.isError &&
+    (!hierarchyQuery.currentData ||
+      (!filterState.filters.boardId && hierarchy.boards.length > 0) ||
+      (!filterState.filters.mediumId && hierarchy.mediums.length > 0));
   const options = (items: { id: string; name: string }[]) =>
     items.map((item) => ({ value: item.id, label: item.name }));
   const columnOptions = {
@@ -315,6 +321,7 @@ export function useAdmissionOfferingsScreen() {
     offeringsQuery,
     rows,
     currentData,
+    scopeLoading,
     columnOptions,
     tableFilters,
     applyTableFilters,

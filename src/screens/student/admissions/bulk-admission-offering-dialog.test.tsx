@@ -297,6 +297,38 @@ describe('Bulk offering step navigation', () => {
     expect(mocks.preview).not.toHaveBeenCalled();
     expect(mocks.create).not.toHaveBeenCalled();
   }, 20000);
+  it('announces preview progress while waiting for the server', async () => {
+    const user = userEvent.setup();
+    const cycle = {
+      id: 'cycle-1',
+      name: 'General Admission',
+      academicYearId: 'year-1',
+      status: 1,
+      windowStatus: 1,
+      startDate: '2026-10-01',
+      endDate: '2026-10-31',
+    } as AdmissionCycle;
+    const preview = Promise.withResolvers<{ canCommit: boolean }>();
+    mocks.preview.mockReturnValue(preview.promise);
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <BulkAdmissionOfferingDialog open cycle={cycle} onClose={vi.fn()} />
+      </ThemeProvider>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Select Class 1' }));
+    await user.click(screen.getByRole('button', { name: 'Preview Offerings' }));
+    try {
+      expect(
+        await screen.findByRole('progressbar', { name: 'Preparing offering preview…' })
+      ).toBeVisible();
+      expect(mocks.create).not.toHaveBeenCalled();
+    } finally {
+      preview.resolve({ canCommit: false });
+      await screen.findByRole('heading', { name: 'Preview Offerings' });
+    }
+  });
+
   it('retains visible remote-select labels and selected IDs after Preview and Back', async () => {
     const user = userEvent.setup();
     mocks.preview.mockResolvedValue({ canCommit: false });

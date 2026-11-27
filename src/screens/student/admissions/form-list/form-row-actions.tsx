@@ -122,7 +122,7 @@ export function FormRowActions({
   return (
     <AdaptiveThreeDotsActions
       placement="right-top"
-      moreLabel={`More Actions `}
+      moreLabel={`More actions for ${form.name}, version ${form.version}`}
       directActionLimit={2}
       collapseOnOverflow={false}
       sx={{

@@ -96,8 +96,10 @@ export type SaveAdmissionIntakeSetupInput = {
 export type AdmissionPublicInquiryLink = {
   id: string;
   admissionCycleId: string;
+  admissionCycleName?: string | null;
   counsellorAssignmentProfileId: string | null;
   inquiryFormDefinitionId?: string | null;
+  inquiryFormName?: string | null;
   name: string;
   source: number;
   sourceDetail?: string | null;
@@ -109,7 +111,7 @@ export type AdmissionPublicInquiryLink = {
 
 export type CreateAdmissionPublicInquiryLink = Omit<
   AdmissionPublicInquiryLink,
-  'id' | 'isActive' | 'canCopy' | 'concurrencyStamp'
+  'id' | 'isActive' | 'canCopy' | 'concurrencyStamp' | 'admissionCycleName' | 'inquiryFormName'
 >;
 
 export type CreatedAdmissionPublicInquiryLink = AdmissionPublicInquiryLink & { token: string };
@@ -300,7 +302,14 @@ export const admissionIntakeProfilesApi = api.injectEndpoints({
               undefined,
               (links) => {
                 const index = links.findIndex((link) => link.id === data.id);
-                if (index !== -1) links[index] = data;
+                if (index !== -1) {
+                  const existing = links[index];
+                  links[index] = {
+                    ...data,
+                    admissionCycleName: data.admissionCycleName ?? existing.admissionCycleName,
+                    inquiryFormName: data.inquiryFormName ?? existing.inquiryFormName,
+                  };
+                }
               }
             )
           );

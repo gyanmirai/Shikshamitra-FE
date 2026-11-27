@@ -66,7 +66,7 @@ describe('Admissions settings row actions', () => {
     expect(handlers.onEdit).toHaveBeenCalledWith(row);
     expect(handlers.onDelete).toHaveBeenCalledWith(row);
     expect(screen.queryByRole('button', { name: 'Clone' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'More Actions' }));
+    await user.click(screen.getByRole('button', { name: 'More actions for ADM-G6' }));
     expect(screen.queryByRole('menuitem', { name: 'Clone' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Deactivate' })).toBeVisible();
     await user.click(screen.getByRole('menuitem', { name: 'Deactivate' }));
@@ -103,7 +103,7 @@ describe('Admissions settings row actions', () => {
     );
 
     expect(screen.queryByRole('button', { name: 'Activate' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'More Actions' }));
+    await user.click(screen.getByRole('button', { name: 'More actions for ADM-G7' }));
     await user.click(screen.getByRole('menuitem', { name: 'Resolve Activation Issues' }));
 
     expect(handlers.onToggleActive).toHaveBeenCalledWith(row);
@@ -139,8 +139,7 @@ describe('Admissions settings row actions', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'More Actions' }));
-    await user.click(screen.getByRole('menuitem', { name: 'Activate' }));
+    await user.click(screen.getByRole('button', { name: 'Activate' }));
 
     expect(handlers.onToggleActive).toHaveBeenCalledWith(row);
     expect(handlers.onEdit).not.toHaveBeenCalled();
@@ -161,6 +160,7 @@ describe('Admissions settings row actions', () => {
     const form = {
       id: 'form-1',
       name: 'Fresh admission',
+      version: 2,
       status: 0,
     } as AdmissionForm;
 
@@ -171,18 +171,24 @@ describe('Admissions settings row actions', () => {
     expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'More Actions' }));
+    await user.click(
+      screen.getByRole('button', { name: 'More actions for Fresh admission, version 2' })
+    );
     await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     expect(handlers.onDelete).toHaveBeenCalledOnce();
 
-    await user.click(screen.getByRole('button', { name: 'More Actions' }));
+    await user.click(
+      screen.getByRole('button', { name: 'More actions for Fresh admission, version 2' })
+    );
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
     expect(screen.queryByRole('menuitem', { name: 'Clone as Draft' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'History & Versions' })).toBeVisible();
     expect(
       screen.queryByRole('menuitem', { name: /approve|request changes/i })
     ).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'More Actions' }));
+    await user.click(
+      screen.getByRole('button', { name: 'More actions for Fresh admission, version 2' })
+    );
 
     rerender(
       <FormRowActions form={{ ...form, status: 1 }} canManage canPublish canDelete {...handlers} />
