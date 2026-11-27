@@ -160,6 +160,7 @@ export default function AdmissionOfferingsScreen() {
             }
             onClearFilters={screen.clearFilters}
             loading={
+              screen.scopeLoading ||
               screen.cyclesQuery.isLoading ||
               (screen.cyclesQuery.isFetching && !screen.cycles.length) ||
               (screen.offeringsQuery.isFetching && !screen.currentData)

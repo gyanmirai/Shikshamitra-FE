@@ -181,9 +181,11 @@ export function AdmissionPublicInquiryLinks({
   const [revoke, revokeState] = useRevokeAdmissionPublicInquiryLinkMutation();
   const [getCopyToken, copyTokenState] = useGetAdmissionPublicInquiryLinkCopyTokenMutation();
   const [regenerate, regenerateState] = useRegenerateAdmissionPublicInquiryLinkMutation();
-  // Existing links carry IDs, so their visible labels need these lookups even in read-only lists.
-  const needsPeriodLabels = Boolean(links.currentData?.length);
-  const needsFormLabels = Boolean(links.currentData?.some((link) => link.inquiryFormDefinitionId));
+  // Older API deployments return only IDs for saved links.
+  const needsPeriodLabels = links.currentData?.some((link) => link.admissionCycleName == null);
+  const needsFormLabels = links.currentData?.some(
+    (link) => link.inquiryFormDefinitionId && link.inquiryFormName == null
+  );
   const cycles = useGetAdmissionCyclesQuery(
     { maxResultCount: 100, skipCount: 0 },
     { skip: !createOpen && !needsPeriodLabels }
@@ -499,18 +501,27 @@ export function AdmissionPublicInquiryLinks({
     .reverse()
     .map((link) => listedLinks.find((listed) => listed.id === link.id) ?? link);
   const visibleLinks = [...recentLinks, ...listedLinks.filter((link) => !createdLinks[link.id])];
+  const periodNames = new Map(cycles.data?.items.map((cycle) => [cycle.id, cycle.name]));
+  const formNames = new Map(publishedForms.map((form) => [form.id, form.name]));
   const rows: LinkRow[] = visibleLinks.map((link) => {
     const expired = Boolean(link.expiresAtUtc && Date.parse(link.expiresAtUtc) <= Date.now());
+    const periodName = link.admissionCycleName ?? periodNames.get(link.admissionCycleId);
+    const formName = link.inquiryFormDefinitionId
+      ? (link.inquiryFormName ?? formNames.get(link.inquiryFormDefinitionId))
+      : 'Offering inquiry form';
     return {
       ...link,
       sourceDisplay: `${INQUIRY_SOURCE_OPTIONS.find((item) => item.value === link.source)?.label ?? 'Source'}${link.sourceDetail ? ` · ${link.sourceDetail}` : ''}`,
       periodName:
-        cycles.data?.items.find((cycle) => cycle.id === link.admissionCycleId)?.name ??
-        'Admission period unavailable',
-      formName: link.inquiryFormDefinitionId
-        ? (publishedForms.find((form) => form.id === link.inquiryFormDefinitionId)?.name ??
-          'Inquiry form unavailable')
-        : 'Offering inquiry form',
+        periodName ||
+        (periodName == null && (cycles.isLoading || cycles.isFetching)
+          ? 'Loading admission period…'
+          : 'Admission period unavailable'),
+      formName:
+        formName ||
+        (formName == null && (forms.isLoading || forms.isFetching)
+          ? 'Loading inquiry form…'
+          : 'Inquiry form unavailable'),
       status: link.isActive ? (expired ? 'Expired' : 'Active') : 'Revoked',
     };
   });

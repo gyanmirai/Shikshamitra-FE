@@ -69,7 +69,7 @@ export function AdmissionOfferingRowActions({ row, ...actions }: Props) {
   return (
     <AdaptiveThreeDotsActions
       placement="right-top"
-      moreLabel="More Actions"
+      moreLabel={`More actions for ${row.code}`}
       directActionLimit={2}
       collapseOnOverflow={false}
       sx={{

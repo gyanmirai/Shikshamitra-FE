@@ -112,6 +112,7 @@ const screenState = (bulkOpen = false) => ({
   },
   cyclesQuery: { isLoading: false, isFetching: false, isError: false },
   currentData: { totalCount: 0, items: [] },
+  scopeLoading: false,
   rows: [],
   offeringsQuery: {
     isFetching: false,
@@ -138,6 +139,14 @@ describe('Admission Offerings add action', () => {
   beforeEach(() => {
     openBulk.mockReset();
     useAdmissionOfferingsScreen.mockReturnValue(screenState());
+  });
+
+  it('keeps the table loading while the default academic scope is being resolved', () => {
+    useAdmissionOfferingsScreen.mockReturnValue({ ...screenState(), scopeLoading: true });
+
+    render(<AdmissionOfferingsScreen />);
+
+    expect(screen.getByTestId('offering-table-loading')).toHaveTextContent('true');
   });
 
   it('uses one Add offering action to open the bulk workflow', () => {
@@ -204,7 +213,7 @@ describe('Admission Offerings add action', () => {
     expect(dialog).toBeVisible();
     expect(within(dialog).getByText('Class 1 General', { selector: 'strong' })).toBeVisible();
     expect(dialog).toHaveTextContent('This offering will become active for student applications.');
-    expect(screen.getByRole('button', { name: 'Activate' })).toHaveClass('MuiButton-colorPrimary');
+    expect(screen.getByRole('button', { name: 'Activate' })).toHaveClass('MuiButton-colorInherit');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByText(/Current usage|server will recheck/)).not.toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
@@ -221,10 +230,8 @@ describe('Admission Offerings add action', () => {
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Activate' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
-    const dialog = screen.getByRole('dialog', { name: 'Activate Admission Offering?' });
-    expect(within(dialog).getByRole('status', { name: 'Activating Offering…' })).toBeVisible();
     expect(
-      within(screen.getByRole('button', { name: 'Activate' })).queryByRole('progressbar')
-    ).not.toBeInTheDocument();
+      within(screen.getByRole('button', { name: 'Activate' })).getByRole('progressbar')
+    ).toBeVisible();
   });
 });

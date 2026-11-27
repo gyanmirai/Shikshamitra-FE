@@ -801,6 +801,39 @@ describe('public inquiry link details and actions', () => {
     hooks.options.isError = false;
   });
 
+  it('uses resolved link labels without loading separate lookup lists', () => {
+    hooks.links = [
+      {
+        ...activeLink,
+        admissionCycleName: 'Resolved admission period',
+        inquiryFormName: 'Historical inquiry form',
+      },
+    ];
+    renderList();
+
+    expect(screen.getByRole('cell', { name: 'Resolved admission period' })).toBeVisible();
+    expect(screen.getByRole('cell', { name: 'Historical inquiry form' })).toBeVisible();
+    expect(hooks.cycleChoices).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+    expect(hooks.formChoices).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+  });
+
+  it('shows that legacy link labels are loading until the lookup resolves', () => {
+    hooks.forms.data.items = [];
+    hooks.forms.isLoading = true;
+    const { rerender } = renderList();
+
+    expect(screen.getByRole('cell', { name: 'Loading inquiry form…' })).toBeVisible();
+
+    hooks.forms.isLoading = false;
+    hooks.forms.data.items = [
+      { id: 'form-1', name: 'Inquiry form', version: 1, status: 1, purpose: 0 },
+    ];
+    rerender(
+      <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
+    );
+    expect(screen.getByRole('cell', { name: 'Inquiry form' })).toBeVisible();
+  });
+
   it('enables each data header filter on the complete returned list', () => {
     hooks.links = Array.from({ length: 25 }, (_, index) => ({
       ...activeLink,

@@ -188,6 +188,7 @@ export function BulkAdmissionOfferingDialog({
           showSaveButton={false}
           backButtonProps={{ sx: { ml: 'auto', '& + .MuiBox-root': { ml: 0 } } }}
           nextButtonLabel="Preview Offerings"
+          loadingLabel={activeStep === 0 ? 'Preparing offering preview…' : 'Creating offerings…'}
           finalButtonLabel={`Create ${selectedCount} Offering${selectedCount === 1 ? '' : 's'}`}
           disableSubmit={activeStep === 1 && !bulk.canSaveInactive}
           saveAndNextButtonProps={{
