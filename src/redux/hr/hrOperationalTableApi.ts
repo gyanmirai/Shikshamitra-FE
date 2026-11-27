@@ -1,6 +1,8 @@
 import { api } from 'src/redux/service';
 import { employeeType, workShiftType, payrollStructureType } from 'src/redux/tagTypes';
 
+import { markAttendanceReadTags } from './attendanceApi';
+
 import type { ReportTableCriteria } from './hrReportingWorkspaceApi';
 
 export function operationalTableTags(table: string) {
@@ -32,6 +34,7 @@ export function operationalTableTags(table: string) {
     case 'esi-employee-impact':
       return [payrollStructureType.statutoryScheme];
     case 'hr-manual-attendance':
+      return markAttendanceReadTags;
     case 'hr-attendance-register':
       return [employeeType.attendance];
     case 'hr-salary-documents':

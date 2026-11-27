@@ -36,7 +36,6 @@ import {
 import {
   APPROVED_LEAVE_EDIT_REASON,
   toAttendanceTableTimeValue,
-  isManualAttendanceRowDirty,
   restoreManualAttendanceRows,
   getDirtyManualAttendanceRows,
   canMutateManualAttendanceDay,
@@ -81,6 +80,8 @@ const segmentBtnBase = {
   borderRadius: '4px',
   transition: 'all 0.2s',
 };
+
+const attendanceCacheFreshnessSeconds = 30;
 
 const toAttendanceDateParam = (value: Dayjs | null) => (value ? value.format('YYYY-MM-DD') : '');
 
@@ -130,21 +131,17 @@ const ManualAttendanceScreen = () => {
   });
   const [query, setQuery] = useState({
     skipCount: 0,
-    maxResultCount: 50,
+    maxResultCount: 25,
     search: '',
     department: '',
     isTeaching: undefined as boolean | undefined,
   });
 
-  // Detect unsaved changes by comparing current data with original
-  const isDirty = useMemo(
-    () =>
-      employeeData.some((emp) => {
-        const original = originalDataRef.current.find((o: any) => o.id === emp.id);
-        return isManualAttendanceRowDirty(emp, original);
-      }),
+  const changedRows = useMemo(
+    () => getDirtyManualAttendanceRows(employeeData, originalDataRef.current),
     [employeeData]
   );
+  const isDirty = changedRows.length > 0;
 
   const exportTable = useHrTableExport('hr-manual-attendance', {
     attendanceDate: toAttendanceDateParam(date),
@@ -176,6 +173,7 @@ const ManualAttendanceScreen = () => {
       resetPage: () => setQuery((current) => ({ ...current, skipCount: 0 })),
       skip: !date,
       locked: isDirty,
+      freshnessSeconds: attendanceCacheFreshnessSeconds,
     },
     useQueryAndMutation({
       type: 'query',
@@ -188,7 +186,11 @@ const ManualAttendanceScreen = () => {
         skipCount: query.skipCount,
         maxResultCount: query.maxResultCount,
       },
-      options: { skip: !date },
+      options: {
+        skip: !date,
+        refetchOnMountOrArgChange: attendanceCacheFreshnessSeconds,
+      },
+      popupConfig: { error: false },
     })
   );
 
@@ -280,6 +282,7 @@ const ManualAttendanceScreen = () => {
   // Handle date change — intercept if dirty
   const handleDateChange = useCallback(
     (val: Dayjs | null) => {
+      if (toAttendanceDateParam(val) === toAttendanceDateParam(date)) return;
       if (isDirty) {
         setPendingDate(val);
         discardConfirmDialog.onTrue();
@@ -298,6 +301,7 @@ const ManualAttendanceScreen = () => {
       academicYearEnd,
       academicYearStart,
       clearDaySpecificState,
+      date,
       discardConfirmDialog,
       isDateOutsideAcademicYear,
       isDirty,
@@ -349,15 +353,10 @@ const ManualAttendanceScreen = () => {
     [employeeData]
   );
 
-  const dirtyRows = useMemo(
-    () =>
-      normalizeManualAttendanceRowsForSave(
-        getDirtyManualAttendanceRows(employeeData, originalDataRef.current)
-      ),
-    [employeeData]
-  );
+  const dirtyRows = useMemo(() => normalizeManualAttendanceRowsForSave(changedRows), [changedRows]);
   const timeIssuesByStaff = useMemo(
-    () => new Map(getTimeBasedAttendanceTimeIssues(dirtyRows).map((issue) => [issue.row.id, issue])),
+    () =>
+      new Map(getTimeBasedAttendanceTimeIssues(dirtyRows).map((issue) => [issue.row.id, issue])),
     [dirtyRows]
   );
 
@@ -870,11 +869,11 @@ const ManualAttendanceScreen = () => {
                               mt={1}
                               sx={{ fontStyle: 'italic', opacity: 0.8 }}
                             >
-                              Click ✓ to mark all as Present
+                              Click ✓ to mark this page as Present
                             </Typography>
                           </Box>
                         ) : (
-                          'Click ✓ to mark all as Present'
+                          'Click ✓ to mark this page as Present'
                         )
                       }
                       arrow
@@ -921,7 +920,7 @@ const ManualAttendanceScreen = () => {
                         STATUS.HalfDay,
                         'Half Day',
                         halfDayCount,
-                        'Click ½ to mark all as Half Day'
+                        'Click ½ to mark this page as Half Day'
                       )}
                       arrow
                       placement="top"
@@ -1038,11 +1037,11 @@ const ManualAttendanceScreen = () => {
                               mt={1}
                               sx={{ fontStyle: 'italic', opacity: 0.8 }}
                             >
-                              Click ✗ to mark all as Absent
+                              Click ✗ to mark this page as Absent
                             </Typography>
                           </Box>
                         ) : (
-                          'Click ✗ to mark all as Absent'
+                          'Click ✗ to mark this page as Absent'
                         )
                       }
                       arrow
@@ -1098,11 +1097,11 @@ const ManualAttendanceScreen = () => {
                     }}
                   >
                     {/* Mark all Present */}
-                    <CustomTooltip title="Mark all as Present" arrow placement="top">
+                    <CustomTooltip title="Mark this page as Present" arrow placement="top">
                       <Box
                         component="button"
                         type="button"
-                        aria-label="Mark all as Present"
+                        aria-label="Mark this page as Present"
                         data-testid="manual-attendance-mark-all-present"
                         aria-disabled={isBulkStatusDisabled(STATUS.Present)}
                         onClick={(e) => {
@@ -1132,11 +1131,11 @@ const ManualAttendanceScreen = () => {
                     </CustomTooltip>
 
                     {/* Mark all Half Day */}
-                    <CustomTooltip title="Mark all as Half Day" arrow placement="top">
+                    <CustomTooltip title="Mark this page as Half Day" arrow placement="top">
                       <Box
                         component="button"
                         type="button"
-                        aria-label="Mark all as Half Day"
+                        aria-label="Mark this page as Half Day"
                         data-testid="manual-attendance-mark-all-half-day"
                         aria-disabled={isBulkStatusDisabled(STATUS.HalfDay)}
                         onClick={(e) => {
@@ -1182,11 +1181,11 @@ const ManualAttendanceScreen = () => {
                     </Box>
 
                     {/* Mark all Absent */}
-                    <CustomTooltip title="Mark all as Absent" arrow placement="top">
+                    <CustomTooltip title="Mark this page as Absent" arrow placement="top">
                       <Box
                         component="button"
                         type="button"
-                        aria-label="Mark all as Absent"
+                        aria-label="Mark this page as Absent"
                         data-testid="manual-attendance-mark-all-absent"
                         aria-disabled={isBulkStatusDisabled(STATUS.Absent)}
                         onClick={(e) => {
@@ -1498,7 +1497,7 @@ const ManualAttendanceScreen = () => {
           { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
           { name: 'Mark Attendance' },
         ]}
-        description="Choose the date, then mark staff as Present, Half Day, or Absent. Pending can undo an unsaved mark; approved leave is managed through the leave request."
+        description="Choose a date and mark each staff member. Bulk actions apply to the current page."
       />
 
       {/* ── Top toolbar ── */}
@@ -1734,16 +1733,25 @@ const ManualAttendanceScreen = () => {
         page={Math.floor(query.skipCount / query.maxResultCount)}
         rowsPerPage={query.maxResultCount}
         serverSidePagination
-        isLoading={isLoading || isFetching || substitution.opening}
+        isLoading={substitution.opening || ((isLoading || isFetching) && !dayAttendanceData)}
+        isRefreshing={Boolean(dayAttendanceData) && isFetching}
         columns={columns}
         error={tableError}
         onRetry={refetchDayAttendance}
-        noDataText="No staff found for the selected date"
+        noDataText={
+          query.search ||
+          query.department ||
+          query.isTeaching !== undefined ||
+          operationalTableProps.filters?.length
+            ? 'No staff match the current filters'
+            : 'No staff found for the selected date'
+        }
         data={isError ? [] : employeeData}
         rowProps={rowProps}
         serverSide
         totalCount={isError ? 0 : dayAttendanceData?.totalCount || 0}
         onServerPagination={(page, rowsPerPage) => {
+          if (isDirty) return;
           setQuery((prev) => ({
             ...prev,
             skipCount: (page - 1) * rowsPerPage,
