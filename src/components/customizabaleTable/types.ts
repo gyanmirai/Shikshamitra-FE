@@ -143,6 +143,7 @@ export interface ICustomizableTableProps {
   isScrollbar?: boolean;
   isShowedDense?: boolean;
   rowProps?: (row: IData, index: number) => CustomizableTableRowProps;
+  getRowKey?: (row: IData) => string | number;
   renderExpandedRow?: (row: IData, index: number) => ReactNode;
   showToolbar?: boolean;
   tableId: string;

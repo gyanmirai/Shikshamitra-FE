@@ -97,6 +97,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   tableContainerProps = {},
   isShowedDense = true,
   rowProps = () => ({}),
+  getRowKey,
   renderExpandedRow,
   showToolbar = true,
   tableId,
@@ -342,10 +343,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   }, [tableUniqId]);
 
   const [filterAnchorEl, setFilterAnchorEl] = useState<IColumnFilterAnchor | null>(null);
-  const [expandedRows, setExpandedRows] = useState<{ [key: number]: boolean }>({});
+  const [expandedRows, setExpandedRows] = useState<Record<string | number, boolean>>({});
 
-  const handleExpandRow = useCallback((index: number) => {
-    setExpandedRows((prev) => ({ ...prev, [index]: !prev[index] }));
+  const handleExpandRow = useCallback((key: string | number) => {
+    setExpandedRows((prev) => ({ ...prev, [key]: prev[key] !== true }));
   }, []);
 
   const handlePageChange = useCallback(
@@ -711,6 +712,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   onRowClick={handleRowClick}
                   getRowAction={getRowAction}
                   rowProps={rowProps}
+                  getRowKey={getRowKey}
                   renderExpandedRow={renderExpandedRow}
                   expandedRows={expandedRows}
                   onExpandRow={handleExpandRow}
@@ -836,7 +838,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     labelDisplayedRows={
                       isLoading
                         ? () => 'Loading…'
-                        : paginationMode === 'unknown' ? () => `Page ${page + 1}` : undefined
+                        : paginationMode === 'unknown'
+                          ? () => `Page ${page + 1}`
+                          : undefined
                     }
                     slotProps={
                       paginationMode === 'unknown'
@@ -917,6 +921,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       handleRowClick,
       getRowAction,
       rowProps,
+      getRowKey,
       renderExpandedRow,
       showToolbar,
       expandedRows,

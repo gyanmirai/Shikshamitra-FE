@@ -9,11 +9,12 @@ import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
 import { useSearchParams } from 'next/navigation';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { durationHours } from 'src/screens/hr/utils/table-values';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -22,8 +23,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { useHrTableQuery } from 'src/screens/hr/hooks/use-hr-table-query';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
+import { useHrTableCriteria } from 'src/screens/hr/hooks/use-hr-table-query';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
@@ -40,7 +41,6 @@ import {
   Stack,
   Button,
   Select,
-  Divider,
   Collapse,
   Checkbox,
   MenuItem,
@@ -64,12 +64,7 @@ import {
 import type { AttendanceDraftErrors } from './adjustment-state';
 
 type RegisterStatus =
-  | 'NotMarked'
-  | 'Present'
-  | 'HalfDay'
-  | 'Absent'
-  | 'HalfDayLeave'
-  | 'FullDayLeave';
+  'NotMarked' | 'Present' | 'HalfDay' | 'Absent' | 'HalfDayLeave' | 'FullDayLeave';
 type PayrollState = 'All' | 'Editable' | 'Locked';
 type ExceptionFilter = 'All' | 'NeedsAttention' | 'Absent' | 'HalfDay' | 'MissingPunch' | 'Locked';
 
@@ -234,13 +229,40 @@ const getDefaultFilters = () => ({
   endDate: dayjs() as Dayjs | null,
   educationMediumStageIds: [] as string[],
   employeeId: '',
-  employeeGroup: 'all',
+  employeeGroup: 'all' as 'all' | 'Teaching' | 'NonTeaching',
   department: '',
-  status: 'all',
+  status: 'all' as 'all' | (typeof STATUS_OPTIONS)[number]['value'],
   payrollState: 'All' as PayrollState,
   exceptionFilter: 'All' as ExceptionFilter,
   search: '',
 });
+
+const MAX_REGISTER_DATE_SPAN = 366;
+const REGISTER_CACHE_FRESHNESS_SECONDS = 30;
+const REGISTER_SORT_COLUMNS = ['employeeName', 'present', 'employeeGroup', 'department'];
+
+function getDashboardFilters(start: string | null, end: string | null, employeeId: string | null) {
+  const startDate = dayjs(start);
+  const endDate = dayjs(end);
+  if (
+    !startDate.isValid() ||
+    !endDate.isValid() ||
+    startDate.format('YYYY-MM-DD') !== start ||
+    endDate.format('YYYY-MM-DD') !== end ||
+    endDate.isBefore(startDate, 'day') ||
+    endDate.diff(startDate, 'day') > MAX_REGISTER_DATE_SPAN
+  )
+    return null;
+
+  return {
+    startDate,
+    endDate,
+    employeeId:
+      employeeId && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(employeeId)
+        ? employeeId
+        : '',
+  };
+}
 
 type AttendanceDraft = {
   status: RegisterStatus;
@@ -253,28 +275,29 @@ type AttendanceDraft = {
 const AttendanceTrackingScreen = () => {
   const dashboardParams = useSearchParams();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [filters, setFilters] = useState(getDefaultFilters);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canAdjust = hasGrantedPermission(
+    permissions,
+    `${hrPermissions.attendance.attendanceTracking}.Add`
+  );
+  const dashboardStart = dashboardParams.get('startDate');
+  const dashboardEnd = dashboardParams.get('endDate');
+  const dashboardEmployee = dashboardParams.get('employeeId');
+  const dashboardFilters = useMemo(
+    () => getDashboardFilters(dashboardStart, dashboardEnd, dashboardEmployee),
+    [dashboardStart, dashboardEnd, dashboardEmployee]
+  );
+  const [filters, setFilters] = useState(() => ({ ...getDefaultFilters(), ...dashboardFilters }));
+  const appliedDashboardFilters = React.useRef(dashboardFilters);
   useEffect(() => {
-    const start = dashboardParams.get('startDate');
-    const end = dashboardParams.get('endDate');
-    const employeeId = dashboardParams.get('employeeId');
-    if (
-      start &&
-      end &&
-      dayjs(start).isValid() &&
-      dayjs(end).isValid() &&
-      dayjs(start).format('YYYY-MM-DD') === start &&
-      dayjs(end).format('YYYY-MM-DD') === end &&
-      !dayjs(end).isBefore(dayjs(start), 'day')
-    ) {
-      setFilters((previous) => ({
-        ...previous,
-        startDate: dayjs(start),
-        endDate: dayjs(end),
-        employeeId: employeeId && /^[a-f0-9-]{36}$/i.test(employeeId) ? employeeId : '',
-      }));
+    if (appliedDashboardFilters.current === dashboardFilters) return;
+    appliedDashboardFilters.current = dashboardFilters;
+    if (dashboardFilters) {
+      setFilters((previous) => ({ ...previous, ...dashboardFilters }));
+      setPage(1);
+      setSelectedIds([]);
     }
-  }, [dashboardParams]);
+  }, [dashboardFilters]);
   const [selectedEmployeeOption, setSelectedEmployeeOption] = useState<any | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -286,6 +309,8 @@ const AttendanceTrackingScreen = () => {
   const [isSavingAdjustment, setIsSavingAdjustment] = useState(false);
   const adjustmentInFlight = React.useRef(false);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  const [periodError, setPeriodError] = useState('');
+  const [departmentInput, setDepartmentInput] = useState('');
   const [draft, setDraft] = useState<AttendanceDraft>({
     status: 'Present' as RegisterStatus,
     inTime: '',
@@ -296,14 +321,14 @@ const AttendanceTrackingScreen = () => {
   const [draftErrors, setDraftErrors] = useState<AttendanceDraftErrors>({});
   const [adjustmentError, setAdjustmentError] = useState<string | null>(null);
   // A dashboard link carries an explicit date; let the register resolve that date's calendar.
-  const academicYearId =
-    filters.employeeId &&
-    filters.employeeId === dashboardParams.get('employeeId') &&
-    dashboardParams.get('startDate')
-      ? undefined
-      : currentYear?.id;
-  const { options: stages, isLoading: stagesLoading } =
-    useAcademicOrganizationOptions(academicYearId);
+  const isDashboardEmployee = Boolean(
+    filters.employeeId && filters.employeeId === dashboardFilters?.employeeId
+  );
+  const academicYearId = isDashboardEmployee ? undefined : currentYear?.id;
+  const { options: stages, isLoading: stagesLoading } = useAcademicOrganizationOptions(
+    academicYearId,
+    advancedFiltersOpen || filters.educationMediumStageIds.length > 0
+  );
   const [findEmployees] = useLazyGetEmployeeQuery();
   const fetchStaffOptions = useCallback(
     async (search: string, nextPage: number) => {
@@ -320,6 +345,7 @@ const AttendanceTrackingScreen = () => {
     [findEmployees]
   );
   const previousYear = React.useRef(academicYearId);
+  const changingYear = previousYear.current !== academicYearId;
   useEffect(() => {
     if (previousYear.current === academicYearId) return;
     previousYear.current = academicYearId;
@@ -335,8 +361,7 @@ const AttendanceTrackingScreen = () => {
       academicYearId,
       educationMediumStageIds: filters.educationMediumStageIds,
       employeeId: filters.employeeId,
-      employeeGroup:
-        filters.employeeGroup === 'all' ? undefined : filters.employeeGroup || undefined,
+      employeeGroup: filters.employeeGroup === 'all' ? undefined : filters.employeeGroup,
       department: filters.department,
       status: filters.status === 'all' ? undefined : filters.status,
       payrollState: filters.payrollState,
@@ -347,16 +372,6 @@ const AttendanceTrackingScreen = () => {
     }),
     [academicYearId, filters, page, pageSize]
   );
-
-  const exportTable = useHrTableExport('hr-attendance-register', queryParams);
-  const registerQuery = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetGroupedAttendanceRegisterQuery,
-    params: queryParams,
-    options: {
-      skip: !filters.startDate || !filters.endDate || (!academicYearId && !filters.employeeId),
-    },
-  });
 
   const [adjustAttendance, { isLoading: isAdjusting }] = useQueryAndMutation({
     type: 'mutation',
@@ -374,30 +389,43 @@ const AttendanceTrackingScreen = () => {
     isAdjusting,
     isBulkAdjusting,
   });
+  const missingYear = !academicYearId && !isDashboardEmployee;
+  const skipRegister = missingYear || changingYear;
+  const { active, filtered, nativeSort, tableProps } = useHrTableCriteria({
+    table: 'hr-attendance-register',
+    query: queryParams,
+    page: page - 1,
+    size: pageSize,
+    resetPage: () => {
+      setPage(1);
+      setSelectedIds([]);
+    },
+    skip: skipRegister,
+    locked: queryLocked,
+    freshnessSeconds: REGISTER_CACHE_FRESHNESS_SECONDS,
+    nativeSortColumns: REGISTER_SORT_COLUMNS,
+  });
+  const registerParams = { ...queryParams, sorting: nativeSort };
+  const registerQuery = useGetGroupedAttendanceRegisterQuery(registerParams, {
+    skip: skipRegister || active,
+    refetchOnMountOrArgChange: REGISTER_CACHE_FRESHNESS_SECONDS,
+    refetchOnReconnect: true,
+  });
   const {
-    currentData: data,
+    currentData,
     isLoading,
     isFetching,
     error: tableError,
     refetch: retryTable,
-    tableProps,
-  } = useHrTableQuery(
-    {
-      table: 'hr-attendance-register',
-      query: queryParams,
-      page: page - 1,
-      size: pageSize,
-      resetPage: () => {
-        setPage(1);
-        setSelectedIds([]);
-      },
-      skip: !filters.startDate || !filters.endDate || (!academicYearId && !filters.employeeId),
-      locked: queryLocked,
-    },
-    registerQuery
-  );
+  } = active ? filtered : registerQuery;
+  const data = currentData as
+    { items: GroupedAttendanceRegisterRow[]; totalCount: number } | undefined;
+  const exportRegister = useHrTableExport('hr-attendance-register', registerParams);
+  const exportTable = (request: Parameters<typeof exportRegister>[0]) =>
+    exportRegister(nativeSort ? { ...request, sorts: [] } : request);
+  const canEditRows = canAdjust && !isFetching && !tableError;
 
-  const rows = useMemo(() => (data?.items || []) as GroupedAttendanceRegisterRow[], [data?.items]);
+  const rows = useMemo(() => data?.items ?? [], [data?.items]);
   useEffect(() => {
     if (!filters.employeeId || selectedEmployeeOption?.id === filters.employeeId) return;
     const row = rows.find((item) => item.employeeId === filters.employeeId);
@@ -410,6 +438,7 @@ const AttendanceTrackingScreen = () => {
     setSelectedEmployeeOption(option);
   }, [rows, filters.employeeId, selectedEmployeeOption?.id]);
   const allDayRows = useMemo(() => rows.flatMap((row) => row.days || []), [rows]);
+  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const getDayIdentifier = useCallback(
     (day: AttendanceRegisterRow) => day.attendanceId || `${day.employeeId}_${day.attendanceDate}`,
     []
@@ -417,8 +446,11 @@ const AttendanceTrackingScreen = () => {
 
   const selectableDayRows = useMemo(() => allDayRows.filter((row) => row.canEdit), [allDayRows]);
   const selectedRows = useMemo(
-    () => allDayRows.filter((row) => selectedIds.includes(getDayIdentifier(row))),
-    [allDayRows, selectedIds, getDayIdentifier]
+    () =>
+      selectedIdSet.size
+        ? allDayRows.filter((row) => selectedIdSet.has(getDayIdentifier(row)))
+        : [],
+    [allDayRows, selectedIdSet, getDayIdentifier]
   );
   // Retain target identities through mutation-triggered query refreshes, including unmarked days.
   const bulkTargetRows = bulkRows ?? selectedRows;
@@ -446,7 +478,7 @@ const AttendanceTrackingScreen = () => {
     setSelectedIds([]);
   };
 
-  const setFilter = (key: keyof typeof filters, value: any) => {
+  const setFilter = <Key extends keyof typeof filters>(key: Key, value: (typeof filters)[Key]) => {
     if (queryLocked) return;
     setFilters((prev) => ({ ...prev, [key]: value }));
     resetPaging();
@@ -455,18 +487,42 @@ const AttendanceTrackingScreen = () => {
   const resetFilters = () => {
     if (queryLocked) return;
     setFilters(getDefaultFilters());
+    setDepartmentInput('');
+    setPeriodError('');
     setSelectedEmployeeOption(null);
+    resetPaging();
+  };
+  useEffect(() => {
+    const department = departmentInput.trim();
+    if (queryLocked || department === filters.department) return undefined;
+    const timer = setTimeout(() => {
+      setFilters((previous) => ({ ...previous, department }));
+      setPage(1);
+      setSelectedIds([]);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [departmentInput, filters.department, queryLocked]);
+
+  const setPeriod = ([startDate, endDate]: [Dayjs | null, Dayjs | null]) => {
+    if (queryLocked || !startDate?.isValid() || !endDate?.isValid()) return;
+    if (
+      endDate.isBefore(startDate, 'day') ||
+      endDate.diff(startDate, 'day') > MAX_REGISTER_DATE_SPAN
+    ) {
+      setPeriodError('Choose an end date within 366 days of the start date.');
+      return;
+    }
+    setPeriodError('');
+    if (startDate.isSame(filters.startDate, 'day') && endDate.isSame(filters.endDate, 'day'))
+      return;
+    setFilters((previous) => ({ ...previous, startDate, endDate }));
     resetPaging();
   };
   const shiftMonth = (offset: number) => {
     if (queryLocked || !filters.startDate) return;
     const month = filters.startDate.add(offset, 'month');
-    setFilters((prev) => ({
-      ...prev,
-      startDate: month.startOf('month'),
-      endDate: month.endOf('month'),
-    }));
-    resetPaging();
+    const now = dayjs();
+    setPeriod([month.startOf('month'), month.isSame(now, 'month') ? now : month.endOf('month')]);
   };
   const appliedFilters = [
     ...filters.educationMediumStageIds.map((id) => ({
@@ -504,12 +560,15 @@ const AttendanceTrackingScreen = () => {
       .map((key) => ({
         key,
         label: `${{ employeeGroup: 'Group', department: 'Department contains', status: 'Attendance status', payrollState: 'Payroll state', exceptionFilter: 'Exceptions', search: 'Search' }[key]}: ${key === 'status' ? statusMeta(filters[key]).label : key === 'exceptionFilter' ? EXCEPTION_FILTERS.find((option) => option.value === filters[key])?.label : key === 'employeeGroup' && filters[key] === 'NonTeaching' ? 'Non teaching' : filters[key]}`,
-        clear: () => setFilter(key, getDefaultFilters()[key]),
+        clear: () => {
+          if (key === 'department') setDepartmentInput('');
+          setFilter(key, getDefaultFilters()[key]);
+        },
       })),
   ];
 
   const openEdit = (row: AttendanceRegisterRow) => {
-    if (!row.canEdit) return;
+    if (!canEditRows || !row.canEdit) return;
     setEditRow(row);
     setDraftErrors({});
     setAdjustmentError(null);
@@ -628,16 +687,16 @@ const AttendanceTrackingScreen = () => {
   };
 
   const getEditableDayIds = (group: GroupedAttendanceRegisterRow) =>
-    (group.days || []).filter((day) => day.canEdit).map((day) => getDayIdentifier(day));
+    (group.days || []).filter((day) => day.canEdit).map(getDayIdentifier);
 
   const isGroupSelected = (group: GroupedAttendanceRegisterRow) => {
     const editableIds = getEditableDayIds(group);
-    return editableIds.length > 0 && editableIds.every((id) => selectedIds.includes(id));
+    return editableIds.length > 0 && editableIds.every((id) => selectedIdSet.has(id));
   };
 
   const isGroupIndeterminate = (group: GroupedAttendanceRegisterRow) => {
     const editableIds = getEditableDayIds(group);
-    const selectedEditableCount = editableIds.filter((id) => selectedIds.includes(id)).length;
+    const selectedEditableCount = editableIds.filter((id) => selectedIdSet.has(id)).length;
     return selectedEditableCount > 0 && selectedEditableCount < editableIds.length;
   };
 
@@ -658,6 +717,16 @@ const AttendanceTrackingScreen = () => {
     );
   };
 
+  const openBulk = (targets: AttendanceRegisterRow[]) => {
+    if (!canEditRows || !targets.some((row) => row.canEdit)) return;
+    setBulkRows(targets);
+    setBulkRetryBlocked(false);
+    setAdjustmentError(null);
+    setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });
+    setDraftErrors({});
+    setBulkOpen(true);
+  };
+
   const dayColumns: IColumn[] = [
     {
       id: 'select',
@@ -670,8 +739,8 @@ const AttendanceTrackingScreen = () => {
       render: (_value, row) => (
         <Checkbox
           size="small"
-          disabled={!row.canEdit}
-          checked={Boolean(selectedIds.includes(getDayIdentifier(row as AttendanceRegisterRow)))}
+          disabled={!canEditRows || !row.canEdit}
+          checked={selectedIdSet.has(getDayIdentifier(row as AttendanceRegisterRow))}
           onChange={(event) => {
             toggleDaySelection(
               getDayIdentifier(row as AttendanceRegisterRow),
@@ -887,7 +956,7 @@ const AttendanceTrackingScreen = () => {
               <Button
                 size="small"
                 variant="outlined"
-                disabled={!dayRow.canEdit}
+                disabled={!canEditRows || !dayRow.canEdit}
                 startIcon={<Iconify icon="solar:pen-bold" width={16} />}
                 onClick={() => openEdit(dayRow)}
               >
@@ -980,13 +1049,14 @@ const AttendanceTrackingScreen = () => {
           inputProps={{
             'aria-label': 'Select editable attendance on this page',
           }}
+          disabled={!canEditRows || !selectableDayRows.length}
           checked={
             selectableDayRows.length > 0 &&
-            selectableDayRows.every((row) => selectedIds.includes(getDayIdentifier(row)))
+            selectableDayRows.every((row) => selectedIdSet.has(getDayIdentifier(row)))
           }
           indeterminate={
             selectedIds.length > 0 &&
-            !selectableDayRows.every((row) => selectedIds.includes(getDayIdentifier(row)))
+            !selectableDayRows.every((row) => selectedIdSet.has(getDayIdentifier(row)))
           }
           onChange={(event) => {
             setSelectedIds(
@@ -1009,7 +1079,7 @@ const AttendanceTrackingScreen = () => {
       render: (_value, row: any) => (
         <Checkbox
           size="small"
-          disabled={getEditableDayIds(row).length === 0}
+          disabled={!canEditRows || getEditableDayIds(row).length === 0}
           inputProps={{
             'aria-label': `Select editable attendance for ${row.employeeName}`,
           }}
@@ -1111,8 +1181,8 @@ const AttendanceTrackingScreen = () => {
       enumOptions: [
         { label: 'Teaching', value: 'Teaching' },
         { label: 'Non teaching', value: 'NonTeaching' },
-        { label: 'Non teaching', value: 'Non teaching' },
       ],
+      render: (value) => (value === 'NonTeaching' ? 'Non teaching' : value),
       isSort: true,
       isFilter: true,
     },
@@ -1175,29 +1245,10 @@ const AttendanceTrackingScreen = () => {
             <IconButton
               size="small"
               aria-label={`Adjust attendance for ${row.employeeName || 'staff member'}`}
-              disabled={getEditableDayIds(row).length === 0}
-              onClick={() => {
-                toggleGroupSelection(row, true);
-                const groupIds = getEditableDayIds(row);
-                setBulkRows(
-                  allDayRows.filter(
-                    (day) =>
-                      selectedIds.includes(getDayIdentifier(day)) ||
-                      groupIds.includes(getDayIdentifier(day))
-                  )
-                );
-                setBulkRetryBlocked(false);
-                setAdjustmentError(null);
-                setDraft({
-                  status: 'Present',
-                  inTime: '',
-                  outTime: '',
-                  remarks: '',
-                  reason: '',
-                });
-                setDraftErrors({});
-                setBulkOpen(true);
-              }}
+              disabled={!canEditRows || getEditableDayIds(row).length === 0}
+              onClick={() =>
+                openBulk((row.days || []).filter((day: AttendanceRegisterRow) => day.canEdit))
+              }
             >
               <Iconify icon="solar:pen-2-bold" width={18} />
             </IconButton>
@@ -1442,28 +1493,17 @@ const AttendanceTrackingScreen = () => {
       <CustomBreadcrumbs
         layout="inline"
         action={
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<Iconify icon="solar:pen-2-bold" />}
-            disabled={!editableSelectedIds.length && !editableSelectedEmployeeDates.length}
-            onClick={() => {
-              setBulkRows(selectedRows);
-              setBulkRetryBlocked(false);
-              setAdjustmentError(null);
-              setDraft({
-                status: 'Present',
-                inTime: '',
-                outTime: '',
-                remarks: '',
-                reason: '',
-              });
-              setDraftErrors({});
-              setBulkOpen(true);
-            }}
-          >
-            Bulk adjust{selectedRows.length ? ` (${selectedRows.length})` : ''}
-          </Button>
+          canAdjust && (
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon="solar:pen-2-bold" />}
+              disabled={!canEditRows || !selectedRows.some((row) => row.canEdit)}
+              onClick={() => openBulk(selectedRows)}
+            >
+              Bulk adjust{selectedRows.length ? ` (${selectedRows.length})` : ''}
+            </Button>
+          )
         }
         heading="Attendance Register"
         description="Review staff attendance and resolve exceptions for the selected period."
@@ -1475,54 +1515,52 @@ const AttendanceTrackingScreen = () => {
 
       <Stack spacing={1} sx={{ px: 1, pb: 1, flexShrink: 0 }}>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-          <CustomTooltip title="Previous month">
-            <IconButton
-              size="small"
-              aria-label="Previous month"
-              disabled={!filters.startDate}
-              onClick={() => shiftMonth(-1)}
-            >
-              <Iconify icon="solar:alt-arrow-left-linear" />
-            </IconButton>
-          </CustomTooltip>
-          <Box sx={{ width: { xs: 'calc(100% - 80px)', sm: 290 }, minWidth: 0 }}>
-            <CustomDateRangePicker
-              label="Register period"
-              value={[filters.startDate, filters.endDate]}
-              dateFormat="DD/MM/YYYY"
-              onChange={(value) => {
-                if (queryLocked) return;
-                setFilters((prev) => ({
-                  ...prev,
-                  startDate: value[0],
-                  endDate: value[1],
-                }));
-                resetPaging();
-              }}
-            />
-          </Box>
-          <CustomTooltip title="Next month">
-            <IconButton
-              size="small"
-              aria-label="Next month"
-              disabled={!filters.startDate}
-              onClick={() => shiftMonth(1)}
-            >
-              <Iconify icon="solar:alt-arrow-right-linear" />
-            </IconButton>
-          </CustomTooltip>
+          <Stack
+            direction="row"
+            spacing={0.5}
+            alignItems="center"
+            role="group"
+            aria-label="Register period navigation"
+            sx={{ width: { xs: 1, sm: 'auto' }, minWidth: 0 }}
+          >
+            <CustomTooltip title="Previous month">
+              <IconButton
+                size="small"
+                aria-label="Previous month"
+                disabled={queryLocked}
+                onClick={() => shiftMonth(-1)}
+              >
+                <Iconify icon="solar:alt-arrow-left-linear" />
+              </IconButton>
+            </CustomTooltip>
+            <Box sx={{ flex: { xs: 1, sm: '0 0 256px' }, minWidth: 0 }}>
+              <CustomDateRangePicker
+                label="Register period"
+                title="Register Period"
+                value={[filters.startDate, filters.endDate]}
+                dateFormat="DD/MM/YYYY"
+                disabled={queryLocked}
+                onChange={setPeriod}
+              />
+            </Box>
+            <CustomTooltip title="Next month">
+              <IconButton
+                size="small"
+                aria-label="Next month"
+                disabled={queryLocked}
+                onClick={() => shiftMonth(1)}
+              >
+                <Iconify icon="solar:alt-arrow-right-linear" />
+              </IconButton>
+            </CustomTooltip>
+          </Stack>
           <Button
             size="small"
             color="inherit"
+            disabled={queryLocked}
             onClick={() => {
-              if (queryLocked) return;
               const defaults = getDefaultFilters();
-              setFilters((prev) => ({
-                ...prev,
-                startDate: defaults.startDate,
-                endDate: defaults.endDate,
-              }));
-              resetPaging();
+              setPeriod([defaults.startDate, defaults.endDate]);
             }}
           >
             This month
@@ -1538,22 +1576,36 @@ const AttendanceTrackingScreen = () => {
           >
             Filters{appliedFilters.length ? ` (${appliedFilters.length})` : ''}
           </Button>
-          <Button size="small" color="inherit" onClick={resetFilters}>
-            Reset
-          </Button>
+          {!!appliedFilters.length && (
+            <Button size="small" color="inherit" disabled={queryLocked} onClick={resetFilters}>
+              Reset filters
+            </Button>
+          )}
           <Typography
             variant="caption"
             role="status"
             aria-live="polite"
-            sx={{ ml: { sm: 'auto' } }}
+            color="text.secondary"
+            sx={{ ml: 'auto' }}
           >
-            {isFetching
-              ? 'Updating staff…'
-              : data
-                ? `${data.totalCount} staff found`
-                : 'Select a register period'}
+            {tableError
+              ? 'Attendance could not be loaded'
+              : isFetching
+                ? data
+                  ? 'Refreshing attendance…'
+                  : 'Loading attendance…'
+                : data
+                  ? `${data.totalCount} staff found`
+                  : missingYear
+                    ? 'Select an academic year'
+                    : 'Loading attendance…'}
           </Typography>
         </Stack>
+        {periodError && (
+          <Typography role="alert" variant="caption" color="error">
+            {periodError}
+          </Typography>
+        )}
         <Collapse in={advancedFiltersOpen} timeout="auto" unmountOnExit>
           <Box
             id="attendance-register-filters"
@@ -1576,13 +1628,19 @@ const AttendanceTrackingScreen = () => {
               size="small"
               fullWidth
               label="Divisions"
+              disabled={queryLocked}
               isLoading={stagesLoading}
               value={filters.educationMediumStageIds}
               options={stages.map((stage) => ({
                 value: stage.id,
                 label: stage.label,
               }))}
-              onChange={(value) => setFilter('educationMediumStageIds', value)}
+              onChange={(value) =>
+                setFilter(
+                  'educationMediumStageIds',
+                  value.filter((id): id is string => typeof id === 'string')
+                )
+              }
               renderValue={(value) => (value.length ? `${value.length} selected` : 'All divisions')}
               helperText="All divisions, or any selected academic organization assignment."
             />
@@ -1590,6 +1648,7 @@ const AttendanceTrackingScreen = () => {
               size="small"
               fullWidth
               label="Staff"
+              disabled={queryLocked}
               value={selectedEmployeeOption}
               fetchOptions={fetchStaffOptions}
               getOptionLabel={getEmployeeOptionLabel}
@@ -1602,7 +1661,7 @@ const AttendanceTrackingScreen = () => {
               }}
             />
 
-            <FormControl size="small" fullWidth>
+            <FormControl size="small" fullWidth disabled={queryLocked}>
               <InputLabel id="register-group-label">Staff group</InputLabel>
               <Select
                 label="Staff group"
@@ -1615,7 +1674,7 @@ const AttendanceTrackingScreen = () => {
                 <MenuItem value="NonTeaching">Non teaching</MenuItem>
               </Select>
             </FormControl>
-            <FormControl size="small" fullWidth>
+            <FormControl size="small" fullWidth disabled={queryLocked}>
               <InputLabel id="register-status-label">Attendance status</InputLabel>
               <Select
                 label="Attendance status"
@@ -1631,7 +1690,7 @@ const AttendanceTrackingScreen = () => {
                 ))}
               </Select>
             </FormControl>
-            <FormControl size="small" fullWidth>
+            <FormControl size="small" fullWidth disabled={queryLocked}>
               <InputLabel id="register-payroll-label">Payroll state</InputLabel>
               <Select
                 label="Payroll state"
@@ -1649,16 +1708,21 @@ const AttendanceTrackingScreen = () => {
             <TextField
               size="small"
               label="Department contains"
-              value={filters.department}
-              onChange={(event) => setFilter('department', event.target.value)}
+              value={departmentInput}
+              disabled={queryLocked}
+              onChange={(event) => setDepartmentInput(event.target.value)}
             />
             <CustomSelect
               size="small"
               fullWidth
               label="Staff with exceptions"
+              disabled={queryLocked}
               value={filters.exceptionFilter}
               options={EXCEPTION_FILTERS}
-              onChange={(value) => setFilter('exceptionFilter', value)}
+              onChange={(value) => {
+                const match = EXCEPTION_FILTERS.find((option) => option.value === value);
+                if (match) setFilter('exceptionFilter', match.value);
+              }}
             />
           </Box>
           <Typography variant="caption" color="text.secondary">
@@ -1676,13 +1740,16 @@ const AttendanceTrackingScreen = () => {
             aria-label="Applied register filters"
           >
             {appliedFilters.map((filter) => (
-              <Chip key={filter.key} size="small" label={filter.label} onDelete={filter.clear} />
+              <Chip
+                key={filter.key}
+                size="small"
+                label={filter.label}
+                onDelete={queryLocked ? undefined : filter.clear}
+              />
             ))}
           </Stack>
         )}
       </Stack>
-
-      <Divider />
 
       <CustomizableTable
         showColumns
@@ -1696,7 +1763,10 @@ const AttendanceTrackingScreen = () => {
         onRetry={retryTable}
         columns={columns}
         data={rows}
-        isLoading={isLoading || (isFetching && !data)}
+        getRowKey={(row) => row.employeeId}
+        isLoading={
+          changingYear || (!skipRegister && !tableError && (isLoading || (isFetching && !data)))
+        }
         isRefreshing={isFetching && !!data}
         {...tableProps}
         serverSide
@@ -1715,7 +1785,7 @@ const AttendanceTrackingScreen = () => {
           setPageSize(nextPageSize);
           setSelectedIds([]);
         }}
-        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        wrapperProps={{ sx: { flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' } }}
         tableContainerProps={{
           sx: {
             height: 1,
@@ -1756,12 +1826,16 @@ const AttendanceTrackingScreen = () => {
           },
         }}
         noDataText={
-          <Stack spacing={1} alignItems="center">
-            <Typography>No staff attendance matches this period and filters.</Typography>
-            <Button size="small" onClick={resetFilters}>
-              Reset filters
-            </Button>
-          </Stack>
+          missingYear ? (
+            'Select an academic year to view attendance.'
+          ) : (
+            <Stack spacing={1} alignItems="center">
+              <Typography>No staff attendance matches this period and filters.</Typography>
+              <Button size="small" onClick={resetFilters}>
+                Reset filters
+              </Button>
+            </Stack>
+          )
         }
       />
 

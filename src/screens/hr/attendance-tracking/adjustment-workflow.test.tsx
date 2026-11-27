@@ -13,11 +13,20 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock('react-redux', () => ({
-  useSelector: (read: any) => read({ globalState: { currentYear: { id: 'year' } } }),
+  useSelector: (read: any) =>
+    read({
+      globalState: { currentYear: { id: 'year' } },
+      auth: {
+        permissions: [{ name: 'HR.AttendanceAndLeave.AttendanceTracking.Add', isGranted: true }],
+      },
+    }),
 }));
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams() }));
 vi.mock('src/utils/icons', () => ({ GlobalIcons: {} }));
-vi.mock('src/constants/hr-menus', () => ({ hrPaths: { attendance: { dashboard: '/hr' } } }));
+vi.mock('src/constants/hr-menus', () => ({
+  hrPaths: { attendance: { dashboard: '/hr' } },
+  hrPermissions: { attendance: { attendanceTracking: 'HR.AttendanceAndLeave.AttendanceTracking' } },
+}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/components/label', () => ({ Label: ({ children }: any) => <span>{children}</span> }));
 vi.mock('src/components/custom-tooltip', () => ({ default: ({ children }: any) => children }));
@@ -50,7 +59,7 @@ vi.mock('src/screens/hr/hooks/useAcademicOrganizationOptions', () => ({
 }));
 vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));
 vi.mock('src/screens/hr/hooks/use-hr-table-query', () => ({
-  useHrTableQuery: (_: any, query: any) => ({ ...query, tableProps: {} }),
+  useHrTableCriteria: () => ({ active: false, tableProps: {} }),
 }));
 vi.mock('src/redux/customQueryAndMutation', () => ({
   default: ({ currentQueryAndMutation }: any) => currentQueryAndMutation(),

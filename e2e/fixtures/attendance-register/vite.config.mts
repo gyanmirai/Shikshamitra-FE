@@ -13,6 +13,7 @@ export default defineConfig({
       ...[
         'src/redux/hr/attendanceApi',
         'src/redux/hr/employeeApi',
+        'src/redux/hr/hrOperationalTableApi',
         'src/redux/customQueryAndMutation',
         'src/screens/hr/hooks/use-hr-table-export',
         'src/screens/hr/hooks/useAcademicOrganizationOptions',

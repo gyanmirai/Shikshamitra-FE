@@ -25,11 +25,29 @@ it('refreshes active Register criteria after both owning adjustment mutations', 
     table: 'hr-attendance-register',
   });
   expect(criteriaTags).toEqual(captured.endpoints.getGroupedAttendanceRegister.providesTags);
+  expect(criteriaTags).toEqual(
+    expect.arrayContaining([
+      employeeType.attendance,
+      employeeType.employee,
+      employeeType.attendanceRule,
+      employeeType.runPayroll,
+      employeeType.salarySlip,
+    ])
+  );
   ['adjustAttendanceRegister', 'bulkAdjustAttendanceRegister'].forEach((operation) => {
-    expect(captured.endpoints[operation].invalidatesTags).toEqual(
-      expect.arrayContaining(criteriaTags)
-    );
+    expect(captured.endpoints[operation].invalidatesTags).toContain(employeeType.attendance);
   });
+});
+
+it('bounds both Register reads with the same timeout', () => {
+  const grouped = captured.endpoints.getGroupedAttendanceRegister.query({
+    startDate: '2026-11-01',
+    endDate: '2026-11-26',
+  });
+  expect(grouped.timeout).toBe(30_000);
+  expect(
+    captured.endpoints.hrOperationalTable.query({ table: 'hr-attendance-register' }).timeout
+  ).toBe(grouped.timeout);
 });
 
 it('keeps I-card criteria on the existing employee mutation cache and preserves zero/false criteria', () => {

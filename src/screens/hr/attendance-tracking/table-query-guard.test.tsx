@@ -2,14 +2,48 @@ import { it, vi, expect } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 
 import { isRegisterQueryLocked } from './table-query-guard';
-import { useHrTableQuery } from '../hooks/use-hr-table-query';
+import { useHrTableQuery, useHrTableCriteria } from '../hooks/use-hr-table-query';
 
+const query = vi.hoisted(() => vi.fn());
 vi.mock('src/redux/hr/hrOperationalTableApi', () => ({
-  useHrOperationalTableQuery: () => ({
-    currentData: { items: [{ employeeName: 'Selected staff' }], totalCount: 125 },
-    isFetching: false,
-  }),
+  useHrOperationalTableQuery: (...args: unknown[]) => {
+    query(...args);
+    return {
+      currentData: { items: [{ employeeName: 'Selected staff' }], totalCount: 125 },
+      isFetching: false,
+    };
+  },
 }));
+
+it('bypasses the population query for supported single-column sorts and falls back for column filters', () => {
+  const { result } = renderHook(() =>
+    useHrTableCriteria({
+      table: 'hr-attendance-register',
+      query: {},
+      page: 0,
+      size: 50,
+      resetPage: vi.fn(),
+      nativeSortColumns: ['employeeName'],
+    })
+  );
+  act(() => {
+    result.current.tableProps.onServerSort!('employeeName', [
+      { column: 'employeeName', direction: 'asc' },
+    ]);
+  });
+  expect(result.current.nativeSort).toBe('employeeName asc');
+  expect(result.current.active).toBe(false);
+  expect(query.mock.lastCall?.[1]).toMatchObject({ skip: true });
+
+  act(() => {
+    result.current.tableProps.onServerFilter!([
+      { column: 'exceptions', type: 'contains', value: 'Locked', valueType: 'string' },
+    ]);
+  });
+  expect(result.current.nativeSort).toBeUndefined();
+  expect(result.current.active).toBe(true);
+  expect(query.mock.lastCall?.[1]).toMatchObject({ skip: false });
+});
 
 it.each(['editRow', 'bulkOpen', 'isAdjusting', 'isBulkAdjusting'] as const)(
   'keeps Register criteria and selected row context while %s is active, then allows criteria after close/save',

@@ -1,4 +1,4 @@
-import React, { useSyncExternalStore } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 
 export const stages = [
   { id: 'division-a', label: 'Primary / English' },
@@ -21,7 +21,7 @@ const listeners = new Set<() => void>();
 const edits = new Map<string, any>();
 const fixture = { query: {} as any, export: null as any, adjustments: [] as any[] };
 (window as any).attendanceFixture = fixture;
-export const useSearchParams = () => new URLSearchParams();
+export const useSearchParams = () => new URLSearchParams(window.location.search);
 export const usePathname = () => '/hr/attendanceTracking';
 export const useRouter = () => ({ push() {}, replace() {}, prefetch() {} });
 export default function queryOrLink(props: any) {
@@ -46,7 +46,14 @@ export const useLazyGetEmployeeQuery = () => [
     []
   ),
 ];
-export function useGetGroupedAttendanceRegisterQuery(query: any) {
+export function useGetGroupedAttendanceRegisterQuery(query: any, options?: { skip?: boolean }) {
+  const failFirst = new URLSearchParams(window.location.search).has('failFirst');
+  const [loadState, setLoadState] = useState(failFirst ? 'pending' : 'ready');
+  useEffect(() => {
+    if (loadState !== 'pending' || options?.skip) return undefined;
+    const timer = setTimeout(() => setLoadState('failed'), 800);
+    return () => clearTimeout(timer);
+  }, [loadState, options?.skip]);
   useSyncExternalStore(
     (callback) => {
       listeners.add(callback);
@@ -54,6 +61,14 @@ export function useGetGroupedAttendanceRegisterQuery(query: any) {
     },
     () => revision
   );
+  if (options?.skip) return { isFetching: false };
+  if (loadState === 'pending') return { isLoading: true, isFetching: true };
+  if (loadState === 'failed')
+    return {
+      isFetching: false,
+      error: { status: 'TIMEOUT_ERROR' },
+      refetch: () => setLoadState('ready'),
+    };
   fixture.query = structuredClone(query);
   let rows = staff
     .filter(
@@ -129,7 +144,12 @@ const mutate = (body: any) => ({
         });
     revision += 1;
     listeners.forEach((listener) => listener());
-    return { updatedCount: 1, skippedCount: 0 };
+    const ids = body.attendanceIds || [body.attendanceId];
+    return {
+      updatedCount: ids.length,
+      skippedCount: 0,
+      rows: ids.map((attendanceId: string) => ({ attendanceId, updated: true })),
+    };
   },
 });
 export const useAdjustAttendanceRegisterMutation = () => [mutate, { isLoading: false }];
@@ -137,3 +157,5 @@ export const useBulkAdjustAttendanceRegisterMutation = useAdjustAttendanceRegist
 export const useHrTableExport = (_table: string, query: any) => async (request: any) => {
   fixture.export = { query: structuredClone(query), request: { ...request, signal: undefined } };
 };
+
+export const useHrOperationalTableQuery = () => ({ isFetching: false });
