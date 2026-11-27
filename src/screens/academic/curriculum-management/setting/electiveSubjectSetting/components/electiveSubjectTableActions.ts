@@ -44,7 +44,6 @@ export function getElectiveSubjectTableActions(
         id: 'archive',
         label: 'Archive group',
         icon: 'solar:archive-bold',
-        color: 'warning.main',
         onClick: () => options.onArchive(group),
       }
     );
